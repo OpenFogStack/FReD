@@ -16,7 +16,7 @@ before_script:
   - mkdir -p /go/src/gitlab.tu-berlin.de/mcc-fred /go/src/_/builds
   - cp -r $CI_PROJECT_DIR /go/src/gitlab.tu-berlin.de/mcc-fred/fred
   - ln -s /go/src/gitlab.tu-berlin.de/mcc-fred /go/src/_/builds/mcc-fred
-  - export CC=clang-7.0
+  - export CC=clang
   - make dep
 
 unit_tests:
