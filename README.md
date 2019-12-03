@@ -1,7 +1,8 @@
-# FReD Devtools
-## Setup
-Please run the `./setup-git.sh` **in the `fred-devtools` (=this) folder**. It will clone the other projects into `src/`.
-When working with GoLand please open this folder.
+# FReD 
+
+[![Build Status](https://gitlab.tu-berlin.de/mcc-fred/fred/ci/badges/master/build.svg)](https://gitlab.tu-berlin.de/mcc-fred/fred/commits/master)
+[![Coverage Report](https://gitlab.tu-berlin.de/mcc-fred/fred/ci/badges/master/coverage.svg)](https://gitlab.tu-berlin.de/mcc-fred/fred/commits/master)
+[![License MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://img.shields.io/badge/License-MIT-brightgreen.svg)
 
 ## Git Workflow
 
