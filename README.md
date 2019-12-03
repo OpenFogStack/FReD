@@ -1,7 +1,7 @@
 # FReD 
 
-[![Build Status](https://gitlab.tu-berlin.de/mcc-fred/fred/ci/badges/master/build.svg)](https://gitlab.tu-berlin.de/mcc-fred/fred/commits/master)
-[![Coverage Report](https://gitlab.tu-berlin.de/mcc-fred/fred/ci/badges/master/coverage.svg)](https://gitlab.tu-berlin.de/mcc-fred/fred/commits/master)
+[![pipeline status](https://gitlab.tubit.tu-berlin.de/mcc-fred/fred/badges/master/pipeline.svg)](https://gitlab.tubit.tu-berlin.de/mcc-fred/fred/commits/master)
+[![coverage report](https://gitlab.tubit.tu-berlin.de/mcc-fred/fred/badges/master/coverage.svg)](https://gitlab.tubit.tu-berlin.de/mcc-fred/fred/commits/master)
 [![License MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://img.shields.io/badge/License-MIT-brightgreen.svg)
 
 ## Git Workflow
