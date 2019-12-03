@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # Code coverage generation
 
