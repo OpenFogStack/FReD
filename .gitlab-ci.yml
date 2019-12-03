@@ -1,13 +1,5 @@
 image: gitlab-registry.tubit.tu-berlin.de/mcc-fred/fred/ci:latest
 
-cache:
-  paths:
-    - /apt-cache
-    - /go/src/github.com
-    - /go/src/golang.org
-    - /go/src/google.golang.org
-    - /go/src/gopkg.in
-
 stages:
   - test
   - build
@@ -16,7 +8,7 @@ before_script:
   - mkdir -p /go/src/gitlab.tu-berlin.de/mcc-fred /go/src/_/builds
   - cp -r $CI_PROJECT_DIR /go/src/gitlab.tu-berlin.de/mcc-fred/fred
   - ln -s /go/src/gitlab.tu-berlin.de/mcc-fred /go/src/_/builds/mcc-fred
-  - export CC=clang-7.0
+  - export CC=clang
   - make dep
 
 unit_tests:

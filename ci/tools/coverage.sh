@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # Code coverage generation
 
@@ -21,7 +21,7 @@ tail -q -n +2 "${COVERAGE_DIR}"/*.cov >> "${COVERAGE_DIR}"/coverage.cov ;
 go tool cover -func="${COVERAGE_DIR}"/coverage.cov ;
 
 # If needed, generate HTML report
-if [ "$1" == "html" ]; then
+if [ "$1" = "html" ]; then
     go tool cover -html="${COVERAGE_DIR}"/coverage.cov -o coverage.html ;
 fi
 

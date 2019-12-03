@@ -1,5 +1,5 @@
 PROJECT_NAME := "fred-node"
-PKG := "gitlab.tu-berlin.de/mcc-fred/fred$(PROJECT_NAME)"
+PKG := "gitlab.tu-berlin.de/mcc-fred/fred/$(PROJECT_NAME)"
 PKG_LIST := $(shell go list ${PKG}/... | grep -v /vendor/)
 GO_FILES := $(shell find . -name '*.go' | grep -v /vendor/ | grep -v _test.go)
 
@@ -20,17 +20,17 @@ msan: dep ## Run memory sanitizer
 	@go test -msan -short ${PKG_LIST}
 
 coverage: ## Generate global code coverage report
-	./ci/tools/coverage.sh;
+	@sh ./ci/tools/coverage.sh;
 
 coverhtml: ## Generate global code coverage report in HTML
-	./ci/tools/coverage.sh html;
+	@sh ./ci/tools/coverage.sh html;
 
 dep: ## Get the dependencies
 	@go get -v -d ./...
 	@go get -u golang.org/x/lint/golint
 
 build: dep ## Build the binary file
-	@go build -i -v $(PKG)
+	@go build -i -v $(PKG)/cmd
 
 clean: ## Remove previous build
 	@rm -f $(PROJECT_NAME)
