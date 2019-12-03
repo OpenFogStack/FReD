@@ -20,10 +20,10 @@ msan: dep ## Run memory sanitizer
 	@go test -msan -short ${PKG_LIST}
 
 coverage: ## Generate global code coverage report
-	./tools/coverage.sh;
+	./ci/tools/coverage.sh;
 
 coverhtml: ## Generate global code coverage report in HTML
-	./tools/coverage.sh html;
+	./ci/tools/coverage.sh html;
 
 dep: ## Get the dependencies
 	@go get -v -d ./...
