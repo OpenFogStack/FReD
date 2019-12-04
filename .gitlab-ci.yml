@@ -1,13 +1,16 @@
 image: gitlab-registry.tubit.tu-berlin.de/mcc-fred/fred/ci:latest
 
+cache:
+  paths:
+    - .cache
+
 stages:
   - test
   - build
 
 before_script:
-  - mkdir -p /go/src/gitlab.tu-berlin.de/mcc-fred /go/src/_/builds
-  - cp -r $CI_PROJECT_DIR /go/src/gitlab.tu-berlin.de/mcc-fred/fred
-  - ln -s /go/src/gitlab.tu-berlin.de/mcc-fred /go/src/_/builds/mcc-fred
+  - mkdir -p .cache
+  - export GOPATH="$CI_PROJECT_DIR/.cache"
   - export CC=clang
   - make dep
 
