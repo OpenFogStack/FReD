@@ -1,5 +1,5 @@
-PROJECT_NAME := "fred-node"
-PKG := "gitlab.tu-berlin.de/mcc-fred/fred/$(PROJECT_NAME)"
+PROJECT_NAME := "fred"
+PKG := "gitlab.tu-berlin.de/mcc-fred/$(PROJECT_NAME)"
 PKG_LIST := $(shell go list ${PKG}/... | grep -v /vendor/)
 GO_FILES := $(shell find . -name '*.go' | grep -v /vendor/ | grep -v _test.go)
 
@@ -30,7 +30,7 @@ dep: ## Get the dependencies
 	@go get -u golang.org/x/lint/golint
 
 build: dep ## Build the binary file
-	@go build -i -v $(PKG)/cmd
+	@go build -i -v $(PKG)/cmd/frednode
 
 clean: ## Remove previous build
 	@rm -f $(PROJECT_NAME)
