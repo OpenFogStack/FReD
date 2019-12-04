@@ -5,17 +5,20 @@ import (
 	"sync"
 )
 
+// Storage stores a map of keygroups by name.
 type Storage struct {
 	keygroups map[string]Keygroup
 	sync.RWMutex
 }
 
+// Keygroup stores a map of items by id, has a maxkey to keep track of the unused ids.
 type Keygroup struct {
 	items  map[uint64]string
 	maxkey uint64
 	sync.RWMutex
 }
 
+// New create a new Storage.
 func New() (s *Storage) {
 	s = &Storage{
 		keygroups: make(map[string]Keygroup),
@@ -24,6 +27,7 @@ func New() (s *Storage) {
 	return
 }
 
+// Create creates a new item in the specified keygroup.
 func (s *Storage) Create(kgname string, data string) (uint64, error) {
 
 	if data == "" {
@@ -50,6 +54,7 @@ func (s *Storage) Create(kgname string, data string) (uint64, error) {
 
 }
 
+// Read returns an item with the specified id from the specified keygroup.
 func (s *Storage) Read(kgname string, id uint64) (string, error) {
 
 	s.RLock()
@@ -72,6 +77,7 @@ func (s *Storage) Read(kgname string, id uint64) (string, error) {
 	return value, nil
 }
 
+// Update updates the item with the specified id in the specified keygroup.
 func (s *Storage) Update(kgname string, id uint64, data string) error {
 	if data == "" {
 		return errors.New("empty data")
@@ -104,6 +110,7 @@ func (s *Storage) Update(kgname string, id uint64, data string) error {
 	return nil
 }
 
+// Delete deletes the item with the specified id from the specified keygroup.
 func (s *Storage) Delete(kgname string, id uint64) error {
 	s.RLock()
 	kg, ok := s.keygroups[kgname]
@@ -120,7 +127,6 @@ func (s *Storage) Delete(kgname string, id uint64) error {
 	kg.RUnlock()
 
 	if !ok {
-
 		return errors.New("no such item")
 	}
 
@@ -132,6 +138,7 @@ func (s *Storage) Delete(kgname string, id uint64) error {
 
 }
 
+// CreateKeygroup creates a new keygroup with the specified name in Storage.
 func (s *Storage) CreateKeygroup(kgname string) error {
 	s.RLock()
 	kg, exists := s.keygroups[kgname]
@@ -155,6 +162,7 @@ func (s *Storage) CreateKeygroup(kgname string) error {
 	return nil
 }
 
+// DeleteKeygroup removes the keygroup with the specified name from Storage.
 func (s *Storage) DeleteKeygroup(kgname string) error {
 	s.RLock()
 	_, ok := s.keygroups[kgname]

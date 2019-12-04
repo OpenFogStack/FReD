@@ -4,11 +4,13 @@ import (
 	"sync"
 )
 
+// KeygroupStorage saves a set of all available keygroups.
 type KeygroupStorage struct {
 	keygroups map[string]struct{}
 	sync.RWMutex
 }
 
+// New create a new KeygroupStorage.
 func New() (k *KeygroupStorage) {
 	k = &KeygroupStorage{
 		keygroups: make(map[string]struct{}),
@@ -17,6 +19,7 @@ func New() (k *KeygroupStorage) {
 	return
 }
 
+// Create adds a keygroup to the KeygroupStorage.
 func (k *KeygroupStorage) Create(kgname string) error {
 	k.RLock()
 	_, ok := k.keygroups[kgname]
@@ -33,6 +36,7 @@ func (k *KeygroupStorage) Create(kgname string) error {
 	return nil
 }
 
+// Delete removes a keygroup from the KeygroupStorage.
 func (k *KeygroupStorage) Delete(kgname string) error {
 	k.RLock()
 	_, ok := k.keygroups[kgname]
@@ -49,6 +53,7 @@ func (k *KeygroupStorage) Delete(kgname string) error {
 	return nil
 }
 
+// Exists checks if a keygroup exists in the KeygroupStorage.
 func (k *KeygroupStorage) Exists(kgname string) bool {
 	k.RLock()
 	_, ok := k.keygroups[kgname]
