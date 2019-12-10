@@ -6,6 +6,8 @@
 
 ## Git Workflow
 
+Setup git environment with `sh ./env-setup.sh` (installs git hooks). Be sure to have go installed...
+
 The `master` branch is protected and only approved pull requests can push to it. Most important part of
 the workflow is `rebase`, heres a refresher on merging vs rebasing https://www.atlassian.com/git/tutorials/merging-vs-rebasing.
 
