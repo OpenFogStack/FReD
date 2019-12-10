@@ -3,6 +3,10 @@
 
 ### Go ###
 # Binaries for programs and plugins
+
+# frednode
+frednode
+
 *.exe
 *.exe~
 *.dll

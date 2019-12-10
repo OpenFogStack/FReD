@@ -1,0 +1,15 @@
+#!/bin/sh
+#
+# An example hook script to verify what is about to be committed.
+# Called by "git commit" with no arguments.  The hook should
+# exit with non-zero status after issuing an appropriate message if
+# it wants to stop the commit.
+#
+# To enable this hook, rename this file to "pre-commit".
+
+if [ "$branch" = "master" ]; then
+  echo "You can't commit directly to '"${branch}"' branch" # webstorm or intellij will show this as popup
+  exit 1 # if you remove this line then it won't block commit but send message to group and on command line
+fi
+
+make lint
