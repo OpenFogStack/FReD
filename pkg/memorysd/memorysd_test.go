@@ -11,7 +11,11 @@ func TestNew(t *testing.T) {
 		name  string
 		wantS *Storage
 	}{
-		// TODO: Add test cases.
+		{	"create new empty Storage",
+			&Storage{
+				keygroups: make(map[string]Keygroup),
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -25,7 +29,7 @@ func TestNew(t *testing.T) {
 func TestStorage_Create(t *testing.T) {
 	type fields struct {
 		keygroups map[string]Keygroup
-		RWMutex   sync.RWMutex
+		sync.RWMutex
 	}
 	type args struct {
 		kgname string
@@ -38,7 +42,30 @@ func TestStorage_Create(t *testing.T) {
 		want    uint64
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{	"create item in non-existent keygroup",
+			fields{
+				make(map[string]Keygroup),
+				sync.RWMutex{},
+			},
+			args{
+					"keygroup",
+					"hello",
+			},
+			0,
+			true,
+		},
+		{	"create empty item in non-existent keygroup",
+			fields{
+				make(map[string]Keygroup),
+				sync.RWMutex{},
+			},
+			args{
+				"",
+				"hello",
+			},
+			0,
+			true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -61,7 +88,7 @@ func TestStorage_Create(t *testing.T) {
 func TestStorage_CreateKeygroup(t *testing.T) {
 	type fields struct {
 		keygroups map[string]Keygroup
-		RWMutex   sync.RWMutex
+		sync.RWMutex
 	}
 	type args struct {
 		kgname string
@@ -72,7 +99,22 @@ func TestStorage_CreateKeygroup(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{	"create simple keygroup",
+			fields{
+				make(map[string]Keygroup),
+				sync.RWMutex{},
+			},
+			args{"keygroup"},
+			false,
+		},
+		{	"create keygroup with empty name",
+			fields{
+				make(map[string]Keygroup),
+				sync.RWMutex{},
+			},
+			args{""},
+			true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -90,7 +132,7 @@ func TestStorage_CreateKeygroup(t *testing.T) {
 func TestStorage_Delete(t *testing.T) {
 	type fields struct {
 		keygroups map[string]Keygroup
-		RWMutex   sync.RWMutex
+		sync.RWMutex
 	}
 	type args struct {
 		kgname string
@@ -102,7 +144,18 @@ func TestStorage_Delete(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{	"delete non-existent item from non-existent keygroup",
+			fields{
+				make(map[string]Keygroup),
+				sync.RWMutex{},
+			},
+			args{
+				"keygroup",
+				0,
+			},
+			true,
+		},
+
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -120,7 +173,7 @@ func TestStorage_Delete(t *testing.T) {
 func TestStorage_DeleteKeygroup(t *testing.T) {
 	type fields struct {
 		keygroups map[string]Keygroup
-		RWMutex   sync.RWMutex
+		sync.RWMutex
 	}
 	type args struct {
 		kgname string
@@ -131,7 +184,22 @@ func TestStorage_DeleteKeygroup(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{	"delete non-existent keygroup",
+			fields{
+				make(map[string]Keygroup),
+				sync.RWMutex{},
+			},
+			args{"keygroup"},
+			true,
+		},
+		{	"delete keygroup with empty name",
+			fields{
+				make(map[string]Keygroup),
+				sync.RWMutex{},
+			},
+			args{""},
+			true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -149,7 +217,7 @@ func TestStorage_DeleteKeygroup(t *testing.T) {
 func TestStorage_Read(t *testing.T) {
 	type fields struct {
 		keygroups map[string]Keygroup
-		RWMutex   sync.RWMutex
+		sync.RWMutex
 	}
 	type args struct {
 		kgname string
@@ -162,7 +230,18 @@ func TestStorage_Read(t *testing.T) {
 		want    string
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{	"read non-existent item from non-existent keygroup",
+			fields{
+				make(map[string]Keygroup),
+				sync.RWMutex{},
+			},
+			args{
+				"keygroup",
+				0,
+			},
+			"",
+			true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -185,7 +264,7 @@ func TestStorage_Read(t *testing.T) {
 func TestStorage_Update(t *testing.T) {
 	type fields struct {
 		keygroups map[string]Keygroup
-		RWMutex   sync.RWMutex
+		sync.RWMutex
 	}
 	type args struct {
 		kgname string
@@ -198,7 +277,18 @@ func TestStorage_Update(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{	"delete non-existent item from non-existent keygroup",
+			fields{
+				make(map[string]Keygroup),
+				sync.RWMutex{},
+			},
+			args{
+				"keygroup",
+				0,
+				"a new hello",
+			},
+			true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

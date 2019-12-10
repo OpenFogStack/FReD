@@ -1,6 +1,7 @@
 package memorykg
 
 import (
+	"errors"
 	"sync"
 )
 
@@ -21,6 +22,10 @@ func New() (k *KeygroupStorage) {
 
 // Create adds a keygroup to the KeygroupStorage.
 func (k *KeygroupStorage) Create(kgname string) error {
+	if kgname == "" {
+		return errors.New("invalid keygroup name")
+	}
+
 	k.RLock()
 	_, ok := k.keygroups[kgname]
 	k.RUnlock()
@@ -38,12 +43,16 @@ func (k *KeygroupStorage) Create(kgname string) error {
 
 // Delete removes a keygroup from the KeygroupStorage.
 func (k *KeygroupStorage) Delete(kgname string) error {
+	if kgname == "" {
+		return errors.New("invalid keygroup name")
+	}
+
 	k.RLock()
 	_, ok := k.keygroups[kgname]
 	k.RUnlock()
 
 	if !ok {
-		return nil
+		return errors.New("no such keygroup")
 	}
 
 	k.Lock()
