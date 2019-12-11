@@ -16,7 +16,7 @@ func Test_setupRouter(t *testing.T) {
 		args  args
 		wantR *gin.Engine
 	}{
-		// TODO: Add test cases.
+		// TODO: Add Test Cases
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

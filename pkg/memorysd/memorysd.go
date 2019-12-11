@@ -29,6 +29,9 @@ func New() (s *Storage) {
 
 // Create creates a new item in the specified keygroup.
 func (s *Storage) Create(kgname string, data string) (uint64, error) {
+	if kgname == "" {
+		return 0, errors.New("invalid keygroup name")
+	}
 
 	if data == "" {
 		return 0, errors.New("empty data")
@@ -56,6 +59,9 @@ func (s *Storage) Create(kgname string, data string) (uint64, error) {
 
 // Read returns an item with the specified id from the specified keygroup.
 func (s *Storage) Read(kgname string, id uint64) (string, error) {
+	if kgname == "" {
+		return "", errors.New("invalid keygroup name")
+	}
 
 	s.RLock()
 	kg, ok := s.keygroups[kgname]
@@ -79,6 +85,10 @@ func (s *Storage) Read(kgname string, id uint64) (string, error) {
 
 // Update updates the item with the specified id in the specified keygroup.
 func (s *Storage) Update(kgname string, id uint64, data string) error {
+	if kgname == "" {
+		return errors.New("invalid keygroup name")
+	}
+
 	if data == "" {
 		return errors.New("empty data")
 	}
@@ -112,6 +122,10 @@ func (s *Storage) Update(kgname string, id uint64, data string) error {
 
 // Delete deletes the item with the specified id from the specified keygroup.
 func (s *Storage) Delete(kgname string, id uint64) error {
+	if kgname == "" {
+		return errors.New("invalid keygroup name")
+	}
+
 	s.RLock()
 	kg, ok := s.keygroups[kgname]
 
@@ -140,6 +154,10 @@ func (s *Storage) Delete(kgname string, id uint64) error {
 
 // CreateKeygroup creates a new keygroup with the specified name in Storage.
 func (s *Storage) CreateKeygroup(kgname string) error {
+	if kgname == "" {
+		return errors.New("invalid keygroup name")
+	}
+
 	s.RLock()
 	kg, exists := s.keygroups[kgname]
 
@@ -164,12 +182,16 @@ func (s *Storage) CreateKeygroup(kgname string) error {
 
 // DeleteKeygroup removes the keygroup with the specified name from Storage.
 func (s *Storage) DeleteKeygroup(kgname string) error {
+	if kgname == "" {
+		return errors.New("invalid keygroup name")
+	}
+
 	s.RLock()
 	_, ok := s.keygroups[kgname]
 	s.RUnlock()
 
 	if !ok {
-		return nil
+		return errors.New("keygroup does not exist")
 	}
 
 	s.Lock()
