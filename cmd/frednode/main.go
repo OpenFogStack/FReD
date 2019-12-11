@@ -22,12 +22,13 @@ type Fred interface {
 }
 
 var addr = flag.String("addr", ":9001", "http service address")
+var a Fred
 
 func postKeygroup(context *gin.Context) {
 
 	kgname := context.Params.ByName("kgname")
 
-	err := app.CreateKeygroup(kgname)
+	err := a.CreateKeygroup(kgname)
 
 	if err != nil {
 		context.Status(http.StatusConflict)
@@ -41,7 +42,7 @@ func postKeygroup(context *gin.Context) {
 func deleteKeygroup(context *gin.Context) {
 	kgname := context.Params.ByName("kgname")
 
-	err := app.DeleteKeygroup(kgname)
+	err := a.DeleteKeygroup(kgname)
 
 	if err != nil {
 		context.Status(http.StatusConflict)
@@ -65,7 +66,7 @@ func postItem(context *gin.Context) {
 
 	data := json.Data
 
-	id, err := app.Create(kgname, data)
+	id, err := a.Create(kgname, data)
 
 	if err != nil {
 		context.Status(http.StatusConflict)
@@ -87,7 +88,7 @@ func getItem(context *gin.Context) {
 		return
 	}
 
-	data, err := app.Read(kgname, uint64(id))
+	data, err := a.Read(kgname, uint64(id))
 
 	if err != nil {
 		context.Status(http.StatusNotFound)
@@ -119,7 +120,7 @@ func putItem(context *gin.Context) {
 	}
 
 	data := json.Data
-	err = app.Update(kgname, uint64(id), data)
+	err = a.Update(kgname, uint64(id), data)
 
 	if err != nil {
 		context.Status(http.StatusConflict)
@@ -140,7 +141,7 @@ func deleteItem(context *gin.Context) {
 		return
 	}
 
-	err = app.Delete(kgname, uint64(id))
+	err = a.Delete(kgname, uint64(id))
 
 	if err != nil {
 		context.Status(http.StatusNotFound)
@@ -151,7 +152,7 @@ func deleteItem(context *gin.Context) {
 	return
 }
 
-func setupRouter(app Fred) (r *gin.Engine) {
+func setupRouter() (r *gin.Engine) {
 	r = gin.Default()
 
 	r.POST("/keygroup/:kgname", postKeygroup)
@@ -166,9 +167,9 @@ func setupRouter(app Fred) (r *gin.Engine) {
 }
 
 func main() {
-	var app Fred = app.New()
+	a = app.New()
 
-	r := setupRouter(app)
+	r := setupRouter()
 
 	log.Fatal(r.Run(*addr))
 }
