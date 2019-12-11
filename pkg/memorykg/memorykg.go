@@ -11,7 +11,7 @@ type KeygroupStorage struct {
 	sync.RWMutex
 }
 
-// New create a new KeygroupStorage.
+// New creates a new KeygroupStorage.
 func New() (k *KeygroupStorage) {
 	k = &KeygroupStorage{
 		keygroups: make(map[string]struct{}),

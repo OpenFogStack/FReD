@@ -20,7 +20,7 @@ func TestKeygroupStorage_Create(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{	"create simple keygroup",
+		{"create simple keygroup",
 			fields{
 				make(map[string]struct{}),
 				sync.RWMutex{},
@@ -28,7 +28,7 @@ func TestKeygroupStorage_Create(t *testing.T) {
 			args{"keygroup"},
 			false,
 		},
-		{	"create keygroup with empty name",
+		{"create keygroup with empty name",
 			fields{
 				make(map[string]struct{}),
 				sync.RWMutex{},
@@ -64,7 +64,7 @@ func TestKeygroupStorage_Delete(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{	"delete non-existent keygroup",
+		{"delete non-existent keygroup",
 			fields{
 				make(map[string]struct{}),
 				sync.RWMutex{},
@@ -72,7 +72,7 @@ func TestKeygroupStorage_Delete(t *testing.T) {
 			args{"keygroup"},
 			true,
 		},
-		{	"delete keygroup with empty name",
+		{"delete keygroup with empty name",
 			fields{
 				make(map[string]struct{}),
 				sync.RWMutex{},
@@ -108,7 +108,7 @@ func TestKeygroupStorage_Exists(t *testing.T) {
 		args   args
 		want   bool
 	}{
-		{	"check non-existent keygroup",
+		{"check non-existent keygroup",
 			fields{
 				make(map[string]struct{}),
 				sync.RWMutex{},
@@ -116,7 +116,7 @@ func TestKeygroupStorage_Exists(t *testing.T) {
 			args{"keygroup"},
 			false,
 		},
-		{	"check keygroup with empty name",
+		{"check keygroup with empty name",
 			fields{
 				make(map[string]struct{}),
 				sync.RWMutex{},
@@ -143,7 +143,7 @@ func TestNew(t *testing.T) {
 		name  string
 		wantK *KeygroupStorage
 	}{
-		{	"create new empty KeygroupStorage",
+		{"create new empty KeygroupStorage",
 			&KeygroupStorage{
 				keygroups: make(map[string]struct{}),
 			},
