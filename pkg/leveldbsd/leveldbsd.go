@@ -35,9 +35,9 @@ func New(dbPath string) (s *Storage) {
 func (s *Storage) Read(i data.Item) (data.Item, error) {
 	key := makeKeyName(i.Keygroup, i.ID)
 
-	data, err := s.db.Get([]byte(key), nil)
+	value, err := s.db.Get([]byte(key), nil)
 
-	i.Data = string(data)
+	i.Data = string(value)
 
 	return i, err
 }

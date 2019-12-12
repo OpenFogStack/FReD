@@ -14,5 +14,8 @@ port = 9001
 # adaptor can be either "leveldb" or "memory"
 adaptor = "leveldb"
 
+[zmq]
+port = 5555
+
 [leveldb]
 path = "./db"
