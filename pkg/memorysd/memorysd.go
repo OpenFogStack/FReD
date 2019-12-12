@@ -13,8 +13,7 @@ type Storage struct {
 
 // Keygroup stores a map of items by id, has a maxkey to keep track of the unused ids.
 type Keygroup struct {
-	items  map[uint64]string
-	maxkey uint64
+	items  map[string]string
 	sync.RWMutex
 }
 
@@ -27,38 +26,8 @@ func New() (s *Storage) {
 	return
 }
 
-// Create creates a new item in the specified keygroup.
-func (s *Storage) Create(kgname string, data string) (uint64, error) {
-	if kgname == "" {
-		return 0, errors.New("invalid keygroup name")
-	}
-
-	if data == "" {
-		return 0, errors.New("empty data")
-	}
-
-	s.RLock()
-	kg, ok := s.keygroups[kgname]
-	s.RUnlock()
-
-	if !ok {
-		return 0, errors.New("no such keygroup")
-	}
-
-	kg.Lock()
-
-	kg.maxkey++
-	kg.items[kg.maxkey] = data
-
-	key := kg.maxkey
-	kg.Unlock()
-
-	return key, nil
-
-}
-
 // Read returns an item with the specified id from the specified keygroup.
-func (s *Storage) Read(kgname string, id uint64) (string, error) {
+func (s *Storage) Read(kgname string, id string) (string, error) {
 	if kgname == "" {
 		return "", errors.New("invalid keygroup name")
 	}
@@ -84,7 +53,7 @@ func (s *Storage) Read(kgname string, id uint64) (string, error) {
 }
 
 // Update updates the item with the specified id in the specified keygroup.
-func (s *Storage) Update(kgname string, id uint64, data string) error {
+func (s *Storage) Update(kgname string, id string, data string) error {
 	if kgname == "" {
 		return errors.New("invalid keygroup name")
 	}
@@ -121,7 +90,7 @@ func (s *Storage) Update(kgname string, id uint64, data string) error {
 }
 
 // Delete deletes the item with the specified id from the specified keygroup.
-func (s *Storage) Delete(kgname string, id uint64) error {
+func (s *Storage) Delete(kgname string, id string) error {
 	if kgname == "" {
 		return errors.New("invalid keygroup name")
 	}
@@ -169,8 +138,7 @@ func (s *Storage) CreateKeygroup(kgname string) error {
 	s.RUnlock()
 
 	kg = Keygroup{
-		items:  make(map[uint64]string),
-		maxkey: 0,
+		items:  make(map[string]string),
 	}
 
 	s.Lock()

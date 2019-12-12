@@ -9,10 +9,9 @@ import (
 
 // Storage is an interface that abstracts the component that stores actual Keygroups data.
 type Storage interface {
-	Create(kg string, data string) (uint64, error)
-	Read(kg string, id uint64) (string, error)
-	Update(kg string, id uint64, data string) error
-	Delete(kg string, id uint64) error
+	Read(kg string, id string) (string, error)
+	Update(kg string, id string, data string) error
+	Delete(kg string, id string) error
 	CreateKeygroup(kg string) error
 	DeleteKeygroup(kg string) error
 }
@@ -64,24 +63,8 @@ func (a *App) DeleteKeygroup(kgname string) error {
 	return nil
 }
 
-// Create creates a new item in the specified keygroup.
-func (a *App) Create(kgname string, data string) (uint64, error) {
-
-	if !a.kg.Exists(kgname) {
-		return 0, errors.New("not found")
-	}
-
-	id, err := a.sd.Create(kgname, data)
-
-	if err != nil {
-		return 0, err
-	}
-
-	return id, nil
-}
-
 // Read returns an item with the specified id from the specified keygroup.
-func (a *App) Read(kgname string, id uint64) (string, error) {
+func (a *App) Read(kgname string, id string) (string, error) {
 	if !a.kg.Exists(kgname) {
 		return "", errors.New("keygroup not found")
 	}
@@ -96,7 +79,7 @@ func (a *App) Read(kgname string, id uint64) (string, error) {
 }
 
 // Update updates the item with the specified id in the specified keygroup.
-func (a *App) Update(kgname string, id uint64, data string) error {
+func (a *App) Update(kgname string, id string, data string) error {
 	if !a.kg.Exists(kgname) {
 		return errors.New("keygroup not found")
 	}
@@ -111,12 +94,12 @@ func (a *App) Update(kgname string, id uint64, data string) error {
 }
 
 // Delete deletes the item with the specified id from the specified keygroup.
-func (a *App) Delete(kgname string, id uint64) error {
+func (a *App) Delete(kgname string, id string) error {
 	if !a.kg.Exists(kgname) {
 		return errors.New("keygroup not found")
 	}
 
-	err := a.sd.Delete(kgname, uint64(id))
+	err := a.sd.Delete(kgname, id)
 
 	if err != nil {
 		return err

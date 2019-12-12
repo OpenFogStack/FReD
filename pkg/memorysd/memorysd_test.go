@@ -26,65 +26,6 @@ func TestNew(t *testing.T) {
 	}
 }
 
-func TestStorage_Create(t *testing.T) {
-	type fields struct {
-		keygroups map[string]Keygroup
-		sync.RWMutex
-	}
-	type args struct {
-		kgname string
-		data   string
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    uint64
-		wantErr bool
-	}{
-		{"create item in non-existent keygroup",
-			fields{
-				make(map[string]Keygroup),
-				sync.RWMutex{},
-			},
-			args{
-				"keygroup",
-				"hello",
-			},
-			0,
-			true,
-		},
-		{"create empty item in non-existent keygroup",
-			fields{
-				make(map[string]Keygroup),
-				sync.RWMutex{},
-			},
-			args{
-				"",
-				"hello",
-			},
-			0,
-			true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := &Storage{
-				keygroups: tt.fields.keygroups,
-				RWMutex:   tt.fields.RWMutex,
-			}
-			got, err := s.Create(tt.args.kgname, tt.args.data)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Create() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if got != tt.want {
-				t.Errorf("Create() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestStorage_CreateKeygroup(t *testing.T) {
 	type fields struct {
 		keygroups map[string]Keygroup
@@ -136,7 +77,7 @@ func TestStorage_Delete(t *testing.T) {
 	}
 	type args struct {
 		kgname string
-		id     uint64
+		id     string
 	}
 	tests := []struct {
 		name    string
@@ -151,7 +92,7 @@ func TestStorage_Delete(t *testing.T) {
 			},
 			args{
 				"keygroup",
-				0,
+				"0",
 			},
 			true,
 		},
@@ -220,7 +161,7 @@ func TestStorage_Read(t *testing.T) {
 	}
 	type args struct {
 		kgname string
-		id     uint64
+		id     string
 	}
 	tests := []struct {
 		name    string
@@ -236,7 +177,7 @@ func TestStorage_Read(t *testing.T) {
 			},
 			args{
 				"keygroup",
-				0,
+				"0",
 			},
 			"",
 			true,
@@ -267,7 +208,7 @@ func TestStorage_Update(t *testing.T) {
 	}
 	type args struct {
 		kgname string
-		id     uint64
+		id     string
 		data   string
 	}
 	tests := []struct {
@@ -283,7 +224,7 @@ func TestStorage_Update(t *testing.T) {
 			},
 			args{
 				"keygroup",
-				0,
+				"0",
 				"a new hello",
 			},
 			true,

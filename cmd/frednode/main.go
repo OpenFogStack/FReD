@@ -4,7 +4,6 @@ import (
 	"flag"
 	"log"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 
@@ -15,10 +14,9 @@ import (
 type Fred interface {
 	CreateKeygroup(kg string) error
 	DeleteKeygroup(kg string) error
-	Create(kg string, data string) (uint64, error)
-	Read(kg string, id uint64) (string, error)
-	Update(kg string, id uint64, data string) error
-	Delete(kg string, id uint64) error
+	Read(kg string, id string) (string, error)
+	Update(kg string, id string, data string) error
+	Delete(kg string, id string) error
 }
 
 var addr = flag.String("addr", ":9001", "http service address")
@@ -53,42 +51,12 @@ func deleteKeygroup(context *gin.Context) {
 	return
 }
 
-func postItem(context *gin.Context) {
-	kgname := context.Params.ByName("kgname")
-	var json struct {
-		Data string `json:"data" binding:"required"`
-	}
-
-	if err := context.ShouldBindJSON(&json); err != nil {
-		context.Status(http.StatusBadRequest)
-		return
-	}
-
-	data := json.Data
-
-	id, err := a.Create(kgname, data)
-
-	if err != nil {
-		context.Status(http.StatusConflict)
-		return
-	}
-
-	context.String(http.StatusOK, string(id))
-	return
-
-}
-
 func getItem(context *gin.Context) {
 	kgname := context.Params.ByName("kgname")
 
-	id, err := strconv.Atoi(context.Params.ByName("id"))
+	id := context.Params.ByName("id")
 
-	if err != nil {
-		context.Status(http.StatusBadRequest)
-		return
-	}
-
-	data, err := a.Read(kgname, uint64(id))
+	data, err := a.Read(kgname, id)
 
 	if err != nil {
 		context.Status(http.StatusNotFound)
@@ -102,12 +70,7 @@ func getItem(context *gin.Context) {
 func putItem(context *gin.Context) {
 	kgname := context.Params.ByName("kgname")
 
-	id, err := strconv.Atoi(context.Params.ByName("id"))
-
-	if err != nil {
-		context.Status(http.StatusBadRequest)
-		return
-	}
+	id := context.Params.ByName("id")
 
 	var json struct {
 		Data string `json:"data" binding:"required"`
@@ -120,7 +83,7 @@ func putItem(context *gin.Context) {
 	}
 
 	data := json.Data
-	err = a.Update(kgname, uint64(id), data)
+	err := a.Update(kgname, id, data)
 
 	if err != nil {
 		context.Status(http.StatusConflict)
@@ -134,14 +97,9 @@ func putItem(context *gin.Context) {
 func deleteItem(context *gin.Context) {
 	kgname := context.Params.ByName("kgname")
 
-	id, err := strconv.Atoi(context.Params.ByName("id"))
+	id := context.Params.ByName("id")
 
-	if err != nil {
-		context.Status(http.StatusBadRequest)
-		return
-	}
-
-	err = a.Delete(kgname, uint64(id))
+	err := a.Delete(kgname, id)
 
 	if err != nil {
 		context.Status(http.StatusNotFound)
@@ -158,7 +116,6 @@ func setupRouter() (r *gin.Engine) {
 	r.POST("/keygroup/:kgname", postKeygroup)
 	r.DELETE("/keygroup/:kgname", deleteKeygroup)
 
-	r.POST("/keygroup/:kgname/items", postItem)
 	r.GET("/keygroup/:kgname/items/:id", getItem)
 	r.PUT("/keygroup/:kgname/items/:id", putItem)
 	r.DELETE("/keygroup/:kgname/items/:id", deleteItem)
