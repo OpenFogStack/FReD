@@ -1,0 +1,145 @@
+swagger: "2.0"
+info:
+  description: "FReD - Fog Replicated Data Storage."
+  version: "1.0.0"
+  title: "FReD"
+  contact:
+    email: "tp@mcc.tu-berlin.de"
+  license:
+    name: "MIT"
+    url: "https://mit-license.org/"
+host: "mcc-f.red"
+basePath: "/v0"
+tags:
+- name: "keygroup"
+  description: "Contains all keygroups"
+- name: "items"
+  description: "All items of a particular keygroup"
+schemes:
+- "https"
+- "http"
+paths:
+  /keygroup/{group_id}:
+    post:
+      tags:
+      - "keygroup"
+      summary: "Create a new Keygroup"
+      description: "Creates a new Keygroup with the name `group_id` if it does not exist already."
+      responses:
+        200:
+          description: OK
+        409:
+          description: Conflict, Keygroup exists already
+      parameters:
+      - name: "group_id"
+        in: "path"
+        description: "Name of Keygroup"
+        required: true
+        type: "string"
+        format: "string"
+    
+    delete:
+      tags:
+      - "keygroup"
+      summary: "Delete an existing Keygroup"
+      description: "Deletes the Keygroup with the name `group_id` if it exists."
+      responses:
+        200:
+          description: OK
+        404:
+          description: Keygroup not found
+      parameters:
+      - name: "group_id"
+        in: "path"
+        description: "ID of pet to return"
+        required: true
+        type: "string"
+        format: "string"
+  /keygroup/{group_id}/items/{item_id}:
+    get:
+      tags:
+      - "items"
+      summary: "Gets an item value from a Keygroup"
+      description: "Gets the value of item `item_id` in Keygroup with the name `group_id`."
+      responses:
+        200:
+          description: OK
+        404:
+          description: The item ID or Keygroup could not be found
+      parameters:
+      - name: "group_id"
+        in: "path"
+        description: "Name of Keygroup"
+        required: true
+        type: "string"
+        format: "string"
+      - name: "item_id"
+        in: "path"
+        description: "ID of item to update"
+        required: true
+        type: "string"
+        format: "string"
+    put:
+      tags:
+      - "items"
+      summary: "Sets an item value in a Keygroup"
+      description: "Sets the value of item `item_id` in Keygroup with the name `group_id` to the provided value."
+      responses:
+        200:
+          description: OK
+        400:
+          description: Bad Request, the request is malformed
+        409:
+          description: Conflict, item could not be updated
+      parameters:
+      - name: "group_id"
+        in: "path"
+        description: "Name of Keygroup"
+        required: true
+        type: "string"
+        format: "string"
+      - name: "item_id"
+        in: "path"
+        description: "ID of item to update"
+        required: true
+        type: "string"
+        format: "string"
+      - name: "body"
+        in: "body"
+        description: "Data that should be saved in this item."
+        required: true
+        schema:
+          $ref: "#/definitions/Item"
+    delete:
+      tags:
+      - "items"
+      summary: "Deletes an item value from a Keygroup"
+      description: "Deletes the value of item `item_id` in Keygroup with the name `group_id`."
+      responses:
+        200:
+          description: OK
+        404:
+          description: The item ID or Keygroup could not be found
+      parameters:
+      - name: "group_id"
+        in: "path"
+        description: "Name of Keygroup"
+        required: true
+        type: "string"
+        format: "string"
+      - name: "item_id"
+        in: "path"
+        description: "ID of item to update"
+        required: true
+        type: "string"
+        format: "string"
+
+definitions:
+    Item:
+      type: "object"
+      required:
+      - "data"
+      properties:
+        data:
+          type: "string"
+          format: "utf-8"

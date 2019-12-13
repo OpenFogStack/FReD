@@ -43,7 +43,7 @@ func deleteKeygroup(context *gin.Context) {
 	err := a.DeleteKeygroup(kgname)
 
 	if err != nil {
-		context.Status(http.StatusConflict)
+		context.Status(http.StatusNotFound)
 		return
 	}
 
