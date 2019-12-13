@@ -2,7 +2,7 @@
 
 const Fred = require('./fred.js');
 
-let fred = new Fred('localhost', '9001');
+let fred = new Fred('localhost', '9001', 'v0');
 
 (async () => {
     console.log(await fred.createKeygroup('kg'));

@@ -19,6 +19,8 @@ type Fred interface {
 	Delete(kg string, id string) error
 }
 
+const apiversion = "/v0"
+
 var addr = flag.String("addr", ":9001", "http service address")
 var a Fred
 
@@ -113,12 +115,12 @@ func deleteItem(context *gin.Context) {
 func setupRouter() (r *gin.Engine) {
 	r = gin.Default()
 
-	r.POST("/keygroup/:kgname", postKeygroup)
-	r.DELETE("/keygroup/:kgname", deleteKeygroup)
+	r.POST(apiversion + "/keygroup/:kgname", postKeygroup)
+	r.DELETE(apiversion + "/keygroup/:kgname", deleteKeygroup)
 
-	r.GET("/keygroup/:kgname/items/:id", getItem)
-	r.PUT("/keygroup/:kgname/items/:id", putItem)
-	r.DELETE("/keygroup/:kgname/items/:id", deleteItem)
+	r.GET(apiversion + "/keygroup/:kgname/items/:id", getItem)
+	r.PUT(apiversion + "/keygroup/:kgname/items/:id", putItem)
+	r.DELETE(apiversion + "/keygroup/:kgname/items/:id", deleteItem)
 
 	return
 }
