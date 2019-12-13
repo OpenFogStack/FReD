@@ -1,0 +1,17 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="ci/Dockerfile" type="docker-deploy" factoryName="dockerfile" activateToolWindowBeforeRun="false" server-name="Docker">
+    <deployment type="dockerfile">
+      <settings>
+        <option name="buildCliOptions" value="" />
+        <option name="buildOnly" value="true" />
+        <option name="command" value="" />
+        <option name="containerName" value="ci" />
+        <option name="entrypoint" value="" />
+        <option name="imageTag" value="gitlab-registry.tubit.tu-berlin.de/mcc-fred/fred/ci" />
+        <option name="commandLineOptions" value="" />
+        <option name="sourceFilePath" value="ci/Dockerfile" />
+      </settings>
+    </deployment>
+    <method v="2" />
+  </configuration>
+</component>
