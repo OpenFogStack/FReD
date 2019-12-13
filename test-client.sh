@@ -2,6 +2,7 @@
 HOST=localhost
 PORT=9001
 KEYGROUP_NAME=testgroup
+ID=1
 
 printf "\n"
 printf "Creating a Keygroup...\n"
@@ -13,14 +14,12 @@ curl --request POST -sL \
 
 printf "\n"
 printf "Creating a Data Item in Keygroup...\n"
-printf "Calling POST http://%s:%s/keygroup/%s/items\n" $HOST $PORT $KEYGROUP_NAME
+printf "Calling PUT http://%s:%s/keygroup/%s/items/%s\n" $HOST $PORT $KEYGROUP_NAME $ID
 
-curl --request POST -sL \
-     --url http://$HOST:$PORT/keygroup/$KEYGROUP_NAME/items \
-     --data '{"data":"hello world!"}' \
+curl --request PUT -sL \
+     --url http://$HOST:$PORT/keygroup/"$KEYGROUP_NAME"/items/"$ID" \
+     --data '{"data":"hello other world!"}' \
      -i
-
-ID=1
 
 printf "\n"
 printf "Reading Data Item from Keygroup...\n"

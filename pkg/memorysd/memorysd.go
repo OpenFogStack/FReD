@@ -72,14 +72,6 @@ func (s *Storage) Update(kgname string, id string, data string) error {
 
 	s.RUnlock()
 
-	kg.RLock()
-	_, ok = kg.items[id]
-	kg.RUnlock()
-
-	if !ok {
-		return errors.New("no such item")
-	}
-
 	kg.Lock()
 
 	kg.items[id] = data
