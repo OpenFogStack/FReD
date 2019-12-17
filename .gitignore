@@ -6,6 +6,7 @@
 
 # frednode
 frednode
+db/
 
 *.exe
 *.exe~

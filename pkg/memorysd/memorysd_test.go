@@ -54,7 +54,7 @@ func TestStorage_CreateKeygroup(t *testing.T) {
 				sync.RWMutex{},
 			},
 			args{""},
-			true,
+			false,
 		},
 	}
 	for _, tt := range tests {

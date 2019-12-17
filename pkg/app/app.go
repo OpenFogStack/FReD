@@ -5,6 +5,7 @@ import (
 
 	"github.com/mmcloughlin/geohash"
 
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/leveldbsd"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/memorykg"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/memorysd"
 )
@@ -34,6 +35,10 @@ type App struct {
 
 // CreateKeygroup creates a new keygroup with the specified name in Storage.
 func (a *App) CreateKeygroup(kgname string) error {
+	if err := checkParameters(kgname); err != nil {
+		return err
+	}
+
 	err := a.kg.Create(kgname)
 
 	if err != nil {
@@ -51,6 +56,10 @@ func (a *App) CreateKeygroup(kgname string) error {
 
 // DeleteKeygroup removes the keygroup with the specified name from Storage.
 func (a *App) DeleteKeygroup(kgname string) error {
+	if err := checkParameters(kgname); err != nil {
+		return err
+	}
+
 	err := a.kg.Delete(kgname)
 
 	if err != nil {
@@ -68,6 +77,10 @@ func (a *App) DeleteKeygroup(kgname string) error {
 
 // Read returns an item with the specified id from the specified keygroup.
 func (a *App) Read(kgname string, id string) (string, error) {
+	if err := checkParameters(kgname, id); err != nil {
+		return "", err
+	}
+
 	if !a.kg.Exists(kgname) {
 		return "", errors.New("keygroup not found")
 	}
@@ -83,6 +96,10 @@ func (a *App) Read(kgname string, id string) (string, error) {
 
 // Update updates the item with the specified id in the specified keygroup.
 func (a *App) Update(kgname string, id string, data string) error {
+	if err := checkParameters(kgname, id, data); err != nil {
+		return err
+	}
+
 	if !a.kg.Exists(kgname) {
 		return errors.New("keygroup not found")
 	}
@@ -98,6 +115,10 @@ func (a *App) Update(kgname string, id string, data string) error {
 
 // Delete deletes the item with the specified id from the specified keygroup.
 func (a *App) Delete(kgname string, id string) error {
+	if err := checkParameters(kgname, id); err != nil {
+		return err
+	}
+
 	if !a.kg.Exists(kgname) {
 		return errors.New("keygroup not found")
 	}
@@ -111,11 +132,32 @@ func (a *App) Delete(kgname string, id string) error {
 	return nil
 }
 
+func checkParameters(params ...string) error{
+	for _, p := range params {
+		if p == "" {
+			return errors.New("empty parameter")
+		}
+	}
+
+	return nil
+}
+
 // New create a new App.
-func New(lat float64, lng float64) (a *App) {
+func New(lat float64, lng float64, storageRuntime string, dbPath string) (a *App, err error) {
+	var sd Storage = nil
+
+	switch storageRuntime {
+	case "leveldb":
+		sd = leveldbsd.New(dbPath)
+	case "memory":
+		sd = memorysd.New()
+	default:
+		return nil, errors.New("unknown storage backend")
+	}
+
 	a = &App{
 		kg: memorykg.New(),
-		sd: memorysd.New(),
+		sd: sd,
 		ID: geohash.Encode(lng, lng),
 	}
 
