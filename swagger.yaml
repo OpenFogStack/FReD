@@ -8,7 +8,7 @@ info:
   license:
     name: "MIT"
     url: "https://mit-license.org/"
-host: "mcc-f.red"
+host: "[node-id].nodes.mcc-f.red"
 basePath: "/v0"
 tags:
 - name: "keygroup"
