@@ -22,6 +22,10 @@ type Fred interface {
 const apiversion = "/v0"
 
 var addr = flag.String("addr", ":9001", "http service address")
+
+var lat = *flag.Float64("lat", 52.514927933123914, "latitude of the server")
+var lng = *flag.Float64("lng", 13.32676300345363, "longitude of the server")
+
 var a Fred
 
 func postKeygroup(context *gin.Context) {
@@ -126,7 +130,7 @@ func setupRouter() (r *gin.Engine) {
 }
 
 func main() {
-	a = app.New()
+	a = app.New(lat, lng)
 
 	r := setupRouter()
 

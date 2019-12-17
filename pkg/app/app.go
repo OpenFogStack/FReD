@@ -3,6 +3,8 @@ package app
 import (
 	"errors"
 
+	"github.com/mmcloughlin/geohash"
+
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/memorykg"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/memorysd"
 )
@@ -27,6 +29,7 @@ type Keygroups interface {
 type App struct {
 	kg Keygroups
 	sd Storage
+	ID string
 }
 
 // CreateKeygroup creates a new keygroup with the specified name in Storage.
@@ -109,10 +112,11 @@ func (a *App) Delete(kgname string, id string) error {
 }
 
 // New create a new App.
-func New() (a *App) {
+func New(lat float64, lng float64) (a *App) {
 	a = &App{
 		kg: memorykg.New(),
 		sd: memorysd.New(),
+		ID: geohash.Encode(lng, lng),
 	}
 
 	return
