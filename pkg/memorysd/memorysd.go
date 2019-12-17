@@ -28,10 +28,6 @@ func New() (s *Storage) {
 
 // Read returns an item with the specified id from the specified keygroup.
 func (s *Storage) Read(kgname string, id string) (string, error) {
-	if kgname == "" {
-		return "", errors.New("invalid keygroup name")
-	}
-
 	s.RLock()
 	kg, ok := s.keygroups[kgname]
 	s.RUnlock()
@@ -54,14 +50,6 @@ func (s *Storage) Read(kgname string, id string) (string, error) {
 
 // Update updates the item with the specified id in the specified keygroup.
 func (s *Storage) Update(kgname string, id string, data string) error {
-	if kgname == "" {
-		return errors.New("invalid keygroup name")
-	}
-
-	if data == "" {
-		return errors.New("empty data")
-	}
-
 	s.RLock()
 	kg, ok := s.keygroups[kgname]
 
@@ -83,10 +71,6 @@ func (s *Storage) Update(kgname string, id string, data string) error {
 
 // Delete deletes the item with the specified id from the specified keygroup.
 func (s *Storage) Delete(kgname string, id string) error {
-	if kgname == "" {
-		return errors.New("invalid keygroup name")
-	}
-
 	s.RLock()
 	kg, ok := s.keygroups[kgname]
 
@@ -115,10 +99,6 @@ func (s *Storage) Delete(kgname string, id string) error {
 
 // CreateKeygroup creates a new keygroup with the specified name in Storage.
 func (s *Storage) CreateKeygroup(kgname string) error {
-	if kgname == "" {
-		return errors.New("invalid keygroup name")
-	}
-
 	s.RLock()
 	kg, exists := s.keygroups[kgname]
 
@@ -142,10 +122,6 @@ func (s *Storage) CreateKeygroup(kgname string) error {
 
 // DeleteKeygroup removes the keygroup with the specified name from Storage.
 func (s *Storage) DeleteKeygroup(kgname string) error {
-	if kgname == "" {
-		return errors.New("invalid keygroup name")
-	}
-
 	s.RLock()
 	_, ok := s.keygroups[kgname]
 	s.RUnlock()
