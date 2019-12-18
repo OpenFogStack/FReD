@@ -7,6 +7,7 @@ cache:
 stages:
   - test
   - build
+  - release
 
 before_script:
   - mkdir -p .cache
@@ -50,3 +51,14 @@ build:
   stage: build
   script:
     - make
+
+container:
+  stage: release
+  script:
+    - make container
+    - IFS='/' read -ra components <<< "$CI_COMMIT_REF_NAME"
+    - CONTAINER_TAG=${components[0]}
+    - if [ "$CI_COMMIT_REF_NAME" == "master" ]; then CONTAINER_TAG=latest; fi;
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker tag mcc-fred/fred gitlab-registry.tubit.tu-berlin.de/mcc-fred/fred/fred:$CONTAINER_TAG
+    - docker push gitlab-registry.tubit.tu-berlin.de/mcc-fred/fred/fred:$CONTAINER_TAG
