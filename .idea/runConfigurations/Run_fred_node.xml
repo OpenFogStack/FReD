@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Run fred-node" type="GoApplicationRunConfiguration" factoryName="Go Application">
+    <module name="FReD" />
+    <working_directory value="$PROJECT_DIR$/" />
+    <parameters value="--addr &quot;:9001&quot; --storage-runtime &quot;leveldb&quot; --db-path &quot;./db&quot;" />
+    <kind value="FILE" />
+    <filePath value="$PROJECT_DIR$/cmd/frednode/main.go" />
+    <directory value="$PROJECT_DIR$/" />
+    <method v="2" />
+  </configuration>
+</component>

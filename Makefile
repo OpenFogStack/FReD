@@ -8,6 +8,7 @@ GO_FILES := $(shell find . -name '*.go' | grep -v /vendor/ | grep -v _test.go)
 all: build
 
 lint: ## Lint the files
+	@go get -u golang.org/x/lint/golint
 	@golint -set_exit_status ${PKG_LIST}
 
 test: ## Run unittests
@@ -27,13 +28,15 @@ coverhtml: ## Generate global code coverage report in HTML
 
 dep: ## Get the dependencies
 	@go get -v -d ./...
-	@go get -u golang.org/x/lint/golint
 
 build: dep ## Build the binary file
 	@go build -i -v $(PKG)/cmd/frednode
 
 clean: ## Remove previous build
 	@rm -f $(PROJECT_NAME)
+
+container: build ## Create a Docker container
+	@docker build . -t gitlab-registry.tubit.tu-berlin.de/mcc-fred/fred/fred
 
 help: ## Display this help screen
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
