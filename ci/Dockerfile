@@ -21,3 +21,32 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Set Clang as default CC
 ENV set_clang /etc/profile.d/set-clang-cc.sh
 RUN echo "export CC=clang-7.0" | tee -a ${set_clang} && chmod a+x ${set_clang}
+
+# Install Docker (to build images)
+ENV DOCKER_CHANNEL stable
+ENV DOCKER_VERSION 19.03.5
+
+RUN set -eux; \
+	\
+	apkArch="$(arch)"; \
+	case "$apkArch" in \
+# amd64
+		x86_64) dockerArch='x86_64' ;; \
+# arm32v6
+		armhf) dockerArch='armel' ;; \
+# arm32v7
+		armv7) dockerArch='armhf' ;; \
+# arm64v8
+		aarch64) dockerArch='aarch64' ;; \
+		*) echo >&2 "error: unsupported architecture ($apkArch)"; exit 1 ;;\
+	esac; \
+	\
+	if ! wget -O docker.tgz "https://download.docker.com/linux/static/${DOCKER_CHANNEL}/${dockerArch}/docker-${DOCKER_VERSION}.tgz"; then \
+		echo >&2 "error: failed to download 'docker-${DOCKER_VERSION}' from '${DOCKER_CHANNEL}' for '${dockerArch}'"; \
+		exit 1; \
+	fi; \
+	\
+	tar xzvf docker.tgz --strip=1 -C /usr/local/bin docker/docker; \
+	rm docker.tgz; \
+	\
+	docker --version

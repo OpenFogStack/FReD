@@ -1,9 +1,11 @@
-FROM scratch
+FROM alpine
 
 MAINTAINER Tobias Pfandzelter
 
-ADD frednode .
+ADD frednode frednode
 
 EXPOSE 9001
 
-CMD ["./frednode", "--addr localhost:9001"]
+RUN ls
+
+ENTRYPOINT ["./frednode", "--addr localhost:9001"]
