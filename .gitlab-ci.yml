@@ -7,7 +7,7 @@ cache:
 stages:
   - test
   - build
-  - publish
+  - release
 
 before_script:
   - mkdir -p .cache
@@ -53,7 +53,7 @@ build:
     - make
 
 container:
-  stage: publish
+  stage: release
   script:
     - make container
     - IFS='/' read -ra components <<< "$CI_COMMIT_REF_NAME"

@@ -35,7 +35,7 @@ build: dep ## Build the binary file
 clean: ## Remove previous build
 	@rm -f $(PROJECT_NAME)
 
-container: build ## Create a Docker container
+container: ## Create a Docker container
 	@docker build . -t mcc-fred/fred
 
 help: ## Display this help screen
