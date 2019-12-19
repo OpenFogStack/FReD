@@ -7,5 +7,5 @@ require (
 	github.com/mmcloughlin/geohash v0.9.0
 	github.com/syndtr/goleveldb v1.0.0
 	golang.org/x/lint v0.0.0-20191125180803-fdd1cda4f05f // indirect
-	golang.org/x/tools v0.0.0-20191218040434-6f9e13bbec44 // indirect
+	golang.org/x/tools v0.0.0-20191219041853-979b82bfef62 // indirect
 )
