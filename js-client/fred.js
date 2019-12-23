@@ -11,7 +11,7 @@ module.exports = class Fred {
 
     async read(kg, id) {
         let options = {
-            url: this.baseurl + '/keygroup/' + kg + '/items/' + id
+            url: this.baseurl + '/keygroup/' + kg + '/data/' + id
         };
 
         return await request(options);
@@ -23,7 +23,7 @@ module.exports = class Fred {
         };
 
         let options = {
-            url: this.baseurl + '/keygroup/' + kg + '/items/' + id,
+            url: this.baseurl + '/keygroup/' + kg + '/data/' + id,
             method: 'PUT',
             body: JSON.stringify(dataString)
         };
@@ -33,7 +33,7 @@ module.exports = class Fred {
 
     async delete(kg, id) {
         let options = {
-            url: this.baseurl + '/keygroup/' + kg + '/items/' + id,
+            url: this.baseurl + '/keygroup/' + kg + '/data/' + id,
             method: 'DELETE'
         };
 

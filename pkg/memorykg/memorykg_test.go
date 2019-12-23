@@ -1,6 +1,7 @@
 package memorykg
 
 import (
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/keygroup"
 	"reflect"
 	"sync"
 	"testing"
@@ -12,7 +13,7 @@ func TestKeygroupStorage_Create(t *testing.T) {
 		sync.RWMutex
 	}
 	type args struct {
-		kgname string
+		keygroup.Keygroup
 	}
 	tests := []struct {
 		name    string
@@ -25,7 +26,9 @@ func TestKeygroupStorage_Create(t *testing.T) {
 				make(map[string]struct{}),
 				sync.RWMutex{},
 			},
-			args{"keygroup"},
+			args{keygroup.Keygroup{
+				Name: "keygroup",
+			}},
 			false,
 		},
 		{"create keygroup with empty name",
@@ -33,7 +36,9 @@ func TestKeygroupStorage_Create(t *testing.T) {
 				make(map[string]struct{}),
 				sync.RWMutex{},
 			},
-			args{""},
+			args{keygroup.Keygroup{
+				Name: "",
+			}},
 			false,
 		},
 	}
@@ -43,7 +48,7 @@ func TestKeygroupStorage_Create(t *testing.T) {
 				keygroups: tt.fields.keygroups,
 				RWMutex:   tt.fields.RWMutex,
 			}
-			if err := k.Create(tt.args.kgname); (err != nil) != tt.wantErr {
+			if err := k.Create(tt.args.Keygroup); (err != nil) != tt.wantErr {
 				t.Errorf("Create() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -56,7 +61,7 @@ func TestKeygroupStorage_Delete(t *testing.T) {
 		RWMutex   sync.RWMutex
 	}
 	type args struct {
-		kgname string
+		keygroup.Keygroup
 	}
 	tests := []struct {
 		name    string
@@ -69,7 +74,9 @@ func TestKeygroupStorage_Delete(t *testing.T) {
 				make(map[string]struct{}),
 				sync.RWMutex{},
 			},
-			args{"keygroup"},
+			args{keygroup.Keygroup{
+				Name: "keygroup",
+			}},
 			true,
 		},
 		{"delete keygroup with empty name",
@@ -77,7 +84,9 @@ func TestKeygroupStorage_Delete(t *testing.T) {
 				make(map[string]struct{}),
 				sync.RWMutex{},
 			},
-			args{""},
+			args{keygroup.Keygroup{
+				Name: "",
+			}},
 			true,
 		},
 	}
@@ -87,7 +96,7 @@ func TestKeygroupStorage_Delete(t *testing.T) {
 				keygroups: tt.fields.keygroups,
 				RWMutex:   tt.fields.RWMutex,
 			}
-			if err := k.Delete(tt.args.kgname); (err != nil) != tt.wantErr {
+			if err := k.Delete(tt.args.Keygroup); (err != nil) != tt.wantErr {
 				t.Errorf("Delete() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -100,7 +109,7 @@ func TestKeygroupStorage_Exists(t *testing.T) {
 		RWMutex   sync.RWMutex
 	}
 	type args struct {
-		kgname string
+		keygroup.Keygroup
 	}
 	tests := []struct {
 		name   string
@@ -113,7 +122,9 @@ func TestKeygroupStorage_Exists(t *testing.T) {
 				make(map[string]struct{}),
 				sync.RWMutex{},
 			},
-			args{"keygroup"},
+			args{keygroup.Keygroup{
+				Name: "",
+			}},
 			false,
 		},
 		{"check keygroup with empty name",
@@ -121,7 +132,9 @@ func TestKeygroupStorage_Exists(t *testing.T) {
 				make(map[string]struct{}),
 				sync.RWMutex{},
 			},
-			args{""},
+			args{keygroup.Keygroup{
+				Name: "",
+			}},
 			false,
 		},
 	}
@@ -131,7 +144,7 @@ func TestKeygroupStorage_Exists(t *testing.T) {
 				keygroups: tt.fields.keygroups,
 				RWMutex:   tt.fields.RWMutex,
 			}
-			if got := k.Exists(tt.args.kgname); got != tt.want {
+			if got := k.Exists(tt.args.Keygroup); got != tt.want {
 				t.Errorf("Exists() = %v, want %v", got, tt.want)
 			}
 		})

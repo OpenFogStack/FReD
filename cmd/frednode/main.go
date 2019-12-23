@@ -2,9 +2,16 @@ package main
 
 import (
 	"flag"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/exthandler"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/memorykg"
 	"log"
 
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/app"
+	"github.com/mmcloughlin/geohash"
+
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/data"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/keygroup"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/leveldbsd"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/memorysd"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/webserver"
 )
 
@@ -17,11 +24,28 @@ var storageRuntime = *flag.String("storage-runtime", "leveldb", "storage runtime
 var dbPath = *flag.String("db-path", "./db", "path to use for database (only for databases that write to the file system, ignored otherwise)")
 
 func main() {
-	a, err := app.New(lat, lng, storageRuntime, dbPath)
+	var is data.Service
+	var ks keygroup.Service
 
-	if err != nil {
-		panic(err)
+	var i data.Store
+	var k keygroup.Store
+
+	switch storageRuntime {
+	case "leveldb":
+		i = leveldbsd.New(dbPath)
+	case "memory":
+		i = memorysd.New()
+	default:
+		panic("unknown storage backend")
 	}
 
-	log.Fatal(webserver.SetupRouter(*addr, a))
+	k = memorykg.New()
+
+	is = data.New(i)
+	ks = keygroup.New(k, geohash.Encode(lat, lng))
+
+	exthandler := exthandler.New(is, ks)
+	//inthandler := inthandler.New(is, ks)
+
+	log.Fatal(webserver.Setup(*addr, exthandler))
 }

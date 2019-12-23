@@ -2,6 +2,8 @@ package leveldbsd
 
 import (
 	"github.com/syndtr/goleveldb/leveldb"
+
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/data"
 )
 
 // Storage is a struct that saves all necessary information to access the database, in this case just a pointer to the LevelDB database.
@@ -30,38 +32,66 @@ func New(dbPath string) (s *Storage) {
 }
 
 // Read returns an item with the specified id from the specified keygroup.
-func (s *Storage) Read(kgname string, id string) (string, error) {
-	key := makeKeyName(kgname, id)
+func (s *Storage) Read(i data.Item) (data.Item, error) {
+	key := makeKeyName(i.Keygroup, i.ID)
 
 	data, err := s.db.Get([]byte(key), nil)
 
-	return string(data), err
+	i.Data = string(data)
+
+	return i, err
 }
 
 // Update updates the item with the specified id in the specified keygroup.
-func (s *Storage) Update(kgname string, id string, data string) error {
-	key := makeKeyName(kgname, id)
+func (s *Storage) Update(i data.Item) error {
+	key := makeKeyName(i.Keygroup, i.ID)
 
-	err := s.db.Put([]byte(key), []byte(data), nil)
+	err := s.db.Put([]byte(key), []byte(i.Data), nil)
 
 	return err
 }
 
 // Delete deletes the item with the specified id from the specified keygroup.
-func (s *Storage) Delete(kgname string, id string) error {
-	key := makeKeyName(kgname, id)
+func (s *Storage) Delete(i data.Item) error {
+	key := makeKeyName(i.Keygroup, i.ID)
 
 	err := s.db.Delete([]byte(key), nil)
 
 	return err
 }
 
-// CreateKeygroup does nothing.
-func (s *Storage) CreateKeygroup(kgname string) error {
-	return nil
+// Exists checks if the given data item exists in the leveldb database.
+func (s *Storage) Exists(i data.Item) bool {
+	key := makeKeyName(i.Keygroup, i.ID)
+
+	has, _ := s.db.Has([]byte(key), nil)
+
+	return has
 }
 
-// DeleteKeygroup does nothing.
-func (s *Storage) DeleteKeygroup(kgname string) error {
-	return nil
+// ExistsKeygroup checks if the given keygroup exists in the leveldb database.
+func (s *Storage) ExistsKeygroup(i data.Item) bool {
+	key := makeKeyName(i.Keygroup, i.ID)
+
+	has, _ := s.db.Has([]byte(key), nil)
+
+	return has
+}
+
+// CreateKeygroup creates the given keygroup in the leveldb database.
+func (s *Storage) CreateKeygroup(i data.Item) error {
+	key := makeKeyName(i.Keygroup, i.ID)
+
+	err := s.db.Put([]byte(key), []byte(i.Data), nil)
+
+	return err
+}
+
+// DeleteKeygroup deletes the given keygroup from the leveldb database.
+func (s *Storage) DeleteKeygroup(i data.Item) error {
+	key := makeKeyName(i.Keygroup, i.ID)
+
+	err := s.db.Delete([]byte(key), nil)
+
+	return err
 }

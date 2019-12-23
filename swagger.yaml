@@ -12,9 +12,9 @@ host: "[node-id].nodes.mcc-f.red"
 basePath: "/v0"
 tags:
 - name: "keygroup"
-  description: "Contains all keygroups"
-- name: "items"
-  description: "All items of a particular keygroup"
+  description: "Contains all keygroup"
+- name: "data"
+  description: "All data of a particular keygroup"
 schemes:
 - "https"
 - "http"
@@ -58,7 +58,7 @@ paths:
   /keygroup/{group_id}/items/{item_id}:
     get:
       tags:
-      - "items"
+      - "data"
       summary: "Gets an item value from a Keygroup"
       description: "Gets the value of item `item_id` in Keygroup with the name `group_id`."
       responses:
@@ -81,7 +81,7 @@ paths:
         format: "string"
     put:
       tags:
-      - "items"
+      - "data"
       summary: "Sets an item value in a Keygroup"
       description: "Sets the value of item `item_id` in Keygroup with the name `group_id` to the provided value."
       responses:
@@ -112,7 +112,7 @@ paths:
           $ref: "#/definitions/Item"
     delete:
       tags:
-      - "items"
+      - "data"
       summary: "Deletes an item value from a Keygroup"
       description: "Deletes the value of item `item_id` in Keygroup with the name `group_id`."
       responses:
