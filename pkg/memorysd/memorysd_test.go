@@ -1,6 +1,7 @@
 package memorysd
 
 import (
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/data"
 	"reflect"
 	"sync"
 	"testing"
@@ -32,7 +33,7 @@ func TestStorage_CreateKeygroup(t *testing.T) {
 		sync.RWMutex
 	}
 	type args struct {
-		kgname string
+		data.Item
 	}
 	tests := []struct {
 		name    string
@@ -45,7 +46,9 @@ func TestStorage_CreateKeygroup(t *testing.T) {
 				make(map[string]Keygroup),
 				sync.RWMutex{},
 			},
-			args{"keygroup"},
+			args{data.Item{
+				Keygroup: "keygroup",
+			}},
 			false,
 		},
 		{"create keygroup with empty name",
@@ -53,7 +56,9 @@ func TestStorage_CreateKeygroup(t *testing.T) {
 				make(map[string]Keygroup),
 				sync.RWMutex{},
 			},
-			args{""},
+			args{data.Item{
+				Keygroup: "",
+			},},
 			false,
 		},
 	}
@@ -63,7 +68,7 @@ func TestStorage_CreateKeygroup(t *testing.T) {
 				keygroups: tt.fields.keygroups,
 				RWMutex:   tt.fields.RWMutex,
 			}
-			if err := s.CreateKeygroup(tt.args.kgname); (err != nil) != tt.wantErr {
+			if err := s.CreateKeygroup(tt.args.Item); (err != nil) != tt.wantErr {
 				t.Errorf("CreateKeygroup() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -76,8 +81,7 @@ func TestStorage_Delete(t *testing.T) {
 		sync.RWMutex
 	}
 	type args struct {
-		kgname string
-		id     string
+		data.Item
 	}
 	tests := []struct {
 		name    string
@@ -91,8 +95,10 @@ func TestStorage_Delete(t *testing.T) {
 				sync.RWMutex{},
 			},
 			args{
-				"keygroup",
-				"0",
+				data.Item{
+					Keygroup: "keygroup",
+					ID:       "0",
+				},
 			},
 			true,
 		},
@@ -103,7 +109,7 @@ func TestStorage_Delete(t *testing.T) {
 				keygroups: tt.fields.keygroups,
 				RWMutex:   tt.fields.RWMutex,
 			}
-			if err := s.Delete(tt.args.kgname, tt.args.id); (err != nil) != tt.wantErr {
+			if err := s.Delete(tt.args.Item); (err != nil) != tt.wantErr {
 				t.Errorf("Delete() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -116,7 +122,7 @@ func TestStorage_DeleteKeygroup(t *testing.T) {
 		sync.RWMutex
 	}
 	type args struct {
-		kgname string
+		data.Item
 	}
 	tests := []struct {
 		name    string
@@ -129,7 +135,12 @@ func TestStorage_DeleteKeygroup(t *testing.T) {
 				make(map[string]Keygroup),
 				sync.RWMutex{},
 			},
-			args{"keygroup"},
+			args{
+				data.Item{
+					Keygroup: "keygroup",
+					ID:       "0",
+				},
+			},
 			true,
 		},
 		{"delete keygroup with empty name",
@@ -137,7 +148,9 @@ func TestStorage_DeleteKeygroup(t *testing.T) {
 				make(map[string]Keygroup),
 				sync.RWMutex{},
 			},
-			args{""},
+			args{data.Item{
+				Keygroup: "",
+			}},
 			true,
 		},
 	}
@@ -147,7 +160,7 @@ func TestStorage_DeleteKeygroup(t *testing.T) {
 				keygroups: tt.fields.keygroups,
 				RWMutex:   tt.fields.RWMutex,
 			}
-			if err := s.DeleteKeygroup(tt.args.kgname); (err != nil) != tt.wantErr {
+			if err := s.DeleteKeygroup(tt.args.Item); (err != nil) != tt.wantErr {
 				t.Errorf("DeleteKeygroup() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -160,14 +173,13 @@ func TestStorage_Read(t *testing.T) {
 		sync.RWMutex
 	}
 	type args struct {
-		kgname string
-		id     string
+		data.Item
 	}
 	tests := []struct {
 		name    string
 		fields  fields
 		args    args
-		want    string
+		want    data.Item
 		wantErr bool
 	}{
 		{"read non-existent item from non-existent keygroup",
@@ -176,10 +188,15 @@ func TestStorage_Read(t *testing.T) {
 				sync.RWMutex{},
 			},
 			args{
-				"keygroup",
-				"0",
+				data.Item{
+					Keygroup: "keygroup",
+					ID:       "0",
+				},
 			},
-			"",
+			data.Item{
+				Keygroup: "keygroup",
+				ID:       "0",
+			},
 			true,
 		},
 	}
@@ -189,7 +206,7 @@ func TestStorage_Read(t *testing.T) {
 				keygroups: tt.fields.keygroups,
 				RWMutex:   tt.fields.RWMutex,
 			}
-			got, err := s.Read(tt.args.kgname, tt.args.id)
+			got, err := s.Read(tt.args.Item)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Read() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -207,9 +224,7 @@ func TestStorage_Update(t *testing.T) {
 		sync.RWMutex
 	}
 	type args struct {
-		kgname string
-		id     string
-		data   string
+		data.Item
 	}
 	tests := []struct {
 		name    string
@@ -223,9 +238,11 @@ func TestStorage_Update(t *testing.T) {
 				sync.RWMutex{},
 			},
 			args{
-				"keygroup",
-				"0",
-				"a new hello",
+				data.Item{
+					"keygroup",
+					"0",
+					"a new hello",
+				},
 			},
 			true,
 		},
@@ -236,7 +253,7 @@ func TestStorage_Update(t *testing.T) {
 				keygroups: tt.fields.keygroups,
 				RWMutex:   tt.fields.RWMutex,
 			}
-			if err := s.Update(tt.args.kgname, tt.args.id, tt.args.data); (err != nil) != tt.wantErr {
+			if err := s.Update(tt.args.Item); (err != nil) != tt.wantErr {
 				t.Errorf("Update() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

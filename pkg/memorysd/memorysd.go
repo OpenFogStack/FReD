@@ -2,18 +2,19 @@ package memorysd
 
 import (
 	"errors"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/data"
 	"sync"
 )
 
-// Storage stores a map of keygroups by name.
+// Storage stores a map of keygroup by name.
 type Storage struct {
 	keygroups map[string]Keygroup
 	sync.RWMutex
 }
 
-// Keygroup stores a map of items by id, has a maxkey to keep track of the unused ids.
+// Keygroup stores a map of data by id, has a maxkey to keep track of the unused ids.
 type Keygroup struct {
-	items  map[string]string
+	items map[string]string
 	sync.RWMutex
 }
 
@@ -27,42 +28,44 @@ func New() (s *Storage) {
 }
 
 // Read returns an item with the specified id from the specified keygroup.
-func (s *Storage) Read(kgname string, id string) (string, error) {
+func (s *Storage) Read(i data.Item) (data.Item, error) {
 	s.RLock()
-	kg, ok := s.keygroups[kgname]
+	kg, ok := s.keygroups[i.Keygroup]
 	s.RUnlock()
 
 	if !ok {
-		return "", errors.New("no such keygroup")
+		return i, errors.New("memorysd: no such keygroup")
 	}
 
 	kg.RLock()
 	var value string
-	value, ok = kg.items[id]
+	value, ok = kg.items[i.ID]
 	kg.RUnlock()
 
 	if !ok {
-		return "", errors.New("no such item")
+		return i, errors.New("memorysd: no such item")
 	}
 
-	return value, nil
+	i.Data = value
+
+	return i, nil
 }
 
 // Update updates the item with the specified id in the specified keygroup.
-func (s *Storage) Update(kgname string, id string, data string) error {
+func (s *Storage) Update(i data.Item) error {
 	s.RLock()
-	kg, ok := s.keygroups[kgname]
+	kg, ok := s.keygroups[i.Keygroup]
 
 	if !ok {
 		s.RUnlock()
-		return errors.New("no such keygroup")
+		return errors.New("memorysd: no such keygroup")
 	}
 
 	s.RUnlock()
 
 	kg.Lock()
 
-	kg.items[id] = data
+	kg.items[i.ID] = i.Data
 
 	kg.Unlock()
 
@@ -70,68 +73,95 @@ func (s *Storage) Update(kgname string, id string, data string) error {
 }
 
 // Delete deletes the item with the specified id from the specified keygroup.
-func (s *Storage) Delete(kgname string, id string) error {
+func (s *Storage) Delete(i data.Item) error {
 	s.RLock()
-	kg, ok := s.keygroups[kgname]
+	kg, ok := s.keygroups[i.Keygroup]
 
 	if !ok {
 		s.RUnlock()
-		return errors.New("no such keygroup")
+		return errors.New("memorysd: no such keygroup")
 	}
 
 	s.RUnlock()
 
 	kg.RLock()
-	_, ok = kg.items[id]
+	_, ok = kg.items[i.ID]
 	kg.RUnlock()
 
 	if !ok {
-		return errors.New("no such item")
+		return errors.New("memorysd: no such item")
 	}
 
 	kg.Lock()
-	delete(kg.items, id)
+	delete(kg.items, i.ID)
 	kg.Unlock()
 
 	return nil
 
 }
 
-// CreateKeygroup creates a new keygroup with the specified name in Storage.
-func (s *Storage) CreateKeygroup(kgname string) error {
+// Exists checks if the given item exists in the given keygroups map.
+func (s *Storage) Exists(i data.Item) bool {
 	s.RLock()
-	kg, exists := s.keygroups[kgname]
+	kg, ok := s.keygroups[i.Keygroup]
+	s.RUnlock()
+
+	if !ok {
+		return false
+	}
+
+	kg.RLock()
+	_, ok = kg.items[i.ID]
+	kg.RUnlock()
+
+	return ok
+}
+
+// ExistsKeygroup checks if the keygroup exists in the map.
+func (s *Storage) ExistsKeygroup(i data.Item) bool {
+	s.RLock()
+	_, ok := s.keygroups[i.Keygroup]
+	s.RUnlock()
+
+	return ok
+
+}
+
+// CreateKeygroup creates a new keygroup with the specified name in Storage.
+func (s *Storage) CreateKeygroup(i data.Item) error {
+	s.RLock()
+	kg, exists := s.keygroups[i.Keygroup]
 
 	if exists {
 		s.RUnlock()
-		return errors.New("keygroup exists")
+		return errors.New("memorysd: keygroup exists")
 	}
 
 	s.RUnlock()
 
 	kg = Keygroup{
-		items:  make(map[string]string),
+		items: make(map[string]string),
 	}
 
 	s.Lock()
-	s.keygroups[kgname] = kg
+	s.keygroups[i.Keygroup] = kg
 	s.Unlock()
 
 	return nil
 }
 
 // DeleteKeygroup removes the keygroup with the specified name from Storage.
-func (s *Storage) DeleteKeygroup(kgname string) error {
+func (s *Storage) DeleteKeygroup(i data.Item) error {
 	s.RLock()
-	_, ok := s.keygroups[kgname]
+	_, ok := s.keygroups[i.Keygroup]
 	s.RUnlock()
 
 	if !ok {
-		return errors.New("keygroup does not exist")
+		return errors.New("kmemorysd: keygroup does not exist")
 	}
 
 	s.Lock()
-	delete(s.keygroups, kgname)
+	delete(s.keygroups, i.Keygroup)
 	s.Unlock()
 
 	return nil

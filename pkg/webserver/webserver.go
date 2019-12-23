@@ -6,121 +6,134 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/app"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/data"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/keygroup"
 )
 
-// Fred is the main app logic.
-type Fred interface {
-	ExtHandleCreateKeygroup(kg string) error
-	ExtHandleDeleteKeygroup(kg string) error
-	ExtHandleRead(kg string, id string) (string, error)
-	ExtHandleUpdate(kg string, id string, data string) error
-	ExtHandleDelete(kg string, id string) error
-}
-
 const apiversion string = "/v0"
-var a Fred
 
-func postKeygroup(context *gin.Context) {
+func postKeygroup(h handler) func(context *gin.Context) {
+	return func(context *gin.Context) {
+		kgname := context.Params.ByName("kgname")
 
-	kgname := context.Params.ByName("kgname")
+		err := h.HandleCreateKeygroup(keygroup.Keygroup{
+			Name: kgname,
+		})
 
-	err := a.ExtHandleCreateKeygroup(kgname)
+		if err != nil {
+			context.AbortWithError(http.StatusConflict, err)
+			return
+		}
 
-	if err != nil {
-		context.Status(http.StatusConflict)
+		context.Status(http.StatusOK)
 		return
 	}
-
-	context.Status(http.StatusOK)
-	return
 }
 
-func deleteKeygroup(context *gin.Context) {
-	kgname := context.Params.ByName("kgname")
+func deleteKeygroup(h handler) func(context *gin.Context) {
+	return func(context *gin.Context) {
+		kgname := context.Params.ByName("kgname")
 
-	err := a.ExtHandleDeleteKeygroup(kgname)
+		err := h.HandleDeleteKeygroup(keygroup.Keygroup{
+			Name: kgname,
+		})
 
-	if err != nil {
-		context.Status(http.StatusNotFound)
+		if err != nil {
+			context.AbortWithError(http.StatusNotFound, err)
+			return
+		}
+
+		context.Status(http.StatusOK)
 		return
 	}
-
-	context.Status(http.StatusOK)
-	return
 }
 
-func getItem(context *gin.Context) {
-	kgname := context.Params.ByName("kgname")
+func getItem(h handler) func(context *gin.Context) {
+	return func(context *gin.Context) {
+		kgname := context.Params.ByName("kgname")
 
-	id := context.Params.ByName("id")
+		id := context.Params.ByName("id")
 
-	data, err := a.ExtHandleRead(kgname, id)
+		data, err := h.HandleRead(data.Item{
+			Keygroup: kgname,
+			ID:       id,
+		})
 
-	if err != nil {
-		context.Status(http.StatusNotFound)
+		if err != nil {
+			context.AbortWithError(http.StatusNotFound, err)
+			return
+		}
+
+		context.JSON(http.StatusOK, data)
 		return
 	}
-
-	context.String(http.StatusOK, data)
-	return
 }
 
-func putItem(context *gin.Context) {
-	kgname := context.Params.ByName("kgname")
+func putItem(h handler) func(context *gin.Context) {
+	return func(context *gin.Context) {
+		kgname := context.Params.ByName("kgname")
 
-	id := context.Params.ByName("id")
+		id := context.Params.ByName("id")
 
-	var json struct {
-		Data string `json:"data" binding:"required"`
-	}
+		var jsonstruct struct {
+			Data string `json:"data" binding:"required"`
+		}
 
-	if err := context.ShouldBindJSON(&json); err != nil {
-		log.Print(err)
-		context.Status(http.StatusBadRequest)
+		if err := context.ShouldBindJSON(&jsonstruct); err != nil {
+			log.Print(err)
+			context.AbortWithError(http.StatusBadRequest, err)
+			return
+		}
+
+		arg := jsonstruct.Data
+		err := h.HandleUpdate(data.Item{
+			Keygroup: kgname,
+			ID:       id,
+			Data:     arg,
+		})
+
+		if err != nil {
+			context.AbortWithError(http.StatusConflict, err)
+			return
+		}
+
+		context.Status(http.StatusOK)
 		return
 	}
-
-	data := json.Data
-	err := a.ExtHandleUpdate(kgname, id, data)
-
-	if err != nil {
-		context.Status(http.StatusConflict)
-		return
-	}
-
-	context.Status(http.StatusOK)
-	return
 }
 
-func deleteItem(context *gin.Context) {
-	kgname := context.Params.ByName("kgname")
+func deleteItem(h handler) func(context *gin.Context) {
+	return func(context *gin.Context) {
+		kgname := context.Params.ByName("kgname")
 
-	id := context.Params.ByName("id")
+		id := context.Params.ByName("id")
 
-	err := a.ExtHandleDelete(kgname, id)
+		err := h.HandleDelete(data.Item{
+			Keygroup: kgname,
+			ID:       id,
+		})
 
-	if err != nil {
-		context.Status(http.StatusNotFound)
+		if err != nil {
+			context.AbortWithError(http.StatusNotFound, err)
+			return
+		}
+
+		context.Status(http.StatusOK)
 		return
 	}
 
-	context.Status(http.StatusOK)
-	return
 }
 
-// SetupRouter sets up a webserver for Fred
-func SetupRouter(addr string, fred *app.App) error {
-	a = fred
-
+// Setup sets up a web server client interface for the Fred node.
+func Setup(addr string, h handler) error {
 	r := gin.Default()
 
-	r.POST(apiversion + "/keygroup/:kgname", postKeygroup)
-	r.DELETE(apiversion + "/keygroup/:kgname", deleteKeygroup)
+	r.POST(apiversion+"/keygroup/:kgname", postKeygroup(h))
+	r.DELETE(apiversion+"/keygroup/:kgname", deleteKeygroup(h))
 
-	r.GET(apiversion + "/keygroup/:kgname/items/:id", getItem)
-	r.PUT(apiversion + "/keygroup/:kgname/items/:id", putItem)
-	r.DELETE(apiversion + "/keygroup/:kgname/items/:id", deleteItem)
+	r.GET(apiversion+"/keygroup/:kgname/data/:id", getItem(h))
+	r.PUT(apiversion+"/keygroup/:kgname/data/:id", putItem(h))
+	r.DELETE(apiversion+"/keygroup/:kgname/data/:id", deleteItem(h))
 
 	return r.Run(addr)
 }
