@@ -1,0 +1,18 @@
+# FReD Node Configuration File
+
+[location]
+# latitude of the server
+lat = 52.514927933123914
+# longitude of the server
+lng = 13.32676300345363
+
+[webserver]
+# host = "localhost"
+port = 9001
+
+[storage]
+# adaptor can be either "leveldb" or "memory"
+adaptor = "leveldb"
+
+[leveldb]
+leveldb.path = "./db"

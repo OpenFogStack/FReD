@@ -17,4 +17,4 @@ COPY --from=golang /go/bin/main frednode
 
 EXPOSE 9001
 
-ENTRYPOINT ["./frednode", "--addr localhost:9001"]
+ENTRYPOINT ["./frednode"]
