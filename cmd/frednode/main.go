@@ -2,10 +2,12 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/exthandler"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/memorykg"
 	"log"
 
+	"github.com/BurntSushi/toml"
 	"github.com/mmcloughlin/geohash"
 
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/data"
@@ -15,24 +17,57 @@ import (
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/webserver"
 )
 
-var addr = flag.String("addr", ":9001", "http service address")
+var configPath = *flag.String("config", "", "path to .toml configuration file")
 
-var lat = *flag.Float64("lat", 52.514927933123914, "latitude of the server")
-var lng = *flag.Float64("lng", 13.32676300345363, "longitude of the server")
+type fredConfig struct {
+	location locationConfig
+	server webserverConfig
+	storage adaptorConfig
+}
 
-var storageRuntime = *flag.String("storage-runtime", "leveldb", "storage runtime to use, e.g. leveldb or memory")
-var dbPath = *flag.String("db-path", "./db", "path to use for database (only for databases that write to the file system, ignored otherwise)")
+type locationConfig struct {
+	Lat float64
+	Lng float64
+}
+
+type webserverConfig struct {
+	Host string
+	Port int
+}
+
+type adaptorConfig struct {
+	Adaptor string
+}
 
 func main() {
+	if configPath == "" {
+		log.Fatal("no configuration specified")
+	}
+
+	var fc fredConfig
+	if _, err := toml.DecodeFile(configPath, &fc); err != nil {
+		log.Fatalf("invalid configuration! error: %s", err)
+	}
+
 	var is data.Service
 	var ks keygroup.Service
 
 	var i data.Store
 	var k keygroup.Store
 
-	switch storageRuntime {
+	switch fc.storage.Adaptor {
 	case "leveldb":
-		i = leveldbsd.New(dbPath)
+		type leveldbConfig struct {
+			path string `toml:"leveldb.path"`
+		}
+
+		var ldbc leveldbConfig
+
+		if _, err := toml.DecodeFile(configPath, &ldbc); err != nil {
+			log.Fatalf("invalid leveldb configuration! error: %s", err)
+		}
+
+		i = leveldbsd.New(ldbc.path)
 	case "memory":
 		i = memorysd.New()
 	default:
@@ -42,10 +77,11 @@ func main() {
 	k = memorykg.New()
 
 	is = data.New(i)
-	ks = keygroup.New(k, geohash.Encode(lat, lng))
+	ks = keygroup.New(k, geohash.Encode(fc.location.Lat, fc.location.Lng))
 
-	exthandler := exthandler.New(is, ks)
+	e := exthandler.New(is, ks)
 	//inthandler := inthandler.New(is, ks)
 
-	log.Fatal(webserver.Setup(*addr, exthandler))
+	addr := fmt.Sprintf("%s:%d", fc.server.Host, fc.server.Port)
+	log.Fatal(webserver.Setup(addr, e))
 }
