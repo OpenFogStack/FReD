@@ -1,7 +1,5 @@
 package data
 
-import "errors"
-
 type service struct {
 	iS Store
 }
@@ -21,10 +19,6 @@ func (s *service) Read(i Item) (Item, error) {
 		return Item{}, err
 	}
 
-	if !s.iS.ExistsKeygroup(i) {
-		return Item{}, errors.New("data: keygroup not found")
-	}
-
 	data, err := s.iS.Read(i)
 
 	if err != nil {
@@ -42,10 +36,6 @@ func (s *service) Update(i Item) error {
 		return err
 	}
 
-	if !s.iS.ExistsKeygroup(i) {
-		return errors.New("data: keygroup not found")
-	}
-
 	err = s.iS.Update(i)
 
 	if err != nil {
@@ -61,10 +51,6 @@ func (s *service) Delete(i Item) error {
 
 	if err != nil {
 		return err
-	}
-
-	if !s.iS.ExistsKeygroup(i) {
-		return errors.New("data: keygroup not found")
 	}
 
 	err = s.iS.Delete(i)

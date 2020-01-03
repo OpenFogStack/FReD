@@ -15,4 +15,4 @@ port = 9001
 adaptor = "leveldb"
 
 [leveldb]
-leveldb.path = "./db"
+path = "./db"
