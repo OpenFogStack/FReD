@@ -95,6 +95,7 @@ func main() {
 	// Add more options here
 	zmqH := memoryzmq.New(intH)
 
-	go log.Fatal(zmqserver.Setup(fc.ZMQ.Port, nodeID, zmqH))
+	go zmqserver.Setup(fc.ZMQ.Port, nodeID, zmqH)
+
 	log.Fatal(webserver.Setup(addr, extH))
 }
