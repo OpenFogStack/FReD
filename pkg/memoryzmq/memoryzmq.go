@@ -25,8 +25,6 @@ func New(h inthandler.Handler) (l zmqserver.MessageHandler) {
 
 // HandleCreateKeygroup handles requests to the CreateKeygroup endpoint of the internal zmqclient interface.
 func (l *localMemoryMessageHandler) HandleCreateKeygroup(req *zmqcommon.Request, from string) {
-	log.Printf("HandleCreateKeygroup called with %s", req.Keygroup)
-	log.Print(req)
 	_ = l.i.HandleCreateKeygroup(keygroup.Keygroup{Name: req.Keygroup})
 	// TODO Error handling: send a reply message if necessary, the identity of the sender is in req.From
 }

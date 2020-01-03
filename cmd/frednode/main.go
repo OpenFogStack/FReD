@@ -106,7 +106,7 @@ func main() {
 
 	zmqClient.SendCreateKeygroup("localhost", fc.ZMQ.Port, "Hello")
 	zmqClient.SendCreateKeygroup("localhost", fc.ZMQ.Port, "World")
-	
+
 	log.Fatal(webserver.Setup(addr, extH))
 
 	// Shutdown
