@@ -42,7 +42,7 @@ func (r *Receiver) ReplyTo(id string, msType byte, data []byte) (err error) {
 
 // Destroy the receiver.
 func (r *Receiver) Destroy() {
-	r.Destroy()
+	r.socket.Destroy()
 }
 
 // Receive receives a message on the Receiver.

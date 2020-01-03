@@ -2,7 +2,6 @@ package zmqserver
 
 import (
 	"encoding/json"
-	"errors"
 	"github.com/zeromq/goczmq"
 	"log"
 )
@@ -43,7 +42,7 @@ func Setup(port string, id string, handler MessageHandler) (err error) {
 	}
 
 	//if anything happens, we should be destroying this controller...
-	//defer controller.Destroy()
+	defer controller.Destroy()
 
 	return pollForever(controller)
 }
@@ -52,7 +51,8 @@ func pollForever(c *Controller) error {
 	for {
 		newMessageSocket := c.poller.Wait(10_000)
 		if newMessageSocket == nil {
-			return errors.New("there was no new message for 10 seconds, shutting down")
+			//return errors.New("there was no new message for 10 seconds, shutting down")
+			continue
 		}
 
 		// Receiver has got a new message
@@ -80,35 +80,36 @@ func pollForever(c *Controller) error {
 		// We dont want to send the answer in the current thread because that would block polling
 		if newMessageSocket.Identity() == c.receiver.GetSocket().Identity() {
 			switch answerType {
-			case 0x10: // Create keygroup
+			case CreateKeygroup: // Create keygroup
 				var req = &Request{}
 				err = json.Unmarshal(msg, &req)
 				go c.handler.HandleCreateKeygroup(req, src)
-			case 0x11: // Delete keygroup
+			case DeleteKeygroup: // Delete keygroup
 				var req = &Request{}
 				err = json.Unmarshal(msg, &req)
 				go c.handler.HandleDeleteKeygroup(req, src)
-			case 0x12: // Get from Keygroup
-				var req = &Request{}
-				err = json.Unmarshal(msg, &req)
-				go c.handler.HandleGetValueFromKeygroup(req, src)
-			case 0x13: // Put into keygroup
+			//case 0x12: // Get from Keygroup
+			//	var req = &Request{}
+			//	err = json.Unmarshal(msg, &req)
+			//	go c.handler.HandleGetValueFromKeygroup(req, src)
+			case PutItem: // Put into keygroup
 				var req = &Request{}
 				err = json.Unmarshal(msg, &req)
 				go c.handler.HandlePutValueIntoKeygroup(req, src)
-			case 0x14: // Delete in Keygroup
+			case DeleteItem: // Delete in Keygroup
 				var req = &Request{}
 				err = json.Unmarshal(msg, &req)
 				go c.handler.HandleDeleteFromKeygroup(req, src)
 			}
 		} else {
-			switch answerType {
-			case 0x12: // Answer to a get request received
-				var res = &Response{}
-				err = json.Unmarshal(msg, &res)
-				log.Println("Yeah! My get request was answered! ")
-				log.Println(res)
-			}
+			// Not necessary because we only need eventual consistency
+			//switch answerType {
+			//case 0x12: // Answer to a get request received
+			//	var res = &Response{}
+			//	err = json.Unmarshal(msg, &res)
+			//	log.Println("Yeah! My get request was answered! ")
+			//	log.Println(res)
+			//}
 		}
 	}
 }
@@ -148,22 +149,22 @@ func (c *Controller) SendPut(ip, kgname, kgid, value string) (err error) {
 		return
 	}
 
-	err = c.sendMessage(0x13, ip, req)
+	err = c.sendMessage(PutItem, ip, req)
 	return
 }
 
 // SendGetReply that answers a getRequest.
-func (c *Controller) SendGetReply(to string, kgname, id, value string) (err error) {
-	rep, err := json.Marshal(&Response{
-		Keygroup: kgname,
-		ID:       id,
-		Value:    value,
-	})
-
-	if err != nil {
-		return
-	}
-
-	err = c.receiver.ReplyTo(to, 0x12, rep)
-	return
-}
+//func (c *Controller) SendGetReply(to string, kgname, id, value string) (err error) {
+//	rep, err := json.Marshal(&Response{
+//		Keygroup: kgname,
+//		ID:       id,
+//		Value:    value,
+//	})
+//
+//	if err != nil {
+//		return
+//	}
+//
+//	err = c.receiver.ReplyTo(to, 0x12, rep)
+//	return
+//}
