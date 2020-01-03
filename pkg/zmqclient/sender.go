@@ -1,4 +1,4 @@
-package zmqserver
+package zmqclient
 
 import (
 	"fmt"
@@ -6,12 +6,12 @@ import (
 	"log"
 )
 
-// Sender can send zmq messages to a zmq socket (both synchronously and asynchronously).
+// Sender can send zmqclient messages to a zmqclient socket (both synchronously and asynchronously).
 type Sender struct {
 	socket *goczmq.Sock
 }
 
-// NewSender creates a zmq Sender to send messages to the specified ip and port.
+// NewSender creates a zmqclient Sender to send messages to the specified ip and port.
 func NewSender(ip string, port int) (sen *Sender) {
 	// Create a dealer socket and connect it to the router.
 	dealer, err := goczmq.NewDealer(fmt.Sprintf("tcp://%s:%d", ip, port))

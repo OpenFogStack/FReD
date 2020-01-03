@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/zeromq/goczmq"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/zmqclient"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/zmqserver"
 	"log"
 	"math"
@@ -67,7 +68,7 @@ func main() {
 		log.Printf("Converting byte[] to string")
 		log.Printf("Created a very big string of size %dGB", len(b)/int(math.Pow(10, 9)))
 		// Send a very big file in one message
-		sen := zmqserver.NewSender("localhost", 5555)
+		sen := zmqclient.NewSender("localhost", 5555)
 		log.Printf("Sending and waiting for answer")
 		start = time.Now().UnixNano()
 		_ = sen.SendBytes(b)

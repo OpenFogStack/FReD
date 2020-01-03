@@ -17,6 +17,7 @@ import (
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/memorysd"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/memoryzmq"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/webserver"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/zmqclient"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/zmqserver"
 )
 
@@ -95,7 +96,20 @@ func main() {
 	// Add more options here
 	zmqH := memoryzmq.New(intH)
 
-	go zmqserver.Setup(fc.ZMQ.Port, nodeID, zmqH)
+	zmqServer, err := zmqserver.Setup(fc.ZMQ.Port, nodeID, zmqH)
 
+	if err != nil {
+		panic("Cannot start zmqServer")
+	}
+
+	zmqClient := zmqclient.NewClient()
+
+	zmqClient.SendCreateKeygroup("localhost", fc.ZMQ.Port, "Hello")
+	zmqClient.SendCreateKeygroup("localhost", fc.ZMQ.Port, "World")
+	
 	log.Fatal(webserver.Setup(addr, extH))
+
+	// Shutdown
+	zmqServer.Shutdown()
+	zmqClient.Destroy()
 }

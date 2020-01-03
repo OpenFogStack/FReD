@@ -1,6 +1,6 @@
-package zmqserver
+package zmqcommon
 
-// Different types of messages that the zmqserver can send to other nodes
+// Different types of messages that the zmqclient can send to other nodes
 // Currently no messages are received
 const (
 	CreateKeygroup byte = 0x10

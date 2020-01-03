@@ -5,15 +5,15 @@ import (
 	"github.com/zeromq/goczmq"
 )
 
-// Receiver can receive zmq messages on a zmq socket and respond to them (if necessary).
+// Receiver can receive zmqclient messages on a zmqclient socket and respond to them (if necessary).
 type Receiver struct {
 	socket *goczmq.Sock
 }
 
-// NewReceiver creates a zmq Receiver that listens on the given port.
-func NewReceiver(id string, port string) (rec *Receiver, err error) {
+// NewReceiver creates a zmqclient Receiver that listens on the given port.
+func NewReceiver(id string, port int) (rec *Receiver, err error) {
 	// Create a router socket and bind it.
-	r, err := goczmq.NewRouter(fmt.Sprintf("tcp://0.0.0.0:%s", port))
+	r, err := goczmq.NewRouter(fmt.Sprintf("tcp://0.0.0.0:%d", port))
 
 	if err != nil {
 		return nil, err
@@ -43,9 +43,4 @@ func (r *Receiver) ReplyTo(id string, msType byte, data []byte) (err error) {
 // Destroy the receiver.
 func (r *Receiver) Destroy() {
 	r.socket.Destroy()
-}
-
-// Receive receives a message on the Receiver.
-func (r *Receiver) Receive() ([][]byte, error) {
-	return r.socket.RecvMessage()
 }
