@@ -6,5 +6,4 @@ type Store interface {
 	Delete(i Item) error
 	Read(i Item) (Item, error)
 	Exists(i Item) bool
-	ExistsKeygroup(i Item) bool
 }
