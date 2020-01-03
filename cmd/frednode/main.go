@@ -3,18 +3,22 @@ package main
 import (
 	"flag"
 	"fmt"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/exthandler"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/memorykg"
 	"log"
 
 	"github.com/BurntSushi/toml"
 	"github.com/mmcloughlin/geohash"
 
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/data"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/exthandler"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/inthandler"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/keygroup"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/leveldbsd"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/memorykg"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/memorysd"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/memoryzmq"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/webserver"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/zmqclient"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/zmqserver"
 )
 
 type fredConfig struct {
@@ -29,6 +33,9 @@ type fredConfig struct {
 	Storage struct {
 		Adaptor string `toml:"adaptor"`
 	} `toml:"storage"`
+	ZMQ struct {
+		Port int `toml:"port"`
+	} `toml:"zmq"`
 }
 
 func main() {
@@ -44,6 +51,8 @@ func main() {
 	if _, err := toml.DecodeFile(*configPath, &fc); err != nil {
 		log.Fatalf("invalid configuration! error: %s", err)
 	}
+
+	var nodeID = geohash.Encode(fc.Location.Lat, fc.Location.Lng)
 
 	var is data.Service
 	var ks keygroup.Service
@@ -72,14 +81,35 @@ func main() {
 		log.Fatalf("unknown storage backend")
 	}
 
+	// Add more options here
 	k = memorykg.New()
 
 	is = data.New(i)
-	ks = keygroup.New(k, geohash.Encode(fc.Location.Lat, fc.Location.Lng))
 
-	e := exthandler.New(is, ks)
-	//inthandler := inthandler.New(is, ks)
+	ks = keygroup.New(k, nodeID)
 
 	addr := fmt.Sprintf("%s:%d", fc.Server.Host, fc.Server.Port)
-	log.Fatal(webserver.Setup(addr, e))
+
+	extH := exthandler.New(is, ks)
+	intH := inthandler.New(is, ks)
+
+	// Add more options here
+	zmqH := memoryzmq.New(intH)
+
+	zmqServer, err := zmqserver.Setup(fc.ZMQ.Port, nodeID, zmqH)
+
+	if err != nil {
+		panic("Cannot start zmqServer")
+	}
+
+	zmqClient := zmqclient.NewClient()
+
+	zmqClient.SendCreateKeygroup("localhost", fc.ZMQ.Port, "Hello")
+	zmqClient.SendCreateKeygroup("localhost", fc.ZMQ.Port, "World")
+
+	log.Fatal(webserver.Setup(addr, extH))
+
+	// Shutdown
+	zmqServer.Shutdown()
+	zmqClient.Destroy()
 }

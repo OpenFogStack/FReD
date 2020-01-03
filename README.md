@@ -4,6 +4,11 @@
 [![coverage report](https://gitlab.tubit.tu-berlin.de/mcc-fred/fred/badges/master/coverage.svg)](https://gitlab.tubit.tu-berlin.de/mcc-fred/fred/commits/master)
 [![License MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://img.shields.io/badge/License-MIT-brightgreen.svg)
 
+## Setup
+
+In order to run zmq please install [zmq](https://zeromq.org/download/) and [czmq](http://czmq.zeromq.org/page:get-the-software).
+On Arch, this is done by running `yay -S czmq`
+
 ## Git Workflow
 
 Setup git environment with `sh ./env-setup.sh` (installs git hooks). Be sure to have go installed...

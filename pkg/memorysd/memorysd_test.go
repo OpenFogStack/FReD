@@ -58,7 +58,7 @@ func TestStorage_CreateKeygroup(t *testing.T) {
 			},
 			args{data.Item{
 				Keygroup: "",
-			},},
+			}},
 			false,
 		},
 	}

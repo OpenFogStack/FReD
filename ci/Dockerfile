@@ -21,7 +21,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Set Clang as default CC
 ENV set_clang /etc/profile.d/set-clang-cc.sh
 RUN echo "export CC=clang-7.0" | tee -a ${set_clang} && chmod a+x ${set_clang}
-
 # Install czmq
 RUN echo "deb http://download.opensuse.org/repositories/network:/messaging:/zeromq:/release-stable/Debian_10/ ./" >> /etc/apt/sources.list
 RUN wget -O - https://download.opensuse.org/repositories/network:/messaging:/zeromq:/release-stable/Debian_10/Release.key | apt-key add -
@@ -59,3 +58,12 @@ RUN set -eux; \
 	rm docker.tgz; \
 	\
 	docker --version
+
+# Install zmq
+RUN echo "deb http://download.opensuse.org/repositories/network:/messaging:/zeromq:/release-stable/Debian_10/ ./" >> /etc/apt/sources.list
+RUN wget -O - https://download.opensuse.org/repositories/network:/messaging:/zeromq:/release-stable/Debian_10/Release.key | apt-key add -
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libczmq-dev libzmq3-dev libsodium23 \
+     && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
