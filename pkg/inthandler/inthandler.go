@@ -1,6 +1,7 @@
 package inthandler
 
 import (
+	"errors"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/data"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/keygroup"
 )
@@ -20,25 +21,56 @@ func New(i data.Service, k keygroup.Service) Handler {
 
 // HandleCreateKeygroup handles requests to the CreateKeygroup endpoint of the internal interface.
 func (h *handler) HandleCreateKeygroup(k keygroup.Keygroup) error {
-	panic("implement me")
+	if err := h.k.Create(keygroup.Keygroup{
+		Name: k.Name,
+	}); err != nil {
+		return err
+	}
+
+	if err := h.i.CreateKeygroup(data.Item{
+		Keygroup: k.Name,
+	}); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // HandleDeleteKeygroup handles requests to the DeleteKeygroup endpoint of the internal interface.
 func (h *handler) HandleDeleteKeygroup(k keygroup.Keygroup) error {
-	panic("implement me")
-}
+	if err := h.k.Delete(keygroup.Keygroup{
+		Name: k.Name,
+	}); err != nil {
+		return err
+	}
 
-// HandleRead handles requests to the Read endpoint of the internal interface.
-func (h *handler) HandleRead(i data.Item) (data.Item, error) {
-	panic("implement me")
+	if err := h.i.DeleteKeygroup(data.Item{
+		Keygroup: k.Name,
+	}); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // HandleUpdate handles requests to the Update endpoint of the internal interface.
 func (h *handler) HandleUpdate(i data.Item) error {
-	panic("implement me")
+	if !h.k.Exists(keygroup.Keygroup{
+		Name: i.Keygroup,
+	}) {
+		return errors.New("inthandler: keygroup does not exist")
+	}
+
+	return h.i.Update(i)
 }
 
 // HandleDelete handles requests to the Delete endpoint of the internal interface.
 func (h *handler) HandleDelete(i data.Item) error {
-	panic("implement me")
+	if !h.k.Exists(keygroup.Keygroup{
+		Name: i.Keygroup,
+	}) {
+		return errors.New("inthandler: keygroup does not exist")
+	}
+
+	return h.i.Delete(i)
 }
