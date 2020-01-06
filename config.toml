@@ -19,3 +19,7 @@ port = 5555
 
 [leveldb]
 path = "./db"
+
+[log]
+# debug,info,warn,error,fatal,panic
+level = "debug"

@@ -7,7 +7,11 @@ import "C"
 import (
 	"flag"
 	"fmt"
-	"log"
+	"os"
+
+	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 
 	"github.com/BurntSushi/toml"
 	"github.com/mmcloughlin/geohash"
@@ -40,6 +44,9 @@ type fredConfig struct {
 	ZMQ struct {
 		Port int `toml:"port"`
 	} `toml:"zmq"`
+	Log struct {
+		Level string `toml:level`
+	} `toml:log`
 }
 
 func main() {
@@ -48,12 +55,38 @@ func main() {
 	flag.Parse()
 
 	if *configPath == "" {
-		log.Fatal("no configuration specified")
+		log.Fatal().Msg("no configuration specified")
 	}
 
 	var fc fredConfig
 	if _, err := toml.DecodeFile(*configPath, &fc); err != nil {
-		log.Fatalf("invalid configuration! error: %s", err)
+		log.Fatal().Msgf("invalid configuration! error: %s", err)
+	}
+
+	// Setup Logging
+	// This writer has nice colored output, but is not very fast.
+	// In Prod another writer should be used. See Readme of zerolog
+	log.Logger = log.Output(
+		zerolog.ConsoleWriter{
+			Out:     os.Stderr,
+			NoColor: false,
+		},
+	)
+
+	if gin.IsDebugging() {
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	} else {
+		switch fc.Log.Level {
+		case "debug": zerolog.SetGlobalLevel(zerolog.DebugLevel)
+		case "info": zerolog.SetGlobalLevel(zerolog.InfoLevel)
+		case "warn": zerolog.SetGlobalLevel(zerolog.WarnLevel)
+		case "error": zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+		case "fatal": zerolog.SetGlobalLevel(zerolog.FatalLevel)
+		case "panic": zerolog.SetGlobalLevel(zerolog.PanicLevel)
+		default:
+			zerolog.SetGlobalLevel(zerolog.InfoLevel)
+			log.Info().Msg("No Loglevel specified, using 'info'")
+		}
 	}
 
 	var nodeID = geohash.Encode(fc.Location.Lat, fc.Location.Lng)
@@ -73,7 +106,7 @@ func main() {
 		}
 
 		if _, err := toml.DecodeFile(*configPath, &ldbc); err != nil {
-			log.Fatalf("invalid leveldb configuration! error: %s", err)
+			log.Fatal().Err(err).Msg("invalid leveldb configuration!")
 		}
 
 		log.Print(ldbc)
@@ -82,7 +115,7 @@ func main() {
 	case "memory":
 		i = memorysd.New()
 	default:
-		log.Fatalf("unknown storage backend")
+		log.Fatal().Msgf("unknown storage backend")
 	}
 
 	// Add more options here
@@ -111,7 +144,7 @@ func main() {
 	zmqClient.SendCreateKeygroup("localhost", fc.ZMQ.Port, "Hello")
 	zmqClient.SendCreateKeygroup("localhost", fc.ZMQ.Port, "World")
 
-	log.Fatal(webserver.Setup(addr, extH))
+	log.Fatal().Err(webserver.Setup(addr, extH)).Msg("Websever.Setup")
 
 	// Shutdown
 	zmqServer.Shutdown()
