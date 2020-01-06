@@ -2,6 +2,7 @@ package zmqserver
 
 import (
 	"fmt"
+
 	"github.com/zeromq/goczmq"
 )
 

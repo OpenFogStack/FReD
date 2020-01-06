@@ -1,6 +1,8 @@
 package replication
 
-import "net"
+import (
+	"net"
+)
 
 // ID is an identifier of a replica node.
 type ID string

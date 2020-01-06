@@ -1,10 +1,11 @@
 package memorykg
 
 import (
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/keygroup"
 	"reflect"
 	"sync"
 	"testing"
+
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/keygroup"
 )
 
 func TestKeygroupStorage_Create(t *testing.T) {

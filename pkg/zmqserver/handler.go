@@ -1,6 +1,8 @@
 package zmqserver
 
-import "gitlab.tu-berlin.de/mcc-fred/fred/pkg/zmqcommon"
+import (
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/zmqcommon"
+)
 
 // MessageHandler provides all methods to handle an incoming ZMQ request.
 type MessageHandler interface {

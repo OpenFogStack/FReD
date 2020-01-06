@@ -2,8 +2,9 @@ package memorysd
 
 import (
 	"errors"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/data"
 	"sync"
+
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/data"
 )
 
 // Storage stores a map of keygroup by name.
