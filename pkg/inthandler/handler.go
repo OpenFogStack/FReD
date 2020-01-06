@@ -9,7 +9,6 @@ import (
 type Handler interface {
 	HandleCreateKeygroup(k keygroup.Keygroup) error
 	HandleDeleteKeygroup(k keygroup.Keygroup) error
-	HandleRead(i data.Item) (data.Item, error)
 	HandleUpdate(i data.Item) error
 	HandleDelete(i data.Item) error
 }

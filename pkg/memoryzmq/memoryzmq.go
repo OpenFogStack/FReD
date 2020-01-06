@@ -2,12 +2,10 @@ package memoryzmq
 
 import (
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/data"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/inthandler"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/keygroup"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/zmqcommon"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/zmqserver"
-	"log"
-
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/inthandler"
 )
 
 type localMemoryMessageHandler struct {
@@ -27,21 +25,6 @@ func New(h inthandler.Handler) (l zmqserver.MessageHandler) {
 func (l *localMemoryMessageHandler) HandleCreateKeygroup(req *zmqcommon.Request, from string) {
 	_ = l.i.HandleCreateKeygroup(keygroup.Keygroup{Name: req.Keygroup})
 	// TODO Error handling: send a reply message if necessary, the identity of the sender is in req.From
-}
-
-// HandleGetValueFromKeygroup handles requests to the Read endpoint of the internal zmqclient interface.
-func (l *localMemoryMessageHandler) HandleGetValueFromKeygroup(req *zmqcommon.Request, from string) {
-	_, err := l.i.HandleRead(data.Item{
-		Keygroup: req.Keygroup,
-		ID:       req.ID,
-	})
-
-	if err == nil {
-		log.Fatal("Get from App failed! ", err)
-		return
-	}
-
-	//C.SendGetAnswer(from, req.Keygroup, val)
 }
 
 // HandlePutValueIntoKeygroup handles requests to the Update endpoint of the internal zmqclient interface.
