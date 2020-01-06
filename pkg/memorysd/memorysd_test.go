@@ -1,10 +1,11 @@
 package memorysd
 
 import (
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/data"
 	"reflect"
 	"sync"
 	"testing"
+
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/data"
 )
 
 func TestNew(t *testing.T) {

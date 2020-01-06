@@ -2,6 +2,7 @@ package inthandler
 
 import (
 	"errors"
+
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/data"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/keygroup"
 )

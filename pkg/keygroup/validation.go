@@ -1,6 +1,8 @@
 package keygroup
 
-import "errors"
+import (
+	"errors"
+)
 
 func checkKeygroup(params ...Keygroup) error {
 	for _, p := range params {

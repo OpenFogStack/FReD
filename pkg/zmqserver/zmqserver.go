@@ -2,9 +2,11 @@ package zmqserver
 
 import (
 	"encoding/json"
-	"github.com/zeromq/goczmq"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/zmqcommon"
+
 	"github.com/rs/zerolog/log"
+	"github.com/zeromq/goczmq"
+
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/zmqcommon"
 )
 
 // Server is a ZMQ server that accepts incoming requests within the fred system.
