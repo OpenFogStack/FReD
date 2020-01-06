@@ -1,5 +1,7 @@
 package main
 
+// leave this in for cgo to work
+
 import "C"
 
 import (
