@@ -9,12 +9,11 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/BurntSushi/toml"
 	"github.com/gin-gonic/gin"
+	"github.com/mmcloughlin/geohash"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-
-	"github.com/BurntSushi/toml"
-	"github.com/mmcloughlin/geohash"
 
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/data"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/exthandler"
@@ -45,7 +44,8 @@ type fredConfig struct {
 		Port int `toml:"port"`
 	} `toml:"zmq"`
 	Log struct {
-		Level string `toml:level`
+		Level   string `toml:level`
+		Handler string `toml:handler`
 	} `toml:log`
 }
 
@@ -60,29 +60,40 @@ func main() {
 
 	var fc fredConfig
 	if _, err := toml.DecodeFile(*configPath, &fc); err != nil {
-		log.Fatal().Msgf("invalid configuration! error: %s", err)
+		log.Fatal().Err(err).Msg("invalid configuration!")
 	}
 
 	// Setup Logging
 	// This writer has nice colored output, but is not very fast.
 	// In Prod another writer should be used. See Readme of zerolog
-	log.Logger = log.Output(
-		zerolog.ConsoleWriter{
-			Out:     os.Stderr,
-			NoColor: false,
-		},
-	)
+
+	if fc.Log.Handler == "dev" {
+		log.Logger = log.Output(
+			zerolog.ConsoleWriter{
+				Out:     os.Stderr,
+				NoColor: false,
+			},
+		)
+	} else if fc.Log.Handler != "prod" {
+		log.Fatal().Msg("Log Handler has to be either dev or prod")
+	}
 
 	if gin.IsDebugging() {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	} else {
 		switch fc.Log.Level {
-		case "debug": zerolog.SetGlobalLevel(zerolog.DebugLevel)
-		case "info": zerolog.SetGlobalLevel(zerolog.InfoLevel)
-		case "warn": zerolog.SetGlobalLevel(zerolog.WarnLevel)
-		case "error": zerolog.SetGlobalLevel(zerolog.ErrorLevel)
-		case "fatal": zerolog.SetGlobalLevel(zerolog.FatalLevel)
-		case "panic": zerolog.SetGlobalLevel(zerolog.PanicLevel)
+		case "debug":
+			zerolog.SetGlobalLevel(zerolog.DebugLevel)
+		case "info":
+			zerolog.SetGlobalLevel(zerolog.InfoLevel)
+		case "warn":
+			zerolog.SetGlobalLevel(zerolog.WarnLevel)
+		case "error":
+			zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+		case "fatal":
+			zerolog.SetGlobalLevel(zerolog.FatalLevel)
+		case "panic":
+			zerolog.SetGlobalLevel(zerolog.PanicLevel)
 		default:
 			zerolog.SetGlobalLevel(zerolog.InfoLevel)
 			log.Info().Msg("No Loglevel specified, using 'info'")
@@ -115,7 +126,7 @@ func main() {
 	case "memory":
 		i = memorysd.New()
 	default:
-		log.Fatal().Msgf("unknown storage backend")
+		log.Fatal().Msg("unknown storage backend")
 	}
 
 	// Add more options here

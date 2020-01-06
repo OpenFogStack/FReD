@@ -1,14 +1,13 @@
 package webserver
 
 import (
+	"net/http"
+
 	"github.com/gin-contrib/logger"
 	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/data"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/keygroup"
-	"net/http"
-	"time"
 )
 
 const apiversion string = "/v0"
@@ -130,13 +129,9 @@ func Setup(addr string, h handler) error {
 	gin.SetMode("release")
 	r := gin.New()
 
-	subLog := zerolog.New(zerolog.NewConsoleWriter(func(w *zerolog.ConsoleWriter) {
-		w.TimeFormat = time.RFC822
-	}))
-
 	r.Use(logger.SetLogger(logger.Config{
-		Logger:         &subLog,
-		UTC:            true,
+		Logger: &log.Logger,
+		UTC:    true,
 	}))
 
 	r.POST(apiversion+"/keygroup/:kgname", postKeygroup(h))

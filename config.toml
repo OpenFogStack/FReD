@@ -23,3 +23,6 @@ path = "./db"
 [log]
 # debug,info,warn,error,fatal,panic
 level = "debug"
+# dev: print colored output to stdout
+# prod: print json to stdout
+handler = "dev"
