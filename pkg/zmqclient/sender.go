@@ -2,8 +2,10 @@ package zmqclient
 
 import (
 	"fmt"
-	"github.com/zeromq/goczmq"
+	"net"
+
 	"github.com/rs/zerolog/log"
+	"github.com/zeromq/goczmq"
 )
 
 // Sender can send zmqclient messages to a zmqclient socket (both synchronously and asynchronously).
@@ -12,7 +14,7 @@ type Sender struct {
 }
 
 // NewSender creates a zmqclient Sender to send messages to the specified ip and port.
-func NewSender(ip string, port int) (sen *Sender) {
+func NewSender(ip net.IP, port int) (sen *Sender) {
 	// Create a dealer socket and connect it to the router.
 	dealer, err := goczmq.NewDealer(fmt.Sprintf("tcp://%s:%d", ip, port))
 	if err != nil {
