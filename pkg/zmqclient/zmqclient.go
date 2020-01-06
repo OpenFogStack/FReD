@@ -3,8 +3,11 @@ package zmqclient
 import (
 	"encoding/json"
 	"fmt"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/zmqcommon"
+	"net"
+
 	"github.com/rs/zerolog/log"
+
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/zmqcommon"
 )
 
 // Client : Linter wants a comment here. Linter is dumb.
@@ -19,7 +22,7 @@ func NewClient() (client *Client){
 }
 
 // SendCreateKeygroup sends the message to the specified node.
-func (c *Client) SendCreateKeygroup(ip string, port int, kgname string) (err error) {
+func (c *Client) SendCreateKeygroup(ip net.IP, port int, kgname string) (err error) {
 	req, err := json.Marshal(&zmqcommon.Request{
 		Keygroup: kgname,
 	})
@@ -33,7 +36,7 @@ func (c *Client) SendCreateKeygroup(ip string, port int, kgname string) (err err
 }
 
 // SendDeleteKeygroup sends the message to the specified node.
-func (c *Client) SendDeleteKeygroup(ip string, port int, kgname string) (err error) {
+func (c *Client) SendDeleteKeygroup(ip net.IP, port int, kgname string) (err error) {
 	req, err := json.Marshal(&zmqcommon.Request{
 		Keygroup: kgname,
 	})
@@ -46,8 +49,8 @@ func (c *Client) SendDeleteKeygroup(ip string, port int, kgname string) (err err
 	return
 }
 
-// SendPut sends a PUT message to the specified node.
-func (c *Client) SendPut(ip string, port int, kgname, kgid, value string) (err error) {
+// SendUpdate sends a PUT message to the specified node.
+func (c *Client) SendUpdate(ip net.IP, port int, kgname, kgid, value string) (err error) {
 	req, err := json.Marshal(&zmqcommon.Request{
 		Keygroup: kgname,
 		ID:       kgid,
@@ -63,7 +66,7 @@ func (c *Client) SendPut(ip string, port int, kgname, kgid, value string) (err e
 }
 
 // SendDelete sends the message to the specified node.
-func (c *Client) SendDelete(ip string, port int, kgname, kgid string) (err error) {
+func (c *Client) SendDelete(ip net.IP, port int, kgname, kgid string) (err error) {
 	req, err := json.Marshal(&zmqcommon.Request{
 		Keygroup: kgname,
 		ID:       kgid,
@@ -78,7 +81,7 @@ func (c *Client) SendDelete(ip string, port int, kgname, kgid string) (err error
 }
 
 // sendMessage to the specified IP.
-func (c *Client) sendMessage(msType byte, ip string, port int, msg []byte) (err error) {
+func (c *Client) sendMessage(msType byte, ip net.IP, port int, msg []byte) (err error) {
 	endpoint := fmt.Sprintf("%s:%d", ip, port)
 	cSender, exists := c.senders[endpoint]
 	if !exists {

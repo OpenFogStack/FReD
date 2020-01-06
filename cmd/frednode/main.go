@@ -21,8 +21,11 @@ import (
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/keygroup"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/leveldbsd"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/memorykg"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/memoryns"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/memorysd"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/memoryzmq"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/replication"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/replicationhandler"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/webserver"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/zmqclient"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/zmqserver"
@@ -44,9 +47,9 @@ type fredConfig struct {
 		Port int `toml:"port"`
 	} `toml:"zmq"`
 	Log struct {
-		Level   string `toml:level`
-		Handler string `toml:handler`
-	} `toml:log`
+		Level   string `toml:"level"`
+		Handler string `toml:"handler"`
+	} `toml:"log"`
 }
 
 func main() {
@@ -104,9 +107,11 @@ func main() {
 
 	var is data.Service
 	var ks keygroup.Service
+	var rs replication.Service
 
 	var i data.Store
 	var k keygroup.Store
+	var n replication.Store
 
 	switch fc.Storage.Adaptor {
 	case "leveldb":
@@ -131,14 +136,18 @@ func main() {
 
 	// Add more options here
 	k = memorykg.New()
+	n = memoryns.New()
 
 	is = data.New(i)
+	c := zmqclient.NewClient()
 
 	ks = keygroup.New(k, nodeID)
 
+	rs = replicationhandler.New(n, c)
+
 	addr := fmt.Sprintf("%s:%d", fc.Server.Host, fc.Server.Port)
 
-	extH := exthandler.New(is, ks)
+	extH := exthandler.New(is, ks, rs)
 	intH := inthandler.New(is, ks)
 
 	// Add more options here
@@ -150,14 +159,9 @@ func main() {
 		panic("Cannot start zmqServer")
 	}
 
-	zmqClient := zmqclient.NewClient()
-
-	zmqClient.SendCreateKeygroup("localhost", fc.ZMQ.Port, "Hello")
-	zmqClient.SendCreateKeygroup("localhost", fc.ZMQ.Port, "World")
-
 	log.Fatal().Err(webserver.Setup(addr, extH)).Msg("Websever.Setup")
 
 	// Shutdown
 	zmqServer.Shutdown()
-	zmqClient.Destroy()
+	c.Destroy()
 }
