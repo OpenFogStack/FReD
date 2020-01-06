@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"github.com/zeromq/goczmq"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/zmqcommon"
-	"log"
+	"github.com/rs/zerolog/log"
 )
 
 // Server is a ZMQ server that accepts incoming requests within the fred system.
@@ -60,7 +60,7 @@ func pollForever(c *Server) error {
 
 		// TODO error handling
 		if err != nil {
-			log.Println(err)
+			log.Err(err).Msg("pollForever has received an error during its receive")
 		}
 
 		// src = identity of socket from dealer

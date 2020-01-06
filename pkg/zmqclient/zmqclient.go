@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/zmqcommon"
-	"log"
+	"github.com/rs/zerolog/log"
 )
 
 // Client : Linter wants a comment here. Linter is dumb.
@@ -82,7 +82,7 @@ func (c *Client) sendMessage(msType byte, ip string, port int, msg []byte) (err 
 	endpoint := fmt.Sprintf("%s:%d", ip, port)
 	cSender, exists := c.senders[endpoint]
 	if !exists {
-		log.Printf("Created a new Socket to send to node %s:%d \n", ip, port)
+		log.Debug().Msgf("Created a new Socket to send to node %s:%d \n", ip, port)
 		cSender = *NewSender(ip, port)
 		c.senders[endpoint] = cSender
 		// If the controller also needs to listen to answers

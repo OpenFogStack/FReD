@@ -3,7 +3,7 @@ package zmqclient
 import (
 	"fmt"
 	"github.com/zeromq/goczmq"
-	"log"
+	"github.com/rs/zerolog/log"
 )
 
 // Sender can send zmqclient messages to a zmqclient socket (both synchronously and asynchronously).
@@ -16,7 +16,7 @@ func NewSender(ip string, port int) (sen *Sender) {
 	// Create a dealer socket and connect it to the router.
 	dealer, err := goczmq.NewDealer(fmt.Sprintf("tcp://%s:%d", ip, port))
 	if err != nil {
-		log.Fatal(err)
+		log.Error().Err(err).Msg("Can not create ZMQ Dealer")
 	}
 	log.Printf("Sender has created a dealer to tcp://%s:%d\n", ip, port)
 	sen = &Sender{dealer}

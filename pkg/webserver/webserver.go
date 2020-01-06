@@ -1,11 +1,11 @@
 package webserver
 
 import (
-	"log"
 	"net/http"
 
+	"github.com/gin-contrib/logger"
 	"github.com/gin-gonic/gin"
-
+	"github.com/rs/zerolog/log"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/data"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/keygroup"
 )
@@ -126,7 +126,13 @@ func deleteItem(h handler) func(context *gin.Context) {
 
 // Setup sets up a web server client interface for the Fred node.
 func Setup(addr string, h handler) error {
-	r := gin.Default()
+	gin.SetMode("release")
+	r := gin.New()
+
+	r.Use(logger.SetLogger(logger.Config{
+		Logger: &log.Logger,
+		UTC:    true,
+	}))
 
 	r.POST(apiversion+"/keygroup/:kgname", postKeygroup(h))
 	r.DELETE(apiversion+"/keygroup/:kgname", deleteKeygroup(h))
