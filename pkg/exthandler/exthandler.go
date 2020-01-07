@@ -2,6 +2,7 @@ package exthandler
 
 import (
 	"errors"
+	"fmt"
 
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/data"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/keygroup"
@@ -110,4 +111,74 @@ func (h *handler) HandleDelete(i data.Item) error {
 	}
 
 	return nil
+}
+
+// HandleAddKeygroupReplica handles requests to the AddKeygroupReplica endpoint of the client interface.
+func (h *handler) HandleAddKeygroupReplica(k keygroup.Keygroup, n replication.Node) error {
+	if !h.k.Exists(keygroup.Keygroup{
+		Name: k.Name,
+	}) {
+		return errors.New("exthandler: keygroup does not exist")
+	}
+
+	if err := h.r.AddReplica(k, n); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// HandleGetKeygroupReplica handles requests to the GetKeygroupReplica endpoint of the client interface.
+func (h *handler) HandleGetKeygroupReplica(k keygroup.Keygroup) ([]replication.Node, error) {
+	if !h.k.Exists(keygroup.Keygroup{
+		Name: k.Name,
+	}) {
+		return nil, errors.New("exthandler: keygroup does not exist")
+	}
+
+	return h.r.GetReplica(k)
+}
+
+// HandleRemoveKeygroupReplica handles requests to the RemoveKeygroupReplica( endpoint of the client interface.
+func (h *handler) HandleRemoveKeygroupReplica(k keygroup.Keygroup, n replication.Node) error {
+	if !h.k.Exists(keygroup.Keygroup{
+		Name: k.Name,
+	}) {
+		return errors.New("exthandler: keygroup does not exist")
+	}
+
+	if err := h.r.RemoveReplica(k, n); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// HandleAddReplica handles requests to the AddReplica endpoint of the client interface.
+func (h *handler) HandleAddReplica(n []replication.Node) error {
+	e := make([]string, len(n))
+	ec := 0
+
+	for _, node := range n {
+		if err := h.r.AddNode(node); err != nil {
+			e[ec] = fmt.Sprintf("%v", err)
+			ec++
+		}
+	}
+
+	if ec > 0 {
+		return fmt.Errorf("exthandler: %v", e)
+	}
+
+	return nil
+}
+
+// HandleGetReplica handles requests to the GetReplica endpoint of the client interface.
+func (h *handler) HandleGetReplica() ([]replication.Node, error) {
+	return h.r.GetNodes()
+}
+
+// HandleRemoveReplica handles requests to the RemoveReplica endpoint of the client interface.
+func (h *handler) HandleRemoveReplica(n replication.Node) error {
+	return h.r.RemoveNode(n)
 }

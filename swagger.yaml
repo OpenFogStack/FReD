@@ -51,10 +51,79 @@ paths:
       parameters:
       - name: "group_id"
         in: "path"
-        description: "ID of pet to return"
+        description: "Name of Keygroup"
         required: true
         type: "string"
         format: "string"
+
+  /keygroup/{group_id}/replica:
+    get:
+      tags:
+        - "keygroup"
+      summary: "Gets all Replica Nodes for a Keygroup"
+      description: "Returns replica nodes for a Keygroup with the name `group_id` if it does not exist already."
+      responses:
+        200:
+          description: OK
+        404:
+          description: Keygroup not Found
+      parameters:
+        - name: "group_id"
+          in: "path"
+          description: "Name of Keygroup"
+          required: true
+          type: "string"
+          format: "string"
+
+  /keygroup/{group_id}/replica/{node_id}:
+    post:
+      tags:
+        - "keygroup"
+      summary: "Create a new Replica node for a Keygroup"
+      description: "Registers the node with the name `node_id` as a replica node for a Keygroup with the name `group_id` if it does not exist already."
+      responses:
+        200:
+          description: OK
+        409:
+          description: Conflict, Replica Node or Keygroup exists already
+      parameters:
+        - name: "group_id"
+          in: "path"
+          description: "Name of Keygroup"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "node_id"
+          in: "path"
+          description: "Name of Replica Node"
+          required: true
+          type: "string"
+          format: "string"
+
+    delete:
+      tags:
+        - "keygroup"
+      summary: "Remove an existing replica node for a Keygroup"
+      description: "De-registers the node with the name {node_id} as a replica node for the Keygroup with the name `group_id` if it exists."
+      responses:
+        200:
+          description: OK
+        404:
+          description: Replica Node or Keygroup not found
+      parameters:
+        - name: "group_id"
+          in: "path"
+          description: "Name of Keygroup"
+          required: true
+          type: "string"
+          format: "string"
+        - name: "node_id"
+          in: "path"
+          description: "Name of Replica Node"
+          required: true
+          type: "string"
+          format: "string"
+
   /keygroup/{group_id}/items/{item_id}:
     get:
       tags:
@@ -79,6 +148,7 @@ paths:
         required: true
         type: "string"
         format: "string"
+
     put:
       tags:
       - "data"
@@ -110,6 +180,7 @@ paths:
         required: true
         schema:
           $ref: "#/definitions/Item"
+
     delete:
       tags:
       - "data"
@@ -134,6 +205,55 @@ paths:
         type: "string"
         format: "string"
 
+  /replica:
+    get:
+      tags:
+        - "replication"
+      summary: "Gets all Replica Nodes"
+      description: "Returns all known replica nodes."
+      responses:
+        200:
+          description: OK
+        404:
+          description: Keygroup not Found
+
+    post:
+      tags:
+        - "replication"
+      summary: "Register a new Replica Node"
+      description: "Creates a new replica node if it does not exist already or updates existing data."
+      responses:
+        200:
+          description: OK
+        409:
+          description: Conflict, Replica Node exists already
+      parameters:
+        - name: "body"
+          in: "body"
+          description: "ID, IP Address and Port of Replica Node."
+          required: true
+          schema:
+            $ref: "#/definitions/Replica"
+
+  /replica/{node_id}:
+    delete:
+      tags:
+        - "replication"
+      summary: "Remove an existing replica node"
+      description: "Removes the replica node `node_id` if it exists."
+      responses:
+        200:
+          description: OK
+        404:
+          description: Replica Node not found
+      parameters:
+        - name: "node_id"
+          in: "path"
+          description: "ID of pet to return"
+          required: true
+          type: "string"
+          format: "string"
+
 definitions:
     Item:
       type: "object"
@@ -142,4 +262,20 @@ definitions:
       properties:
         data:
           type: "string"
+          format: "utf-8"
+    Replica:
+      type: "object"
+      required:
+        - "id"
+        - "ip"
+        - "port"
+      properties:
+        id:
+          type: "string"
+          format: "utf-8"
+        ip:
+          type: "string"
+          format: "utf-8"
+        port:
+          type: "integer"
           format: "utf-8"

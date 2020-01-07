@@ -11,4 +11,10 @@ type Service interface {
 	RelayDeleteKeygroup(k keygroup.Keygroup) error
 	RelayUpdate(i data.Item) error
 	RelayDelete(i data.Item) error
+	AddNode(n Node) error
+	RemoveNode(n Node) error
+	AddReplica(k keygroup.Keygroup, n Node) error
+	RemoveReplica(k keygroup.Keygroup, n Node) error
+	GetNodes() ([]Node, error)
+	GetReplica(k keygroup.Keygroup) ([]Node, error)
 }
