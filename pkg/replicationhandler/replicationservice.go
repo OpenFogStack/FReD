@@ -206,3 +206,33 @@ func (s *service) RemoveReplica(k keygroup.Keygroup, n replication.Node) error {
 
 	return err
 }
+
+func (s *service) AddNode(n replication.Node) error {
+	return s.n.CreateNode(n)
+}
+
+func (s *service) RemoveNode(n replication.Node) error {
+	return s.n.DeleteNode(n)
+}
+
+func (s *service) GetNodes() ([]replication.Node, error) {
+	return s.n.GetNodes()
+}
+
+func (s *service) GetReplica(k keygroup.Keygroup) ([]replication.Node, error) {
+	kg := replication.Keygroup{
+		Name: replication.KeygroupName(k.Name),
+	}
+
+	if !s.n.ExistsKeygroup(kg)  {
+		return nil, errors.New("replicationservice: no such keygroup")
+	}
+
+	kg, err := s.n.GetKeygroup(kg)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return s.n.GetReplica(kg)
+}

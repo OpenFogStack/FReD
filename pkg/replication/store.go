@@ -12,4 +12,6 @@ type Store interface {
 	ExistsKeygroup(k Keygroup) bool
 	AddReplica(k Keygroup, n Node) error
 	RemoveReplica(k Keygroup, n Node) error
+	GetNodes() ([]Node, error)
+	GetReplica(k Keygroup) ([]Node, error)
 }

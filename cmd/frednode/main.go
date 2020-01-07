@@ -21,7 +21,7 @@ import (
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/keygroup"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/leveldbsd"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/memorykg"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/memoryns"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/memoryrs"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/memorysd"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/memoryzmq"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/replication"
@@ -136,7 +136,7 @@ func main() {
 
 	// Add more options here
 	k = memorykg.New()
-	n = memoryns.New()
+	n = memoryrs.New()
 
 	is = data.New(i)
 	c := zmqclient.NewClient()
@@ -159,7 +159,7 @@ func main() {
 		panic("Cannot start zmqServer")
 	}
 
-	log.Fatal().Err(webserver.Setup(addr, extH)).Msg("Websever.Setup")
+	log.Fatal().Err(webserver.Setup(addr, extH)).Msg("Webserver.Setup")
 
 	// Shutdown
 	zmqServer.Shutdown()
