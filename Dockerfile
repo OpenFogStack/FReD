@@ -22,4 +22,6 @@ COPY --from=golang /go/bin/frednode frednode
 
 EXPOSE 9001
 
+EXPOSE 5555
+
 ENTRYPOINT ["./frednode"]
