@@ -6,3 +6,8 @@ variable "aws_region" {
 variable "identifier" {
   type = string
 }
+
+variable "instance_count" {
+  type = number
+  default = 3
+}

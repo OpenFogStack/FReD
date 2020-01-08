@@ -28,3 +28,8 @@ variable "gitlab_repo_username" {
 variable "gitlab_repo_password" {
   type = string
 }
+
+variable "instance_count" {
+  type = number
+  default = 3
+}

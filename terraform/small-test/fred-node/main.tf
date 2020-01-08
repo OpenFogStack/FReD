@@ -2,6 +2,7 @@ resource "aws_instance" "fred_instance" {
   ami             = data.aws_ami.amazonlinux2.id
   instance_type   = var.instance_type
   key_name        = aws_key_pair.my-test-key.key_name
+  count = instance_count
 
   security_groups = var.security_groups
 
@@ -31,7 +32,7 @@ resource "aws_instance" "fred_instance" {
   }
 
   tags = {
-    Name = "test-instance"
+    Name = "${var.name}-${count.index}"
     type = "fred"
   }
 }
