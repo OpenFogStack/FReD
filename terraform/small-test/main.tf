@@ -6,7 +6,7 @@ resource "aws_key_pair" "terraform_key" {
 module "fred-node-0" {
   source = ".//fred-node"
 
-  name            = "fred-node-0"
+  name            = "${var.identifier}-fred-node-0"
   key_pair        = aws_key_pair.terraform_key.key_name
   key_pair_key    = "terraform.key"
   security_groups = [
