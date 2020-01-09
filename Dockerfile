@@ -12,6 +12,7 @@ WORKDIR /go/src/gitlab.tu-berlin.de/mcc-fred/fred/
 COPY . .
 
 # Static build required so that we can safely copy the binary over.
+RUN ls
 RUN touch ./cmd/frednode/dummy.cc
 RUN go install -a -ldflags '-linkmode external -w -s -extldflags "-static -luuid" ' ./cmd/frednode/
 
@@ -21,5 +22,7 @@ FROM scratch
 COPY --from=golang /go/bin/frednode frednode
 
 EXPOSE 9001
+
+EXPOSE 5555
 
 ENTRYPOINT ["./frednode"]

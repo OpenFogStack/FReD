@@ -1,1 +1,4 @@
-Dockerfile
+**/*
+!/pkg/*
+!/cmd/*
+!go.mod

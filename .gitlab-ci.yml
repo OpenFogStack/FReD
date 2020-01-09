@@ -8,6 +8,7 @@ stages:
   - test
   - build
   - release
+#  - test_aws
 
 before_script:
   - mkdir -p .cache
@@ -61,5 +62,16 @@ container:
     - if [ "$CI_COMMIT_REF_NAME" == "master" ]; then CONTAINER_TAG=latest; fi;
     - echo $CONTAINER_TAG
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker tag mcc-fred/fred gitlab-registry.tubit.tu-berlin.de/mcc-fred/fred/fred:$CONTAINER_TAG
+    - docker tag gitlab-registry.tubit.tu-berlin.de/mcc-fred/fred/fred gitlab-registry.tubit.tu-berlin.de/mcc-fred/fred/fred:$CONTAINER_TAG
     - docker push gitlab-registry.tubit.tu-berlin.de/mcc-fred/fred/fred:$CONTAINER_TAG
+
+# this adds a new stage to the CI process that tests the terraform files
+#terraform:
+#  stage: test_aws
+#  script:
+#    - cd terraform/small-test
+#    - TF_IN_AUTOMATION=true
+#    - CONTAINER_TAG=${components[0]}
+#    - if [ "$CI_COMMIT_REF_NAME" == "master" ]; then CONTAINER_TAG=latest; fi;
+#    - terraform init -input=false
+#    - terraform plan -input=false -var="aws_access_key=$AWS_ACCESS_KEY" -var="aws_secret_key=$AWS_SECRET_KEY" -var="gitlab_repo_username=$CI_REGISTRY_USER" -var="gitlab_repo_password=$CI_REGISTRY_PASSWORD" -var="identifier=$CONTAINER_TAG"

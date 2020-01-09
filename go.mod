@@ -11,5 +11,5 @@ require (
 	github.com/syndtr/goleveldb v1.0.0
 	github.com/zeromq/goczmq v4.1.0+incompatible
 	golang.org/x/lint v0.0.0-20191125180803-fdd1cda4f05f // indirect
-	golang.org/x/tools v0.0.0-20200107050322-53017a39ae36 // indirect
+	golang.org/x/tools v0.0.0-20200108203644-89082a384178 // indirect
 )

@@ -36,7 +36,7 @@ clean: ## Remove previous build
 	@rm -f $(PROJECT_NAME)
 
 container: ## Create a Docker container
-	@docker build . -t mcc-fred/fred
+	@docker build . -t gitlab-registry.tubit.tu-berlin.de/mcc-fred/fred/fred
 
 help: ## Display this help screen
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
