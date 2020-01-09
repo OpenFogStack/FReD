@@ -10,7 +10,6 @@ import (
 	"os"
 
 	"github.com/BurntSushi/toml"
-	"github.com/gin-gonic/gin"
 	"github.com/mmcloughlin/geohash"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -63,13 +62,12 @@ func main() {
 
 	var fc fredConfig
 	if _, err := toml.DecodeFile(*configPath, &fc); err != nil {
-		log.Fatal().Err(err).Msg("invalid configuration!")
+		log.Fatal().Err(err).Msg("Invalid configuration! Toml can not be decoded.")
 	}
 
 	// Setup Logging
-	// This writer has nice colored output, but is not very fast.
-	// In Prod another writer should be used. See Readme of zerolog
-
+	// In Dev the ConsoleWriter has nice colored output, but is not very fast.
+	// In Prod the default handler is used. It writes json to stdout and is very fast.
 	if fc.Log.Handler == "dev" {
 		log.Logger = log.Output(
 			zerolog.ConsoleWriter{
@@ -81,26 +79,22 @@ func main() {
 		log.Fatal().Msg("Log Handler has to be either dev or prod")
 	}
 
-	if gin.IsDebugging() {
+	switch fc.Log.Level {
+	case "debug":
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
-	} else {
-		switch fc.Log.Level {
-		case "debug":
-			zerolog.SetGlobalLevel(zerolog.DebugLevel)
-		case "info":
-			zerolog.SetGlobalLevel(zerolog.InfoLevel)
-		case "warn":
-			zerolog.SetGlobalLevel(zerolog.WarnLevel)
-		case "error":
-			zerolog.SetGlobalLevel(zerolog.ErrorLevel)
-		case "fatal":
-			zerolog.SetGlobalLevel(zerolog.FatalLevel)
-		case "panic":
-			zerolog.SetGlobalLevel(zerolog.PanicLevel)
-		default:
-			zerolog.SetGlobalLevel(zerolog.InfoLevel)
-			log.Info().Msg("No Loglevel specified, using 'info'")
-		}
+	case "info":
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	case "warn":
+		zerolog.SetGlobalLevel(zerolog.WarnLevel)
+	case "error":
+		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+	case "fatal":
+		zerolog.SetGlobalLevel(zerolog.FatalLevel)
+	case "panic":
+		zerolog.SetGlobalLevel(zerolog.PanicLevel)
+	default:
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
+		log.Info().Msg("No Loglevel specified, using 'info'")
 	}
 
 	var nodeID = geohash.Encode(fc.Location.Lat, fc.Location.Lng)
@@ -125,7 +119,8 @@ func main() {
 			log.Fatal().Err(err).Msg("invalid leveldb configuration!")
 		}
 
-		log.Print(ldbc)
+		// "%v": unly print field values. "%#v": also print field names
+		log.Debug().Msgf("leveldb struct is: %v", ldbc)
 
 		i = leveldbsd.New(ldbc.Config.Path)
 	case "memory":
