@@ -15,4 +15,6 @@ module "fred-node" {
   gitlab_repo_password = var.gitlab_repo_password
   gitlab_repo_username = var.gitlab_repo_username
   identifier = var.identifier
+  instance_type = var.instance_type
+  fred_flags = var.fred_flags
 }

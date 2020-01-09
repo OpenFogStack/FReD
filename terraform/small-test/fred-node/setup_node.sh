@@ -16,4 +16,4 @@ sudo docker run -it \
       -p 80:9001 \
       -p 5555:5555 \
       -v /tmp/config.toml:/config.toml \
-      gitlab-registry.tubit.tu-berlin.de/mcc-fred/fred/fred:latest --config config.toml
+      gitlab-registry.tubit.tu-berlin.de/mcc-fred/fred/fred:latest --config config.toml $4

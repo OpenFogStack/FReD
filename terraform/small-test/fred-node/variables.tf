@@ -41,3 +41,7 @@ variable "instance_count" {
 variable "identifier" {
   type = string
 }
+
+variable "fred_flags" {
+  type = list(string)
+}

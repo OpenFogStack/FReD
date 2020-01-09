@@ -20,7 +20,7 @@ resource "aws_instance" "fred_instance" {
   provisioner "remote-exec" {
     inline = [
       "chmod +x /tmp/script.sh",
-      "/tmp/script.sh ${var.gitlab_repo_username} ${var.gitlab_repo_password} ${var.identifier}",
+      "/tmp/script.sh ${var.gitlab_repo_username} ${var.gitlab_repo_password} ${var.identifier} ${var.fred_flags[count.index]}",
     ]
   }
 
