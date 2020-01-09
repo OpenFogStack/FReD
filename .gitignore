@@ -1,8 +1,18 @@
-# Created by https://www.gitignore.io/api/go,linux,macos,windows,microsoftoffice
-# Edit at https://www.gitignore.io/?templates=go,linux,macos,windows,microsoftoffice
+# FReD Specific
+
+# terraform secrets
+secret.tfvars
+
+# fred binary
+frednode
+
+# leveldb database
+db/
+
+# Created by https://www.gitignore.io/api/go,linux,macos,windows,microsoftoffice,terraform,node
+# Edit at https://www.gitignore.io/api/go,linux,macos,windows,microsoftoffice,terraform,node
 
 ### Terraform ###
-**/secret.tfvars
 
 # Local .terraform directories
 .terraform/
@@ -37,10 +47,6 @@ override.tf.json
 
 ### Go ###
 # Binaries for programs and plugins
-
-# frednode
-frednode
-db/
 
 *.exe
 *.exe~
@@ -151,12 +157,6 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-# End of https://www.gitignore.io/api/go,linux,macos,windows,microsoftoffice
-
-
-# Created by https://www.gitignore.io/api/node
-# Edit at https://www.gitignore.io/?templates=node
-
 ### Node ###
 # Logs
 logs
@@ -249,3 +249,5 @@ public/
 
 # DynamoDB Local files
 .dynamodb/
+
+# End of https://www.gitignore.io/api/go,linux,macos,windows,microsoftoffice,terraform,node
