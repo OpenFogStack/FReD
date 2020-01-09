@@ -3,6 +3,8 @@ package inthandler
 import (
 	"errors"
 
+	"github.com/rs/zerolog/log"
+
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/data"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/keygroup"
 )
@@ -25,12 +27,14 @@ func (h *handler) HandleCreateKeygroup(k keygroup.Keygroup) error {
 	if err := h.k.Create(keygroup.Keygroup{
 		Name: k.Name,
 	}); err != nil {
+		log.Err(err).Msg("Inthandler can not create keygroup with keygroup service")
 		return err
 	}
 
 	if err := h.i.CreateKeygroup(data.Item{
 		Keygroup: k.Name,
 	}); err != nil {
+		log.Err(err).Msg("Inthandler can not create keygroup with data service")
 		return err
 	}
 
@@ -42,12 +46,14 @@ func (h *handler) HandleDeleteKeygroup(k keygroup.Keygroup) error {
 	if err := h.k.Delete(keygroup.Keygroup{
 		Name: k.Name,
 	}); err != nil {
+		log.Err(err).Msg("Inthandler can not delete keygroup with keygroup service")
 		return err
 	}
 
 	if err := h.i.DeleteKeygroup(data.Item{
 		Keygroup: k.Name,
 	}); err != nil {
+		log.Err(err).Msg("Inthandler can not delete keygroup with data service")
 		return err
 	}
 

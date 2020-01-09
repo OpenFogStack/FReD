@@ -5,6 +5,8 @@ import (
 	"net"
 	"sync"
 
+	"github.com/rs/zerolog/log"
+
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/replication"
 )
 
@@ -34,6 +36,7 @@ func New() (rS *ReplicationStorage) {
 
 // CreateNode adds a node to the node storage in ReplicationStorage.
 func (rS *ReplicationStorage) CreateNode(n replication.Node) error {
+	log.Debug().Msgf("CreateNode from memoryns: in %v", n)
 	rS.nodesLock.RLock()
 	_, ok := rS.nodes[n.ID]
 	rS.nodesLock.RUnlock()
@@ -54,6 +57,7 @@ func (rS *ReplicationStorage) CreateNode(n replication.Node) error {
 
 // DeleteNode removes a node from the node storage in ReplicationStorage.
 func (rS *ReplicationStorage) DeleteNode(n replication.Node) error {
+	log.Debug().Msgf("DeleteNode from memoryns: in %v", n)
 	rS.nodesLock.RLock()
 	_, ok := rS.nodes[n.ID]
 	rS.nodesLock.RUnlock()
@@ -71,6 +75,7 @@ func (rS *ReplicationStorage) DeleteNode(n replication.Node) error {
 
 // GetNode returns a node from the node storage in ReplicationStorage.
 func (rS *ReplicationStorage) GetNode(n replication.Node) (replication.Node, error) {
+	log.Debug().Msgf("GetNode from memoryns: in %v", n)
 	rS.nodesLock.RLock()
 	node, ok := rS.nodes[n.ID]
 	rS.nodesLock.RUnlock()
@@ -92,11 +97,14 @@ func (rS *ReplicationStorage) ExistsNode(n replication.Node) bool {
 	_, ok := rS.nodes[n.ID]
 	rS.nodesLock.RUnlock()
 
+	log.Debug().Msgf("ExistsNode from memoryns: in %v, out %t", n, ok)
+
 	return ok
 }
 
 // CreateKeygroup creates a keygroup in the keygroup storage in ReplicationStorage.
 func (rS *ReplicationStorage) CreateKeygroup(k replication.Keygroup) error {
+	log.Debug().Msgf("CreateKeygroup from memoryns: in %v", k)
 	rS.kgLock.RLock()
 	_, ok := rS.kg[k.Name]
 	rS.kgLock.RUnlock()
@@ -114,6 +122,7 @@ func (rS *ReplicationStorage) CreateKeygroup(k replication.Keygroup) error {
 
 // DeleteKeygroup removes a keygroup from the keygroup storage in ReplicationStorage.
 func (rS *ReplicationStorage) DeleteKeygroup(k replication.Keygroup) error {
+	log.Debug().Msgf("DeleteKeygroup from memoryns: in %v", k)
 	rS.kgLock.RLock()
 	_, ok := rS.kg[k.Name]
 	rS.kgLock.RUnlock()
@@ -131,6 +140,7 @@ func (rS *ReplicationStorage) DeleteKeygroup(k replication.Keygroup) error {
 
 // GetKeygroup returns a keygroup from the keygroup storage in ReplicationStorage.
 func (rS *ReplicationStorage) GetKeygroup(k replication.Keygroup) (replication.Keygroup, error) {
+	log.Debug().Msgf("GetKeygroup from memoryns: in %v", k)
 	rS.kgLock.RLock()
 	replicas, ok := rS.kg[k.Name]
 	rS.kgLock.RUnlock()
@@ -151,11 +161,14 @@ func (rS *ReplicationStorage) ExistsKeygroup(k replication.Keygroup) bool {
 	_, ok := rS.kg[k.Name]
 	rS.kgLock.RUnlock()
 
+	log.Debug().Msgf("ExistsKeygroup from memoryns: in %v, out %t", k, ok)
+
 	return ok
 }
 
 // AddReplica adds a replica node to the keygroup in the keygroup storage in ReplicationStorage.
 func (rS *ReplicationStorage) AddReplica(k replication.Keygroup, n replication.Node) error {
+	log.Debug().Msgf("AddReplica from memoryns: in kg=%v no=%v", k, n)
 	rS.kgLock.RLock()
 	_, ok := rS.kg[k.Name]
 	rS.kgLock.RUnlock()
@@ -181,6 +194,7 @@ func (rS *ReplicationStorage) AddReplica(k replication.Keygroup, n replication.N
 
 // RemoveReplica removes a replica node from the keygroup in the keygroup storage in ReplicationStorage.
 func (rS *ReplicationStorage) RemoveReplica(k replication.Keygroup, n replication.Node) error {
+	log.Debug().Msgf("RemoveReplica from memoryns: in kg=%v no=%v", k, n)
 	rS.kgLock.RLock()
 	_, ok := rS.kg[k.Name]
 	rS.kgLock.RUnlock()
@@ -222,6 +236,8 @@ func (rS *ReplicationStorage) GetNodes() ([]replication.Node, error) {
 		i++
 	}
 
+	log.Debug().Msgf("GetNodes from memoryns: found %d nodes", i)
+
 	return nodes, nil
 }
 
@@ -253,6 +269,7 @@ func (rS *ReplicationStorage) GetReplica(k replication.Keygroup) ([]replication.
 
 		i++
 	}
+	log.Debug().Msgf("GetReplica from memoryns: found %d nodes", i)
 
 	return nodes, nil
 }

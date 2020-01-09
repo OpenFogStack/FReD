@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/rs/zerolog/log"
+
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/data"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/keygroup"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/replication"
@@ -29,12 +31,14 @@ func (h *handler) HandleCreateKeygroup(k keygroup.Keygroup) error {
 	if err := h.k.Create(keygroup.Keygroup{
 		Name: k.Name,
 	}); err != nil {
+		log.Err(err).Msg("Exthandler can not create keygroup with keygroup service")
 		return err
 	}
 
 	if err := h.i.CreateKeygroup(data.Item{
 		Keygroup: k.Name,
 	}); err != nil {
+		log.Err(err).Msg("Exthandler can not create keygroup with data service")
 		return err
 	}
 
@@ -46,18 +50,21 @@ func (h *handler) HandleDeleteKeygroup(k keygroup.Keygroup) error {
 	if err := h.k.Delete(keygroup.Keygroup{
 		Name: k.Name,
 	}); err != nil {
+		log.Err(err).Msg("Exthandler can not delete keygroup with keygroup service")
 		return err
 	}
 
 	if err := h.i.DeleteKeygroup(data.Item{
 		Keygroup: k.Name,
 	}); err != nil {
+		log.Err(err).Msg("Exthandler can not delete keygroup with data service")
 		return err
 	}
 
 	if err := h.r.RelayDeleteKeygroup(keygroup.Keygroup{
 		Name: k.Name,
 	}); err != nil {
+		log.Err(err).Msg("Exthandler can not delete keygroup with replication service")
 		return err
 	}
 
@@ -84,10 +91,12 @@ func (h *handler) HandleUpdate(i data.Item) error {
 	}
 
 	if err := h.i.Update(i); err != nil {
+		log.Err(err).Msg("Exthandler can not relay update with data service")
 		return err
 	}
 
 	if err := h.r.RelayUpdate(i); err != nil {
+		log.Err(err).Msg("Exthandler can not delete keygroup with replication service")
 		return err
 	}
 
@@ -103,10 +112,12 @@ func (h *handler) HandleDelete(i data.Item) error {
 	}
 
 	if err := h.i.Delete(i); err != nil {
+		log.Err(err).Msg("Exthandler can not delete data item with data service")
 		return err
 	}
 
 	if err := h.r.RelayDelete(i); err != nil {
+		log.Err(err).Msg("Exthandler can not delete data item with data service")
 		return err
 	}
 
@@ -122,6 +133,7 @@ func (h *handler) HandleAddKeygroupReplica(k keygroup.Keygroup, n replication.No
 	}
 
 	if err := h.r.AddReplica(k, n); err != nil {
+		log.Err(err).Msg("Exthandler can not add a new keygroup replica")
 		return err
 	}
 
@@ -161,6 +173,7 @@ func (h *handler) HandleAddReplica(n []replication.Node) error {
 
 	for _, node := range n {
 		if err := h.r.AddNode(node); err != nil {
+			log.Err(err).Msgf("Exthandler can no add a new replica node. (node=%v)", node)
 			e[ec] = fmt.Sprintf("%v", err)
 			ec++
 		}

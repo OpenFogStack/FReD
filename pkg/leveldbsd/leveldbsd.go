@@ -1,6 +1,7 @@
 package leveldbsd
 
 import (
+	"github.com/rs/zerolog/log"
 	"github.com/syndtr/goleveldb/leveldb"
 
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/data"
@@ -39,6 +40,8 @@ func (s *Storage) Read(i data.Item) (data.Item, error) {
 
 	i.Data = string(value)
 
+	log.Debug().Err(err).Msgf("Read from levedbsd: in %v, out %s", i, string(value))
+
 	return i, err
 }
 
@@ -47,6 +50,8 @@ func (s *Storage) Update(i data.Item) error {
 	key := makeKeyName(i.Keygroup, i.ID)
 
 	err := s.db.Put([]byte(key), []byte(i.Data), nil)
+
+	log.Debug().Err(err).Msgf("Update from levedbsd: in %v", i)
 
 	return err
 }
@@ -57,6 +62,8 @@ func (s *Storage) Delete(i data.Item) error {
 
 	err := s.db.Delete([]byte(key), nil)
 
+	log.Debug().Err(err).Msgf("Delete from levedbsd: in %v", i)
+
 	return err
 }
 
@@ -65,6 +72,8 @@ func (s *Storage) Exists(i data.Item) bool {
 	key := makeKeyName(i.Keygroup, i.ID)
 
 	has, _ := s.db.Has([]byte(key), nil)
+
+	log.Debug().Msgf("Exists from levedbsd: in %v, out: %t", i, has)
 
 	return has
 }
@@ -75,6 +84,8 @@ func (s *Storage) ExistsKeygroup(i data.Item) bool {
 
 	has, _ := s.db.Has([]byte(key), nil)
 
+	log.Debug().Msgf("ExistsKeygroup from levedbsd: in %v, out: %t", i, has)
+
 	return has
 }
 
@@ -84,6 +95,8 @@ func (s *Storage) CreateKeygroup(i data.Item) error {
 
 	err := s.db.Put([]byte(key), []byte(i.Data), nil)
 
+	log.Debug().Err(err).Msgf("CreateKeygroup from levedbsd: in %v", i)
+
 	return err
 }
 
@@ -92,6 +105,8 @@ func (s *Storage) DeleteKeygroup(i data.Item) error {
 	key := makeKeyName(i.Keygroup, i.ID)
 
 	err := s.db.Delete([]byte(key), nil)
+
+	log.Debug().Err(err).Msgf("DeleteKeygroup from levedbsd: in %v", i)
 
 	return err
 }

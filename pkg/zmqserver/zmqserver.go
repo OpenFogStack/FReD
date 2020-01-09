@@ -68,9 +68,11 @@ func pollForever(c *Server) error {
 		// src = identity of socket from dealer
 		src := string(request[0])
 		// the first byte of answer tells whether an answer is expected
-		answerType := request[1][0]
+		msgType := request[1][0]
 		// the rest is the message we got
 		msg := request[2]
+
+		log.Debug().Msgf("ZMQServer received a request: msgType=%v, msg=%v", msgType, msg)
 
 		// identity of sender can be either:
 		// - our own receiver socket. This means another node wants to initiate a conservation with us
@@ -80,7 +82,7 @@ func pollForever(c *Server) error {
 		//   But it should be expanded to handle error replies ect.
 		// We dont want to send the answer in the current thread because that would block polling
 		if newMessageSocket.Identity() == c.receiver.GetSocket().Identity() {
-			switch answerType {
+			switch msgType {
 			case zmqcommon.CreateKeygroup: // Create keygroup
 				var req = &zmqcommon.Request{}
 				err = json.Unmarshal(msg, &req)
@@ -104,7 +106,7 @@ func pollForever(c *Server) error {
 			}
 		} else {
 			// Not necessary because we only need eventual consistency, so we dont receive answers to our questions
-			//switch answerType {
+			//switch msgType {
 			//case 0x12: // Answer to a get request received
 			//	var res = &Response{}
 			//	err = json.Unmarshal(msg, &res)
