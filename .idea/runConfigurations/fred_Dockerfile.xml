@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="frednode/Dockerfile" type="docker-deploy" factoryName="dockerfile" activateToolWindowBeforeRun="false" server-name="Docker">
+  <configuration default="false" name="fred/Dockerfile" type="docker-deploy" factoryName="dockerfile" activateToolWindowBeforeRun="false" server-name="Docker">
     <deployment type="dockerfile">
       <settings>
         <option name="buildCliOptions" value="" />

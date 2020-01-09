@@ -62,7 +62,7 @@ container:
     - if [ "$CI_COMMIT_REF_NAME" == "master" ]; then CONTAINER_TAG=latest; fi;
     - echo $CONTAINER_TAG
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker tag mcc-fred/fred gitlab-registry.tubit.tu-berlin.de/mcc-fred/fred/fred:$CONTAINER_TAG
+    - docker tag gitlab-registry.tubit.tu-berlin.de/mcc-fred/fred/fred gitlab-registry.tubit.tu-berlin.de/mcc-fred/fred/fred:$CONTAINER_TAG
     - docker push gitlab-registry.tubit.tu-berlin.de/mcc-fred/fred/fred:$CONTAINER_TAG
 
 terraform:
