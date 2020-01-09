@@ -7,12 +7,16 @@ variable "name" {
   type = string
 }
 
-variable "key_pair" {
+variable "key_name" {
   type = string
-  default = "my_test_key"
+  default = "keypair"
 }
 
-variable "key_pair_key" {
+variable "key_pub" {
+  type = string
+}
+
+variable "key_prv" {
   type = string
 }
 
@@ -32,4 +36,8 @@ variable "gitlab_repo_password" {
 variable "instance_count" {
   type = number
   default = 3
+}
+
+variable "identifier" {
+  type = string
 }

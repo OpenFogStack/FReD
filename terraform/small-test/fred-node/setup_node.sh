@@ -7,7 +7,7 @@ sudo systemctl start docker
 
 sudo cat ./gitlabtoken | sudo docker login -u="$1" --password-stdin gitlab-registry.tubit.tu-berlin.de
 
-sudo docker pull gitlab-registry.tubit.tu-berlin.de/mcc-fred/fred/fred:latest
+sudo docker pull gitlab-registry.tubit.tu-berlin.de/mcc-fred/fred/fred:"$3"
 
 sudo docker run -it \
       --name=fred \

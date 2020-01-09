@@ -1,4 +1,4 @@
-resource "aws_key_pair" "my-test-key" {
-  key_name   = "test-key"
-  public_key = file("terraform.key.pub")
+resource "aws_key_pair" "keypair" {
+  key_name   = var.key_name
+  public_key = var.key_pub
 }

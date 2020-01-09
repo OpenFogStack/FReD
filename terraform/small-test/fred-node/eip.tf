@@ -1,3 +1,4 @@
 resource "aws_eip" "test-eip" {
-  instance    = aws_instance.fred_instance.id
+  count = var.instance_count
+  instance    = aws_instance.fred_instance[count.index].id
 }

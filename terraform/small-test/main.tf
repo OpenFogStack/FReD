@@ -1,14 +1,10 @@
-resource "aws_key_pair" "terraform_key" {
-  key_name   = "terraform_key"
-  public_key = file("terraform.key.pub")
-}
-
-module "fred-nodes" {
+module "fred-node" {
   source = ".//fred-node"
 
   name            = "${var.identifier}-fred-node"
-  key_pair        = aws_key_pair.terraform_key.key_name
-  key_pair_key    = "terraform.key"
+  key_name        = "${var.identifier}-terraform_key"
+  key_pub         = file("terraform.key.pub")
+  key_prv         = file("terraform.key")
   instance_count = var.instance_count
   security_groups = [
     aws_security_group.allow_ssh.name,
@@ -18,4 +14,5 @@ module "fred-nodes" {
   ]
   gitlab_repo_password = var.gitlab_repo_password
   gitlab_repo_username = var.gitlab_repo_username
+  identifier = var.identifier
 }
