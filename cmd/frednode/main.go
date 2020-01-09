@@ -62,7 +62,7 @@ func main() {
 
 	var fc fredConfig
 	if _, err := toml.DecodeFile(*configPath, &fc); err != nil {
-		log.Fatal().Err(err).Msg("Invalid configuration! Toml can not be decoded.")
+		log.Fatal().Err(err).Msg("Invalid configuration! Toml cannot be decoded.")
 	}
 
 	// Setup Logging

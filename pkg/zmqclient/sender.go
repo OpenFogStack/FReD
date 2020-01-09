@@ -18,7 +18,7 @@ func NewSender(ip net.IP, port int) (sen *Sender) {
 	// Create a dealer socket and connect it to the router.
 	dealer, err := goczmq.NewDealer(fmt.Sprintf("tcp://%s:%d", ip, port))
 	if err != nil {
-		log.Error().Err(err).Msg("Can not create ZMQ Dealer")
+		log.Error().Err(err).Msg("cannot create ZMQ Dealer")
 	}
 	log.Printf("Sender has created a dealer to tcp://%s:%d\n", ip, port)
 	sen = &Sender{dealer}

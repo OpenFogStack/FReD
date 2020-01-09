@@ -46,7 +46,7 @@ func (s *service) RelayDeleteKeygroup(k keygroup.Keygroup) error {
 		Name:    replication.KeygroupName(k.Name),
 	}
 
-	if s.n.ExistsKeygroup(kg) {
+	if !s.n.ExistsKeygroup(kg) {
 		return errors.New("replicationservice: no such keygroup")
 	}
 
@@ -84,7 +84,7 @@ func (s *service) RelayUpdate(i data.Item) error {
 		Name:    replication.KeygroupName(i.Keygroup),
 	}
 
-	if s.n.ExistsKeygroup(kg) {
+	if !s.n.ExistsKeygroup(kg) {
 		return errors.New("replicationservice: no such keygroup")
 	}
 
@@ -118,7 +118,7 @@ func (s *service) RelayDelete(i data.Item) error {
 		Name:    replication.KeygroupName(i.Keygroup),
 	}
 
-	if s.n.ExistsKeygroup(kg) {
+	if !s.n.ExistsKeygroup(kg) {
 		return errors.New("replicationservice: no such keygroup")
 	}
 
