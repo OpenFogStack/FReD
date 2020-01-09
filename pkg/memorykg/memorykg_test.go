@@ -5,12 +5,13 @@ import (
 	"sync"
 	"testing"
 
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/commons"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/keygroup"
 )
 
 func TestKeygroupStorage_Create(t *testing.T) {
 	type fields struct {
-		keygroups map[string]struct{}
+		keygroups map[commons.KeygroupName]struct{}
 		sync.RWMutex
 	}
 	type args struct {
@@ -24,7 +25,7 @@ func TestKeygroupStorage_Create(t *testing.T) {
 	}{
 		{"create simple keygroup",
 			fields{
-				make(map[string]struct{}),
+				make(map[commons.KeygroupName]struct{}),
 				sync.RWMutex{},
 			},
 			args{keygroup.Keygroup{
@@ -34,7 +35,7 @@ func TestKeygroupStorage_Create(t *testing.T) {
 		},
 		{"create keygroup with empty name",
 			fields{
-				make(map[string]struct{}),
+				make(map[commons.KeygroupName]struct{}),
 				sync.RWMutex{},
 			},
 			args{keygroup.Keygroup{
@@ -58,7 +59,7 @@ func TestKeygroupStorage_Create(t *testing.T) {
 
 func TestKeygroupStorage_Delete(t *testing.T) {
 	type fields struct {
-		keygroups map[string]struct{}
+		keygroups map[commons.KeygroupName]struct{}
 		RWMutex   sync.RWMutex
 	}
 	type args struct {
@@ -72,7 +73,7 @@ func TestKeygroupStorage_Delete(t *testing.T) {
 	}{
 		{"delete non-existent keygroup",
 			fields{
-				make(map[string]struct{}),
+				make(map[commons.KeygroupName]struct{}),
 				sync.RWMutex{},
 			},
 			args{keygroup.Keygroup{
@@ -82,7 +83,7 @@ func TestKeygroupStorage_Delete(t *testing.T) {
 		},
 		{"delete keygroup with empty name",
 			fields{
-				make(map[string]struct{}),
+				make(map[commons.KeygroupName]struct{}),
 				sync.RWMutex{},
 			},
 			args{keygroup.Keygroup{
@@ -106,7 +107,7 @@ func TestKeygroupStorage_Delete(t *testing.T) {
 
 func TestKeygroupStorage_Exists(t *testing.T) {
 	type fields struct {
-		keygroups map[string]struct{}
+		keygroups map[commons.KeygroupName]struct{}
 		RWMutex   sync.RWMutex
 	}
 	type args struct {
@@ -120,7 +121,7 @@ func TestKeygroupStorage_Exists(t *testing.T) {
 	}{
 		{"check non-existent keygroup",
 			fields{
-				make(map[string]struct{}),
+				make(map[commons.KeygroupName]struct{}),
 				sync.RWMutex{},
 			},
 			args{keygroup.Keygroup{
@@ -130,7 +131,7 @@ func TestKeygroupStorage_Exists(t *testing.T) {
 		},
 		{"check keygroup with empty name",
 			fields{
-				make(map[string]struct{}),
+				make(map[commons.KeygroupName]struct{}),
 				sync.RWMutex{},
 			},
 			args{keygroup.Keygroup{
@@ -159,7 +160,7 @@ func TestNew(t *testing.T) {
 	}{
 		{"create new empty KeygroupStorage",
 			&KeygroupStorage{
-				keygroups: make(map[string]struct{}),
+				keygroups: make(map[commons.KeygroupName]struct{}),
 			},
 		},
 	}

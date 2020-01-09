@@ -7,6 +7,8 @@ import (
 
 	"github.com/rs/zerolog/log"
 
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/commons"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/replication"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/zmqcommon"
 )
 
@@ -16,15 +18,22 @@ type Client struct {
 }
 
 // NewClient creates a new Client.
-func NewClient() (client *Client){
+func NewClient() (client *Client) {
 	client = &Client{senders: make(map[string]Sender)}
 	return
 }
 
+// Destroy the server.
+func (c *Client) Destroy() {
+	for _, sender := range c.senders {
+		sender.Destroy()
+	}
+}
+
 // SendCreateKeygroup sends the message to the specified node.
-func (c *Client) SendCreateKeygroup(ip net.IP, port int, kgname string) (err error) {
+func (c *Client) SendCreateKeygroup(ip net.IP, port int, kgname commons.KeygroupName) (err error) {
 	req, err := json.Marshal(&zmqcommon.Request{
-		Keygroup: kgname,
+		Keygroup: string(kgname),
 	})
 
 	if err != nil {
@@ -36,9 +45,9 @@ func (c *Client) SendCreateKeygroup(ip net.IP, port int, kgname string) (err err
 }
 
 // SendDeleteKeygroup sends the message to the specified node.
-func (c *Client) SendDeleteKeygroup(ip net.IP, port int, kgname string) (err error) {
+func (c *Client) SendDeleteKeygroup(ip net.IP, port int, kgname commons.KeygroupName) (err error) {
 	req, err := json.Marshal(&zmqcommon.Request{
-		Keygroup: kgname,
+		Keygroup: string(kgname),
 	})
 
 	if err != nil {
@@ -50,10 +59,10 @@ func (c *Client) SendDeleteKeygroup(ip net.IP, port int, kgname string) (err err
 }
 
 // SendUpdate sends a PUT message to the specified node.
-func (c *Client) SendUpdate(ip net.IP, port int, kgname, kgid, value string) (err error) {
+func (c *Client) SendUpdate(ip net.IP, port int, kgname commons.KeygroupName, id, value string) (err error) {
 	req, err := json.Marshal(&zmqcommon.Request{
-		Keygroup: kgname,
-		ID:       kgid,
+		Keygroup: string(kgname),
+		ID:       id,
 		Value:    value,
 	})
 
@@ -66,10 +75,10 @@ func (c *Client) SendUpdate(ip net.IP, port int, kgname, kgid, value string) (er
 }
 
 // SendDelete sends the message to the specified node.
-func (c *Client) SendDelete(ip net.IP, port int, kgname, kgid string) (err error) {
+func (c *Client) SendDelete(ip net.IP, port int, kgname commons.KeygroupName, id string) (err error) {
 	req, err := json.Marshal(&zmqcommon.Request{
-		Keygroup: kgname,
-		ID:       kgid,
+		Keygroup: string(kgname),
+		ID:       id,
 	})
 
 	if err != nil {
@@ -102,9 +111,86 @@ func (c *Client) sendMessage(msType byte, ip net.IP, port int, msg []byte) (err 
 	return
 }
 
-// Destroy the server.
-func (c *Client) Destroy() {
-	for _,sender := range c.senders {
-		sender.Destroy()
+// SendAddNode sends the message to the specified node.
+func (c *Client) SendAddNode(ip net.IP, port int, nodeID replication.ID, nodeIP net.IP, nodePort int) (err error) {
+	req, err := json.Marshal(&zmqcommon.ReplicationRequest{
+		Node: struct {
+			ID   string
+			IP   string
+			Port string
+		}{
+			ID: string(nodeID),
+			IP: string(nodeIP),
+			Port: string(nodePort),
+		},
+	})
+
+	if err != nil {
+		return
 	}
+
+	err = c.sendMessage(zmqcommon.AddNode, ip, port, req)
+	return
+}
+
+// SendRemoveNode sends the message to the specified node.
+func (c *Client) SendRemoveNode(ip net.IP, port int, nodeID replication.ID) (err error) {
+	req, err := json.Marshal(&zmqcommon.ReplicationRequest{
+		Node: struct {
+			ID   string
+			IP   string
+			Port string
+		}{
+			ID: string(nodeID),
+		},
+	})
+
+	if err != nil {
+		return
+	}
+
+	err = c.sendMessage(zmqcommon.RemoveNode, ip, port, req)
+	return
+}
+
+// SendAddReplica sends the message to the specified node.
+func (c *Client) SendAddReplica(ip net.IP, port int, kgname commons.KeygroupName, nodeID replication.ID) (err error) {
+	req, err := json.Marshal(&zmqcommon.ReplicationRequest{
+		Keygroup: string(kgname),
+		Node: struct {
+			ID   string
+			IP   string
+			Port string
+		}{
+			ID: string(nodeID),
+		},
+	})
+
+	if err != nil {
+		return
+	}
+
+	err = c.sendMessage(zmqcommon.AddReplica, ip, port, req)
+	return
+}
+
+// SendRemoveReplica sends the message to the specified node.
+func (c *Client) SendRemoveReplica(ip net.IP, port int, kgname commons.KeygroupName, nodeID replication.ID) (err error) {
+	req, err := json.Marshal(&zmqcommon.ReplicationRequest{
+		Keygroup: string(kgname),
+		Node: struct {
+			ID   string
+			IP   string
+			Port string
+		}{
+			ID: string(nodeID),
+		},
+	})
+
+	if err != nil {
+		return
+	}
+
+	err = c.sendMessage(zmqcommon.RemoveReplica, ip, port, req)
+	return
 }

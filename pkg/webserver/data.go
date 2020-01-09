@@ -6,13 +6,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/commons"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/data"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/exthandler"
 )
 
 func getItem(h exthandler.Handler) func(context *gin.Context) {
 	return func(context *gin.Context) {
-		kgname := context.Params.ByName("kgname")
+		kgname := commons.KeygroupName(context.Params.ByName("kgname"))
 
 		id := context.Params.ByName("id")
 
@@ -33,7 +34,7 @@ func getItem(h exthandler.Handler) func(context *gin.Context) {
 
 func putItem(h exthandler.Handler) func(context *gin.Context) {
 	return func(context *gin.Context) {
-		kgname := context.Params.ByName("kgname")
+		kgname := commons.KeygroupName(context.Params.ByName("kgname"))
 
 		id := context.Params.ByName("id")
 
@@ -66,7 +67,7 @@ func putItem(h exthandler.Handler) func(context *gin.Context) {
 
 func deleteItem(h exthandler.Handler) func(context *gin.Context) {
 	return func(context *gin.Context) {
-		kgname := context.Params.ByName("kgname")
+		kgname := commons.KeygroupName(context.Params.ByName("kgname"))
 
 		id := context.Params.ByName("id")
 

@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/commons"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/exthandler"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/keygroup"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/replication"
@@ -15,7 +16,7 @@ func getKeygroupReplica(h exthandler.Handler) func(context *gin.Context) {
 		kgname := context.Params.ByName("kgname")
 
 		r, err := h.HandleGetKeygroupReplica(keygroup.Keygroup{
-			Name: kgname,
+			Name: commons.KeygroupName(kgname),
 		})
 
 		if err != nil {
@@ -34,8 +35,8 @@ func postKeygroupReplica(h exthandler.Handler) func(context *gin.Context) {
 
 		nodeid := context.Params.ByName("nodeid")
 
-		err := h.HandleAddKeygroupReplica(keygroup.Keygroup{
-			Name: kgname,
+		err := h.HandleAddReplica(keygroup.Keygroup{
+			Name: commons.KeygroupName(kgname),
 		}, replication.Node{
 			ID: replication.ID(nodeid),
 		})
@@ -56,8 +57,8 @@ func deleteKeygroupReplica(h exthandler.Handler) func(context *gin.Context) {
 
 		nodeid := context.Params.ByName("nodeid")
 
-		err := h.HandleRemoveKeygroupReplica(keygroup.Keygroup{
-			Name: kgname,
+		err := h.HandleRemoveReplica(keygroup.Keygroup{
+			Name: commons.KeygroupName(kgname),
 		}, replication.Node{
 			ID: replication.ID(nodeid),
 		})

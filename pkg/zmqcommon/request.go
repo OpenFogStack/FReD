@@ -7,3 +7,13 @@ type Request struct {
 	ID       string
 	Value    string
 }
+
+// ReplicationRequest has all data for a ZMQ request for changing replication.
+type ReplicationRequest struct {
+	Keygroup string
+	Node struct {
+		ID string
+		IP string
+		Port string
+	}
+}

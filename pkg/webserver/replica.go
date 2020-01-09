@@ -31,10 +31,10 @@ func postReplica(h exthandler.Handler) func(context *gin.Context) {
 	return func(context *gin.Context) {
 
 		var jsonstruct struct {
-			Nodes []struct{
-				ID string `json:"id" binding:"required"`
-				IP string `json:"ip" binding:"required"`
-				Port int `json:"port" binding:"required"`
+			Nodes []struct {
+				ID   string `json:"id" binding:"required"`
+				IP   string `json:"ip" binding:"required"`
+				Port int    `json:"port" binding:"required"`
 			} `json:"nodes" binding:"required"`
 		}
 
@@ -61,7 +61,7 @@ func postReplica(h exthandler.Handler) func(context *gin.Context) {
 			}
 		}
 
-		err := h.HandleAddReplica(n)
+		err := h.HandleAddNode(n)
 
 		if err != nil {
 			_ = context.AbortWithError(http.StatusConflict, err)
@@ -78,7 +78,7 @@ func deleteReplica(h exthandler.Handler) func(context *gin.Context) {
 
 		nodeid := context.Params.ByName("nodeid")
 
-		err := h.HandleRemoveReplica(replication.Node{
+		err := h.HandleRemoveNode(replication.Node{
 			ID: replication.ID(nodeid),
 		})
 

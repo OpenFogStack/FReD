@@ -103,6 +103,22 @@ func pollForever(c *Server) error {
 				var req = &zmqcommon.Request{}
 				err = json.Unmarshal(msg, &req)
 				go c.handler.HandleDeleteFromKeygroup(req, src)
+			case zmqcommon.AddNode: // Add Node
+				var req = &zmqcommon.ReplicationRequest{}
+				err = json.Unmarshal(msg, &req)
+				go c.handler.HandleRemoveNode(req, src)
+			case zmqcommon.RemoveNode: // Remove Node
+				var req = &zmqcommon.ReplicationRequest{}
+				err = json.Unmarshal(msg, &req)
+				go c.handler.HandleAddNode(req, src)
+			case zmqcommon.AddReplica: // Add Replica in Keygroup
+				var req = &zmqcommon.ReplicationRequest{}
+				err = json.Unmarshal(msg, &req)
+				go c.handler.HandleAddReplica(req, src)
+			case zmqcommon.RemoveReplica: // Remove Replica in Keygroup
+				var req = &zmqcommon.ReplicationRequest{}
+				err = json.Unmarshal(msg, &req)
+				go c.handler.HandleRemoveReplica(req, src)
 			}
 		} else {
 			// Not necessary because we only need eventual consistency, so we dont receive answers to our questions

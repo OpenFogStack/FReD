@@ -7,29 +7,29 @@ import (
 
 	"github.com/rs/zerolog/log"
 
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/commons"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/replication"
 )
 
 type node struct {
-	ip net.IP
+	ip   net.IP
 	port int
 }
 
-
 // ReplicationStorage saves a set of all known nodes.
 type ReplicationStorage struct {
-	nodes map[replication.ID]node
-	kg map[replication.KeygroupName]map[replication.ID]struct{}
+	nodes     map[replication.ID]node
+	kg        map[commons.KeygroupName]map[replication.ID]struct{}
 	nodesLock sync.RWMutex
-	kgLock sync.RWMutex
+	kgLock    sync.RWMutex
 }
 
 // New creates a new NodeStorage.
 func New() (rS *ReplicationStorage) {
 	rS = &ReplicationStorage{
-			nodes: make(map[replication.ID]node),
-			kg: make(map[replication.KeygroupName]map[replication.ID]struct{}),
-		}
+		nodes: make(map[replication.ID]node),
+		kg:    make(map[commons.KeygroupName]map[replication.ID]struct{}),
+	}
 
 	return
 }
@@ -47,7 +47,7 @@ func (rS *ReplicationStorage) CreateNode(n replication.Node) error {
 
 	rS.nodesLock.Lock()
 	rS.nodes[n.ID] = node{
-		ip: n.IP,
+		ip:   n.IP,
 		port: n.Port,
 	}
 	rS.nodesLock.Unlock()
@@ -247,7 +247,6 @@ func (rS *ReplicationStorage) GetReplica(k replication.Keygroup) ([]replication.
 	defer rS.kgLock.RUnlock()
 
 	n, ok := rS.kg[k.Name]
-
 
 	if !ok {
 		return nil, errors.New("memoryrs: no such keygroup")
