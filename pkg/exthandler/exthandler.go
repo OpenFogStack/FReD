@@ -31,14 +31,19 @@ func (h *handler) HandleCreateKeygroup(k keygroup.Keygroup) error {
 	if err := h.k.Create(keygroup.Keygroup{
 		Name: k.Name,
 	}); err != nil {
-		log.Err(err).Msg("Exthandler can not create keygroup with keygroup service")
+		log.Err(err).Msg("Exthandler cannot create keygroup with keygroup service")
 		return err
 	}
 
 	if err := h.i.CreateKeygroup(data.Item{
 		Keygroup: k.Name,
 	}); err != nil {
-		log.Err(err).Msg("Exthandler can not create keygroup with data service")
+		log.Err(err).Msg("Exthandler cannot create keygroup with data service")
+		return err
+	}
+
+	if err := h.r.RelayCreateKeygroup(k); err != nil {
+		log.Err(err).Msg("Exthandler cannot create keygroup with replication service")
 		return err
 	}
 
@@ -50,21 +55,21 @@ func (h *handler) HandleDeleteKeygroup(k keygroup.Keygroup) error {
 	if err := h.k.Delete(keygroup.Keygroup{
 		Name: k.Name,
 	}); err != nil {
-		log.Err(err).Msg("Exthandler can not delete keygroup with keygroup service")
+		log.Err(err).Msg("Exthandler cannot delete keygroup with keygroup service")
 		return err
 	}
 
 	if err := h.i.DeleteKeygroup(data.Item{
 		Keygroup: k.Name,
 	}); err != nil {
-		log.Err(err).Msg("Exthandler can not delete keygroup with data service")
+		log.Err(err).Msg("Exthandler cannot delete keygroup with data service")
 		return err
 	}
 
 	if err := h.r.RelayDeleteKeygroup(keygroup.Keygroup{
 		Name: k.Name,
 	}); err != nil {
-		log.Err(err).Msg("Exthandler can not delete keygroup with replication service")
+		log.Err(err).Msg("Exthandler cannot delete keygroup with replication service")
 		return err
 	}
 
@@ -91,12 +96,12 @@ func (h *handler) HandleUpdate(i data.Item) error {
 	}
 
 	if err := h.i.Update(i); err != nil {
-		log.Err(err).Msg("Exthandler can not relay update with data service")
+		log.Err(err).Msg("Exthandler cannot relay update with data service")
 		return err
 	}
 
 	if err := h.r.RelayUpdate(i); err != nil {
-		log.Err(err).Msg("Exthandler can not delete keygroup with replication service")
+		log.Err(err).Msg("Exthandler cannot delete keygroup with replication service")
 		return err
 	}
 
@@ -112,12 +117,12 @@ func (h *handler) HandleDelete(i data.Item) error {
 	}
 
 	if err := h.i.Delete(i); err != nil {
-		log.Err(err).Msg("Exthandler can not delete data item with data service")
+		log.Err(err).Msg("Exthandler cannot delete data item with data service")
 		return err
 	}
 
 	if err := h.r.RelayDelete(i); err != nil {
-		log.Err(err).Msg("Exthandler can not delete data item with data service")
+		log.Err(err).Msg("Exthandler cannot delete data item with data service")
 		return err
 	}
 
@@ -133,7 +138,7 @@ func (h *handler) HandleAddKeygroupReplica(k keygroup.Keygroup, n replication.No
 	}
 
 	if err := h.r.AddReplica(k, n); err != nil {
-		log.Err(err).Msg("Exthandler can not add a new keygroup replica")
+		log.Err(err).Msg("Exthandler cannot add a new keygroup replica")
 		return err
 	}
 

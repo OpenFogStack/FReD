@@ -22,7 +22,7 @@ func (s *service) Create(k Keygroup) error {
 	err := checkKeygroup(k)
 
 	if err != nil {
-		log.Err(err).Msg("Keygroup service can not create a new keygroup")
+		log.Err(err).Msg("Keygroup service cannot create a new keygroup")
 		return err
 	}
 
@@ -40,14 +40,14 @@ func (s *service) Delete(k Keygroup) error {
 	err := checkKeygroup(k)
 
 	if err != nil {
-		log.Err(err).Msg("Keygroup service can not delete a keygroup")
+		log.Err(err).Msg("Keygroup service cannot delete a keygroup")
 		return err
 	}
 
 	err = s.store.Delete(k)
 
 	if err != nil {
-		log.Err(err).Msg("Keygroup service can not delete a keygroup")
+		log.Err(err).Msg("Keygroup service cannot delete a keygroup")
 		return err
 	}
 
