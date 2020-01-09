@@ -97,6 +97,7 @@ func (c *Client) sendMessage(msType byte, ip net.IP, port int, msg []byte) (err 
 		return err
 	}
 
+	log.Debug().Bytes("msg", msg).Msgf("ZMQClient is sending a new message: ip=%d, msType=%v", ip, msType)
 	err = cSender.SendMessageWithType(msType, msg)
 	return
 }
