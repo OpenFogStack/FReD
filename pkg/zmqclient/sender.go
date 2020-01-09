@@ -38,7 +38,7 @@ func (s *Sender) GetSocket() (socket *goczmq.Sock) {
 // SendBytes sends a message composed of bytes.
 func (s *Sender) SendBytes(data []byte) (err error) {
 	// TODO if the message is too big (maybe 500mb and more?) it should be sent as a multipart message
-	//log.Printf("Sending:: %#v", data)
+	// log.Printf("Sending:: %#v", data)
 	err = s.socket.SendFrame(data, goczmq.FlagNone)
 	return
 }

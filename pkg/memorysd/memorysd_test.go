@@ -5,6 +5,7 @@ import (
 	"sync"
 	"testing"
 
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/commons"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/data"
 )
 
@@ -15,7 +16,7 @@ func TestNew(t *testing.T) {
 	}{
 		{"create new empty Storage",
 			&Storage{
-				keygroups: make(map[string]Keygroup),
+				keygroups: make(map[commons.KeygroupName]Keygroup),
 			},
 		},
 	}
@@ -30,7 +31,7 @@ func TestNew(t *testing.T) {
 
 func TestStorage_CreateKeygroup(t *testing.T) {
 	type fields struct {
-		keygroups map[string]Keygroup
+		keygroups map[commons.KeygroupName]Keygroup
 		sync.RWMutex
 	}
 	type args struct {
@@ -44,7 +45,7 @@ func TestStorage_CreateKeygroup(t *testing.T) {
 	}{
 		{"create simple keygroup",
 			fields{
-				make(map[string]Keygroup),
+				make(map[commons.KeygroupName]Keygroup),
 				sync.RWMutex{},
 			},
 			args{data.Item{
@@ -54,7 +55,7 @@ func TestStorage_CreateKeygroup(t *testing.T) {
 		},
 		{"create keygroup with empty name",
 			fields{
-				make(map[string]Keygroup),
+				make(map[commons.KeygroupName]Keygroup),
 				sync.RWMutex{},
 			},
 			args{data.Item{
@@ -78,7 +79,7 @@ func TestStorage_CreateKeygroup(t *testing.T) {
 
 func TestStorage_Delete(t *testing.T) {
 	type fields struct {
-		keygroups map[string]Keygroup
+		keygroups map[commons.KeygroupName]Keygroup
 		sync.RWMutex
 	}
 	type args struct {
@@ -92,7 +93,7 @@ func TestStorage_Delete(t *testing.T) {
 	}{
 		{"delete non-existent item from non-existent keygroup",
 			fields{
-				make(map[string]Keygroup),
+				make(map[commons.KeygroupName]Keygroup),
 				sync.RWMutex{},
 			},
 			args{
@@ -119,7 +120,7 @@ func TestStorage_Delete(t *testing.T) {
 
 func TestStorage_DeleteKeygroup(t *testing.T) {
 	type fields struct {
-		keygroups map[string]Keygroup
+		keygroups map[commons.KeygroupName]Keygroup
 		sync.RWMutex
 	}
 	type args struct {
@@ -133,7 +134,7 @@ func TestStorage_DeleteKeygroup(t *testing.T) {
 	}{
 		{"delete non-existent keygroup",
 			fields{
-				make(map[string]Keygroup),
+				make(map[commons.KeygroupName]Keygroup),
 				sync.RWMutex{},
 			},
 			args{
@@ -146,7 +147,7 @@ func TestStorage_DeleteKeygroup(t *testing.T) {
 		},
 		{"delete keygroup with empty name",
 			fields{
-				make(map[string]Keygroup),
+				make(map[commons.KeygroupName]Keygroup),
 				sync.RWMutex{},
 			},
 			args{data.Item{
@@ -170,7 +171,7 @@ func TestStorage_DeleteKeygroup(t *testing.T) {
 
 func TestStorage_Read(t *testing.T) {
 	type fields struct {
-		keygroups map[string]Keygroup
+		keygroups map[commons.KeygroupName]Keygroup
 		sync.RWMutex
 	}
 	type args struct {
@@ -185,7 +186,7 @@ func TestStorage_Read(t *testing.T) {
 	}{
 		{"read non-existent item from non-existent keygroup",
 			fields{
-				make(map[string]Keygroup),
+				make(map[commons.KeygroupName]Keygroup),
 				sync.RWMutex{},
 			},
 			args{
@@ -221,7 +222,7 @@ func TestStorage_Read(t *testing.T) {
 
 func TestStorage_Update(t *testing.T) {
 	type fields struct {
-		keygroups map[string]Keygroup
+		keygroups map[commons.KeygroupName]Keygroup
 		sync.RWMutex
 	}
 	type args struct {
@@ -235,14 +236,14 @@ func TestStorage_Update(t *testing.T) {
 	}{
 		{"delete non-existent item from non-existent keygroup",
 			fields{
-				make(map[string]Keygroup),
+				make(map[commons.KeygroupName]Keygroup),
 				sync.RWMutex{},
 			},
 			args{
 				data.Item{
-					"keygroup",
-					"0",
-					"a new hello",
+					Keygroup: "keygroup",
+					ID:       "0",
+					Data:     "a new hello",
 				},
 			},
 			true,
