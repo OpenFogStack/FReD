@@ -73,4 +73,4 @@ terraform:
     - CONTAINER_TAG=${components[0]}
     - if [ "$CI_COMMIT_REF_NAME" == "master" ]; then CONTAINER_TAG=latest; fi;
     - terraform init -input=false
-    - terraform plan -input=false -var="identifier=$CONTAINER_TAG"
+    - terraform plan -input=false -var="aws_access_key=$AWS_ACCESS_KEY" -var="aws_secret_key=$AWS_SECRET_KEY" -var="gitlab_repo_username=$CI_REGISTRY_USER" -var="gitlab_repo_password=$CI_REGISTRY_PASSWORD" -var="identifier=$CONTAINER_TAG"
