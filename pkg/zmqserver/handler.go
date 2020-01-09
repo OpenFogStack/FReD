@@ -12,4 +12,8 @@ type MessageHandler interface {
 	HandleDeleteFromKeygroup(req *zmqcommon.Request, from string)
 	HandleDeleteKeygroup(req *zmqcommon.Request, from string)
 	HandleCreateKeygroup(req *zmqcommon.Request, src string)
+	HandleAddNode(req *zmqcommon.ReplicationRequest, src string)
+	HandleRemoveNode(req *zmqcommon.ReplicationRequest, src string)
+	HandleAddReplica(req *zmqcommon.ReplicationRequest, src string)
+	HandleRemoveReplica(req *zmqcommon.ReplicationRequest, src string)
 }

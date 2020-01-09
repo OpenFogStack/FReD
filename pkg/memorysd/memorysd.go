@@ -4,12 +4,13 @@ import (
 	"errors"
 	"sync"
 
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/commons"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/data"
 )
 
 // Storage stores a map of keygroup by name.
 type Storage struct {
-	keygroups map[string]Keygroup
+	keygroups map[commons.KeygroupName]Keygroup
 	sync.RWMutex
 }
 
@@ -22,7 +23,7 @@ type Keygroup struct {
 // New create a new Storage.
 func New() (s *Storage) {
 	s = &Storage{
-		keygroups: make(map[string]Keygroup),
+		keygroups: make(map[commons.KeygroupName]Keygroup),
 	}
 
 	return

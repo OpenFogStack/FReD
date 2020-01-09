@@ -4,6 +4,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/syndtr/goleveldb/leveldb"
 
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/commons"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/data"
 )
 
@@ -13,8 +14,8 @@ type Storage struct {
 }
 
 // makeKeyName creates the internal LevelDB key given a keygroup name and an id
-func makeKeyName(kgname string, id string) string {
-	return kgname + "/" + id
+func makeKeyName(kgname commons.KeygroupName, id string) string {
+	return string(kgname) + "/" + id
 }
 
 // New create a new Storage.

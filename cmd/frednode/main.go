@@ -143,7 +143,7 @@ func main() {
 	addr := fmt.Sprintf("%s:%d", fc.Server.Host, fc.Server.Port)
 
 	extH := exthandler.New(is, ks, rs)
-	intH := inthandler.New(is, ks)
+	intH := inthandler.New(is, ks, rs)
 
 	// Add more options here
 	zmqH := memoryzmq.New(intH)

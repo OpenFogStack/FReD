@@ -13,10 +13,10 @@ type Handler interface {
 	HandleRead(i data.Item) (data.Item, error)
 	HandleUpdate(i data.Item) error
 	HandleDelete(i data.Item) error
-	HandleAddKeygroupReplica(k keygroup.Keygroup, n replication.Node) error
+	HandleAddReplica(k keygroup.Keygroup, n replication.Node) error
 	HandleGetKeygroupReplica(k keygroup.Keygroup) ([]replication.Node, error)
-	HandleRemoveKeygroupReplica(k keygroup.Keygroup, n replication.Node) error
-	HandleAddReplica(n []replication.Node) error
+	HandleRemoveReplica(k keygroup.Keygroup, n replication.Node) error
+	HandleAddNode(n []replication.Node) error
 	HandleGetReplica() ([]replication.Node, error)
-	HandleRemoveReplica(n replication.Node) error
+	HandleRemoveNode(n replication.Node) error
 }

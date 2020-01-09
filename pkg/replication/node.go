@@ -9,7 +9,7 @@ type ID string
 
 // Node is a replica node.
 type Node struct {
-	ID ID
-	IP net.IP
+	ID   ID
+	IP   net.IP
 	Port int
 }

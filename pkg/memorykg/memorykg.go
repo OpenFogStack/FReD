@@ -6,19 +6,20 @@ import (
 
 	"github.com/rs/zerolog/log"
 
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/commons"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/keygroup"
 )
 
 // KeygroupStorage saves a set of all available keygroup.
 type KeygroupStorage struct {
-	keygroups map[string]struct{}
+	keygroups map[commons.KeygroupName]struct{}
 	sync.RWMutex
 }
 
 // New creates a new KeygroupStorage.
 func New() (kS *KeygroupStorage) {
 	kS = &KeygroupStorage{
-		keygroups: make(map[string]struct{}),
+		keygroups: make(map[commons.KeygroupName]struct{}),
 	}
 
 	return

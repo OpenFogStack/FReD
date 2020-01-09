@@ -7,18 +7,21 @@ import (
 
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/data"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/keygroup"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/replication"
 )
 
 type handler struct {
 	i data.Service
 	k keygroup.Service
+	r replication.Service
 }
 
 // New creates a new handler for internal request (i.e. from peer nodes or the naming service).
-func New(i data.Service, k keygroup.Service) Handler {
+func New(i data.Service, k keygroup.Service, r replication.Service) Handler {
 	return &handler{
 		i: i,
 		k: k,
+		r: r,
 	}
 }
 
@@ -80,4 +83,27 @@ func (h *handler) HandleDelete(i data.Item) error {
 	}
 
 	return h.i.Delete(i)
+}
+
+func (h *handler) HandleAddReplica(k keygroup.Keygroup, n replication.Node) error {
+	return h.r.AddReplica(k, n, false)
+}
+
+func (h *handler) HandleRemoveReplica(k keygroup.Keygroup, n replication.Node) error {
+	panic("implement me")
+}
+
+func (h *handler) HandleAddNode(n []replication.Node) error {
+	for _, rn := range n {
+		if err := h.r.AddNode(rn, true); err != nil {
+			return err
+		}
+	}
+
+	return nil
+
+}
+
+func (h *handler) HandleRemoveNode(n replication.Node) error {
+	panic("implement me")
 }
