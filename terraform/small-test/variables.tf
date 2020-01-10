@@ -4,6 +4,12 @@ variable "aws_region" {
   default = "eu-central-1"
 }
 
+variable "root_domain" {
+  description = "Name of the Hosted Zone and Domain Name for which DNS entries will be created."
+  type = string
+  default = "mcc-f.red"
+}
+
 variable "identifier" {
   description = "Identifier for the deployment."
   type = string

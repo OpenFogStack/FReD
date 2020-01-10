@@ -45,3 +45,11 @@ variable "identifier" {
 variable "fred_flags" {
   type = list(string)
 }
+
+variable "domain_hosted_zone" {
+  type = string
+}
+
+variable "domain_name" {
+  type = string
+}

@@ -17,4 +17,6 @@ module "fred-node" {
   identifier = var.identifier
   instance_type = var.instance_type
   fred_flags = var.fred_flags
+  domain_name = "nodes.${var.identifier}.${var.root_domain}"
+  domain_hosted_zone = var.root_domain
 }
