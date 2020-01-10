@@ -230,7 +230,7 @@ paths:
       parameters:
         - name: "body"
           in: "body"
-          description: "ID, IP Address and Port of Replica Node."
+          description: "ID, Address and Port of Replica Node."
           required: true
           schema:
             $ref: "#/definitions/Replica"
@@ -273,7 +273,7 @@ definitions:
         id:
           type: "string"
           format: "utf-8"
-        ip:
+        addr:
           type: "string"
           format: "utf-8"
         port:
