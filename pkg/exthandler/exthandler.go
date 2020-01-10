@@ -178,7 +178,7 @@ func (h *handler) HandleAddNode(n []replication.Node) error {
 
 	for _, node := range n {
 		if err := h.r.AddNode(node, true); err != nil {
-			log.Err(err).Msgf("Exthandler can no add a new replica node. (node=%v)", node)
+			log.Err(err).Msgf("Exthandler can not add a new replica node. (node=%v)", node)
 			e[ec] = fmt.Sprintf("%v", err)
 			ec++
 		}
