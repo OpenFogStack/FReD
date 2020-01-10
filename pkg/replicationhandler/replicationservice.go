@@ -72,7 +72,7 @@ func (s *service) RelayDeleteKeygroup(k keygroup.Keygroup) error {
 		}
 
 		log.Debug().Msgf("RelayDeleteKeygroup from replicationservice: sending %v to %v", k, node)
-		if err := s.c.SendDeleteKeygroup(node.IP, node.Port, k.Name); err != nil {
+		if err := s.c.SendDeleteKeygroup(node.Addr, node.Port, k.Name); err != nil {
 			return err
 		}
 	}
@@ -110,7 +110,7 @@ func (s *service) RelayUpdate(i data.Item) error {
 		}
 
 		log.Debug().Msgf("RelayUpdate from replicationservice: sending %v to %v", i, node)
-		if err := s.c.SendUpdate(node.IP, node.Port, kg.Name, i.ID, i.Data); err != nil {
+		if err := s.c.SendUpdate(node.Addr, node.Port, kg.Name, i.ID, i.Data); err != nil {
 			return err
 		}
 	}
@@ -146,7 +146,7 @@ func (s *service) RelayDelete(i data.Item) error {
 		}
 
 		log.Debug().Msgf("RelayDelete from replicationservice: sending %v to %v", i, node)
-		if err := s.c.SendDelete(node.IP, node.Port, kg.Name, i.ID); err != nil {
+		if err := s.c.SendDelete(node.Addr, node.Port, kg.Name, i.ID); err != nil {
 			return err
 		}
 	}
@@ -185,7 +185,7 @@ func (s *service) AddReplica(k keygroup.Keygroup, n replication.Node, relay bool
 		}
 
 		log.Debug().Msgf("AddReplica from replicationservice: sending %v to %v", k, node)
-		if err := s.c.SendCreateKeygroup(node.IP, node.Port, kg.Name); err != nil {
+		if err := s.c.SendCreateKeygroup(node.Addr, node.Port, kg.Name); err != nil {
 			return err
 		}
 
@@ -199,7 +199,7 @@ func (s *service) AddReplica(k keygroup.Keygroup, n replication.Node, relay bool
 			}
 
 			log.Debug().Msgf("AddReplica from replicationservice: sending %v to %v", k, node)
-			if err := s.c.SendAddReplica(node.IP, node.Port, kg.Name, node.ID); err != nil {
+			if err := s.c.SendAddReplica(node.Addr, node.Port, kg.Name, node); err != nil {
 				return err
 			}
 		}
@@ -241,7 +241,7 @@ func (s *service) RemoveReplica(k keygroup.Keygroup, n replication.Node, relay b
 		}
 
 		log.Debug().Msgf("RemoveReplica from replicationservice: sending %v to %v", k, node)
-		if err := s.c.SendDeleteKeygroup(node.IP, node.Port, kg.Name); err != nil {
+		if err := s.c.SendDeleteKeygroup(node.Addr, node.Port, kg.Name); err != nil {
 			return err
 		}
 
@@ -255,7 +255,7 @@ func (s *service) RemoveReplica(k keygroup.Keygroup, n replication.Node, relay b
 			}
 
 			log.Debug().Msgf("RemoveReplica from replicationservice: sending %v to %v", k, node)
-			if err := s.c.SendRemoveReplica(node.IP, node.Port, kg.Name, node.ID); err != nil {
+			if err := s.c.SendRemoveReplica(node.Addr, node.Port, kg.Name, node); err != nil {
 				log.Err(err).Msg("")
 				return err
 			}
@@ -291,7 +291,7 @@ func (s *service) AddNode(n replication.Node, relay bool) error {
 			}
 
 			log.Debug().Msgf("AddNode from replicationservice: sending %v to %v", n, node)
-			if err := s.c.SendAddNode(node.IP, node.Port, n.ID, n.IP, n.Port); err != nil {
+			if err := s.c.SendAddNode(node.Addr, node.Port, n); err != nil {
 				log.Err(err).Msg("")
 				return err
 			}
@@ -327,7 +327,7 @@ func (s *service) RemoveNode(n replication.Node, relay bool) error {
 			}
 
 			log.Debug().Msgf("RemoveNode from replicationservice: sending %v to %v", n, node)
-			if err := s.c.SendRemoveNode(node.IP, node.Port, n.ID); err != nil {
+			if err := s.c.SendRemoveNode(node.Addr, node.Port, n); err != nil {
 				log.Err(err).Msg("")
 				return err
 			}
