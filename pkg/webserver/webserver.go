@@ -8,10 +8,8 @@ import (
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/exthandler"
 )
 
-const apiversion string = "/v0"
-
 // Setup sets up a web server client interface for the Fred node.
-func Setup(addr string, h exthandler.Handler) error {
+func Setup(addr string, h exthandler.Handler, apiversion string) error {
 	gin.SetMode("release")
 	r := gin.New()
 
