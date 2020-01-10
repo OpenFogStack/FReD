@@ -1,8 +1,6 @@
 package webserver
 
 import (
-	"fmt"
-	"net"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -33,7 +31,7 @@ func postReplica(h exthandler.Handler) func(context *gin.Context) {
 		var jsonstruct struct {
 			Nodes []struct {
 				ID   string `json:"id" binding:"required"`
-				IP   string `json:"ip" binding:"required"`
+				Addr   string `json:"addr" binding:"required"`
 				Port int    `json:"port" binding:"required"`
 			} `json:"nodes" binding:"required"`
 		}
@@ -47,16 +45,16 @@ func postReplica(h exthandler.Handler) func(context *gin.Context) {
 		n := make([]replication.Node, len(jsonstruct.Nodes))
 
 		for i, node := range jsonstruct.Nodes {
-			ip := net.ParseIP(node.IP)
+			addr, err := replication.ParseAddress(node.Addr)
 
-			if ip == nil {
-				_ = context.AbortWithError(http.StatusConflict, fmt.Errorf("not a valid IP addr: %s", node.IP))
+			if err != nil {
+				_ = context.AbortWithError(http.StatusConflict, err)
 				return
 			}
 
 			n[i] = replication.Node{
 				ID:   replication.ID(node.ID),
-				IP:   ip,
+				Addr:  addr,
 				Port: node.Port,
 			}
 		}

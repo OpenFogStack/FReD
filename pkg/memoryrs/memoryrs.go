@@ -2,7 +2,6 @@ package memoryrs
 
 import (
 	"errors"
-	"net"
 	"sync"
 
 	"github.com/rs/zerolog/log"
@@ -12,7 +11,7 @@ import (
 )
 
 type node struct {
-	ip   net.IP
+	addr   replication.Address
 	port int
 }
 
@@ -47,7 +46,7 @@ func (rS *ReplicationStorage) CreateNode(n replication.Node) error {
 
 	rS.nodesLock.Lock()
 	rS.nodes[n.ID] = node{
-		ip:   n.IP,
+		addr:   n.Addr,
 		port: n.Port,
 	}
 	rS.nodesLock.Unlock()
@@ -86,7 +85,7 @@ func (rS *ReplicationStorage) GetNode(n replication.Node) (replication.Node, err
 
 	return replication.Node{
 		ID:   n.ID,
-		IP:   node.ip,
+		Addr:   node.addr,
 		Port: node.port,
 	}, nil
 }
@@ -229,7 +228,7 @@ func (rS *ReplicationStorage) GetNodes() ([]replication.Node, error) {
 	for id, node := range rS.nodes {
 		nodes[i] = replication.Node{
 			ID:   id,
-			IP:   node.ip,
+			Addr:   node.addr,
 			Port: node.port,
 		}
 
@@ -262,7 +261,7 @@ func (rS *ReplicationStorage) GetReplica(k replication.Keygroup) ([]replication.
 		node := rS.nodes[id]
 		nodes[i] = replication.Node{
 			ID:   id,
-			IP:   node.ip,
+			Addr:   node.addr,
 			Port: node.port,
 		}
 
