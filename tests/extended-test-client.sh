@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# notice that whatever identifier you put in will also be used to find the right docker container
 # terraform plan -var="instance_count=2" -var="identifier=tp" --var-file="secret.tfvars"
 
 IDENTIFIER=tp
