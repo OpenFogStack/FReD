@@ -90,10 +90,10 @@ func (c *Client) SendDelete(addr replication.Address, port int, kgname commons.K
 
 // sendMessage to the specified Addr.
 func (c *Client) sendMessage(msType byte, addr replication.Address, port int, msg []byte) (err error) {
-	endpoint := fmt.Sprintf("%s:%d", addr, port)
+	endpoint := fmt.Sprintf("%s:%d", addr.Addr, port)
 	cSender, exists := c.senders[endpoint]
 	if !exists {
-		log.Debug().Msgf("Created a new Socket to send to node %s:%d \n", addr, port)
+		log.Debug().Msgf("Created a new Socket to send to node %s:%d \n", addr.Addr, port)
 		cSender = *NewSender(addr, port)
 		c.senders[endpoint] = cSender
 		// If the controller also needs to listen to answers
@@ -105,7 +105,7 @@ func (c *Client) sendMessage(msType byte, addr replication.Address, port int, ms
 		return err
 	}
 
-	log.Debug().Bytes("msg", msg).Msgf("ZMQClient is sending a new message: addr=%d, msType=%v", addr, msType)
+	log.Debug().Bytes("msg", msg).Msgf("ZMQClient is sending a new message: addr=%s, msType=%v", addr.Addr, msType)
 	err = cSender.SendMessageWithType(msType, msg)
 	return
 }
