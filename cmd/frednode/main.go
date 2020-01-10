@@ -5,11 +5,11 @@ package main
 import "C"
 
 import (
-	"flag"
 	"fmt"
 	"os"
 
 	"github.com/BurntSushi/toml"
+	"github.com/alecthomas/kingpin"
 	"github.com/mmcloughlin/geohash"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -51,18 +51,60 @@ type fredConfig struct {
 	} `toml:"log"`
 }
 
+const apiversion string = "/v0"
+
+var (
+	configPath = kingpin.Flag("config", "Path to .toml configuration file.").PlaceHolder("PATH").String()
+	lat        = kingpin.Flag("lat", "Latitude of the node.").PlaceHolder("LATITUDE").Default("-200").Float64() // Domain: [-90,90]
+	lng        = kingpin.Flag("lng", "Longitude of the node.").PlaceHolder("LONGITUDE").Default("-200").Float64() // Domain: ]-180,180]
+	wsHost     = kingpin.Flag("ws-host", "Host address of webserver.").String()
+	wsPort     = kingpin.Flag("ws-port", "Port of webserver.").PlaceHolder("WS-PORT").Default("-1").Int() // Domain: [0,9999]
+	zmqPort    = kingpin.Flag("zmq-port", "Port of ZeroMQ.").PlaceHolder("ZMQ-PORT").Default("-1").Int() // Domain: [0,9999]
+	adaptor    = kingpin.Flag("adaptor", "Storage adaptor, can be \"leveldb\", \"memory\".").Enum("leveldb","memory")
+	logLevel   = kingpin.Flag("log-level", "Log level, can be \"debug\", \"info\" ,\"warn\", \"error\", \"fatal\", \"panic\".").Enum("debug","info","warn","error","fatal","panic")
+	handler    = kingpin.Flag("handler", "Mode of log handler, can be \"dev\", \"prod\".").Enum("dev", "prod")
+)
+
 func main() {
-	configPath := flag.String("config", "", "path to .toml configuration file")
-
-	flag.Parse()
-
-	if *configPath == "" {
-		log.Fatal().Msg("no configuration specified")
-	}
+	kingpin.Version(apiversion)
+	kingpin.HelpFlag.Short('h')
+	kingpin.CommandLine.Help = "Fog Replicated Database"
+	kingpin.Parse()
 
 	var fc fredConfig
-	if _, err := toml.DecodeFile(*configPath, &fc); err != nil {
-		log.Fatal().Err(err).Msg("Invalid configuration! Toml cannot be decoded.")
+	if *configPath != "" {
+		if _, err := toml.DecodeFile(*configPath, &fc); err != nil {
+			log.Fatal().Err(err).Msg("Invalid configuration! Toml can not be decoded.")
+		}
+	}
+
+	// replace with set cmd args, no real sanity checks
+	// default value means unset -> don't replace
+	// numbers have negative defaults outside their domain, simple domain checks are implemented
+	// e.g. lat < -90 is ignored and toml is used (if available)
+	if *lat >= -90 && *lat <= 90 {
+		fc.Location.Lat = *lat
+	}
+	if *lng >= -180 && *lng <= 180 {
+		fc.Location.Lng = *lng
+	}
+	if *wsHost != "" {
+		fc.Server.Host = *wsHost
+	}
+	if *wsPort >= 0 {
+		fc.Server.Port = *wsPort
+	}
+	if *zmqPort >= 0 {
+		fc.ZMQ.Port = *zmqPort
+	}
+	if *adaptor != "" {
+		fc.Storage.Adaptor = *adaptor
+	}
+	if *logLevel != "" {
+		fc.Log.Level = *logLevel
+	}
+	if *handler != "" {
+		fc.Log.Handler = *handler
 	}
 
 	// Setup Logging
@@ -154,7 +196,7 @@ func main() {
 		panic("Cannot start zmqServer")
 	}
 
-	log.Fatal().Err(webserver.Setup(addr, extH)).Msg("Webserver.Setup")
+	log.Fatal().Err(webserver.Setup(addr, extH, apiversion)).Msg("Webserver.Setup")
 
 	// Shutdown
 	zmqServer.Shutdown()
