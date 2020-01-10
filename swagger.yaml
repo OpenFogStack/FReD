@@ -266,6 +266,14 @@ definitions:
     Replica:
       type: "object"
       required:
+        - "nodes"
+      properties:
+        nodes:
+          items:
+            $ref: "#/definitions/Node"
+    Node:
+      type: "object"
+      required:
         - "id"
         - "addr"
         - "port"

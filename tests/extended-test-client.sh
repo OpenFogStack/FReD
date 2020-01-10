@@ -7,11 +7,11 @@ DEFAULT_WEB_PORT=80
 
 ID_1=0
 HOST_1=$ID_1.nodes.$IDENTIFIER.mcc-f.red
-PORT_1=DEFAULT_WEB_PORT
+PORT_1=$DEFAULT_WEB_PORT
 
 ID_2=1
 HOST_2=$ID_2.nodes.$IDENTIFIER.mcc-f.red
-PORT_2=DEFAULT_WEB_PORT
+PORT_2=$DEFAULT_WEB_PORT
 
 APIVERSION=v0
 KEYGROUP_NAME=testgroup
@@ -34,7 +34,7 @@ printf "Calling http://%s:%s/%s/replica\n" $HOST_1 $PORT_1 $APIVERSION
 
 curl --request POST -sL \
      --url http://$HOST_1:$PORT_1/$APIVERSION/replica \
-     --data "{\"id\":\"$ID_2\",\"addr\":\"$HOST_2\",\"port\":\"$PORT_2}" \
+     --data "{\"nodes\":[{\"id\":\"$ID_2\",\"addr\":\"$HOST_2\",\"port\":$PORT_2}]}" \
      -i
 
 # Add Node 2 as a Replica Node for the Keygroup at Node 1
@@ -76,7 +76,7 @@ curl --request GET -sL \
 
 # Delete the item at Node 2
 printf "\n"
-printf "Delete the item at Node 1\n"
+printf "Delete the item at Node 2\n"
 printf "Calling DELETE http://%s:%s/%s/keygroup/%s/items/%s\n" $HOST_2 $PORT_2 $APIVERSION $KEYGROUP_NAME $ID
 
 curl --request DELETE -sL \
