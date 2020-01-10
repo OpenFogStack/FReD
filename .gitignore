@@ -9,6 +9,9 @@ frednode
 # leveldb database
 db/
 
+### tubCloud ###
+*_conflic*
+
 # Created by https://www.gitignore.io/api/go,linux,macos,windows,microsoftoffice,terraform,node
 # Edit at https://www.gitignore.io/api/go,linux,macos,windows,microsoftoffice,terraform,node
 
