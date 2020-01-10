@@ -17,11 +17,11 @@ type Sender struct {
 // NewSender creates a zmqclient Sender to send messages to the specified addr and port.
 func NewSender(addr replication.Address, port int) (sen *Sender) {
 	// Create a dealer socket and connect it to the router.
-	dealer, err := goczmq.NewDealer(fmt.Sprintf("tcp://%s:%d", addr, port))
+	dealer, err := goczmq.NewDealer(fmt.Sprintf("tcp://%s:%d", addr.Addr, port))
 	if err != nil {
 		log.Error().Err(err).Msg("cannot create ZMQ Dealer")
 	}
-	log.Printf("Sender has created a dealer to tcp://%s:%d\n", addr, port)
+	log.Printf("Sender has created a dealer to tcp://%s:%d\n", addr.Addr, port)
 	sen = &Sender{dealer}
 	return
 }
