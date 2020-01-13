@@ -9,12 +9,12 @@ import (
 func checkItem(params ...Item) error {
 	for _, p := range params {
 		if p.Keygroup == "" {
-			log.Error().Msgf("checkItem failed for item %v because the keygroup is empty", p)
+			log.Error().Msgf("checkItem failed for item %#v because the keygroup is empty", p)
 			return errors.New("data: empty keygroup")
 		}
 
 		if p.ID == "" {
-			log.Error().Msgf("checkItem failed for item %v because the ID is empty", p)
+			log.Error().Msgf("checkItem failed for item %#v because the ID is empty", p)
 			return errors.New("data: empty ID")
 		}
 	}
@@ -25,7 +25,7 @@ func checkItem(params ...Item) error {
 func checkKeygroup(params ...Item) error {
 	for _, p := range params {
 		if p.Keygroup == "" {
-			log.Error().Msgf("checkKeygroup failed for item %v because the keygroup is empty", p)
+			log.Error().Msgf("checkKeygroup failed for item %#v because the keygroup is empty", p)
 			return errors.New("data: empty keygroup")
 		}
 	}

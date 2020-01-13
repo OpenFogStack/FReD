@@ -31,7 +31,7 @@ func (c *Client) Destroy() {
 
 // SendCreateKeygroup sends the message to the specified node.
 func (c *Client) SendCreateKeygroup(addr replication.Address, port int, kgname commons.KeygroupName) (err error) {
-	req, err := json.Marshal(&zmqcommon.Request{
+	req, err := json.Marshal(&zmqcommon.DataRequest{
 		Keygroup: string(kgname),
 	})
 
@@ -45,7 +45,7 @@ func (c *Client) SendCreateKeygroup(addr replication.Address, port int, kgname c
 
 // SendDeleteKeygroup sends the message to the specified node.
 func (c *Client) SendDeleteKeygroup(addr replication.Address, port int, kgname commons.KeygroupName) (err error) {
-	req, err := json.Marshal(&zmqcommon.Request{
+	req, err := json.Marshal(&zmqcommon.DataRequest{
 		Keygroup: string(kgname),
 	})
 
@@ -59,7 +59,7 @@ func (c *Client) SendDeleteKeygroup(addr replication.Address, port int, kgname c
 
 // SendUpdate sends a PUT message to the specified node.
 func (c *Client) SendUpdate(addr replication.Address, port int, kgname commons.KeygroupName, id, value string) (err error) {
-	req, err := json.Marshal(&zmqcommon.Request{
+	req, err := json.Marshal(&zmqcommon.DataRequest{
 		Keygroup: string(kgname),
 		ID:       id,
 		Value:    value,
@@ -75,7 +75,7 @@ func (c *Client) SendUpdate(addr replication.Address, port int, kgname commons.K
 
 // SendDelete sends the message to the specified node.
 func (c *Client) SendDelete(addr replication.Address, port int, kgname commons.KeygroupName, id string) (err error) {
-	req, err := json.Marshal(&zmqcommon.Request{
+	req, err := json.Marshal(&zmqcommon.DataRequest{
 		Keygroup: string(kgname),
 		ID:       id,
 	})
@@ -110,7 +110,7 @@ func (c *Client) sendMessage(msType byte, addr replication.Address, port int, ms
 	return
 }
 
-// SendAddNode sends the message to the specified node.
+// SendAddNode sends the message to the specified node. Receiver should add the node to the list of known nodes.
 func (c *Client) SendAddNode(addr replication.Address, port int, node replication.Node) (err error) {
 	req, err := json.Marshal(&zmqcommon.ReplicationRequest{
 		Node: node,
@@ -142,7 +142,7 @@ func (c *Client) SendRemoveNode(addr replication.Address, port int, node replica
 func (c *Client) SendAddReplica(addr replication.Address, port int, kgname commons.KeygroupName, node replication.Node) (err error) {
 	req, err := json.Marshal(&zmqcommon.ReplicationRequest{
 		Keygroup: kgname,
-		Node: node,
+		Node:     node,
 	})
 
 	if err != nil {
@@ -157,7 +157,7 @@ func (c *Client) SendAddReplica(addr replication.Address, port int, kgname commo
 func (c *Client) SendRemoveReplica(addr replication.Address, port int, kgname commons.KeygroupName, node replication.Node) (err error) {
 	req, err := json.Marshal(&zmqcommon.ReplicationRequest{
 		Keygroup: kgname,
-		Node: node,
+		Node:     node,
 	})
 
 	if err != nil {
@@ -167,3 +167,32 @@ func (c *Client) SendRemoveReplica(addr replication.Address, port int, kgname co
 	err = c.sendMessage(zmqcommon.RemoveReplica, addr, port, req)
 	return
 }
+
+// SendIntroduce sends an introduction message to the specified node.
+func (c *Client) SendIntroduce(addr replication.Address, port int, self replication.Node, other replication.Node, nodes []replication.Node) (err error) {
+	req, err := json.Marshal(&zmqcommon.IntroductionRequest{
+		Self:  self,
+		Other: other,
+		Node:  nodes,
+	})
+
+	if err != nil {
+		return
+	}
+
+	err = c.sendMessage(zmqcommon.Introduction, addr, port, req)
+	return
+}
+
+// SendDetroduce sends a dedotruction message to the specified node.
+func (c *Client) SendDetroduce(addr replication.Address, port int) (err error) {
+	req, err := json.Marshal(&zmqcommon.IntroductionRequest{})
+
+	if err != nil {
+		return
+	}
+
+	err = c.sendMessage(zmqcommon.Detroduction, addr, port, req)
+	return
+}
+

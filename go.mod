@@ -13,4 +13,6 @@ require (
 	github.com/rs/zerolog v1.17.2
 	github.com/syndtr/goleveldb v1.0.0
 	github.com/zeromq/goczmq v4.1.0+incompatible
+	golang.org/x/lint v0.0.0-20191125180803-fdd1cda4f05f // indirect
+	golang.org/x/tools v0.0.0-20200110142700-428f1ab0ca03 // indirect
 )

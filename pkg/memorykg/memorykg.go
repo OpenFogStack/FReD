@@ -27,7 +27,7 @@ func New() (kS *KeygroupStorage) {
 
 // Create adds a keygroup to the KeygroupStorage.
 func (kS *KeygroupStorage) Create(k keygroup.Keygroup) error {
-	log.Debug().Msgf("CreateKeygroup from memorykg: in %v", k)
+	log.Debug().Msgf("CreateKeygroup from memorykg: in %#v", k)
 	kS.RLock()
 	_, ok := kS.keygroups[k.Name]
 	kS.RUnlock()
@@ -45,7 +45,7 @@ func (kS *KeygroupStorage) Create(k keygroup.Keygroup) error {
 
 // Delete removes a keygroup from the KeygroupStorage.
 func (kS *KeygroupStorage) Delete(k keygroup.Keygroup) error {
-	log.Debug().Msgf("DeleteKeygroup from memorykg: in %v", k)
+	log.Debug().Msgf("DeleteKeygroup from memorykg: in %#v", k)
 	kS.RLock()
 	_, ok := kS.keygroups[k.Name]
 	kS.RUnlock()
@@ -67,7 +67,7 @@ func (kS *KeygroupStorage) Exists(k keygroup.Keygroup) bool {
 	_, ok := kS.keygroups[k.Name]
 	kS.RUnlock()
 
-	log.Debug().Msgf("Exists from memorykg: in %v, out %v", k, ok)
+	log.Debug().Msgf("Exists from memorykg: in %#v, out %#v", k, ok)
 
 	return ok
 }

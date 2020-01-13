@@ -19,6 +19,25 @@ schemes:
 - "https"
 - "http"
 paths:
+  /seed:
+    post:
+      tags:
+        - "seed"
+      summary: "Seeds the Node"
+      description: "Seeds the Node so replication can begin."
+      responses:
+        200:
+          description: OK
+        409:
+          description: Conflict, node is seeded already
+      parameters:
+        - name: "body"
+          in: "body"
+          description: "Seed, contains public IP address and ID for the node."
+          required: true
+          schema:
+            $ref: "#/definitions/Seed"
+
   /keygroup/{group_id}:
     post:
       tags:
@@ -124,7 +143,7 @@ paths:
           type: "string"
           format: "string"
 
-  /keygroup/{group_id}/items/{item_id}:
+  /keygroup/{group_id}/data/{item_id}:
     get:
       tags:
       - "data"
@@ -225,6 +244,8 @@ paths:
       responses:
         200:
           description: OK
+        400:
+          description: Bad Request, post body does not mach definition
         409:
           description: Conflict, Replica Node exists already
       parameters:
@@ -271,6 +292,18 @@ definitions:
         nodes:
           items:
             $ref: "#/definitions/Node"
+    Seed:
+      type: "object"
+      required:
+        - "id"
+        - "addr"
+      properties:
+        id:
+          type: "string"
+          format: "utf-8"
+        addr:
+          type: "string"
+          format: "utf-8"
     Node:
       type: "object"
       required:

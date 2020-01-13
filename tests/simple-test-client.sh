@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 HOST=localhost
 PORT=9001
 APIVERSION=v0
@@ -15,7 +16,7 @@ curl --request POST -sL \
 
 printf "\n"
 printf "Creating a Data Item in Keygroup...\n"
-printf "Calling PUT http://%s:%s/%s/keygroup/%s/items/%s\n" $HOST $PORT $APIVERSION $KEYGROUP_NAME $ID
+printf "Calling PUT http://%s:%s/%s/keygroup/%s/data/%s\n" $HOST $PORT $APIVERSION $KEYGROUP_NAME $ID
 
 curl --request PUT -sL \
      --url http://$HOST:$PORT/$APIVERSION/keygroup/"$KEYGROUP_NAME"/data/"$ID" \
@@ -24,7 +25,7 @@ curl --request PUT -sL \
 
 printf "\n"
 printf "Reading Data Item from Keygroup...\n"
-printf "Calling GET http://%s:%s/%s/keygroup/%s/items/%s\n" $HOST $PORT $APIVERSION $KEYGROUP_NAME $ID
+printf "Calling GET http://%s:%s/%s/keygroup/%s/data/%s\n" $HOST $PORT $APIVERSION $KEYGROUP_NAME $ID
 
 curl --request GET -sL \
      --url http://$HOST:$PORT/$APIVERSION/keygroup/"$KEYGROUP_NAME"/data/"$ID" \
@@ -32,7 +33,7 @@ curl --request GET -sL \
 
 printf "\n"
 printf "Updating Data Item in Keygroup...\n"
-printf "Calling PUT http://%s:%s/%s/keygroup/%s/items/%s\n" $HOST $PORT $APIVERSION $KEYGROUP_NAME $ID
+printf "Calling PUT http://%s:%s/%s/keygroup/%s/data/%s\n" $HOST $PORT $APIVERSION $KEYGROUP_NAME $ID
 
 curl --request PUT -sL \
      --url http://$HOST:$PORT/$APIVERSION/keygroup/"$KEYGROUP_NAME"/data/"$ID" \
@@ -41,7 +42,7 @@ curl --request PUT -sL \
 
 printf "\n"
 printf "Reading Data Item from Keygroup...\n"
-printf "Calling GET http://%s:%s/%s/keygroup/%s/items/%s\n" $HOST $PORT $APIVERSION $KEYGROUP_NAME $ID
+printf "Calling GET http://%s:%s/%s/keygroup/%s/data/%s\n" $HOST $PORT $APIVERSION $KEYGROUP_NAME $ID
 
 curl --request GET -sL \
      --url http://$HOST:$PORT/$APIVERSION/keygroup/"$KEYGROUP_NAME"/data/"$ID" \
@@ -49,7 +50,7 @@ curl --request GET -sL \
 
 printf "\n"
 printf "Deleting Data Item from Keygroup...\n"
-printf "Calling DELETE http://%s:%s/%s/keygroup/%s/items/%s\n" $HOST $PORT $APIVERSION $KEYGROUP_NAME $ID
+printf "Calling DELETE http://%s:%s/%s/keygroup/%s/data/%s\n" $HOST $PORT $APIVERSION $KEYGROUP_NAME $ID
 
 curl --request DELETE -sL \
      --url http://$HOST:$PORT/$APIVERSION/keygroup/"$KEYGROUP_NAME"/data/"$ID" \
@@ -57,7 +58,7 @@ curl --request DELETE -sL \
 
 printf "\n"
 printf "Reading Data Item from Keygroup...\n"
-printf "Calling GET http://%s:%s/%s/keygroup/%s/items/%s\n" $HOST $PORT $APIVERSION $KEYGROUP_NAME $ID
+printf "Calling GET http://%s:%s/%s/keygroup/%s/data/%s\n" $HOST $PORT $APIVERSION $KEYGROUP_NAME $ID
 
 curl --request GET -sL \
      --url http://$HOST:$PORT/$APIVERSION/keygroup/"$KEYGROUP_NAME"/data/"$ID" \

@@ -72,7 +72,7 @@ func pollForever(c *Server) error {
 		// the rest is the message we got
 		msg := request[2]
 
-		log.Debug().Msgf("ZMQServer received a request: msgType=%v, msg=%v", msgType, msg)
+		log.Debug().Msgf("ZMQServer received a request: msgType=%v, msg=%#v", msgType, msg)
 
 		// identity of sender can be either:
 		// - our own receiver socket. This means another node wants to initiate a conservation with us
@@ -84,33 +84,33 @@ func pollForever(c *Server) error {
 		if newMessageSocket.Identity() == c.receiver.GetSocket().Identity() {
 			switch msgType {
 			case zmqcommon.CreateKeygroup: // Create keygroup
-				var req = &zmqcommon.Request{}
+				var req = &zmqcommon.KeygroupRequest{}
 				err = json.Unmarshal(msg, &req)
 				go c.handler.HandleCreateKeygroup(req, src)
 			case zmqcommon.DeleteKeygroup: // Delete keygroup
-				var req = &zmqcommon.Request{}
+				var req = &zmqcommon.KeygroupRequest{}
 				err = json.Unmarshal(msg, &req)
 				go c.handler.HandleDeleteKeygroup(req, src)
 			//case 0x12: // Get from Keygroup
-			//	var req = &Request{}
+			//	var req = &DataRequest{}
 			//	err = json.Unmarshal(msg, &req)
 			//	go c.handler.HandleGetValueFromKeygroup(req, src)
 			case zmqcommon.PutItem: // Put into keygroup
-				var req = &zmqcommon.Request{}
+				var req = &zmqcommon.DataRequest{}
 				err = json.Unmarshal(msg, &req)
 				go c.handler.HandlePutValueIntoKeygroup(req, src)
 			case zmqcommon.DeleteItem: // Delete in Keygroup
-				var req = &zmqcommon.Request{}
+				var req = &zmqcommon.DataRequest{}
 				err = json.Unmarshal(msg, &req)
 				go c.handler.HandleDeleteFromKeygroup(req, src)
 			case zmqcommon.AddNode: // Add Node
 				var req = &zmqcommon.ReplicationRequest{}
 				err = json.Unmarshal(msg, &req)
-				go c.handler.HandleRemoveNode(req, src)
+				go c.handler.HandleAddNode(req, src)
 			case zmqcommon.RemoveNode: // Remove Node
 				var req = &zmqcommon.ReplicationRequest{}
 				err = json.Unmarshal(msg, &req)
-				go c.handler.HandleAddNode(req, src)
+				go c.handler.HandleRemoveNode(req, src)
 			case zmqcommon.AddReplica: // Add Replica in Keygroup
 				var req = &zmqcommon.ReplicationRequest{}
 				err = json.Unmarshal(msg, &req)
@@ -119,6 +119,14 @@ func pollForever(c *Server) error {
 				var req = &zmqcommon.ReplicationRequest{}
 				err = json.Unmarshal(msg, &req)
 				go c.handler.HandleRemoveReplica(req, src)
+			case zmqcommon.Introduction: // Introduction DataRequest
+				var req = &zmqcommon.IntroductionRequest{}
+				err = json.Unmarshal(msg, &req)
+				go c.handler.HandleIntroduction(req, src)
+			case zmqcommon.Detroduction: // Detroduction DataRequest (opposite of Introduction
+				var req = &zmqcommon.IntroductionRequest{}
+				err = json.Unmarshal(msg, &req)
+				go c.handler.HandleDetroduction(req, src)
 			}
 		} else {
 			// Not necessary because we only need eventual consistency, so we dont receive answers to our questions
