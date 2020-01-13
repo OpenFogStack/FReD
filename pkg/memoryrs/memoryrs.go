@@ -290,6 +290,7 @@ func (rS *ReplicationStorage) GetReplica(k replication.Keygroup) ([]replication.
 	return nodes, nil
 }
 
+// Seed seeds the node as a first node in the system and supplies it with information about itself.
 func (rS *ReplicationStorage) Seed(n replication.Node) error {
 	if !rS.needsSeed {
 		return errors.New("memoryrs: node is already seeded or does not need seed")
@@ -306,7 +307,7 @@ func (rS *ReplicationStorage) Seed(n replication.Node) error {
 	return nil
 }
 
-
+// Unseed removes all data about self node from ReplicationStorage and sets "needsSeed" back to true, effectively removing the node from the system.
 func (rS *ReplicationStorage) Unseed() error {
 	if rS.needsSeed {
 		return errors.New("memoryrs: node is already unseeded or needs seed")
@@ -322,6 +323,7 @@ func (rS *ReplicationStorage) Unseed() error {
 
 }
 
+// GetSelf returns data about the self node from ReplicationStorage.
 func (rS *ReplicationStorage) GetSelf() (replication.Node, error) {
 	if rS.needsSeed {
 		return replication.Node{}, errors.New("memoryrs: cannot return self, needs seed")
