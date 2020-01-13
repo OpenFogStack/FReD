@@ -5,8 +5,8 @@ import (
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/replication"
 )
 
-// ReplicationRequest has all data for a ZMQ request for changing replication.
-type ReplicationRequest struct {
+// KeygroupRequest has all data for a ZMQ request to add a new node to the keygroup.
+type KeygroupRequest struct {
 	Keygroup commons.KeygroupName
-	Node     replication.Node
+	Nodes    []replication.Node
 }

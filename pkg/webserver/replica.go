@@ -31,7 +31,7 @@ func postReplica(h exthandler.Handler) func(context *gin.Context) {
 		var jsonstruct struct {
 			Nodes []struct {
 				ID   string `json:"id" binding:"required"`
-				Addr   string `json:"addr" binding:"required"`
+				Addr string `json:"addr" binding:"required"`
 				Port int    `json:"port" binding:"required"`
 			} `json:"nodes" binding:"required"`
 		}
@@ -54,7 +54,7 @@ func postReplica(h exthandler.Handler) func(context *gin.Context) {
 
 			n[i] = replication.Node{
 				ID:   replication.ID(node.ID),
-				Addr:  addr,
+				Addr: addr,
 				Port: node.Port,
 			}
 		}

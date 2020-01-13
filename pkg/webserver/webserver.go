@@ -18,6 +18,8 @@ func Setup(addr string, h exthandler.Handler, apiversion string) error {
 		UTC:    true,
 	}))
 
+	r.POST(apiversion+"/seed", postSeed(h))
+
 	r.GET(apiversion+"/replica", getReplica(h))
 	r.POST(apiversion+"/replica", postReplica(h))
 	r.DELETE(apiversion+"/replica/:nodeid", deleteReplica(h))

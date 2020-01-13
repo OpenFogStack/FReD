@@ -2,6 +2,7 @@ package inthandler
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/rs/zerolog/log"
 
@@ -26,7 +27,7 @@ func New(i data.Service, k keygroup.Service, r replication.Service) Handler {
 }
 
 // HandleCreateKeygroup handles requests to the CreateKeygroup endpoint of the internal interface.
-func (h *handler) HandleCreateKeygroup(k keygroup.Keygroup) error {
+func (h *handler) HandleCreateKeygroup(k keygroup.Keygroup, nodes []replication.Node) error {
 	if err := h.k.Create(keygroup.Keygroup{
 		Name: k.Name,
 	}); err != nil {
@@ -39,6 +40,32 @@ func (h *handler) HandleCreateKeygroup(k keygroup.Keygroup) error {
 	}); err != nil {
 		log.Err(err).Msg("Inthandler cannot create keygroup with data service")
 		return err
+	}
+
+	if err := h.r.CreateKeygroup(keygroup.Keygroup{
+		Name: k.Name,
+	}); err != nil {
+		log.Err(err).Msg("Inthandler cannot create keygroup with replication service")
+		return err
+	}
+
+	kg := keygroup.Keygroup{
+		Name: k.Name,
+	}
+
+	e := make([]string, len(nodes))
+	ec := 0
+
+	for _, node := range nodes {
+		if err := h.r.AddReplica(kg, node, false); err != nil {
+			log.Err(err).Msgf("inthandler: cannot remove node %#v)", node)
+			e[ec] = fmt.Sprintf("%v", err)
+			ec++
+		}
+	}
+
+	if ec > 0 {
+		return fmt.Errorf("exthandler: %v", e)
 	}
 
 	return nil
@@ -57,6 +84,13 @@ func (h *handler) HandleDeleteKeygroup(k keygroup.Keygroup) error {
 		Keygroup: k.Name,
 	}); err != nil {
 		log.Err(err).Msg("Inthandler cannot delete keygroup with data service")
+		return err
+	}
+
+	if err := h.r.DeleteKeygroup(keygroup.Keygroup{
+		Name: k.Name,
+	}); err != nil {
+		log.Err(err).Msg("Inthandler cannot delete keygroup with replication service")
 		return err
 	}
 
@@ -90,20 +124,69 @@ func (h *handler) HandleAddReplica(k keygroup.Keygroup, n replication.Node) erro
 }
 
 func (h *handler) HandleRemoveReplica(k keygroup.Keygroup, n replication.Node) error {
-	panic("implement me")
+	return h.r.RemoveReplica(k, n, false)
 }
 
-func (h *handler) HandleAddNode(n []replication.Node) error {
-	for _, rn := range n {
-		if err := h.r.AddNode(rn, true); err != nil {
-			return err
-		}
-	}
-
-	return nil
-
+func (h *handler) HandleAddNode(n replication.Node) error {
+	return h.r.AddNode(n, false)
 }
 
 func (h *handler) HandleRemoveNode(n replication.Node) error {
-	panic("implement me")
+	return h.r.RemoveNode(n, false)
+}
+
+func (h *handler) HandleIntroduction(self replication.Node, node []replication.Node) error {
+	err := h.r.Seed(self)
+
+	if err != nil {
+		return err
+	}
+
+	e := make([]string, len(node))
+	ec := 0
+
+	for _, node := range node {
+		if err := h.r.AddNode(node, false); err != nil {
+			log.Err(err).Msgf("inthandler: cannot add a new node %#v)", node)
+			e[ec] = fmt.Sprintf("%v", err)
+			ec++
+		}
+	}
+
+	if ec > 0 {
+		return fmt.Errorf("exthandler: %v", e)
+	}
+
+	return nil
+}
+
+func (h *handler) HandleDetroduction() error {
+	err := h.r.Unseed()
+
+	if err != nil {
+		return err
+	}
+
+	nodes, err := h.r.GetNodes()
+
+	if err != nil {
+		return err
+	}
+
+	e := make([]string, len(nodes))
+	ec := 0
+
+	for _, node := range nodes {
+		if err := h.r.RemoveNode(node, false); err != nil {
+			log.Err(err).Msgf("inthandler: cannot remove node %#v)", node)
+			e[ec] = fmt.Sprintf("%v", err)
+			ec++
+		}
+	}
+
+	if ec > 0 {
+		return fmt.Errorf("exthandler: %v", e)
+	}
+
+	return nil
 }

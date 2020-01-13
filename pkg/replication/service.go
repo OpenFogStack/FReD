@@ -7,7 +7,8 @@ import (
 
 // Service is an interface that encapsulates the needed methods to replicate data across nodes.
 type Service interface {
-	RelayCreateKeygroup(k keygroup.Keygroup) error
+	CreateKeygroup(k keygroup.Keygroup) error
+	DeleteKeygroup(k keygroup.Keygroup) error
 	RelayDeleteKeygroup(k keygroup.Keygroup) error
 	RelayUpdate(i data.Item) error
 	RelayDelete(i data.Item) error
@@ -17,4 +18,6 @@ type Service interface {
 	RemoveReplica(k keygroup.Keygroup, n Node, relay bool) error
 	GetNodes() ([]Node, error)
 	GetReplica(k keygroup.Keygroup) ([]Node, error)
+	Seed(n Node) error
+	Unseed() error
 }

@@ -1,4 +1,4 @@
-package replicationhandler
+package replhandler
 
 import (
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/commons"
@@ -15,4 +15,6 @@ type Client interface {
 	SendRemoveNode(addr replication.Address, port int, node replication.Node) error
 	SendAddReplica(addr replication.Address, port int, kgname commons.KeygroupName, node replication.Node) error
 	SendRemoveReplica(addr replication.Address, port int, kgname commons.KeygroupName, node replication.Node) error
+	SendIntroduce(addr replication.Address, port int, self replication.Node, other replication.Node, nodes []replication.Node) error
+	SendDetroduce(addr replication.Address, port int) error
 }

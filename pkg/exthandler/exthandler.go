@@ -42,7 +42,7 @@ func (h *handler) HandleCreateKeygroup(k keygroup.Keygroup) error {
 		return err
 	}
 
-	if err := h.r.RelayCreateKeygroup(k); err != nil {
+	if err := h.r.CreateKeygroup(k); err != nil {
 		log.Err(err).Msg("Exthandler cannot create keygroup with replication service")
 		return err
 	}
@@ -101,7 +101,7 @@ func (h *handler) HandleUpdate(i data.Item) error {
 	}
 
 	if err := h.r.RelayUpdate(i); err != nil {
-		log.Err(err).Msg("Exthandler cannot delete keygroup with replication service")
+		log.Err(err).Msg("Exthandler cannot relay update with replication service")
 		return err
 	}
 
@@ -178,7 +178,7 @@ func (h *handler) HandleAddNode(n []replication.Node) error {
 
 	for _, node := range n {
 		if err := h.r.AddNode(node, true); err != nil {
-			log.Err(err).Msgf("Exthandler can no add a new replica node. (node=%v)", node)
+			log.Err(err).Msgf("Exthandler can not add a new replica node. (node=%#v)", node)
 			e[ec] = fmt.Sprintf("%v", err)
 			ec++
 		}
@@ -199,4 +199,9 @@ func (h *handler) HandleGetReplica() ([]replication.Node, error) {
 // HandleRemoveNode handles requests to the RemoveReplica endpoint of the client interface.
 func (h *handler) HandleRemoveNode(n replication.Node) error {
 	return h.r.RemoveNode(n, true)
+}
+
+// HandleSeed handles seeding of the first replica node.
+func (h *handler) HandleSeed(n replication.Node) error {
+	return h.r.Seed(n)
 }

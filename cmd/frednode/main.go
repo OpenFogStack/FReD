@@ -23,8 +23,8 @@ import (
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/memoryrs"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/memorysd"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/memoryzmq"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/replhandler"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/replication"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/replicationhandler"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/webserver"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/zmqclient"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/zmqserver"
@@ -55,13 +55,13 @@ const apiversion string = "/v0"
 
 var (
 	configPath = kingpin.Flag("config", "Path to .toml configuration file.").PlaceHolder("PATH").String()
-	lat        = kingpin.Flag("lat", "Latitude of the node.").PlaceHolder("LATITUDE").Default("-200").Float64() // Domain: [-90,90]
+	lat        = kingpin.Flag("lat", "Latitude of the node.").PlaceHolder("LATITUDE").Default("-200").Float64()   // Domain: [-90,90]
 	lng        = kingpin.Flag("lng", "Longitude of the node.").PlaceHolder("LONGITUDE").Default("-200").Float64() // Domain: ]-180,180]
 	wsHost     = kingpin.Flag("ws-host", "Host address of webserver.").String()
 	wsPort     = kingpin.Flag("ws-port", "Port of webserver.").PlaceHolder("WS-PORT").Default("-1").Int() // Domain: [0,9999]
-	zmqPort    = kingpin.Flag("zmq-port", "Port of ZeroMQ.").PlaceHolder("ZMQ-PORT").Default("-1").Int() // Domain: [0,9999]
-	adaptor    = kingpin.Flag("adaptor", "Storage adaptor, can be \"leveldb\", \"memory\".").Enum("leveldb","memory")
-	logLevel   = kingpin.Flag("log-level", "Log level, can be \"debug\", \"info\" ,\"warn\", \"error\", \"fatal\", \"panic\".").Enum("debug","info","warn","error","fatal","panic")
+	zmqPort    = kingpin.Flag("zmq-port", "Port of ZeroMQ.").PlaceHolder("ZMQ-PORT").Default("-1").Int()  // Domain: [0,9999]
+	adaptor    = kingpin.Flag("adaptor", "Storage adaptor, can be \"leveldb\", \"memory\".").Enum("leveldb", "memory")
+	logLevel   = kingpin.Flag("log-level", "Log level, can be \"debug\", \"info\" ,\"warn\", \"error\", \"fatal\", \"panic\".").Enum("debug", "info", "warn", "error", "fatal", "panic")
 	handler    = kingpin.Flag("handler", "Mode of log handler, can be \"dev\", \"prod\".").Enum("dev", "prod")
 )
 
@@ -162,7 +162,7 @@ func main() {
 		}
 
 		// "%v": unly print field values. "%#v": also print field names
-		log.Debug().Msgf("leveldb struct is: %v", ldbc)
+		log.Debug().Msgf("leveldb struct is: %#v", ldbc)
 
 		i = leveldbsd.New(ldbc.Config.Path)
 	case "memory":
@@ -173,14 +173,14 @@ func main() {
 
 	// Add more options here
 	k = memorykg.New()
-	n = memoryrs.New()
+	n = memoryrs.New(fc.ZMQ.Port)
 
 	is = data.New(i)
 	c := zmqclient.NewClient()
 
 	ks = keygroup.New(k, nodeID)
 
-	rs = replicationhandler.New(n, c)
+	rs = replhandler.New(n, c)
 
 	addr := fmt.Sprintf("%s:%d", fc.Server.Host, fc.Server.Port)
 

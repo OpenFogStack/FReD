@@ -19,4 +19,5 @@ type Handler interface {
 	HandleAddNode(n []replication.Node) error
 	HandleGetReplica() ([]replication.Node, error)
 	HandleRemoveNode(n replication.Node) error
+	HandleSeed(n replication.Node) error
 }
