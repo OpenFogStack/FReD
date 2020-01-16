@@ -26,33 +26,43 @@ func main() {
 	apiVersion := flag.String("apiVersion", "v0", "API Version (e.g. v0)")
 
 	nodeAhost := flag.String("nodeAhost", "localhost", "host of nodeA (e.g. localhost)")
-	nodeAhttpPort := flag.String("nodeAhttp", "9001", "port of nodeA (e.g. 9001)")
+	nodeAhttpPort := flag.String("nodeAhttp", "80", "port of nodeA (e.g. 9001)")
 	nodeAzmqPort := flag.Int("nodeAzmqPort", 5555, "ZMQ Port of nodeA")
 	nodeAzmqID := flag.String("nodeAzmqID", "nodeA", "ZMQ Id of nodeA")
 
-	nodeAurl := fmt.Sprintf("http://%s:%s/%s/", *nodeAhost, *nodeAhttpPort, *apiVersion)
-
 	nodeBhost := flag.String("nodeBhost", "localhost", "host of nodeB (e.g. localhost)")
-	nodeBhttpPort := flag.String("nodeBhttp", "9002", "port of nodeB (e.g. 9001)")
-	nodeBzmqPort := flag.Int("nodeBzmqPort", 5556, "ZMQ Port of nodeB")
+	nodeBhttpPort := flag.String("nodeBhttp", "80", "port of nodeB (e.g. 9001)")
+	nodeBzmqPort := flag.Int("nodeBzmqPort", 5555, "ZMQ Port of nodeB")
 	nodeBzmqID := flag.String("nodeBzmqID", "nodeB", "ZMQ Id of nodeB")
 
-	nodeBurl := fmt.Sprintf("http://%s:%s/%s/", *nodeBhost, *nodeBhttpPort, *apiVersion)
-
 	nodeChost := flag.String("nodeChost", "localhost", "host of nodeC (e.g. localhost)")
-	nodeChttpPort := flag.String("nodeChttp", "9003", "port of nodeC (e.g. 9001)")
-	nodeCzmqPort := flag.Int("nodeCzmqPort", 5557, "ZMQ Port of nodeC")
+	nodeChttpPort := flag.String("nodeChttp", "80", "port of nodeC (e.g. 9001)")
+	nodeCzmqPort := flag.Int("nodeCzmqPort", 5555, "ZMQ Port of nodeC")
 	nodeCzmqID := flag.String("nodeCzmqID", "nodeC", "ZMQ Id of nodeC")
 
-	nodeCurl := fmt.Sprintf("http://%s:%s/%s/", *nodeChost, *nodeChttpPort, *apiVersion)
-	log.Debug().Msg(string(*nodeAzmqPort) + "would be a unused var if not for this message")
+
 	flag.Parse()
+
+	nodeAurl := fmt.Sprintf("http://%s:%s/%s/", *nodeAhost, *nodeAhttpPort, *apiVersion)
+	log.Debug().Msgf("Node A: %s with ZMQ Port %d and ID %s", nodeAurl, *nodeAzmqPort, *nodeAzmqID)
+
+	nodeBurl := fmt.Sprintf("http://%s:%s/%s/", *nodeBhost, *nodeBhttpPort, *apiVersion)
+	log.Debug().Msgf("Node B: %s with ZMQ Port %d and ID %s", nodeBurl, *nodeBzmqPort, *nodeBzmqID)
+
+	nodeCurl := fmt.Sprintf("http://%s:%s/%s/", *nodeChost, *nodeChttpPort, *apiVersion)
+	log.Debug().Msgf("Node C: %s with ZMQ Port %d and ID %s", nodeCurl, *nodeCzmqPort, *nodeCzmqID)
 
 	nodeA := pkg.NewNode(nodeAurl)
 	nodeB := pkg.NewNode(nodeBurl)
 	nodeC := pkg.NewNode(nodeCurl)
 
 	var resp map[string]string
+
+	// Seed NodeA
+	logNodeAction(nodeA, "Seeding nodeA")
+	nodeA.SeedNode(*nodeAzmqID, *nodeAhost, 200, true)
+
+
 	// Test Keygroups
 	logNodeAction(nodeA, "Creating keygroup testing")
 	nodeA.CreateKeygroup("testing", 200, true)
@@ -100,9 +110,6 @@ func main() {
 	resp = nodeA.GetItem("KG1", "KG1-Item", 404, true)
 
 	// Connect the nodes
-	logNodeAction(nodeA, "Seeding nodeA")
-	nodeA.SeedNode(*nodeAzmqID, *nodeAhost, 200, true)
-
 	logNodeAction(nodeA, "Telling nodeA about nodeB")
 	nodeA.RegisterReplica(*nodeBzmqID, *nodeBhost, *nodeBzmqPort, 200, true)
 

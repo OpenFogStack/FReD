@@ -125,7 +125,7 @@ func (n *Node) SeedNode(nodeID, nodeHost string, expectedStatusCode int, expectE
 
 	if expectEmptyResponse && (responseBody != nil && len(responseBody) != 0) {
 		n.Errors++
-		log.Warn().Str("node", n.URL).Msgf("SeedNode expected an empty response but got %#v with len %d", responseBody, len(responseBody))
+		log.Warn().Str("node", n.URL).Msgf("SeedNode expected an empty response but got %#v with len %d", string(responseBody), len(responseBody))
 	} else if !expectEmptyResponse && (responseBody == nil || len(responseBody) == 0) {
 		n.Errors++
 		log.Warn().Str("node", n.URL).Msg("SeedNode expected a response but got nothing")
