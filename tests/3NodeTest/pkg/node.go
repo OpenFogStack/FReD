@@ -12,12 +12,13 @@ import (
 
 // Node represents the API to a single FReD Node
 type Node struct {
-	URL string
+	URL    string
+	Errors int
 }
 
 // NewNode creates a new Node with the specified url (shuld have format: http://%s:%d/v%d/)
 func NewNode(url string) (node *Node) {
-	node = &Node{URL: url}
+	node = &Node{URL: url, Errors: 0}
 	return
 }
 
@@ -27,6 +28,7 @@ func (n *Node) CreateKeygroup(kgname string, expectedStatusCode int, expectEmpty
 	responseBody = n.sendPostReturnMap("keygroup/"+kgname, nil, expectedStatusCode)
 	if expectEmptyResponse && (responseBody != nil) {
 		log.Warn().Str("node", n.URL).Msgf("Create Keygroup expected an empty response but got %#v", responseBody)
+		n.Errors++
 	}
 	return
 }
@@ -37,6 +39,7 @@ func (n *Node) DeleteKeygroup(kgname string, expectedStatusCode int, expectEmpty
 	responseBody = n.sendDelete("keygroup/"+kgname, nil, expectedStatusCode)
 	if expectEmptyResponse && (responseBody != nil) {
 		log.Warn().Str("node", n.URL).Msgf("Delete Keygroup expected an empty response but got %#v", responseBody)
+		n.Errors++
 	}
 	return
 }
@@ -50,6 +53,7 @@ func (n *Node) PutItem(kgname, item string, data string, expectedStatusCode int,
 	responseBody = n.sendPut(fmt.Sprintf("keygroup/%s/data/%s", kgname, item), reqBody, expectedStatusCode)
 	if expectEmptyResponse && (responseBody != nil) {
 		log.Warn().Str("node", n.URL).Msgf("PutItem expected an empty response but got %#v", responseBody)
+		n.Errors++
 	}
 	return
 }
@@ -60,8 +64,10 @@ func (n *Node) GetItem(kgname, item string, expectedStatusCode int, expectEmptyR
 	responseBody = n.sendGetResponseMap(fmt.Sprintf("keygroup/%s/data/%s", kgname, item), expectedStatusCode)
 	if expectEmptyResponse && (responseBody != nil) {
 		log.Warn().Str("node", n.URL).Msgf("GetItem expected an empty response but got %#v", responseBody)
+		n.Errors++
 	} else if !expectEmptyResponse && responseBody == nil {
 		log.Warn().Str("node", n.URL).Msg("GetItem expected a response but got nothing")
+		n.Errors++
 	}
 	return
 }
@@ -72,8 +78,10 @@ func (n *Node) DeleteItem(kgname, item string, expectedStatusCode int, expectEmp
 	responseBody = n.sendDelete(fmt.Sprintf("keygroup/%s/data/%s", kgname, item), nil, expectedStatusCode)
 	if expectEmptyResponse && (responseBody != nil) {
 		log.Warn().Str("node", n.URL).Msgf("DeleteItem expected an empty response but got %#v", responseBody)
+		n.Errors++
 	} else if !expectEmptyResponse && responseBody == nil {
 		log.Warn().Str("node", n.URL).Msg("DeleteItem expected a response but got nothing")
+		n.Errors++
 	}
 	return
 }
@@ -85,7 +93,9 @@ func (n *Node) RegisterReplica(nodeID, nodeIP string, nodePort int, expectedStat
 	responseBody = n.sendPost("replica", json, expectedStatusCode)
 	if expectEmptyResponse && (responseBody != nil && len(responseBody) != 0) {
 		log.Warn().Str("node", n.URL).Msgf("RegisterReplica expected an empty response but got %#v with len %d", responseBody, len(responseBody))
+		n.Errors++
 	} else if !expectEmptyResponse && (responseBody == nil || len(responseBody) == 0) {
+		n.Errors++
 		log.Warn().Str("node", n.URL).Msg("RegisterReplica expected a response but got nothing")
 	}
 	return
@@ -98,8 +108,10 @@ func (n *Node) GetAllReplica(expectedStatusCode int, expectEmptyResponse bool) (
 	parsed, _ = gabs.ParseJSON(rawResponseBody)
 	log.Debug().Msgf("All Replicas: %s", parsed.String())
 	if expectEmptyResponse && (rawResponseBody != nil && len(rawResponseBody) != 0) {
+		n.Errors++
 		log.Warn().Str("node", n.URL).Msgf("GetAllReplica expected an empty response but got %#v with len %d", rawResponseBody, len(rawResponseBody))
 	} else if !expectEmptyResponse && (rawResponseBody == nil || len(rawResponseBody) == 0) {
+		n.Errors++
 		log.Warn().Str("node", n.URL).Msg("GetAllReplica expected a response but got nothing")
 	}
 	return
@@ -112,8 +124,10 @@ func (n *Node) SeedNode(nodeID, nodeHost string, expectedStatusCode int, expectE
 	responseBody = n.sendPost("seed", json, expectedStatusCode)
 
 	if expectEmptyResponse && (responseBody != nil && len(responseBody) != 0) {
+		n.Errors++
 		log.Warn().Str("node", n.URL).Msgf("SeedNode expected an empty response but got %#v with len %d", responseBody, len(responseBody))
 	} else if !expectEmptyResponse && (responseBody == nil || len(responseBody) == 0) {
+		n.Errors++
 		log.Warn().Str("node", n.URL).Msg("SeedNode expected a response but got nothing")
 	}
 	return
@@ -123,7 +137,8 @@ func (n *Node) SeedNode(nodeID, nodeHost string, expectedStatusCode int, expectE
 func (n *Node) AddReplicaNode(kgname, replicaNodeID string, expectedStatusCode int, expectEmptyResponse bool) (responseBody []byte) {
 	log.Debug().Str("node", n.URL).Msgf("Sending a AddReplicaNode for group %s; expecting %d", kgname, expectedStatusCode)
 	responseBody = n.sendPost("keygroup/"+kgname+"/replica/"+replicaNodeID, nil, expectedStatusCode)
-	if expectEmptyResponse && (responseBody != nil) {
+	if expectEmptyResponse && (responseBody != nil && len(responseBody) != 0) {
+		n.Errors++
 		log.Warn().Str("node", n.URL).Msgf("AddReplica expected an empty response but got %#v", responseBody)
 	}
 	return
@@ -138,6 +153,7 @@ func (n *Node) sendGet(path string, expectedStatusCode int) (responseBody []byte
 		return nil
 	}
 	if resp.StatusCode != expectedStatusCode {
+		n.Errors++
 		log.Error().Str("node", n.URL).Msgf("SendGet got wrong HTTP Status Code Response. Expected: %d, Got: %d", expectedStatusCode, resp.StatusCode)
 	}
 
@@ -187,6 +203,7 @@ func (n *Node) sendPut(path string, data map[string]string, expectedStatusCode i
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(resp.Body)
 	if resp.StatusCode != expectedStatusCode {
+		n.Errors++
 		log.Error().Str("node", n.URL).Msgf("SendPut got wrong HTTP Status Code Response. Expected: %d, Got: %d. Response Body: %s", expectedStatusCode, resp.StatusCode, buf.String())
 	} else if buf.Len() != 0 {
 		err = json.Unmarshal(buf.Bytes(), &responseBody)
@@ -210,6 +227,7 @@ func (n *Node) sendPost(path string, jsonBytes []byte, expectedStatusCode int) (
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != expectedStatusCode {
+		n.Errors++
 		log.Error().Str("node", n.URL).Msgf("SendPost got wrong HTTP Status Code Response. Expected: %d, Got: %d.", expectedStatusCode, resp.StatusCode)
 	}
 	buf := new(bytes.Buffer)
@@ -264,6 +282,7 @@ func (n *Node) sendDelete(path string, data map[string]string, expectedStatusCod
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != expectedStatusCode {
+		n.Errors++
 		log.Error().Str("node", n.URL).Msgf("SendDelete got wrong HTTP Status Code Response. Expected: %d, Got: %d.", expectedStatusCode, resp.StatusCode)
 	}
 	buf := new(bytes.Buffer)

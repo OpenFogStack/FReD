@@ -45,7 +45,7 @@ func main() {
 	nodeCzmqID := flag.String("nodeCzmqID", "nodeC", "ZMQ Id of nodeC")
 
 	nodeCurl := fmt.Sprintf("http://%s:%s/%s/", *nodeChost, *nodeChttpPort, *apiVersion)
-	log.Debug().Msgf("Here are some variables: %s", nodeAzmqPort, nodeAzmqID, nodeBurl, nodeCzmqID, nodeCurl)
+	log.Debug().Msg(string(*nodeAzmqPort) + "would be a unused var if not for this message")
 	flag.Parse()
 
 	nodeA := pkg.NewNode(nodeAurl)
@@ -80,7 +80,7 @@ func main() {
 	nodeA.GetItem("trololoool", "wut", 404, false)
 
 	logNodeAction(nodeA,"Putting a Value into a nonexistent keygroup")
-	nodeA.PutItem("nonexistentkeygroup", "item","data", 400, false)
+	nodeA.PutItem("nonexistentkeygroup", "item","data", 409, false)
 
 	logNodeAction(nodeA, "Putting new value KG1-Item/KG1-Value2 into KG1")
 	nodeA.PutItem("KG1", "KG1-Item", "KG1-Value2", 200, true)
@@ -113,24 +113,32 @@ func main() {
 	parsed := nodeA.GetAllReplica(200, false)
 	// Example Response: [{"Addr":{"Addr":"localhost","IsIP":false},"ID":"nodeB","Port":5556}]
 	// Test for nodeA
-	if parsed.Path("0.ID").Data().(string) != *nodeBzmqID {
-		logNodeFaliure(nodeA, "0.ID == nodeB", parsed.Path("0.ID").String())
+	var nodeBnumber, nodeCnumber string
+	if parsed.Path("0.ID").Data().(string) == *nodeBzmqID {
+		nodeBnumber = "0"
+		nodeCnumber = "1"
+	} else {
+		nodeBnumber = "1"
+		nodeCnumber = "0"
 	}
-	if int(parsed.Path("0.Port").Data().(float64)) != *nodeBzmqPort {
-		logNodeFaliure(nodeA, "0.Port == nodeBZmqPort", parsed.Path("0.Port").String())
+	if parsed.Path(nodeBnumber+".ID").Data().(string) != *nodeBzmqID {
+		logNodeFaliure(nodeA, nodeBnumber+".ID == nodeB", parsed.Path("0.ID").String())
 	}
-	if parsed.Path("0.Addr.Addr").Data().(string) != *nodeBhost {
-		logNodeFaliure(nodeA, "0.Addr.Addr == nodeBhost", parsed.Path("0.Addr.Addr").String())
+	if int(parsed.Path(nodeBnumber+".Port").Data().(float64)) != *nodeBzmqPort {
+		logNodeFaliure(nodeA, nodeBnumber+".Port == nodeBZmqPort", parsed.Path("0.Port").String())
+	}
+	if parsed.Path(nodeBnumber+".Addr.Addr").Data().(string) != *nodeBhost {
+		logNodeFaliure(nodeA, nodeBnumber+".Addr.Addr == nodeBhost", parsed.Path("0.Addr.Addr").String())
 	}
 	// Test for nodeC
-	if parsed.Path("1.ID").Data().(string) != *nodeCzmqID {
-		logNodeFaliure(nodeA, "1.ID == nodeC", parsed.Path("1.ID").String())
+	if parsed.Path(nodeCnumber+".ID").Data().(string) != *nodeCzmqID {
+		logNodeFaliure(nodeA, nodeCnumber+".ID == nodeC", parsed.Path("1.ID").String())
 	}
-	if int(parsed.Path("1.Port").Data().(float64)) != *nodeCzmqPort {
-		logNodeFaliure(nodeA, "1.Port == nodeCZmqPort", parsed.Path("1.Port").String())
+	if int(parsed.Path(nodeCnumber+".Port").Data().(float64)) != *nodeCzmqPort {
+		logNodeFaliure(nodeA, nodeCnumber+".Port == nodeCZmqPort", parsed.Path("1.Port").String())
 	}
-	if parsed.Path("1.Addr.Addr").Data().(string) != *nodeChost {
-		logNodeFaliure(nodeA, "1.Addr.Addr == nodeChost", parsed.Path("1.Addr.Addr").String())
+	if parsed.Path(nodeCnumber+".Addr.Addr").Data().(string) != *nodeChost {
+		logNodeFaliure(nodeA, nodeCnumber+".Addr.Addr == nodeChost", parsed.Path("1.Addr.Addr").String())
 	}
 
 	// Fun with replicas
@@ -138,7 +146,7 @@ func main() {
 	nodeA.AddReplicaNode("KG1", *nodeBzmqID, 200, true)
 
 	logNodeAction(nodeA, "Adding a replica for a nonexisting Keygroup")
-	nodeA.AddReplicaNode("trololololo", *nodeBzmqID, 400, false)
+	nodeA.AddReplicaNode("trololololo", *nodeBzmqID, 409, false)
 
 	// Test sending data between nodes
 	logNodeAction(nodeB, "Creating a new Keygroup (KGN), setting nodeA as Replica node")
@@ -166,7 +174,7 @@ func main() {
 	nodeC.CreateKeygroup("KGB",200,true)
 	nodeC.CreateKeygroup("KGB",200,true)
 	logNodeAction(nodeA,"...Adding the replica should throw an error since the keygroup already exists in the replica and is not already a replica")
-	nodeA.AddReplicaNode("KGB", *nodeCzmqID, 400, false)
+	nodeA.AddReplicaNode("KGB", *nodeCzmqID, 409, false)
 	nodeA.DeleteKeygroup("KGB", 200, true)
 	nodeC.DeleteKeygroup("KGB",200,true)
 
@@ -182,6 +190,11 @@ func main() {
 		logNodeFaliureMap(nodeA, "resp[\"Data\"] is \"KG1-Value1\"", resp)
 	} else {
 		logDebugInfo(nodeA, "Got "+resp["Data"])
+	}
+
+	if nodeA.Errors != 0 || nodeB.Errors != 0 || nodeC.Errors != 0 {
+		log.Error().Msgf("Total Errors: %d", nodeA.Errors + nodeB.Errors + nodeC.Errors)
+		os.Exit(1)
 	}
 }
 
