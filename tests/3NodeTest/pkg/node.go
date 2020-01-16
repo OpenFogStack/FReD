@@ -29,10 +29,8 @@ func (n *Node) CreateKeygroup(kgname string, expectedStatusCode int, expectEmpty
 	if expectEmptyResponse && (responseBody != nil) {
 		log.Warn().Str("node", n.URL).Msgf("Create Keygroup expected an empty response but got %#v", responseBody)
 		n.Errors++
-<<<<<<< HEAD
 	if expectEmptyResponse && (responseBody != nil) {
 		log.Warn().Str("node", n.URL).Msgf("Create Keygroup expected an empty response but got %#v", responseBody)
->>>>>>> Make the linter happy
 	}
 	return
 }
@@ -78,6 +76,7 @@ func (n *Node) GetItem(kgname, item string, expectedStatusCode int, expectEmptyR
 		log.Warn().Str("node", n.URL).Msgf("GetItem expected an empty response but got %#v", responseBody)
 	} else if !expectEmptyResponse && responseBody == nil {
 		log.Warn().Str("node", n.URL).Msg("GetItem expected a response but got nothing")
+		n.Errors++
 	}
 	return
 }
@@ -122,9 +121,6 @@ func (n *Node) GetAllReplica(expectedStatusCode int, expectEmptyResponse bool) (
 		log.Warn().Str("node", n.URL).Msgf("GetAllReplica expected an empty response but got %#v with len %d", rawResponseBody, len(rawResponseBody))
 	} else if !expectEmptyResponse && (rawResponseBody == nil || len(rawResponseBody) == 0) {
 		n.Errors++
-<<<<<<< HEAD
-=======
->>>>>>> Count the number of errors, add run configuration
 		log.Warn().Str("node", n.URL).Msg("GetAllReplica expected a response but got nothing")
 	}
 	return
