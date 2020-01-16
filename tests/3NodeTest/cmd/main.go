@@ -32,6 +32,7 @@ func main() {
 	// Parse Flags
 	apiVersion := flag.String("apiVersion", "v0", "API Version (e.g. v0)")
 
+<<<<<<< HEAD
 	nodeAhost := flag.String("nodeAhost", "172.26.0.10", "host of nodeA (e.g. localhost)")
 	nodeAhttpPort := flag.String("nodeAhttp", "9001", "port of nodeA (e.g. 9001)")
 	nodeAzmqPort := flag.Int("nodeAzmqPort", 5555, "ZMQ Port of nodeA")
@@ -53,6 +54,24 @@ func main() {
 	nodeCurl := fmt.Sprintf("http://%s:%s/%s/", *nodeChost, *nodeChttpPort, *apiVersion)
 	log.Debug().Msg(string(*nodeAzmqPort) + "would be a unused var if not for this message")
 >>>>>>> Count the number of errors, add run configuration
+=======
+	nodeAhost := flag.String("nodeAhost", "localhost", "host of nodeA (e.g. localhost)")
+	nodeAhttpPort := flag.String("nodeAhttp", "80", "port of nodeA (e.g. 9001)")
+	nodeAzmqPort := flag.Int("nodeAzmqPort", 5555, "ZMQ Port of nodeA")
+	nodeAzmqID := flag.String("nodeAzmqID", "nodeA", "ZMQ Id of nodeA")
+
+	nodeBhost := flag.String("nodeBhost", "localhost", "host of nodeB (e.g. localhost)")
+	nodeBhttpPort := flag.String("nodeBhttp", "80", "port of nodeB (e.g. 9001)")
+	nodeBzmqPort := flag.Int("nodeBzmqPort", 5555, "ZMQ Port of nodeB")
+	nodeBzmqID := flag.String("nodeBzmqID", "nodeB", "ZMQ Id of nodeB")
+
+	nodeChost := flag.String("nodeChost", "localhost", "host of nodeC (e.g. localhost)")
+	nodeChttpPort := flag.String("nodeChttp", "80", "port of nodeC (e.g. 9001)")
+	nodeCzmqPort := flag.Int("nodeCzmqPort", 5555, "ZMQ Port of nodeC")
+	nodeCzmqID := flag.String("nodeCzmqID", "nodeC", "ZMQ Id of nodeC")
+
+
+>>>>>>> change some bugs in trevers code
 	flag.Parse()
 
 	nodeAurl := fmt.Sprintf("http://%s:%s/%s/", *nodeAhost, *nodeAhttpPort, *apiVersion)
@@ -122,9 +141,6 @@ func main() {
 	resp = nodeA.GetItem("KG1", "KG1-Item", 404, true)
 
 	// Connect the nodes
-	logNodeAction(nodeA, "Seeding nodeA")
-	nodeA.SeedNode(*nodeAzmqID, *nodeAhost, 200, true)
-
 	logNodeAction(nodeA, "Telling nodeA about nodeB")
 	nodeA.RegisterReplica(*nodeBzmqID, *nodeBhost, *nodeBzmqPort, 200, true)
 
