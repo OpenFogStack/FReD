@@ -32,7 +32,6 @@ func main() {
 	// Parse Flags
 	apiVersion := flag.String("apiVersion", "v0", "API Version (e.g. v0)")
 
-<<<<<<< HEAD
 	nodeAhost := flag.String("nodeAhost", "172.26.0.10", "host of nodeA (e.g. localhost)")
 	nodeAhttpPort := flag.String("nodeAhttp", "9001", "port of nodeA (e.g. 9001)")
 	nodeAzmqPort := flag.Int("nodeAzmqPort", 5555, "ZMQ Port of nodeA")
@@ -63,32 +62,6 @@ func main() {
 	nodeA := pkg.NewNode(nodeAurl)
 	nodeB := pkg.NewNode(nodeBurl)
 	nodeC := pkg.NewNode(nodeCurl)
-=======
-	nodeAhost := flag.String("nodeAhost", "localhost", "host of nodeA (e.g. localhost)")
-	nodeAhttpPort := flag.String("nodeAhttp", "9001", "port of nodeA (e.g. 9001)")
-	nodeAzmqPort := flag.Int("nodeAzmqPort", 5555, "ZMQ Port of nodeA")
-	nodeAzmqId := flag.String("nodeAzmqId", "nodeA", "ZMQ Id of nodeA")
-
-	nodeAurl := fmt.Sprintf("http://%s:%s/%s/", *nodeAhost, *nodeAhttpPort, *apiVersion)
-
-	nodeBhost := flag.String("nodeBhost", "localhost", "host of nodeB (e.g. localhost)")
-	nodeBhttpPort := flag.String("nodeBhttp", "9001", "port of nodeB (e.g. 9001)")
-	nodeBzmqPort := flag.Int("nodeBzmqPort", 5555, "ZMQ Port of nodeB")
-	nodeBzmqId := flag.String("nodeBzmqId", "nodeB", "ZMQ Id of nodeB")
-
-	nodeBurl := fmt.Sprintf("http://%s:%s/%s/", *nodeBhost, *nodeBhttpPort, *apiVersion)
-
-	nodeChost := flag.String("nodeChost", "localhost", "host of nodeC (e.g. localhost)")
-	nodeChttpPort := flag.String("nodeChttp", "9001", "port of nodeC (e.g. 9001)")
-	nodeCzmqPort := flag.Int("nodeCzmqPort", 5555, "ZMQ Port of nodeC")
-	nodeCzmqId := flag.String("nodeCzmqId", "nodeC", "ZMQ Id of nodeC")
-
-	nodeCurl := fmt.Sprintf("http://%s:%s/%s/", *nodeChost, *nodeChttpPort, *apiVersion)
-	log.Debug().Msgf("Here are some variables: %s", nodeAzmqPort, nodeAzmqId, nodeBurl, nodeCzmqId, nodeCurl)
-	flag.Parse()
-
-	nodeA := pkg.NewNode(nodeAurl)
->>>>>>> Added RegisterReplica and GetReplica
 
 	var resp map[string]string
 
@@ -145,17 +118,10 @@ func main() {
 
 	// Connect the nodes
 	logNodeAction(nodeA, "Telling nodeA about nodeB")
-<<<<<<< HEAD
 	nodeA.RegisterReplica(*nodeBzmqID, *nodeBhost, *nodeBzmqPort, 200, true)
 
 	logNodeAction(nodeA, "Telling nodeA about nodeC")
 	nodeA.RegisterReplica(*nodeCzmqID, *nodeChost, *nodeCzmqPort, 200, true)
-=======
-	nodeA.RegisterReplica(*nodeBzmqId, *nodeBhost, *nodeBzmqPort, 200, true)
-
-	logNodeAction(nodeA, "Telling nodeA about nodeC")
-	nodeA.RegisterReplica(*nodeBzmqId, *nodeChost, *nodeCzmqPort, 200, true)
->>>>>>> Added RegisterReplica and GetReplica
 
 	logNodeAction(nodeA, "Getting all Replicas that nodeA has")
 	parsed := nodeA.GetAllReplica(200, false)
