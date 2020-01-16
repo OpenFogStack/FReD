@@ -27,24 +27,24 @@ func main() {
 	nodeAhost := flag.String("nodeAhost", "localhost", "host of nodeA (e.g. localhost)")
 	nodeAhttpPort := flag.String("nodeAhttp", "9001", "port of nodeA (e.g. 9001)")
 	nodeAzmqPort := flag.Int("nodeAzmqPort", 5555, "ZMQ Port of nodeA")
-	nodeAzmqId := flag.String("nodeAzmqId", "nodeA", "ZMQ Id of nodeA")
+	nodeAzmqID := flag.String("nodeAzmqID", "nodeA", "ZMQ Id of nodeA")
 
 	nodeAurl := fmt.Sprintf("http://%s:%s/%s/", *nodeAhost, *nodeAhttpPort, *apiVersion)
 
 	nodeBhost := flag.String("nodeBhost", "localhost", "host of nodeB (e.g. localhost)")
 	nodeBhttpPort := flag.String("nodeBhttp", "9001", "port of nodeB (e.g. 9001)")
 	nodeBzmqPort := flag.Int("nodeBzmqPort", 5555, "ZMQ Port of nodeB")
-	nodeBzmqId := flag.String("nodeBzmqId", "nodeB", "ZMQ Id of nodeB")
+	nodeBzmqID := flag.String("nodeBzmqID", "nodeB", "ZMQ Id of nodeB")
 
 	nodeBurl := fmt.Sprintf("http://%s:%s/%s/", *nodeBhost, *nodeBhttpPort, *apiVersion)
 
 	nodeChost := flag.String("nodeChost", "localhost", "host of nodeC (e.g. localhost)")
 	nodeChttpPort := flag.String("nodeChttp", "9001", "port of nodeC (e.g. 9001)")
 	nodeCzmqPort := flag.Int("nodeCzmqPort", 5555, "ZMQ Port of nodeC")
-	nodeCzmqId := flag.String("nodeCzmqId", "nodeC", "ZMQ Id of nodeC")
+	nodeCzmqID := flag.String("nodeCzmqID", "nodeC", "ZMQ Id of nodeC")
 
 	nodeCurl := fmt.Sprintf("http://%s:%s/%s/", *nodeChost, *nodeChttpPort, *apiVersion)
-	log.Debug().Msgf("Here are some variables: %s", nodeAzmqPort, nodeAzmqId, nodeBurl, nodeCzmqId, nodeCurl)
+	log.Debug().Msgf("Here are some variables: %s", nodeAzmqPort, nodeAzmqID, nodeBurl, nodeCzmqID, nodeCurl)
 	flag.Parse()
 
 	nodeA := pkg.NewNode(nodeAurl)
@@ -89,10 +89,10 @@ func main() {
 
 	// Connect the nodes
 	logNodeAction(nodeA, "Telling nodeA about nodeB")
-	nodeA.RegisterReplica(*nodeBzmqId, *nodeBhost, *nodeBzmqPort, 200, true)
+	nodeA.RegisterReplica(*nodeBzmqID, *nodeBhost, *nodeBzmqPort, 200, true)
 
 	logNodeAction(nodeA, "Telling nodeA about nodeC")
-	nodeA.RegisterReplica(*nodeBzmqId, *nodeChost, *nodeCzmqPort, 200, true)
+	nodeA.RegisterReplica(*nodeBzmqID, *nodeChost, *nodeCzmqPort, 200, true)
 
 	logNodeAction(nodeA, "Getting all Replicas that nodeA has")
 	nodeA.GetAllReplica(200, true)
@@ -100,19 +100,19 @@ func main() {
 }
 
 func logNodeAction(node *pkg.Node, action string) {
-	log.Info().Str("node", node.Url).Msg(action)
+	log.Info().Str("node", node.URL).Msg(action)
 }
 
 func logNodeFaliure(node *pkg.Node, expected, result string) {
-	log.Warn().Str("node", node.Url).Msgf("expected: %s, but got: %#v", expected, result)
+	log.Warn().Str("node", node.URL).Msgf("expected: %s, but got: %#v", expected, result)
 }
 
 func logNodeFaliureMap(node *pkg.Node, expected string, result map[string]string) {
-	log.Warn().Str("node", node.Url).Msgf("expected: %s, but got: %#v", expected, result)
+	log.Warn().Str("node", node.URL).Msgf("expected: %s, but got: %#v", expected, result)
 }
 
 func logDebugInfo(node *pkg.Node, info string) {
-	log.Debug().Str("node", node.Url).Msg(info)
+	log.Debug().Str("node", node.URL).Msg(info)
 }
 
 func expectEmptyResponse(resp map[string]string) {
