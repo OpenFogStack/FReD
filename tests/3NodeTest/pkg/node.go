@@ -71,28 +71,27 @@ func (n *Node) DeleteItem(kgname, item string, expectedStatusCode int, expectEmp
 }
 
 func (n *Node) RegisterReplica(nodeId, nodeIp string, nodePort int, expectedStatusCode int, expectEmptyResponse bool) (responseBody map[string]string){
-	log.Debug().Str("node", n.Url).Msgf("Sending a Post for Replica %s ; expecting %d", nodeId, expectedStatusCode)
-
-	type Message struct {
-		Nodes []struct{
-			ID string
-			IP string
-			Port int
-		}
-	}
-	message := Message{Nodes: make([]struct {
-		ID   string
-		IP   string
-		Port int
-	}, 1)}
-	message.Nodes[0] = struct {
-		ID   string
-		IP   string
-		Port int
-	}{ID: nodeId, IP: nodeIp, Port: nodePort}
-
-	json, _ := json.Marshal(message)
-
+	log.Debug().Str("node", n.Url).Msgf("Registering Replica %s ; expecting %d", nodeId, expectedStatusCode)
+	// type Message struct {
+	// 	Nodes []struct{
+	// 		ID string
+	// 		IP string
+	// 		Port int
+	// 	}
+	// }
+	// message := Message{Nodes: make([]struct {
+	// 	ID   string
+	// 	IP   string
+	// 	Port int
+	// }, 1)}
+	// message.Nodes[0] = struct {
+	// 	ID   string
+	// 	IP   string
+	// 	Port int
+	// }{ID: nodeId, IP: nodeIp, Port: nodePort}
+	//
+	// json, _ := json.Marshal(message)
+	json := []byte(fmt.Sprintf(`{"nodes":[{"id":"%s","addr":"%s","port":%d}]}`,nodeId, nodeIp, nodePort))
 	responseBody = n.sendPost("replica", json, expectedStatusCode)
 	if expectEmptyResponse && (responseBody != nil && len(responseBody) != 0) {
 		log.Warn().Str("node", n.Url).Msgf("RegisterReplica expected an empty response but got %#v with len %d", responseBody, len(responseBody))

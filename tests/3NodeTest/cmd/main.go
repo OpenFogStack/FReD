@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 
 	"github.com/rs/zerolog"
@@ -21,20 +22,32 @@ func main() {
 	)
 
 	// Parse Flags
-	nodeAurl := flag.String("nodeA", "http://localhost:9001/v0/", "ip:port/apiVersion/ of nodeA")
-	nodeAzmqIp := flag.String("nodeAzmqIp", "localhost", "ZMQ IP of nodeA")
-	nodeAzmqPort := flag.Int("nodeAzmqPort", 5555, "ZMQ Port of nodeA")
-	nodeBurl := flag.String("nodeB", "http://localhost:9002/v0/", "ip:port/apiVersion/ of nodeB")
-	nodeBzmqIp := flag.String("nodeBzmqIp", "localhost", "ZMQ IP of nodeB")
-	nodeBzmqPort := flag.Int("nodeBzmqPort", 5556, "ZMQ Port of nodeB")
-	nodeCurl := flag.String("nodeC", "http://localhost:9003/v0/", "ip:port/apiVersion/ of nodeC")
-	nodeCzmqIp := flag.String("nodeCzmqIp", "localhost", "ZMQ IP of nodeC")
-	nodeCzmqPort := flag.Int("nodeCzmqPort", 5557, "ZMQ Port of nodeC")
-	flag.Parse()
-	log.Debug().Str("nodeAurl", *nodeAurl).Str("nodeBurl", *nodeBurl).Str("nodeCurl", *nodeCurl).Msg("Using These URLs to connect to Node API")
-	log.Debug().Str("nodeAzmq", string(*nodeAzmqPort)+":"+*nodeAzmqIp).Str("nodebzmq", string(*nodeBzmqPort)+":"+*nodeBzmqIp).Str("nodeCzmq", string(*nodeCzmqPort)+":"+*nodeCzmqIp).Msgf("Using these as ZMQ connection Points")
+	apiVersion := flag.String("apiVersion", "v0", "API Version (e.g. v0)")
 
-	nodeA := pkg.NewNode(*nodeAurl)
+	nodeAhost := flag.String("nodeAhost", "localhost", "host of nodeA (e.g. localhost)")
+	nodeAhttpPort := flag.String("nodeAhttp", "9001", "port of nodeA (e.g. 9001)")
+	nodeAzmqPort := flag.Int("nodeAzmqPort", 5555, "ZMQ Port of nodeA")
+	nodeAzmqId := flag.String("nodeAzmqId", "nodeA", "ZMQ Id of nodeA")
+
+	nodeAurl := fmt.Sprintf("http://%s:%s/%s/", *nodeAhost, *nodeAhttpPort, *apiVersion)
+
+	nodeBhost := flag.String("nodeBhost", "localhost", "host of nodeB (e.g. localhost)")
+	nodeBhttpPort := flag.String("nodeBhttp", "9001", "port of nodeB (e.g. 9001)")
+	nodeBzmqPort := flag.Int("nodeBzmqPort", 5555, "ZMQ Port of nodeB")
+	nodeBzmqId := flag.String("nodeBzmqId", "nodeB", "ZMQ Id of nodeB")
+
+	nodeBurl := fmt.Sprintf("http://%s:%s/%s/", *nodeBhost, *nodeBhttpPort, *apiVersion)
+
+	nodeChost := flag.String("nodeChost", "localhost", "host of nodeC (e.g. localhost)")
+	nodeChttpPort := flag.String("nodeChttp", "9001", "port of nodeC (e.g. 9001)")
+	nodeCzmqPort := flag.Int("nodeCzmqPort", 5555, "ZMQ Port of nodeC")
+	nodeCzmqId := flag.String("nodeCzmqId", "nodeC", "ZMQ Id of nodeC")
+
+	nodeCurl := fmt.Sprintf("http://%s:%s/%s/", *nodeChost, *nodeChttpPort, *apiVersion)
+	log.Debug().Msgf("Here are some variables: %s", nodeAzmqPort, nodeAzmqId, nodeBurl, nodeCzmqId, nodeCurl)
+	flag.Parse()
+
+	nodeA := pkg.NewNode(nodeAurl)
 
 	var resp map[string]string
 	// Test Keygroups
@@ -76,10 +89,10 @@ func main() {
 
 	// Connect the nodes
 	logNodeAction(nodeA, "Telling nodeA about nodeB")
-	nodeA.RegisterReplica("nodeB", *nodeBzmqIp, *nodeBzmqPort, 200, true)
+	nodeA.RegisterReplica(*nodeBzmqId, *nodeBhost, *nodeBzmqPort, 200, true)
 
 	logNodeAction(nodeA, "Telling nodeA about nodeC")
-	nodeA.RegisterReplica("nodeC", *nodeCzmqIp, *nodeCzmqPort, 200, true)
+	nodeA.RegisterReplica(*nodeBzmqId, *nodeChost, *nodeCzmqPort, 200, true)
 
 	logNodeAction(nodeA, "Getting all Replicas that nodeA has")
 	nodeA.GetAllReplica(200, true)
