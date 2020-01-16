@@ -47,7 +47,12 @@ func main() {
 	nodeCzmqPort := flag.Int("nodeCzmqPort", 5555, "ZMQ Port of nodeC")
 	nodeCzmqID := flag.String("nodeCzmqID", "nodeC", "ZMQ Id of nodeC")
 
+<<<<<<< HEAD
 
+=======
+	nodeCurl := fmt.Sprintf("http://%s:%s/%s/", *nodeChost, *nodeChttpPort, *apiVersion)
+	log.Debug().Msg(string(*nodeAzmqPort) + "would be a unused var if not for this message")
+>>>>>>> Count the number of errors, add run configuration
 	flag.Parse()
 
 	nodeAurl := fmt.Sprintf("http://%s:%s/%s/", *nodeAhost, *nodeAhttpPort, *apiVersion)

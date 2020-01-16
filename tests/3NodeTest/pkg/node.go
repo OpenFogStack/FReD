@@ -25,11 +25,11 @@ func NewNode(url string) (node *Node) {
 // CreateKeygroup creates a new keygroup with the node. The Response should be empty if everything is correct
 func (n *Node) CreateKeygroup(kgname string, expectedStatusCode int, expectEmptyResponse bool) (responseBody map[string]string) {
 	log.Debug().Str("node", n.URL).Msgf("Sending a Create Keygroup for group %s; expecting %d", kgname, expectedStatusCode)
-<<<<<<< HEAD
 	responseBody = n.sendPostReturnMap("keygroup/"+kgname, nil, expectedStatusCode)
 	if expectEmptyResponse && (responseBody != nil) {
 		log.Warn().Str("node", n.URL).Msgf("Create Keygroup expected an empty response but got %#v", responseBody)
 		n.Errors++
+<<<<<<< HEAD
 	if expectEmptyResponse && (responseBody != nil) {
 		log.Warn().Str("node", n.URL).Msgf("Create Keygroup expected an empty response but got %#v", responseBody)
 >>>>>>> Make the linter happy
@@ -49,11 +49,7 @@ func (n *Node) DeleteKeygroup(kgname string, expectedStatusCode int, expectEmpty
 }
 
 // PutItem puts a key-value pair into a (already created) keygroup
-<<<<<<< HEAD
 func (n *Node) PutItem(kgname, item string, data string, expectedStatusCode int, expectEmptyResponse bool) (responseBody []byte) {
-=======
-func (n *Node) PutItem(kgname, item string, data string, expectedStatusCode int, expectEmptyResponse bool) (responseBody []byte) {
->>>>>>> Finalize Replica handling
 	log.Debug().Str("node", n.URL).Msgf("Sending a Put for Item %s in KG %s; expecting %d", item, kgname, expectedStatusCode)
 	reqBody := map[string]string{
 		"data": data,
@@ -67,7 +63,6 @@ func (n *Node) PutItem(kgname, item string, data string, expectedStatusCode int,
 }
 
 // GetItem returns the stored item
-<<<<<<< HEAD
 func (n *Node) GetItem(kgname, item string, expectedStatusCode int, expectEmptyResponse bool) (responseBody map[string]string) {
 	log.Debug().Str("node", n.URL).Msgf("Sending a Get for Item %s in KG %s; expecting %d", item, kgname, expectedStatusCode)
 	responseBody = n.sendGetResponseMap(fmt.Sprintf("keygroup/%s/data/%s", kgname, item), expectedStatusCode)
@@ -83,17 +78,12 @@ func (n *Node) GetItem(kgname, item string, expectedStatusCode int, expectEmptyR
 		log.Warn().Str("node", n.URL).Msgf("GetItem expected an empty response but got %#v", responseBody)
 	} else if !expectEmptyResponse && responseBody == nil {
 		log.Warn().Str("node", n.URL).Msg("GetItem expected a response but got nothing")
->>>>>>> Make the linter happy
 	}
 	return
 }
 
 // DeleteItem deletes the item from the keygroup
-<<<<<<< HEAD
 func (n *Node) DeleteItem(kgname, item string, expectedStatusCode int, expectEmptyResponse bool) (responseBody map[string]string) {
-=======
-func (n *Node) DeleteItem(kgname, item string, expectedStatusCode int, expectEmptyResponse bool) (responseBody map[string]string) {
->>>>>>> Finalize Replica handling
 	log.Debug().Str("node", n.URL).Msgf("Sending a Delete for Item %s in KG %s; expecting %d", item, kgname, expectedStatusCode)
 	responseBody = n.sendDelete(fmt.Sprintf("keygroup/%s/data/%s", kgname, item), nil, expectedStatusCode)
 	if expectEmptyResponse && (responseBody != nil) {
@@ -107,13 +97,8 @@ func (n *Node) DeleteItem(kgname, item string, expectedStatusCode int, expectEmp
 }
 
 // RegisterReplica registers a new replica with this node
-<<<<<<< HEAD
 func (n *Node) RegisterReplica(nodeID, nodeIP string, nodePort int, expectedStatusCode int, expectEmptyResponse bool) (responseBody []byte) {
 	log.Debug().Str("node", n.URL).Msgf("Registering Replica %s ; expecting %d", nodeID, expectedStatusCode)
-=======
-func (n *Node) RegisterReplica(nodeID, nodeIP string, nodePort int, expectedStatusCode int, expectEmptyResponse bool) (responseBody []byte) {
-	log.Debug().Str("node", n.URL).Msgf("Registering Replica %s ; expecting %d", nodeID, expectedStatusCode)
->>>>>>> Finalize Replica handling
 	json := []byte(fmt.Sprintf(`{"nodes":[{"id":"%s","addr":"%s","port":%d}]}`, nodeID, nodeIP, nodePort))
 	responseBody = n.sendPost("replica", json, expectedStatusCode)
 	if expectEmptyResponse && (responseBody != nil && len(responseBody) != 0) {
@@ -127,27 +112,19 @@ func (n *Node) RegisterReplica(nodeID, nodeIP string, nodePort int, expectedStat
 }
 
 // GetAllReplica returns a list of all replica that this node has stored
+func (n *Node) GetAllReplica(expectedStatusCode int, expectEmptyResponse bool) (parsed *gabs.Container) {
+	log.Debug().Str("node", n.URL).Msgf("Sending a Get for all Replicas; expecting %d", expectedStatusCode)
+	rawResponseBody := n.sendGet("replica", expectedStatusCode)
+	parsed, _ = gabs.ParseJSON(rawResponseBody)
+	log.Debug().Msgf("All Replicas: %s", parsed.String())
+	if expectEmptyResponse && (rawResponseBody != nil && len(rawResponseBody) != 0) {
+		n.Errors++
+		log.Warn().Str("node", n.URL).Msgf("GetAllReplica expected an empty response but got %#v with len %d", rawResponseBody, len(rawResponseBody))
+	} else if !expectEmptyResponse && (rawResponseBody == nil || len(rawResponseBody) == 0) {
+		n.Errors++
 <<<<<<< HEAD
-func (n *Node) GetAllReplica(expectedStatusCode int, expectEmptyResponse bool) (parsed *gabs.Container) {
-	log.Debug().Str("node", n.URL).Msgf("Sending a Get for all Replicas; expecting %d", expectedStatusCode)
-	rawResponseBody := n.sendGet("replica", expectedStatusCode)
-	parsed, _ = gabs.ParseJSON(rawResponseBody)
-	log.Debug().Msgf("All Replicas: %s", parsed.String())
-	if expectEmptyResponse && (rawResponseBody != nil && len(rawResponseBody) != 0) {
-		n.Errors++
-		log.Warn().Str("node", n.URL).Msgf("GetAllReplica expected an empty response but got %#v with len %d", rawResponseBody, len(rawResponseBody))
-	} else if !expectEmptyResponse && (rawResponseBody == nil || len(rawResponseBody) == 0) {
-		n.Errors++
 =======
-func (n *Node) GetAllReplica(expectedStatusCode int, expectEmptyResponse bool) (parsed *gabs.Container) {
-	log.Debug().Str("node", n.URL).Msgf("Sending a Get for all Replicas; expecting %d", expectedStatusCode)
-	rawResponseBody := n.sendGet("replica", expectedStatusCode)
-	parsed, _ = gabs.ParseJSON(rawResponseBody)
-	log.Debug().Msgf("All Replicas: %s", parsed.String())
-	if expectEmptyResponse && (rawResponseBody != nil && len(rawResponseBody) != 0) {
-		log.Warn().Str("node", n.URL).Msgf("GetAllReplica expected an empty response but got %#v with len %d", rawResponseBody, len(rawResponseBody))
-	} else if !expectEmptyResponse && (rawResponseBody == nil || len(rawResponseBody) == 0) {
->>>>>>> Finalize Replica handling
+>>>>>>> Count the number of errors, add run configuration
 		log.Warn().Str("node", n.URL).Msg("GetAllReplica expected a response but got nothing")
 	}
 	return
