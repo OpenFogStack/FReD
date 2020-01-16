@@ -117,6 +117,9 @@ func main() {
 	resp = nodeA.GetItem("KG1", "KG1-Item", 404, true)
 
 	// Connect the nodes
+	logNodeAction(nodeA, "Seeding nodeA")
+	nodeA.SeedNode(*nodeAzmqID, *nodeAhost, 200, true)
+
 	logNodeAction(nodeA, "Telling nodeA about nodeB")
 	nodeA.RegisterReplica(*nodeBzmqID, *nodeBhost, *nodeBzmqPort, 200, true)
 
