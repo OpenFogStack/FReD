@@ -1,11 +1,11 @@
 package memorysd
 
 import (
-	"errors"
 	"sync"
 
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/commons"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/data"
+	errors "gitlab.tu-berlin.de/mcc-fred/fred/pkg/errors"
 )
 
 // Storage stores a map of keygroup by name.
@@ -36,7 +36,7 @@ func (s *Storage) Read(i data.Item) (data.Item, error) {
 	s.RUnlock()
 
 	if !ok {
-		return i, errors.New("memorysd: no such keygroup")
+		return i, errors.New(errors.StatusNotFound, "memorysd: no such keygroup")
 	}
 
 	kg.RLock()
@@ -45,7 +45,7 @@ func (s *Storage) Read(i data.Item) (data.Item, error) {
 	kg.RUnlock()
 
 	if !ok {
-		return i, errors.New("memorysd: no such item")
+		return i, errors.New(errors.StatusNotFound, "memorysd: no such item")
 	}
 
 	i.Data = value
@@ -60,7 +60,7 @@ func (s *Storage) Update(i data.Item) error {
 
 	if !ok {
 		s.RUnlock()
-		return errors.New("memorysd: no such keygroup")
+		return errors.New(errors.StatusNotFound, "memorysd: no such keygroup")
 	}
 
 	s.RUnlock()
@@ -81,7 +81,7 @@ func (s *Storage) Delete(i data.Item) error {
 
 	if !ok {
 		s.RUnlock()
-		return errors.New("memorysd: no such keygroup")
+		return errors.New(errors.StatusNotFound, "memorysd: no such keygroup")
 	}
 
 	s.RUnlock()
@@ -91,7 +91,7 @@ func (s *Storage) Delete(i data.Item) error {
 	kg.RUnlock()
 
 	if !ok {
-		return errors.New("memorysd: no such item")
+		return errors.New(errors.StatusNotFound, "memorysd: no such item")
 	}
 
 	kg.Lock()
@@ -136,7 +136,7 @@ func (s *Storage) CreateKeygroup(i data.Item) error {
 
 	if exists {
 		s.RUnlock()
-		return errors.New("memorysd: keygroup exists")
+		return errors.New(errors.StatusConflict, "memorysd: keygroup exists")
 	}
 
 	s.RUnlock()
@@ -159,7 +159,7 @@ func (s *Storage) DeleteKeygroup(i data.Item) error {
 	s.RUnlock()
 
 	if !ok {
-		return errors.New("kmemorysd: keygroup does not exist")
+		return errors.New(errors.StatusNotFound, "kmemorysd: keygroup does not exist")
 	}
 
 	s.Lock()

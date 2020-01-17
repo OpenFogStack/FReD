@@ -1,12 +1,12 @@
 package memorykg
 
 import (
-	"errors"
 	"sync"
 
 	"github.com/rs/zerolog/log"
 
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/commons"
+	errors "gitlab.tu-berlin.de/mcc-fred/fred/pkg/errors"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/keygroup"
 )
 
@@ -51,7 +51,7 @@ func (kS *KeygroupStorage) Delete(k keygroup.Keygroup) error {
 	kS.RUnlock()
 
 	if !ok {
-		return errors.New("memorykg: no such keygroup")
+		return errors.New(errors.StatusNotFound, "memorykg: no such keygroup")
 	}
 
 	kS.Lock()

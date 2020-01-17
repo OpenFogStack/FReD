@@ -16,7 +16,7 @@ func getReplica(h exthandler.Handler) func(context *gin.Context) {
 		r, err := h.HandleGetReplica()
 
 		if err != nil {
-			_ = context.AbortWithError(http.StatusConflict, err)
+			_ = abort(context, err)
 			return
 		}
 
@@ -38,7 +38,7 @@ func postReplica(h exthandler.Handler) func(context *gin.Context) {
 
 		if err := context.ShouldBindJSON(&jsonstruct); err != nil {
 			log.Err(err).Msg("could not bind json")
-			_ = context.AbortWithError(http.StatusBadRequest, err)
+			_ = abort(context, err)
 			return
 		}
 
@@ -48,7 +48,7 @@ func postReplica(h exthandler.Handler) func(context *gin.Context) {
 			addr, err := replication.ParseAddress(node.Addr)
 
 			if err != nil {
-				_ = context.AbortWithError(http.StatusConflict, err)
+				_ = abort(context, err)
 				return
 			}
 
@@ -62,7 +62,7 @@ func postReplica(h exthandler.Handler) func(context *gin.Context) {
 		err := h.HandleAddNode(n)
 
 		if err != nil {
-			_ = context.AbortWithError(http.StatusConflict, err)
+			_ = abort(context, err)
 			return
 		}
 
@@ -81,7 +81,7 @@ func deleteReplica(h exthandler.Handler) func(context *gin.Context) {
 		})
 
 		if err != nil {
-			_ = context.AbortWithError(http.StatusNotFound, err)
+			_ = abort(context, err)
 			return
 		}
 

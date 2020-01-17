@@ -51,7 +51,7 @@ func TestKeygroupStorage_Create(t *testing.T) {
 				RWMutex:   tt.fields.RWMutex,
 			}
 			if err := k.Create(tt.args.Keygroup); (err != nil) != tt.wantErr {
-				t.Errorf("Create() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Create() errors = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
@@ -99,7 +99,7 @@ func TestKeygroupStorage_Delete(t *testing.T) {
 				RWMutex:   tt.fields.RWMutex,
 			}
 			if err := k.Delete(tt.args.Keygroup); (err != nil) != tt.wantErr {
-				t.Errorf("Delete() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Delete() errors = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

@@ -23,7 +23,7 @@ func getItem(h exthandler.Handler) func(context *gin.Context) {
 		})
 
 		if err != nil {
-			_ = context.AbortWithError(http.StatusNotFound, err)
+			_ = abort(context, err)
 			return
 		}
 
@@ -44,7 +44,7 @@ func putItem(h exthandler.Handler) func(context *gin.Context) {
 
 		if err := context.ShouldBindJSON(&jsonstruct); err != nil {
 			log.Err(err).Msg("could not bind json")
-			_ = context.AbortWithError(http.StatusBadRequest, err)
+			_ = abort(context, err)
 			return
 		}
 
@@ -56,7 +56,7 @@ func putItem(h exthandler.Handler) func(context *gin.Context) {
 		})
 
 		if err != nil {
-			_ = context.AbortWithError(http.StatusConflict, err)
+			_ = abort(context, err)
 			return
 		}
 
@@ -77,7 +77,7 @@ func deleteItem(h exthandler.Handler) func(context *gin.Context) {
 		})
 
 		if err != nil {
-			_ = context.AbortWithError(http.StatusNotFound, err)
+			_ = abort(context, err)
 			return
 		}
 

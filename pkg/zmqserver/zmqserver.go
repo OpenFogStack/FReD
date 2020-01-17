@@ -53,16 +53,16 @@ func pollForever(c *Server) error {
 	for c.continueRunning {
 		newMessageSocket := c.poller.Wait(10_000)
 		if newMessageSocket == nil {
-			//return errors.New("there was no new message for 10 seconds, shutting down")
+			//return errors.New(code, "there was no new message for 10 seconds, shutting down")
 			continue
 		}
 
 		// Receiver has got a new message
 		request, err := newMessageSocket.RecvMessage()
 
-		// TODO error handling
+		// TODO errors handling
 		if err != nil {
-			log.Err(err).Msg("pollForever has received an error during its receive")
+			log.Err(err).Msg("pollForever has received an errors during its receive")
 		}
 
 		// src = identity of socket from dealer
@@ -79,7 +79,7 @@ func pollForever(c *Server) error {
 		// - another socket. This must be a sender socket (since we have no other sockets)
 		//   This means we have at some time sent a request to another receiver socket and the other node has replied to our request
 		//   Currently this never happens because we dont send answers to requests
-		//   But it should be expanded to handle error replies ect.
+		//   But it should be expanded to handle errors replies ect.
 		// We dont want to send the answer in the current thread because that would block polling
 		if newMessageSocket.Identity() == c.receiver.GetSocket().Identity() {
 			switch msgType {
