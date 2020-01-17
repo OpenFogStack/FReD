@@ -185,7 +185,7 @@ func (h *handler) HandleAddNode(n []replication.Node) error {
 	}
 
 	if ec > 0 {
-		return fmt.Errorf("exthandler: %v", e)
+		return errors.New(errors.StatusInternalError, fmt.Sprintf("exthandler: %v", e))
 	}
 
 	return nil
