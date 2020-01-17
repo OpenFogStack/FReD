@@ -65,7 +65,7 @@ func (h *handler) HandleCreateKeygroup(k keygroup.Keygroup, nodes []replication.
 	}
 
 	if ec > 0 {
-		return fmt.Errorf("exthandler: %v", e)
+		return errors.New(errors.StatusInternalError, fmt.Sprintf("exthandler: %v", e))
 	}
 
 	return nil
@@ -154,7 +154,7 @@ func (h *handler) HandleIntroduction(self replication.Node, node []replication.N
 	}
 
 	if ec > 0 {
-		return fmt.Errorf("exthandler: %v", e)
+		return errors.New(errors.StatusInternalError, fmt.Sprintf("exthandler: %v", e))
 	}
 
 	return nil
@@ -185,7 +185,7 @@ func (h *handler) HandleDetroduction() error {
 	}
 
 	if ec > 0 {
-		return fmt.Errorf("exthandler: %v", e)
+		return errors.New(errors.StatusInternalError, fmt.Sprintf("exthandler: %v", e))
 	}
 
 	return nil

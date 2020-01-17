@@ -16,6 +16,7 @@ const (
 	StatusConflict int = http.StatusConflict
 	StatusBadRequest int = http.StatusBadRequest
 	StatusNotFound int = http.StatusNotFound
+	StatusInternalError int = http.StatusInternalServerError
 )
 
 // Error is needed to satisfy the interface of error for Error.
@@ -30,4 +31,3 @@ func New(code int, error string) *Error {
 		error: error,
 	}
 }
-

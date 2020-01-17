@@ -6,6 +6,8 @@ import (
 	"regexp"
 
 	"github.com/rs/zerolog/log"
+
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/errors"
 )
 
 // Address is an IP address or a hostname of a FReD node.
@@ -44,7 +46,7 @@ func ParseAddress(a string) (Address, error) {
 	}
 
 	if !matched {
-		return Address{}, fmt.Errorf("replication.address: could not validate %s as IP address or hostname", a)
+		return Address{}, errors.New(errors.StatusBadRequest, fmt.Sprintf("replication.address: could not validate %s as IP address or hostname", a))
 	}
 
 	return Address{
