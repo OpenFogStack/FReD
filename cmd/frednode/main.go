@@ -61,7 +61,7 @@ var (
 	wsPort     = kingpin.Flag("ws-port", "Port of webserver.").PlaceHolder("WS-PORT").Default("-1").Int() // Domain: [0,9999]
 	zmqPort    = kingpin.Flag("zmq-port", "Port of ZeroMQ.").PlaceHolder("ZMQ-PORT").Default("-1").Int()  // Domain: [0,9999]
 	adaptor    = kingpin.Flag("adaptor", "Storage adaptor, can be \"leveldb\", \"memory\".").Enum("leveldb", "memory")
-	logLevel   = kingpin.Flag("log-level", "Log level, can be \"debug\", \"info\" ,\"warn\", \"error\", \"fatal\", \"panic\".").Enum("debug", "info", "warn", "error", "fatal", "panic")
+	logLevel   = kingpin.Flag("log-level", "Log level, can be \"debug\", \"info\" ,\"warn\", \"error\", \"fatal\", \"panic\".").Enum("debug", "info", "warn", "errors", "fatal", "panic")
 	handler    = kingpin.Flag("handler", "Mode of log handler, can be \"dev\", \"prod\".").Enum("dev", "prod")
 )
 
@@ -128,7 +128,7 @@ func main() {
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	case "warn":
 		zerolog.SetGlobalLevel(zerolog.WarnLevel)
-	case "error":
+	case "errors":
 		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
 	case "fatal":
 		zerolog.SetGlobalLevel(zerolog.FatalLevel)

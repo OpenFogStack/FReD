@@ -1,11 +1,10 @@
 package replhandler
 
 import (
-	"errors"
-
 	"github.com/rs/zerolog/log"
 
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/data"
+	errors "gitlab.tu-berlin.de/mcc-fred/fred/pkg/errors"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/keygroup"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/replication"
 )
@@ -62,7 +61,7 @@ func (s *service) RelayDeleteKeygroup(k keygroup.Keygroup) error {
 
 	if !s.n.ExistsKeygroup(kg) {
 		log.Error().Msgf("RelayDeleteKeygroup from replservice: Keygroup does not exist: in %#v", k)
-		return errors.New("replservice: no such keygroup")
+		return errors.New(errors.StatusNotFound, "replservice: no such keygroup")
 	}
 
 	kg, err := s.n.GetKeygroup(kg)
@@ -104,7 +103,7 @@ func (s *service) RelayUpdate(i data.Item) error {
 
 	if !s.n.ExistsKeygroup(kg) {
 		log.Error().Msgf("RelayUpdate from replservice: Keygroup does not exist: in %#v", i)
-		return errors.New("replservice: no such keygroup")
+		return errors.New(errors.StatusNotFound, "replservice: no such keygroup")
 	}
 
 	kg, err := s.n.GetKeygroup(kg)
@@ -142,7 +141,7 @@ func (s *service) RelayDelete(i data.Item) error {
 
 	if !s.n.ExistsKeygroup(kg) {
 		log.Error().Msgf("RelayDelete from replservice: Keygroup does not exist: in %#v", i)
-		return errors.New("replservice: no such keygroup")
+		return errors.New(errors.StatusNotFound, "replservice: no such keygroup")
 	}
 
 	kg, err := s.n.GetKeygroup(kg)
@@ -178,7 +177,7 @@ func (s *service) AddReplica(k keygroup.Keygroup, n replication.Node, relay bool
 
 	if !s.n.ExistsKeygroup(kg) {
 		log.Error().Msgf("AddReplica from replservice: Keygroup does not exist: in %#v", k)
-		return errors.New("replservice: no such keygroup")
+		return errors.New(errors.StatusNotFound, "replservice: no such keygroup")
 	}
 
 	kg, err := s.n.GetKeygroup(kg)
@@ -233,7 +232,7 @@ func (s *service) RemoveReplica(k keygroup.Keygroup, n replication.Node, relay b
 
 	if !s.n.ExistsKeygroup(kg) {
 		log.Error().Msgf("RemoveReplica from replservice: Keygroup does not exist: in %#v", k)
-		return errors.New("replservice: no such keygroup")
+		return errors.New(errors.StatusNotFound, "replservice: no such keygroup")
 	}
 
 	kg, err := s.n.GetKeygroup(kg)
@@ -377,7 +376,7 @@ func (s *service) GetReplica(k keygroup.Keygroup) ([]replication.Node, error) {
 
 	if !s.n.ExistsKeygroup(kg) {
 		log.Error().Msgf("GetReplica from replservice: Keygroup does not exist: in %#v", k)
-		return nil, errors.New("replservice: no such keygroup")
+		return nil, errors.New(errors.StatusNotFound, "replservice: no such keygroup")
 	}
 
 	kg, err := s.n.GetKeygroup(kg)

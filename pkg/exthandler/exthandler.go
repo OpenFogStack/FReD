@@ -1,12 +1,12 @@
 package exthandler
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/rs/zerolog/log"
 
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/data"
+	errors "gitlab.tu-berlin.de/mcc-fred/fred/pkg/errors"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/keygroup"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/replication"
 )
@@ -81,7 +81,7 @@ func (h *handler) HandleRead(i data.Item) (data.Item, error) {
 	if !h.k.Exists(keygroup.Keygroup{
 		Name: i.Keygroup,
 	}) {
-		return i, errors.New("exthandler: keygroup does not exist")
+		return i, errors.New(errors.StatusNotFound, "exthandler: keygroup does not exist")
 	}
 
 	return h.i.Read(i)
@@ -92,7 +92,7 @@ func (h *handler) HandleUpdate(i data.Item) error {
 	if !h.k.Exists(keygroup.Keygroup{
 		Name: i.Keygroup,
 	}) {
-		return errors.New("exthandler: keygroup does not exist")
+		return errors.New(errors.StatusNotFound, "exthandler: keygroup does not exist")
 	}
 
 	if err := h.i.Update(i); err != nil {
@@ -113,7 +113,7 @@ func (h *handler) HandleDelete(i data.Item) error {
 	if !h.k.Exists(keygroup.Keygroup{
 		Name: i.Keygroup,
 	}) {
-		return errors.New("exthandler: keygroup does not exist")
+		return errors.New(errors.StatusNotFound, "exthandler: keygroup does not exist")
 	}
 
 	if err := h.i.Delete(i); err != nil {
@@ -134,7 +134,7 @@ func (h *handler) HandleAddReplica(k keygroup.Keygroup, n replication.Node) erro
 	if !h.k.Exists(keygroup.Keygroup{
 		Name: k.Name,
 	}) {
-		return errors.New("exthandler: keygroup does not exist")
+		return errors.New(errors.StatusNotFound, "exthandler: keygroup does not exist")
 	}
 
 	if err := h.r.AddReplica(k, n, true); err != nil {
@@ -150,7 +150,7 @@ func (h *handler) HandleGetKeygroupReplica(k keygroup.Keygroup) ([]replication.N
 	if !h.k.Exists(keygroup.Keygroup{
 		Name: k.Name,
 	}) {
-		return nil, errors.New("exthandler: keygroup does not exist")
+		return nil, errors.New(errors.StatusNotFound, "exthandler: keygroup does not exist")
 	}
 
 	return h.r.GetReplica(k)
@@ -161,7 +161,7 @@ func (h *handler) HandleRemoveReplica(k keygroup.Keygroup, n replication.Node) e
 	if !h.k.Exists(keygroup.Keygroup{
 		Name: k.Name,
 	}) {
-		return errors.New("exthandler: keygroup does not exist")
+		return errors.New(errors.StatusNotFound, "exthandler: keygroup does not exist")
 	}
 
 	if err := h.r.RemoveReplica(k, n, true); err != nil {

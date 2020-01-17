@@ -16,7 +16,7 @@ type Address struct {
 
 // ParseAddress parses a string and returns it as an Address if it is a valid address.
 // It returns true if the address is an IP address (opposed to a hostname).
-// If it cannot parse the address, it returns an error != nil.
+// If it cannot parse the address, it returns an errors != nil.
 // https://stackoverflow.com/questions/42479410/how-to-determine-if-given-string-is-a-hostname-or-an-ip-address
 func ParseAddress(a string) (Address, error) {
 	if a == "localhost" {

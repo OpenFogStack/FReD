@@ -19,7 +19,7 @@ func postKeygroup(h exthandler.Handler) func(context *gin.Context) {
 		})
 
 		if err != nil {
-			_ = context.AbortWithError(http.StatusConflict, err)
+			_ = abort(context, err)
 			return
 		}
 
@@ -37,7 +37,7 @@ func deleteKeygroup(h exthandler.Handler) func(context *gin.Context) {
 		})
 
 		if err != nil {
-			_ = context.AbortWithError(http.StatusNotFound, err)
+			_ = abort(context, err)
 			return
 		}
 

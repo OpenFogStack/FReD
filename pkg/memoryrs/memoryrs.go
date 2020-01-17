@@ -1,12 +1,12 @@
 package memoryrs
 
 import (
-	"errors"
 	"sync"
 
 	"github.com/rs/zerolog/log"
 
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/commons"
+	errors "gitlab.tu-berlin.de/mcc-fred/fred/pkg/errors"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/replication"
 )
 
@@ -72,7 +72,7 @@ func (rS *ReplicationStorage) DeleteNode(n replication.Node) error {
 	rS.nodesLock.RUnlock()
 
 	if !ok {
-		return errors.New("memoryrs: no such node")
+		return errors.New(errors.StatusNotFound, "memoryrs: no such node")
 	}
 
 	rS.nodesLock.Lock()
@@ -90,7 +90,7 @@ func (rS *ReplicationStorage) GetNode(n replication.Node) (replication.Node, err
 	rS.nodesLock.RUnlock()
 
 	if !ok {
-		return n, errors.New("memoryrs: no such node")
+		return n, errors.New(errors.StatusNotFound, "memoryrs: no such node")
 	}
 
 	return replication.Node{
@@ -137,7 +137,7 @@ func (rS *ReplicationStorage) DeleteKeygroup(k replication.Keygroup) error {
 	rS.kgLock.RUnlock()
 
 	if !ok {
-		return errors.New("memoryrs: no such node")
+		return errors.New(errors.StatusNotFound, "memoryrs: no such node")
 	}
 
 	rS.kgLock.Lock()
@@ -155,7 +155,7 @@ func (rS *ReplicationStorage) GetKeygroup(k replication.Keygroup) (replication.K
 	rS.kgLock.RUnlock()
 
 	if !ok {
-		return k, errors.New("memoryrs: no such node")
+		return k, errors.New(errors.StatusNotFound, "memoryrs: no such node")
 	}
 
 	return replication.Keygroup{
@@ -184,14 +184,14 @@ func (rS *ReplicationStorage) AddReplica(k replication.Keygroup, n replication.N
 	rS.kgLock.RUnlock()
 
 	if !ok {
-		return errors.New("memoryrs: no such keygroup")
+		return errors.New(errors.StatusNotFound, "memoryrs: no such keygroup")
 	}
 
 	rS.nodesLock.RLock()
 	_, ok = rS.nodes[n.ID]
 	rS.nodesLock.RUnlock()
 	if !ok {
-		return errors.New("memoryrs: no such node")
+		return errors.New(errors.StatusNotFound, "memoryrs: no such node")
 	}
 
 	rS.kgLock.RLock()
@@ -199,7 +199,7 @@ func (rS *ReplicationStorage) AddReplica(k replication.Keygroup, n replication.N
 	rS.kgLock.RUnlock()
 
 	if ok {
-		return errors.New("memoryrs: node is already a replica node of keygroup")
+		return errors.New(errors.StatusConflict, "memoryrs: node is already a replica node of keygroup")
 	}
 
 	rS.kgLock.Lock()
@@ -217,7 +217,7 @@ func (rS *ReplicationStorage) RemoveReplica(k replication.Keygroup, n replicatio
 	rS.kgLock.RUnlock()
 
 	if !ok {
-		return errors.New("memoryrs: no such keygroup")
+		return errors.New(errors.StatusNotFound, "memoryrs: no such keygroup")
 	}
 
 	rS.kgLock.RLock()
@@ -225,7 +225,7 @@ func (rS *ReplicationStorage) RemoveReplica(k replication.Keygroup, n replicatio
 	rS.kgLock.RUnlock()
 
 	if !ok {
-		return errors.New("memoryrs: no such node")
+		return errors.New(errors.StatusNotFound, "memoryrs: no such node")
 	}
 
 	rS.kgLock.Lock()
@@ -266,7 +266,7 @@ func (rS *ReplicationStorage) GetReplica(k replication.Keygroup) ([]replication.
 	n, ok := rS.kg[k.Name]
 
 	if !ok {
-		return nil, errors.New("memoryrs: no such keygroup")
+		return nil, errors.New(errors.StatusNotFound, "memoryrs: no such keygroup")
 	}
 
 	rS.nodesLock.RLock()
@@ -293,7 +293,7 @@ func (rS *ReplicationStorage) GetReplica(k replication.Keygroup) ([]replication.
 // Seed seeds the node as a first node in the system and supplies it with information about itself.
 func (rS *ReplicationStorage) Seed(n replication.Node) error {
 	if !rS.needsSeed {
-		return errors.New("memoryrs: node is already seeded or does not need seed")
+		return errors.New(errors.StatusConflict, "memoryrs: node is already seeded or does not need seed")
 	}
 
 	rS.needsSeed = false
@@ -310,7 +310,7 @@ func (rS *ReplicationStorage) Seed(n replication.Node) error {
 // Unseed removes all data about self node from ReplicationStorage and sets "needsSeed" back to true, effectively removing the node from the system.
 func (rS *ReplicationStorage) Unseed() error {
 	if rS.needsSeed {
-		return errors.New("memoryrs: node is already unseeded or needs seed")
+		return errors.New(errors.StatusConflict, "memoryrs: node is already unseeded or needs seed")
 	}
 
 	rS.needsSeed = true
@@ -326,7 +326,7 @@ func (rS *ReplicationStorage) Unseed() error {
 // GetSelf returns data about the self node from ReplicationStorage.
 func (rS *ReplicationStorage) GetSelf() (replication.Node, error) {
 	if rS.needsSeed {
-		return replication.Node{}, errors.New("memoryrs: cannot return self, needs seed")
+		return replication.Node{}, errors.New(errors.StatusConflict, "memoryrs: cannot return self, needs seed")
 	}
 
 	return rS.self, nil

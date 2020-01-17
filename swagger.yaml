@@ -28,6 +28,8 @@ paths:
       responses:
         200:
           description: OK
+        404:
+          description: Bad Request, request body is malformed
         409:
           description: Conflict, node is seeded already
       parameters:

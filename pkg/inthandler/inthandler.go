@@ -1,12 +1,12 @@
 package inthandler
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/rs/zerolog/log"
 
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/data"
+	errors "gitlab.tu-berlin.de/mcc-fred/fred/pkg/errors"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/keygroup"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/replication"
 )
@@ -102,7 +102,7 @@ func (h *handler) HandleUpdate(i data.Item) error {
 	if !h.k.Exists(keygroup.Keygroup{
 		Name: i.Keygroup,
 	}) {
-		return errors.New("inthandler: keygroup does not exist")
+		return errors.New(errors.StatusNotFound, "inthandler: keygroup does not exist")
 	}
 
 	return h.i.Update(i)
@@ -113,7 +113,7 @@ func (h *handler) HandleDelete(i data.Item) error {
 	if !h.k.Exists(keygroup.Keygroup{
 		Name: i.Keygroup,
 	}) {
-		return errors.New("inthandler: keygroup does not exist")
+		return errors.New(errors.StatusNotFound, "inthandler: keygroup does not exist")
 	}
 
 	return h.i.Delete(i)
