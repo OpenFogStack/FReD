@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
 	"os"
@@ -10,6 +11,12 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"gitlab.tu-berlin.de/mcc-fred/fred/tests/3NodeTest/pkg"
+)
+
+var (
+	// Wait for the user to press enter to continue
+	waitUser = true
+	reader = bufio.NewReader(os.Stdin)
 )
 
 func main() {
@@ -25,18 +32,18 @@ func main() {
 	// Parse Flags
 	apiVersion := flag.String("apiVersion", "v0", "API Version (e.g. v0)")
 
-	nodeAhost := flag.String("nodeAhost", "localhost", "host of nodeA (e.g. localhost)")
-	nodeAhttpPort := flag.String("nodeAhttp", "80", "port of nodeA (e.g. 9001)")
+	nodeAhost := flag.String("nodeAhost", "172.26.0.10", "host of nodeA (e.g. localhost)")
+	nodeAhttpPort := flag.String("nodeAhttp", "9001", "port of nodeA (e.g. 9001)")
 	nodeAzmqPort := flag.Int("nodeAzmqPort", 5555, "ZMQ Port of nodeA")
 	nodeAzmqID := flag.String("nodeAzmqID", "nodeA", "ZMQ Id of nodeA")
 
-	nodeBhost := flag.String("nodeBhost", "localhost", "host of nodeB (e.g. localhost)")
-	nodeBhttpPort := flag.String("nodeBhttp", "80", "port of nodeB (e.g. 9001)")
+	nodeBhost := flag.String("nodeBhost", "172.26.0.11", "host of nodeB (e.g. localhost)")
+	nodeBhttpPort := flag.String("nodeBhttp", "9001", "port of nodeB (e.g. 9001)")
 	nodeBzmqPort := flag.Int("nodeBzmqPort", 5555, "ZMQ Port of nodeB")
 	nodeBzmqID := flag.String("nodeBzmqID", "nodeB", "ZMQ Id of nodeB")
 
-	nodeChost := flag.String("nodeChost", "localhost", "host of nodeC (e.g. localhost)")
-	nodeChttpPort := flag.String("nodeChttp", "80", "port of nodeC (e.g. 9001)")
+	nodeChost := flag.String("nodeChost", "172.26.0.12", "host of nodeC (e.g. localhost)")
+	nodeChttpPort := flag.String("nodeChttp", "9001", "port of nodeC (e.g. 9001)")
 	nodeCzmqPort := flag.Int("nodeCzmqPort", 5555, "ZMQ Port of nodeC")
 	nodeCzmqID := flag.String("nodeCzmqID", "nodeC", "ZMQ Id of nodeC")
 
@@ -207,22 +214,28 @@ func main() {
 
 func logNodeAction(node *pkg.Node, action string) {
 	log.Info().Str("node", node.URL).Msg(action)
+	if waitUser {
+		log.Info().Msg("Please press enter to execute this step:")
+		_,_,_ = reader.ReadLine()
+	}
 }
 
 func logNodeFaliure(node *pkg.Node, expected, result string) {
 	log.Warn().Str("node", node.URL).Msgf("expected: %s, but got: %#v", expected, result)
+	if waitUser {
+		log.Info().Msg("Please press enter to continue:")
+		_,_,_ = reader.ReadLine()
+	}
 }
 
 func logNodeFaliureMap(node *pkg.Node, expected string, result map[string]string) {
 	log.Warn().Str("node", node.URL).Msgf("expected: %s, but got: %#v", expected, result)
+	if waitUser {
+		log.Info().Msg("Please press enter to continue:")
+		_,_,_ = reader.ReadLine()
+	}
 }
 
 func logDebugInfo(node *pkg.Node, info string) {
 	log.Debug().Str("node", node.URL).Msg(info)
-}
-
-func expectEmptyResponse(resp map[string]string) {
-	if resp != nil {
-		log.Warn().Msgf("Expected empty response, but got: %#v", resp)
-	}
 }

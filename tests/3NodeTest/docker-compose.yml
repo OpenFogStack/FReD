@@ -1,0 +1,38 @@
+version: "3.7"
+
+services:
+  nodeA:
+    build: ../../../FReD
+    image: fred:3nodetest
+    container_name: nodeA
+    volumes:
+      - ./config.toml:/config.toml
+    command: --config config.toml
+    networks:
+      fredwork:
+        ipv4_address: 172.26.0.10
+
+  nodeB:
+    image: fred:3nodetest
+    container_name: nodeB
+    volumes:
+      - ./config.toml:/config.toml
+    command: --config config.toml
+    networks:
+      fredwork:
+        ipv4_address: 172.26.0.11
+
+  nodeC:
+    image: fred:3nodetest
+    container_name: nodeC
+    volumes:
+      - ./config.toml:/config.toml
+    command: --config config.toml
+    networks:
+      fredwork:
+        ipv4_address: 172.26.0.12
+
+networks:
+  fredwork:
+    external: true
+# docker network create fredwork --gateway 172.26.0.1 --subnet 172.26.0.0/16

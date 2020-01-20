@@ -1,0 +1,28 @@
+# FReD Node Configuration File
+
+[location]
+# latitude of the server
+lat = 52.514927933123914
+# longitude of the server
+lng = 13.32676300345363
+
+[webserver]
+# host = "localhost"
+port = 9001
+
+[storage]
+# adaptor can be either "leveldb" or "memory"
+adaptor = "leveldb"
+
+[zmq]
+port = 5555
+
+[leveldb]
+path = "./db"
+
+[log]
+# debug,info,warn,error,fatal,panic
+level = "debug"
+# dev: print colored output to stdout
+# prod: print json to stdout
+handler = "dev"
