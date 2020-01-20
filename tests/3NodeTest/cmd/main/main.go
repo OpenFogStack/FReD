@@ -152,37 +152,37 @@ func main() {
 	logNodeAction(nodeA, "Telling nodeA about nodeC")
 	nodeA.RegisterReplica(*nodeCzmqID, *nodeChost, *nodeCzmqPort, 200, true)
 
-	logNodeAction(nodeA, "Getting all Replicas that nodeA has")
-	parsed := nodeA.GetAllReplica(200, false)
-	// Example Response: [{"Addr":{"Addr":"localhost","IsIP":false},"ID":"nodeB","Port":5556}]
-	// Test for nodeA
-	var nodeBnumber, nodeCnumber string
-	if parsed.Path("0.ID").Data().(string) == *nodeBzmqID {
-		nodeBnumber = "0"
-		nodeCnumber = "1"
-	} else {
-		nodeBnumber = "1"
-		nodeCnumber = "0"
-	}
-	if parsed.Path(nodeBnumber+".ID").Data().(string) != *nodeBzmqID {
-		logNodeFaliure(nodeA, nodeBnumber+".ID == nodeB", parsed.Path("0.ID").String())
-	}
-	if int(parsed.Path(nodeBnumber+".Port").Data().(float64)) != *nodeBzmqPort {
-		logNodeFaliure(nodeA, nodeBnumber+".Port == nodeBZmqPort", parsed.Path("0.Port").String())
-	}
-	if parsed.Path(nodeBnumber+".Addr.Addr").Data().(string) != *nodeBhost {
-		logNodeFaliure(nodeA, nodeBnumber+".Addr.Addr == nodeBhost", parsed.Path("0.Addr.Addr").String())
-	}
-	// Test for nodeC
-	if parsed.Path(nodeCnumber+".ID").Data().(string) != *nodeCzmqID {
-		logNodeFaliure(nodeA, nodeCnumber+".ID == nodeC", parsed.Path("1.ID").String())
-	}
-	if int(parsed.Path(nodeCnumber+".Port").Data().(float64)) != *nodeCzmqPort {
-		logNodeFaliure(nodeA, nodeCnumber+".Port == nodeCZmqPort", parsed.Path("1.Port").String())
-	}
-	if parsed.Path(nodeCnumber+".Addr.Addr").Data().(string) != *nodeChost {
-		logNodeFaliure(nodeA, nodeCnumber+".Addr.Addr == nodeChost", parsed.Path("1.Addr.Addr").String())
-	}
+	// logNodeAction(nodeA, "Getting all Replicas that nodeA has")
+	// parsed := nodeA.GetAllReplica(200, false)
+	// // Example Response: [{"Addr":{"Addr":"localhost","IsIP":false},"ID":"nodeB","Port":5556}]
+	// // Test for nodeA
+	// var nodeBnumber, nodeCnumber string
+	// if parsed.Path("0.ID").Data().(string) == *nodeBzmqID {
+	// 	nodeBnumber = "0"
+	// 	nodeCnumber = "1"
+	// } else {
+	// 	nodeBnumber = "1"
+	// 	nodeCnumber = "0"
+	// }
+	// if parsed.Path(nodeBnumber+".ID").Data().(string) != *nodeBzmqID {
+	// 	logNodeFaliure(nodeA, nodeBnumber+".ID == nodeB", parsed.Path("0.ID").String())
+	// }
+	// if int(parsed.Path(nodeBnumber+".Port").Data().(float64)) != *nodeBzmqPort {
+	// 	logNodeFaliure(nodeA, nodeBnumber+".Port == nodeBZmqPort", parsed.Path("0.Port").String())
+	// }
+	// if parsed.Path(nodeBnumber+".Addr.Addr").Data().(string) != *nodeBhost {
+	// 	logNodeFaliure(nodeA, nodeBnumber+".Addr.Addr == nodeBhost", parsed.Path("0.Addr.Addr").String())
+	// }
+	// // Test for nodeC
+	// if parsed.Path(nodeCnumber+".ID").Data().(string) != *nodeCzmqID {
+	// 	logNodeFaliure(nodeA, nodeCnumber+".ID == nodeC", parsed.Path("1.ID").String())
+	// }
+	// if int(parsed.Path(nodeCnumber+".Port").Data().(float64)) != *nodeCzmqPort {
+	// 	logNodeFaliure(nodeA, nodeCnumber+".Port == nodeCZmqPort", parsed.Path("1.Port").String())
+	// }
+	// if parsed.Path(nodeCnumber+".Addr.Addr").Data().(string) != *nodeChost {
+	// 	logNodeFaliure(nodeA, nodeCnumber+".Addr.Addr == nodeChost", parsed.Path("1.Addr.Addr").String())
+	// }
 
 	// Fun with replicas
 	logNodeAction(nodeA, "Adding nodeB as Replica node for KG1")

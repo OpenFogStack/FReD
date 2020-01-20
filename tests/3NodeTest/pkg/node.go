@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/Jeffail/gabs/v2"
+	//"github.com/Jeffail/gabs/v2"
 	"github.com/rs/zerolog/log"
 )
 
@@ -111,11 +111,11 @@ func (n *Node) RegisterReplica(nodeID, nodeIP string, nodePort int, expectedStat
 }
 
 // GetAllReplica returns a list of all replica that this node has stored
-func (n *Node) GetAllReplica(expectedStatusCode int, expectEmptyResponse bool) (parsed *gabs.Container) {
+func (n *Node) GetAllReplica(expectedStatusCode int, expectEmptyResponse bool) (parsed []string){//*gabs.Container) {
 	log.Debug().Str("node", n.URL).Msgf("Sending a Get for all Replicas; expecting %d", expectedStatusCode)
 	rawResponseBody := n.sendGet("replica", expectedStatusCode)
-	parsed, _ = gabs.ParseJSON(rawResponseBody)
-	log.Debug().Msgf("All Replicas: %s", parsed.String())
+	// parsed, _ = gabs.ParseJSON(rawResponseBody)
+	// log.Debug().Msgf("All Replicas: %s", parsed.String())
 	if expectEmptyResponse && (rawResponseBody != nil && len(rawResponseBody) != 0) {
 		n.Errors++
 		log.Warn().Str("node", n.URL).Msgf("GetAllReplica expected an empty response but got %#v with len %d", rawResponseBody, len(rawResponseBody))
