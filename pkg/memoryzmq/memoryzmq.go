@@ -28,7 +28,9 @@ func New(h inthandler.Handler) (l zmqserver.MessageHandler) {
 func (l *localMemoryMessageHandler) HandleCreateKeygroup(req *zmqcommon.KeygroupRequest, from string) {
 	err := l.i.HandleCreateKeygroup(keygroup.Keygroup{Name: req.Keygroup}, req.Nodes)
 
-	log.Err(err).Msg("")
+	if err != nil {
+		log.Err(err).Msg("error in HandleCreateKeygroup")
+	}
 	// TODO Error handling: send a reply message if necessary, the identity of the sender is in req.From
 }
 
@@ -39,8 +41,9 @@ func (l *localMemoryMessageHandler) HandlePutValueIntoKeygroup(req *zmqcommon.Da
 		ID:       req.ID,
 		Data:     req.Value,
 	})
-
-	log.Err(err).Msg("")
+	if err != nil {
+		log.Err(err).Msg("error in HandlePutValueIntoKeygroup")
+	}
 }
 
 // HandleDeleteFromKeygroup handles requests to the Delete endpoint of the internal zmqclient interface.
@@ -50,48 +53,64 @@ func (l *localMemoryMessageHandler) HandleDeleteFromKeygroup(req *zmqcommon.Data
 		ID:       req.ID,
 	})
 
-	log.Err(err).Msg("")
+	if err != nil {
+		log.Err(err).Msg("error in HandleDeleteFromKeygroup")
+	}
 }
 
 // HandleDeleteKeygroup handles requests to the DeleteKeygroup endpoint of the internal zmqclient interface.
 func (l *localMemoryMessageHandler) HandleDeleteKeygroup(req *zmqcommon.KeygroupRequest, from string) {
 	err := l.i.HandleDeleteKeygroup(keygroup.Keygroup{Name: req.Keygroup})
 
-	log.Err(err).Msg("")
+	if err != nil {
+		log.Err(err).Msg("error in HandleDeleteKeygroup")
+	}
 }
 
 func (l *localMemoryMessageHandler) HandleAddNode(req *zmqcommon.ReplicationRequest, from string) {
 	err := l.i.HandleAddNode(req.Node)
 
-	log.Err(err).Msg("")
+	if err != nil {
+		log.Err(err).Msg("error in HandleAddNode")
+	}
 }
 
 func (l *localMemoryMessageHandler) HandleRemoveNode(req *zmqcommon.ReplicationRequest, from string) {
 	err := l.i.HandleRemoveNode(req.Node)
 
-	log.Err(err).Msg("")
+	if err != nil {
+		log.Err(err).Msg("error in HandleRemoveNode")
+	}
 }
 
 func (l *localMemoryMessageHandler) HandleAddReplica(req *zmqcommon.ReplicationRequest, from string) {
 	err := l.i.HandleAddReplica(keygroup.Keygroup{Name: req.Keygroup}, req.Node)
 
-	log.Err(err).Msg("")
+	if err != nil {
+		log.Err(err).Msg("error in HandleAddReplica")
+	}
 }
 
 func (l *localMemoryMessageHandler) HandleRemoveReplica(req *zmqcommon.ReplicationRequest, from string) {
 	err := l.i.HandleRemoveReplica(keygroup.Keygroup{Name: req.Keygroup}, req.Node)
 
-	log.Err(err).Msg("")
+	if err != nil {
+		log.Err(err).Msg("error in HandleRemoveReplica")
+	}
 }
 
 func (l *localMemoryMessageHandler) HandleIntroduction(req *zmqcommon.IntroductionRequest, src string) {
 	err := l.i.HandleIntroduction(req.Self, req.Other, req.Node)
 
-	log.Err(err).Msg("")
+	if err != nil {
+		log.Err(err).Msg("error in HandleIntroduction")
+	}
 }
 
 func (l *localMemoryMessageHandler) HandleDetroduction(req *zmqcommon.IntroductionRequest, src string) {
 	err := l.i.HandleDetroduction()
 
-	log.Err(err).Msg("")
+	if err != nil {
+		log.Err(err).Msg("error in HandleDetroduction")
+	}
 }

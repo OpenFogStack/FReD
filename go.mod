@@ -18,8 +18,6 @@ require (
 	golang.org/x/lint v0.0.0-20191125180803-fdd1cda4f05f // indirect
 	golang.org/x/net v0.0.0-20190827160401-ba9fcec4b297 // indirect
 	golang.org/x/tools v0.0.0-20200125223703-d33eef8e6825 // indirect
-	golang.org/x/tools v0.0.0-20200117065230-39095c1d176c // indirect
-	golang.org/x/tools v0.0.0-20200116062425-473961ec044c // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/yaml.v2 v2.2.4 // indirect
 )
