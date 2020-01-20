@@ -2,7 +2,6 @@
   <configuration default="false" name="Run 3NodesTest" type="GoApplicationRunConfiguration" factoryName="Go Application" singleton="false">
     <module name="FReD" />
     <working_directory value="$PROJECT_DIR$" />
-    <parameters value="--nodeAhost=&quot;18.195.252.26&quot; --nodeBhost=&quot;18.196.43.34&quot; --nodeChost=&quot;3.121.12.189&quot;" />
     <kind value="PACKAGE" />
     <filePath value="$PROJECT_DIR$/tests/3NodeTest/cmd/main.go" />
     <package value="gitlab.tu-berlin.de/mcc-fred/fred/tests/3NodeTest/cmd" />
