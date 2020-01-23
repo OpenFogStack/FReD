@@ -20,8 +20,9 @@ func Setup(addr string, h exthandler.Handler, apiversion string) error {
 
 	r.POST(apiversion+"/seed", postSeed(h))
 
-	r.GET(apiversion+"/replica", getReplica(h))
+	r.GET(apiversion+"/replica", getAllReplica(h))
 	r.POST(apiversion+"/replica", postReplica(h))
+	r.GET(apiversion+"/replica/:nodeid", getReplica(h))
 	r.DELETE(apiversion+"/replica/:nodeid", deleteReplica(h))
 
 	r.POST(apiversion+"/keygroup/:kgname", postKeygroup(h))

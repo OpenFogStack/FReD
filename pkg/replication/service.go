@@ -16,6 +16,7 @@ type Service interface {
 	RemoveNode(n Node, relay bool) error
 	AddReplica(k keygroup.Keygroup, n Node, relay bool) error
 	RemoveReplica(k keygroup.Keygroup, n Node, relay bool) error
+	GetNode(n Node) (Node, error)
 	GetNodes() ([]Node, error)
 	GetReplica(k keygroup.Keygroup) ([]Node, error)
 	Seed(n Node) error

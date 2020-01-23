@@ -195,4 +195,3 @@ func (c *Client) SendDetroduce(addr replication.Address, port int) (err error) {
 	err = c.sendMessage(zmqcommon.Detroduction, addr, port, req)
 	return
 }
-

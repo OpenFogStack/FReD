@@ -50,7 +50,18 @@ printf "Calling http://%s:%s/%s/seed\n" $HOST_1 $PORT_1 $APIVERSION
 curl --request POST -sL \
      --url http://$HOST_1:$PORT_1/$APIVERSION/seed \
      --data "{\"id\":\"$ID_1\",\"addr\":\"$HOST_1\"}" \
-     -i
+     -i \
+     --data-binary @- << EOF
+{
+  "data": {
+    "id": "nodeA",
+    "type": "seed",
+    "attributes": {
+      "addr": "172.12.0.3"
+    }
+  }
+}
+EOF
 
 wait
 

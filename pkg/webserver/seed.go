@@ -12,6 +12,14 @@ import (
 
 func postSeed(h exthandler.Handler) func(context *gin.Context) {
 	return func(context *gin.Context) {
+
+		/*
+			{
+			  "id": "nodeA",
+			  "addr": "172.12.0.3"
+			}
+		*/
+
 		var jsonstruct struct {
 			ID   string `json:"id" binding:"required"`
 			Addr string `json:"addr" binding:"required"`

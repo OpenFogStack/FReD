@@ -9,11 +9,17 @@ import (
 )
 
 func abort(c *gin.Context, err error) error {
+	d := struct {
+		Error string `json:"error"`
+	}{
+		err.Error(),
+	}
+
 	if err, ok := err.(*errors.Error); ok {
-		c.String(err.Code, err.Error())
+		c.JSON(err.Code, d)
 		return c.Error(err)
 	}
 
-	c.String(http.StatusNotFound, err.Error())
+	c.JSON(http.StatusNotFound, d)
 	return c.Error(err)
 }

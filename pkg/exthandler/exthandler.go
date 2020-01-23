@@ -191,8 +191,13 @@ func (h *handler) HandleAddNode(n []replication.Node) error {
 	return nil
 }
 
-// HandleGetReplica handles requests to the GetReplica endpoint of the client interface.
-func (h *handler) HandleGetReplica() ([]replication.Node, error) {
+// HandleGetReplica handles requests to the GetAllReplica endpoint of the client interface.
+func (h *handler) HandleGetReplica(n replication.Node) (replication.Node, error) {
+	return h.r.GetNode(n)
+}
+
+// HandleGetAllReplica handles requests to the GetAllReplica endpoint of the client interface.
+func (h *handler) HandleGetAllReplica() ([]replication.Node, error) {
 	return h.r.GetNodes()
 }
 

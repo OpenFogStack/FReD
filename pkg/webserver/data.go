@@ -27,7 +27,25 @@ func getItem(h exthandler.Handler) func(context *gin.Context) {
 			return
 		}
 
-		context.JSON(http.StatusOK, d)
+		/*
+			{
+			  "id": "hello",
+			  "value": "Hello World!",
+			  "keygroup": "Test-Keygroup"
+			}
+		*/
+
+		var r = struct {
+			ID       string `json:"id" binding:"required"`
+			Value    string `json:"value" binding:"required"`
+			Keygroup string `json:"keygroup" binding:"required"`
+		}{
+			d.ID,
+			d.Data,
+			string(d.Keygroup),
+		}
+
+		context.JSON(http.StatusOK, r)
 		return
 	}
 }
@@ -38,8 +56,17 @@ func putItem(h exthandler.Handler) func(context *gin.Context) {
 
 		id := context.Params.ByName("id")
 
+		/*
+			{
+			  "id": "hello",
+			  "value": "Hello World!",
+			  "keygroup": "Test-Keygroup"
+			}
+		*/
 		var jsonstruct struct {
-			Data string `json:"data" binding:"required"`
+			ID       string `json:"id" binding:"required"`
+			Value    string `json:"value" binding:"required"`
+			Keygroup string `json:"keygroup" binding:"required"`
 		}
 
 		if err := context.ShouldBindJSON(&jsonstruct); err != nil {
@@ -48,7 +75,7 @@ func putItem(h exthandler.Handler) func(context *gin.Context) {
 			return
 		}
 
-		arg := jsonstruct.Data
+		arg := jsonstruct.Value
 		err := h.HandleUpdate(data.Item{
 			Keygroup: kgname,
 			ID:       id,

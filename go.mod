@@ -15,9 +15,10 @@ require (
 	github.com/rs/zerolog v1.17.2
 	github.com/syndtr/goleveldb v1.0.0
 	github.com/zeromq/goczmq v4.1.0+incompatible
-	golang.org/x/lint v0.0.0-20191125180803-fdd1cda4f05f // indirect
+	golang.org/x/lint v0.0.0-20200130185559-910be7a94367 // indirect
 	golang.org/x/net v0.0.0-20190827160401-ba9fcec4b297 // indirect
-	golang.org/x/tools v0.0.0-20200125223703-d33eef8e6825 // indirect
+	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
+	golang.org/x/tools v0.0.0-20200203023011-6f24f261dadb // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/yaml.v2 v2.2.4 // indirect
 )

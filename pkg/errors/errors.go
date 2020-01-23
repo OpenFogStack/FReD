@@ -6,16 +6,16 @@ import (
 )
 
 // Error is a custom error type for FReD that also has an HTTP status code.
-type Error struct{
-	Code int
+type Error struct {
+	Code  int
 	error string
 }
 
 // Status Codes we use in FReD that can be used when creating new custom errors.
 const (
-	StatusConflict int = http.StatusConflict
-	StatusBadRequest int = http.StatusBadRequest
-	StatusNotFound int = http.StatusNotFound
+	StatusConflict      int = http.StatusConflict
+	StatusBadRequest    int = http.StatusBadRequest
+	StatusNotFound      int = http.StatusNotFound
 	StatusInternalError int = http.StatusInternalServerError
 )
 

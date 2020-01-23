@@ -17,7 +17,8 @@ type Handler interface {
 	HandleGetKeygroupReplica(k keygroup.Keygroup) ([]replication.Node, error)
 	HandleRemoveReplica(k keygroup.Keygroup, n replication.Node) error
 	HandleAddNode(n []replication.Node) error
-	HandleGetReplica() ([]replication.Node, error)
+	HandleGetReplica(n replication.Node) (replication.Node, error)
+	HandleGetAllReplica() ([]replication.Node, error)
 	HandleRemoveNode(n replication.Node) error
 	HandleSeed(n replication.Node) error
 }

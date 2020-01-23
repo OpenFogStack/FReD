@@ -67,7 +67,7 @@ override.tf.json
 # vendor/
 
 ### Go Patch ###
-/vendor/
+# /vendor/
 /Godeps/
 
 ### Linux ###
