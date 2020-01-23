@@ -34,18 +34,25 @@ func main() {
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 	nodeAhost := flag.String("nodeAhost", "172.26.0.10", "host of nodeA (e.g. localhost)")
+=======
+	nodeAhost := flag.String("nodeAhost", "localhost", "host of nodeA (e.g. localhost)")
+>>>>>>> Add Mac Support, do not fatal on invalid json responses
 	nodeAhttpPort := flag.String("nodeAhttp", "9001", "port of nodeA (e.g. 9001)")
+	nodeAzmqhost := flag.String("nodeAzmqhost", "172.26.0.10", "host of nodeA (e.g. localhost) that can be reached by the other nodes")
 	nodeAzmqPort := flag.Int("nodeAzmqPort", 5555, "ZMQ Port of nodeA")
 	nodeAzmqID := flag.String("nodeAzmqID", "nodeA", "ZMQ Id of nodeA")
 
-	nodeBhost := flag.String("nodeBhost", "172.26.0.11", "host of nodeB (e.g. localhost)")
-	nodeBhttpPort := flag.String("nodeBhttp", "9001", "port of nodeB (e.g. 9001)")
+	nodeBhost := flag.String("nodeBhost", "localhost", "host of nodeB (e.g. localhost)")
+	nodeBhttpPort := flag.String("nodeBhttp", "9002", "port of nodeB (e.g. 9001)")
+	nodeBzmqhost := flag.String("nodeBzmqhost", "172.26.0.11", "host of nodeB (e.g. localhost) that can be reached by the other nodes")
 	nodeBzmqPort := flag.Int("nodeBzmqPort", 5555, "ZMQ Port of nodeB")
 	nodeBzmqID := flag.String("nodeBzmqID", "nodeB", "ZMQ Id of nodeB")
 
-	nodeChost := flag.String("nodeChost", "172.26.0.12", "host of nodeC (e.g. localhost)")
-	nodeChttpPort := flag.String("nodeChttp", "9001", "port of nodeC (e.g. 9001)")
+	nodeChost := flag.String("nodeChost", "localhost", "host of nodeC (e.g. localhost)")
+	nodeChttpPort := flag.String("nodeChttp", "9003", "port of nodeC (e.g. 9001)")
+	nodeCzmqhost := flag.String("nodeCzmqhost", "172.26.0.12", "host of nodeC (e.g. localhost) that can be reached by the other nodes")
 	nodeCzmqPort := flag.Int("nodeCzmqPort", 5555, "ZMQ Port of nodeC")
 	nodeCzmqID := flag.String("nodeCzmqID", "nodeC", "ZMQ Id of nodeC")
 
@@ -96,7 +103,7 @@ func main() {
 
 	// Seed NodeA
 	logNodeAction(nodeA, "Seeding nodeA")
-	nodeA.SeedNode(*nodeAzmqID, *nodeAhost, 200, true)
+	nodeA.SeedNode(*nodeAzmqID, *nodeAzmqhost, 200, true)
 
 
 	// Test Keygroups
@@ -147,42 +154,42 @@ func main() {
 
 	// Connect the nodes
 	logNodeAction(nodeA, "Telling nodeA about nodeB")
-	nodeA.RegisterReplica(*nodeBzmqID, *nodeBhost, *nodeBzmqPort, 200, true)
+	nodeA.RegisterReplica(*nodeBzmqID, *nodeBzmqhost, *nodeBzmqPort, 200, true)
 
 	logNodeAction(nodeA, "Telling nodeA about nodeC")
-	nodeA.RegisterReplica(*nodeCzmqID, *nodeChost, *nodeCzmqPort, 200, true)
+	nodeA.RegisterReplica(*nodeCzmqID, *nodeCzmqhost, *nodeCzmqPort, 200, true)
 
-	// logNodeAction(nodeA, "Getting all Replicas that nodeA has")
-	// parsed := nodeA.GetAllReplica(200, false)
-	// // Example Response: [{"Addr":{"Addr":"localhost","IsIP":false},"ID":"nodeB","Port":5556}]
-	// // Test for nodeA
-	// var nodeBnumber, nodeCnumber string
-	// if parsed.Path("0.ID").Data().(string) == *nodeBzmqID {
-	// 	nodeBnumber = "0"
-	// 	nodeCnumber = "1"
-	// } else {
-	// 	nodeBnumber = "1"
-	// 	nodeCnumber = "0"
-	// }
-	// if parsed.Path(nodeBnumber+".ID").Data().(string) != *nodeBzmqID {
-	// 	logNodeFaliure(nodeA, nodeBnumber+".ID == nodeB", parsed.Path("0.ID").String())
-	// }
-	// if int(parsed.Path(nodeBnumber+".Port").Data().(float64)) != *nodeBzmqPort {
-	// 	logNodeFaliure(nodeA, nodeBnumber+".Port == nodeBZmqPort", parsed.Path("0.Port").String())
-	// }
-	// if parsed.Path(nodeBnumber+".Addr.Addr").Data().(string) != *nodeBhost {
-	// 	logNodeFaliure(nodeA, nodeBnumber+".Addr.Addr == nodeBhost", parsed.Path("0.Addr.Addr").String())
-	// }
-	// // Test for nodeC
-	// if parsed.Path(nodeCnumber+".ID").Data().(string) != *nodeCzmqID {
-	// 	logNodeFaliure(nodeA, nodeCnumber+".ID == nodeC", parsed.Path("1.ID").String())
-	// }
-	// if int(parsed.Path(nodeCnumber+".Port").Data().(float64)) != *nodeCzmqPort {
-	// 	logNodeFaliure(nodeA, nodeCnumber+".Port == nodeCZmqPort", parsed.Path("1.Port").String())
-	// }
-	// if parsed.Path(nodeCnumber+".Addr.Addr").Data().(string) != *nodeChost {
-	// 	logNodeFaliure(nodeA, nodeCnumber+".Addr.Addr == nodeChost", parsed.Path("1.Addr.Addr").String())
-	// }
+	logNodeAction(nodeA, "Getting all Replicas that nodeA has")
+	parsed := nodeA.GetAllReplica(200, false)
+	// Example Response: [{"Addr":{"Addr":"localhost","IsIP":false},"ID":"nodeB","Port":5556}]
+	// Test for nodeA
+	var nodeBnumber, nodeCnumber string
+	if parsed.Path("0.ID").Data().(string) == *nodeBzmqID {
+		nodeBnumber = "0"
+		nodeCnumber = "1"
+	} else {
+		nodeBnumber = "1"
+		nodeCnumber = "0"
+	}
+	if parsed.Path(nodeBnumber+".ID").Data().(string) != *nodeBzmqID {
+		logNodeFaliure(nodeA, nodeBnumber+".ID == nodeB", parsed.Path("0.ID").String())
+	}
+	if int(parsed.Path(nodeBnumber+".Port").Data().(float64)) != *nodeBzmqPort {
+		logNodeFaliure(nodeA, nodeBnumber+".Port == nodeBZmqPort", parsed.Path("0.Port").String())
+	}
+	if parsed.Path(nodeBnumber+".Addr.Addr").Data().(string) != *nodeBhost {
+		logNodeFaliure(nodeA, nodeBnumber+".Addr.Addr == nodeBhost", parsed.Path("0.Addr.Addr").String())
+	}
+	// Test for nodeC
+	if parsed.Path(nodeCnumber+".ID").Data().(string) != *nodeCzmqID {
+		logNodeFaliure(nodeA, nodeCnumber+".ID == nodeC", parsed.Path("1.ID").String())
+	}
+	if int(parsed.Path(nodeCnumber+".Port").Data().(float64)) != *nodeCzmqPort {
+		logNodeFaliure(nodeA, nodeCnumber+".Port == nodeCZmqPort", parsed.Path("1.Port").String())
+	}
+	if parsed.Path(nodeCnumber+".Addr.Addr").Data().(string) != *nodeChost {
+		logNodeFaliure(nodeA, nodeCnumber+".Addr.Addr == nodeChost", parsed.Path("1.Addr.Addr").String())
+	}
 
 	// Fun with replicas
 	logNodeAction(nodeA, "Adding nodeB as Replica node for KG1")

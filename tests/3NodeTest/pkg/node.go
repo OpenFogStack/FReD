@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/Jeffail/gabs/v2"
 	//"github.com/Jeffail/gabs/v2"
 	"github.com/rs/zerolog/log"
 )
@@ -36,11 +37,11 @@ func (n *Node) CreateKeygroup(kgname string, expectedStatusCode int, expectEmpty
 }
 
 // DeleteKeygroup deletes the specified keygroup
-func (n *Node) DeleteKeygroup(kgname string, expectedStatusCode int, expectEmptyResponse bool) (responseBody map[string]string) {
+func (n *Node) DeleteKeygroup(kgname string, expectedStatusCode int, expectEmptyResponse bool) (responseBody []byte) {
 	log.Debug().Str("node", n.URL).Msgf("Sending a Delete Keygroup for group %s; expecting %d", kgname, expectedStatusCode)
 	responseBody = n.sendDelete("keygroup/"+kgname, nil, expectedStatusCode)
 	if expectEmptyResponse && (responseBody != nil) {
-		log.Warn().Str("node", n.URL).Msgf("Delete Keygroup expected an empty response but got %#v", responseBody)
+		log.Warn().Str("node", n.URL).Msgf("Delete Keygroup expected an empty response but got %#v", string(responseBody))
 		n.Errors++
 	}
 	return
@@ -54,7 +55,7 @@ func (n *Node) PutItem(kgname, item string, data string, expectedStatusCode int,
 	}
 	responseBody = n.sendPut(fmt.Sprintf("keygroup/%s/data/%s", kgname, item), reqBody, expectedStatusCode)
 	if expectEmptyResponse && (responseBody != nil) {
-		log.Warn().Str("node", n.URL).Msgf("PutItem expected an empty response but got %#v", responseBody)
+		log.Warn().Str("node", n.URL).Msgf("PutItem expected an empty response but got %#v", string(responseBody))
 		n.Errors++
 	}
 	return
@@ -82,11 +83,11 @@ func (n *Node) GetItem(kgname, item string, expectedStatusCode int, expectEmptyR
 }
 
 // DeleteItem deletes the item from the keygroup
-func (n *Node) DeleteItem(kgname, item string, expectedStatusCode int, expectEmptyResponse bool) (responseBody map[string]string) {
+func (n *Node) DeleteItem(kgname, item string, expectedStatusCode int, expectEmptyResponse bool) (responseBody []byte) {
 	log.Debug().Str("node", n.URL).Msgf("Sending a Delete for Item %s in KG %s; expecting %d", item, kgname, expectedStatusCode)
 	responseBody = n.sendDelete(fmt.Sprintf("keygroup/%s/data/%s", kgname, item), nil, expectedStatusCode)
 	if expectEmptyResponse && (responseBody != nil) {
-		log.Warn().Str("node", n.URL).Msgf("DeleteItem expected an empty response but got %#v", responseBody)
+		log.Warn().Str("node", n.URL).Msgf("DeleteItem expected an empty response but got %#v", string(responseBody))
 		n.Errors++
 	} else if !expectEmptyResponse && responseBody == nil {
 		log.Warn().Str("node", n.URL).Msg("DeleteItem expected a response but got nothing")
@@ -101,7 +102,7 @@ func (n *Node) RegisterReplica(nodeID, nodeIP string, nodePort int, expectedStat
 	json := []byte(fmt.Sprintf(`{"nodes":[{"id":"%s","addr":"%s","port":%d}]}`, nodeID, nodeIP, nodePort))
 	responseBody = n.sendPost("replica", json, expectedStatusCode)
 	if expectEmptyResponse && (responseBody != nil && len(responseBody) != 0) {
-		log.Warn().Str("node", n.URL).Msgf("RegisterReplica expected an empty response but got %#v with len %d", responseBody, len(responseBody))
+		log.Warn().Str("node", n.URL).Msgf("RegisterReplica expected an empty response but got %#v with len %d", string(responseBody), len(responseBody))
 		n.Errors++
 	} else if !expectEmptyResponse && (responseBody == nil || len(responseBody) == 0) {
 		n.Errors++
@@ -111,14 +112,14 @@ func (n *Node) RegisterReplica(nodeID, nodeIP string, nodePort int, expectedStat
 }
 
 // GetAllReplica returns a list of all replica that this node has stored
-func (n *Node) GetAllReplica(expectedStatusCode int, expectEmptyResponse bool) (parsed []string){//*gabs.Container) {
+func (n *Node) GetAllReplica(expectedStatusCode int, expectEmptyResponse bool) (parsed *gabs.Container) {
 	log.Debug().Str("node", n.URL).Msgf("Sending a Get for all Replicas; expecting %d", expectedStatusCode)
 	rawResponseBody := n.sendGet("replica", expectedStatusCode)
-	// parsed, _ = gabs.ParseJSON(rawResponseBody)
-	// log.Debug().Msgf("All Replicas: %s", parsed.String())
+	parsed, _ = gabs.ParseJSON(rawResponseBody)
+	log.Debug().Msgf("All Replicas: %s", parsed.String())
 	if expectEmptyResponse && (rawResponseBody != nil && len(rawResponseBody) != 0) {
 		n.Errors++
-		log.Warn().Str("node", n.URL).Msgf("GetAllReplica expected an empty response but got %#v with len %d", rawResponseBody, len(rawResponseBody))
+		log.Warn().Str("node", n.URL).Msgf("GetAllReplica expected an empty response but got %#v with len %d", string(rawResponseBody), len(rawResponseBody))
 	} else if !expectEmptyResponse && (rawResponseBody == nil || len(rawResponseBody) == 0) {
 		n.Errors++
 		log.Warn().Str("node", n.URL).Msg("GetAllReplica expected a response but got nothing")
@@ -148,7 +149,7 @@ func (n *Node) AddReplicaNode(kgname, replicaNodeID string, expectedStatusCode i
 	responseBody = n.sendPost("keygroup/"+kgname+"/replica/"+replicaNodeID, nil, expectedStatusCode)
 	if expectEmptyResponse && (responseBody != nil && len(responseBody) != 0) {
 		n.Errors++
-		log.Warn().Str("node", n.URL).Msgf("AddReplica expected an empty response but got %#v", responseBody)
+		log.Warn().Str("node", n.URL).Msgf("AddReplica expected an empty response but got %#v", string(responseBody))
 	}
 	return
 }
@@ -181,7 +182,7 @@ func (n *Node) sendGetResponseArray(path string, expectedStatusCode int) (respon
 	if response != nil && len(response) != 0 {
 		err := json.Unmarshal(response, &responseBody)
 		if err != nil {
-			log.Fatal().Str("node", n.URL).Err(err).Str("json", string(response)).Msg("sendGet got a response with invalid json")
+			log.Err(err).Str("node", n.URL).Str("json", string(response)).Msg("sendGet got a response with invalid json")
 		}
 	}
 	return
@@ -192,7 +193,7 @@ func (n *Node) sendGetResponseMap(path string, expectedStatusCode int) (response
 	if response != nil && len(response) != 0 {
 		err := json.Unmarshal(response, &responseBody)
 		if err != nil {
-			log.Fatal().Str("node", n.URL).Err(err).Str("json", string(response)).Msg("sendGet got a response with invalid json")
+			log.Err(err).Str("node", n.URL).Str("json", string(response)).Msg("sendGet got a response with invalid json")
 		}
 	}
 	return
@@ -250,7 +251,7 @@ func (n *Node) sendPostReturnArray(path string, jsonBytes []byte, expectedStatus
 	// Load buf into responseBody
 	err := json.Unmarshal(response, &responseBody)
 	if err != nil && err.Error() != "unexpected end of JSON input" {
-		log.Fatal().Str("node", n.URL).Err(err).Str("jsonBytes", string(response)).Msg("sendPost got a response with invalid jsonBytes")
+		log.Err(err).Str("node", n.URL).Str("jsonBytes", string(response)).Msg("sendPost got a response with invalid jsonBytes")
 	}
 	return
 }
@@ -261,12 +262,12 @@ func (n *Node) sendPostReturnMap(path string, jsonBytes []byte, expectedStatusCo
 	// Load buf into responseBody
 	err := json.Unmarshal(response, &responseBody)
 	if err != nil && err.Error() != "unexpected end of JSON input" {
-		log.Fatal().Str("node", n.URL).Err(err).Str("jsonBytes", string(response)).Msg("sendPost got a response with invalid jsonBytes")
+		log.Err(err).Str("node", n.URL).Str("jsonBytes", string(response)).Msg("sendPost got a response with invalid jsonBytes")
 	}
 	return
 }
 
-func (n *Node) sendDelete(path string, data map[string]string, expectedStatusCode int) (responseBody map[string]string) {
+func (n *Node) sendDelete(path string, data map[string]string, expectedStatusCode int) (responseBody []byte) {
 	var jsonBytes []byte
 	if data != nil {
 		var err error
@@ -299,7 +300,7 @@ func (n *Node) sendDelete(path string, data map[string]string, expectedStatusCod
 	// Load buf into responseBody
 	err = json.Unmarshal(buf.Bytes(), &responseBody)
 	if err != nil && err.Error() != "unexpected end of JSON input" {
-		log.Fatal().Str("node", n.URL).Err(err).Str("json", buf.String()).Msg("sendDelete got a response with invalid json")
+		log.Err(err).Str("node", n.URL).Str("json", buf.String()).Msg("sendDelete got a response with invalid json")
 	}
 	return
 }
