@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/Jeffail/gabs/v2"
-	//"github.com/Jeffail/gabs/v2"
 	"github.com/rs/zerolog/log"
 )
 
@@ -30,8 +29,6 @@ func (n *Node) CreateKeygroup(kgname string, expectedStatusCode int, expectEmpty
 	if expectEmptyResponse && (responseBody != nil) {
 		log.Warn().Str("node", n.URL).Msgf("Create Keygroup expected an empty response but got %#v", responseBody)
 		n.Errors++
-	if expectEmptyResponse && (responseBody != nil) {
-		log.Warn().Str("node", n.URL).Msgf("Create Keygroup expected an empty response but got %#v", responseBody)
 	}
 	return
 }
@@ -68,13 +65,6 @@ func (n *Node) GetItem(kgname, item string, expectedStatusCode int, expectEmptyR
 	if expectEmptyResponse && (responseBody != nil) {
 		log.Warn().Str("node", n.URL).Msgf("GetItem expected an empty response but got %#v", responseBody)
 		n.Errors++
-	} else if !expectEmptyResponse && responseBody == nil {
-		log.Warn().Str("node", n.URL).Msg("GetItem expected a response but got nothing")
-		n.Errors++
-	log.Debug().Str("node", n.URL).Msgf("Sending a Get for Item %s in KG %s; expecting %d", item, kgname, expectedStatusCode)
-	responseBody = n.sendGetResponseMap(fmt.Sprintf("keygroup/%s/data/%s", kgname, item), expectedStatusCode)
-	if expectEmptyResponse && (responseBody != nil) {
-		log.Warn().Str("node", n.URL).Msgf("GetItem expected an empty response but got %#v", responseBody)
 	} else if !expectEmptyResponse && responseBody == nil {
 		log.Warn().Str("node", n.URL).Msg("GetItem expected a response but got nothing")
 		n.Errors++
