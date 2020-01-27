@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Run 3NodesTest" type="GoApplicationRunConfiguration" factoryName="Go Application" singleton="false">
+  <configuration default="false" name="Run 3NodesTest (all Clients in Container)" type="GoApplicationRunConfiguration" factoryName="Go Application" singleton="false">
     <module name="FReD" />
     <working_directory value="$PROJECT_DIR$" />
     <kind value="PACKAGE" />

@@ -9,7 +9,7 @@ services:
       - ./config.toml:/config.toml
     command: --config config.toml
     ports:
-      - 9001:9001
+      - 9002:9001
     networks:
       fredwork:
         ipv4_address: 172.26.0.10
@@ -21,7 +21,7 @@ services:
       - ./config.toml:/config.toml
     command: --config config.toml
     ports:
-      - 9002:9001
+      - 9003:9001
     networks:
       fredwork:
         ipv4_address: 172.26.0.11
@@ -33,7 +33,7 @@ services:
       - ./config.toml:/config.toml
     command: --config config.toml
     ports:
-      - 9003:9001
+      - 9004:9001
     networks:
       fredwork:
         ipv4_address: 172.26.0.12
