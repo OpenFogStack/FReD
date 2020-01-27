@@ -16,6 +16,6 @@ type Handler interface {
 	HandleRemoveReplica(k keygroup.Keygroup, n replication.Node) error
 	HandleAddNode(n replication.Node) error
 	HandleRemoveNode(n replication.Node) error
-	HandleIntroduction(self replication.Node, node []replication.Node) error
+	HandleIntroduction(introducer replication.Node, self replication.Node, node []replication.Node) error
 	HandleDetroduction() error
 }

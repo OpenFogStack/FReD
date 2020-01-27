@@ -85,7 +85,7 @@ func (l *localMemoryMessageHandler) HandleRemoveReplica(req *zmqcommon.Replicati
 }
 
 func (l *localMemoryMessageHandler) HandleIntroduction(req *zmqcommon.IntroductionRequest, src string) {
-	err := l.i.HandleIntroduction(req.Self, req.Node)
+	err := l.i.HandleIntroduction(req.Self, req.Other, req.Node)
 
 	log.Err(err).Msg("")
 }

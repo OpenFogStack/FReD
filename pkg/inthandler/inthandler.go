@@ -135,16 +135,25 @@ func (h *handler) HandleRemoveNode(n replication.Node) error {
 	return h.r.RemoveNode(n, false)
 }
 
-func (h *handler) HandleIntroduction(self replication.Node, node []replication.Node) error {
+func (h *handler) HandleIntroduction(introducer replication.Node, self replication.Node, node []replication.Node) error {
 	err := h.r.Seed(self)
 
 	if err != nil {
 		return err
 	}
 
-	e := make([]string, len(node))
+	// +1 to account for the introducer
+	e := make([]string, len(node)+1)
 	ec := 0
 
+	// add introducer (the node that sent the introduction) to our list of known nodes
+	if err := h.r.AddNode(introducer, false); err != nil {
+		log.Err(err).Msgf("inthandler: cannot add a new node %#v)", introducer)
+		e[ec] = fmt.Sprintf("%v", err)
+		ec++
+	}
+
+	// add the list of nodes that we were told about by the introducer
 	for _, node := range node {
 		if err := h.r.AddNode(node, false); err != nil {
 			log.Err(err).Msgf("inthandler: cannot add a new node %#v)", node)
