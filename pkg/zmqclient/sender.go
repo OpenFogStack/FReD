@@ -47,7 +47,7 @@ func (s *Sender) SendBytes(data []byte) (err error) {
 // SendMessageWithType TODO
 func (s *Sender) SendMessageWithType(msType byte, data []byte) (err error) {
 	// TODO some sanity checks, whatevs
-	log.Debug().Msgf("Sending message type %#v to %s", msType, s.socket.Identity())
+	log.Debug().Msgf("Sending message type %#X to %v", msType, s.socket.Identity())
 	err = s.socket.SendFrame([]byte{msType}, goczmq.FlagMore)
 	if err != nil {
 		return

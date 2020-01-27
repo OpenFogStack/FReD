@@ -72,7 +72,7 @@ func pollForever(c *Server) error {
 		// the rest is the message we got
 		msg := request[2]
 
-		log.Debug().Msgf("ZMQServer received a request: msgType=%v, msg=%#v", msgType, string(msg))
+		log.Debug().Msgf("ZMQServer received a request: msgType=%#X, msg=%#v", msgType, string(msg))
 
 		// identity of sender can be either:
 		// - our own receiver socket. This means another node wants to initiate a conservation with us
