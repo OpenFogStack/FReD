@@ -5,8 +5,10 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
+	"github.com/Jeffail/gabs/v2"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
@@ -16,7 +18,7 @@ import (
 var (
 	// Wait for the user to press enter to continue
 	waitUser = true
-	reader = bufio.NewReader(os.Stdin)
+	reader   = bufio.NewReader(os.Stdin)
 )
 
 func main() {
@@ -32,8 +34,8 @@ func main() {
 	// Parse Flags
 	apiVersion := flag.String("apiVersion", "v0", "API Version (e.g. v0)")
 
-	nodeAhost := flag.String("nodeAhost", "localhost", "host of nodeA (e.g. localhost)") // Docker: localhost
-	nodeAhttpPort := flag.String("nodeAhttp", "9002", "port of nodeA (e.g. 9001)") // Docker: 9002
+	nodeAhost := flag.String("nodeAhost", "localhost", "host of nodeA (e.g. localhost)")                                                // Docker: localhost
+	nodeAhttpPort := flag.String("nodeAhttp", "9002", "port of nodeA (e.g. 9001)")                                                      // Docker: 9002
 	nodeAzmqhost := flag.String("nodeAzmqhost", "172.26.0.10", "host of nodeA (e.g. localhost) that can be reached by the other nodes") // Docker: 172.26.0.10
 	nodeAzmqPort := flag.Int("nodeAzmqPort", 5555, "ZMQ Port of nodeA")
 	nodeAzmqID := flag.String("nodeAzmqID", "nodeA", "ZMQ Id of nodeA")
@@ -71,7 +73,6 @@ func main() {
 	logNodeAction(nodeA, "Seeding nodeA")
 	nodeA.SeedNode(*nodeAzmqID, *nodeAzmqhost, 200, true)
 
-
 	// Test Keygroups
 	logNodeAction(nodeA, "Creating keygroup testing")
 	nodeA.CreateKeygroup("testing", 200, true)
@@ -95,11 +96,11 @@ func main() {
 		logNodeFaliureMap(nodeA, "resp[\"Data\"] is \"KG1-Value\"", resp)
 	}
 
-	logNodeAction(nodeA,"Getting a Value from a nonexistent keygroup")
+	logNodeAction(nodeA, "Getting a Value from a nonexistent keygroup")
 	nodeA.GetItem("trololoool", "wut", 404, false)
 
-	logNodeAction(nodeA,"Putting a Value into a nonexistent keygroup")
-	nodeA.PutItem("nonexistentkeygroup", "item","data", 409, false)
+	logNodeAction(nodeA, "Putting a Value into a nonexistent keygroup")
+	nodeA.PutItem("nonexistentkeygroup", "item", "data", 409, false)
 
 	logNodeAction(nodeA, "Putting new value KG1-Item/KG1-Value2 into KG1")
 	nodeA.PutItem("KG1", "KG1-Item", "KG1-Value2", 200, true)
@@ -137,23 +138,23 @@ func main() {
 		nodeBnumber = "1"
 		nodeCnumber = "0"
 	}
-	if parsed.Path(nodeBnumber+".ID").Data().(string) != *nodeBzmqID {
+	if !gabsEqualsString(parsed, nodeBnumber+".ID", *nodeBzmqID) {
 		logNodeFaliure(nodeA, nodeBnumber+".ID == nodeB", parsed.Path("0.ID").String())
 	}
 	if int(parsed.Path(nodeBnumber+".Port").Data().(float64)) != *nodeBzmqPort {
 		logNodeFaliure(nodeA, nodeBnumber+".Port == nodeBZmqPort", parsed.Path("0.Port").String())
 	}
-	if parsed.Path(nodeBnumber+".Addr.Addr").Data().(string) != *nodeBhost {
-		logNodeFaliure(nodeA, nodeBnumber+".Addr.Addr == nodeBhost", parsed.Path("0.Addr.Addr").String())
+	if !gabsEqualsString(parsed, nodeBnumber+".Addr.Addr", *nodeBzmqhost) {
+		logNodeFaliure(nodeA, nodeBnumber+".Addr.Addr == nodeBhost (" + *nodeBzmqhost + ")", parsed.Path("0.Addr.Addr").String())
 	}
 	// Test for nodeC
-	if parsed.Path(nodeCnumber+".ID").Data().(string) != *nodeCzmqID {
+	if !gabsEqualsString(parsed, nodeCnumber+".ID", *nodeCzmqID) {
 		logNodeFaliure(nodeA, nodeCnumber+".ID == nodeC", parsed.Path("1.ID").String())
 	}
 	if int(parsed.Path(nodeCnumber+".Port").Data().(float64)) != *nodeCzmqPort {
 		logNodeFaliure(nodeA, nodeCnumber+".Port == nodeCZmqPort", parsed.Path("1.Port").String())
 	}
-	if parsed.Path(nodeCnumber+".Addr.Addr").Data().(string) != *nodeChost {
+	if !gabsEqualsString(parsed, nodeCnumber+".Addr.Addr", *nodeCzmqhost) {
 		logNodeFaliure(nodeA, nodeCnumber+".Addr.Addr == nodeChost", parsed.Path("1.Addr.Addr").String())
 	}
 
@@ -161,46 +162,46 @@ func main() {
 	logNodeAction(nodeA, "Adding nodeB as Replica node for KG1")
 	nodeA.AddReplicaNode("KG1", *nodeBzmqID, 200, true)
 
-	logNodeAction(nodeA, "Adding a replica for a nonexisting Keygroup")
-	nodeA.AddReplicaNode("trololololo", *nodeBzmqID, 409, false)
-
 	// Test sending data between nodes
-	logNodeAction(nodeB, "Creating a new Keygroup (KGN), setting nodeA as Replica node")
-	nodeB.CreateKeygroup("KGN",200,true)
-	nodeB.AddReplicaNode("KGN",*nodeAzmqID,200,true)
+	logNodeAction(nodeB, "Creating a new Keygroup (KGN) in nodeB, setting nodeA as Replica node")
+	nodeB.CreateKeygroup("KGN", 200, true)
+	nodeB.AddReplicaNode("KGN", *nodeAzmqID, 200, true)
 
-	logNodeAction(nodeB, "Putting something in KGN, testing whether nodeA gets Replica")
-	nodeB.PutItem("KGN","Item","Value",200,true)
-	time.Sleep(1000*time.Millisecond)
+	logNodeAction(nodeB, "Putting something in KGN, testing whether nodeA gets Replica (sleep 1.5s in between)")
+	nodeB.PutItem("KGN", "Item", "Value", 200, true)
+	time.Sleep(1500 * time.Millisecond)
 	resp = nodeA.GetItem("KGN", "Item", 200, false)
 	if resp["Data"] != "Value" {
 		logNodeFaliureMap(nodeA, "resp[\"Data\"] is \"Value\"", resp)
 	}
 
-	logNodeAction(nodeA, "Putting something in KGN, testing whether nodeB gets Replica")
-	nodeB.PutItem("KGN","Item2","Value2",200,true)
-	time.Sleep(1000*time.Millisecond)
-	resp = nodeA.GetItem("KGN", "Item2", 200, false)
+	logNodeAction(nodeA, "Putting something in KGN, testing whether nodeB gets Replica (sleep 1.5s in between)")
+	nodeA.PutItem("KGN", "Item2", "Value2", 200, true)
+	time.Sleep(1500 * time.Millisecond)
+	resp = nodeB.GetItem("KGN", "Item2", 200, false)
 	if resp["Data"] != "Value2" {
 		logNodeFaliureMap(nodeA, "resp[\"Data\"] is \"Value2\"", resp)
 	}
 
+	logNodeAction(nodeA, "Adding a replica for a nonexisting Keygroup")
+	nodeA.AddReplicaNode("trololololo", *nodeBzmqID, 409, false)
+
 	logNodeAction(nodeA, "Creating a new Keygroup (KGB) in nodeC and nodeA and then telling nodeA that nodeC is a Replica node")
-	nodeA.CreateKeygroup("KGB",200,true)
-	nodeC.CreateKeygroup("KGB",200,true)
-	nodeC.CreateKeygroup("KGB",200,true)
-	logNodeAction(nodeA,"...Adding the replica should throw an error since the keygroup already exists in the replica and is not already a replica")
+	nodeA.CreateKeygroup("KGB", 200, true)
+	nodeC.CreateKeygroup("KGB", 200, true)
+	nodeC.CreateKeygroup("KGB", 200, true)
+	logNodeAction(nodeA, "...Adding the replica should throw an error since the keygroup already exists in the replica and is not already a replica")
 	nodeA.AddReplicaNode("KGB", *nodeCzmqID, 409, false)
 	nodeA.DeleteKeygroup("KGB", 200, true)
-	nodeC.DeleteKeygroup("KGB",200,true)
+	nodeC.DeleteKeygroup("KGB", 200, true)
 
-	logNodeAction(nodeA,"Adding stuff to existing KG KG1 and then adding nodeB as replica")
+	logNodeAction(nodeA, "Adding stuff to existing KG KG1 and then adding nodeB as replica (sleep 1.5s in between)")
 	nodeA.PutItem("KG1", "KG1-Item1", "KG1-Value1", 200, true)
 	nodeA.PutItem("KG1", "KG1-Item2", "KG1-Value2", 200, true)
 	nodeA.PutItem("KG1", "KG1-Item3", "KG1-Value3", 200, true)
 	nodeA.AddReplicaNode("KG1", *nodeBzmqID, 200, true)
-	time.Sleep(1000 * time.Millisecond)
-	logNodeAction(nodeA,"...Getting values from nodeB, they should have propagated")
+	time.Sleep(1500 * time.Millisecond)
+	logNodeAction(nodeA, "...Getting values from nodeB, they should have propagated")
 	resp = nodeB.GetItem("KG1", "KG-Item1", 200, false)
 	if resp["Data"] != "KG1-Value1" {
 		logNodeFaliureMap(nodeA, "resp[\"Data\"] is \"KG1-Value1\"", resp)
@@ -209,7 +210,7 @@ func main() {
 	}
 
 	if nodeA.Errors != 0 || nodeB.Errors != 0 || nodeC.Errors != 0 {
-		log.Error().Msgf("Total Errors: %d", nodeA.Errors + nodeB.Errors + nodeC.Errors)
+		log.Error().Msgf("Total Errors: %d", nodeA.Errors+nodeB.Errors+nodeC.Errors)
 		os.Exit(1)
 	}
 }
@@ -218,7 +219,7 @@ func logNodeAction(node *pkg.Node, action string) {
 	log.Info().Str("node", node.URL).Msg(action)
 	if waitUser {
 		log.Info().Msg("Please press enter to execute this step:")
-		_,_,_ = reader.ReadLine()
+		_, _, _ = reader.ReadLine()
 	}
 }
 
@@ -226,7 +227,7 @@ func logNodeFaliure(node *pkg.Node, expected, result string) {
 	log.Warn().Str("node", node.URL).Msgf("expected: %s, but got: %#v", expected, result)
 	if waitUser {
 		log.Info().Msg("Please press enter to continue:")
-		_,_,_ = reader.ReadLine()
+		_, _, _ = reader.ReadLine()
 	}
 }
 
@@ -234,10 +235,16 @@ func logNodeFaliureMap(node *pkg.Node, expected string, result map[string]string
 	log.Warn().Str("node", node.URL).Msgf("expected: %s, but got: %#v", expected, result)
 	if waitUser {
 		log.Info().Msg("Please press enter to continue:")
-		_,_,_ = reader.ReadLine()
+		_, _, _ = reader.ReadLine()
 	}
 }
 
 func logDebugInfo(node *pkg.Node, info string) {
 	log.Debug().Str("node", node.URL).Msg(info)
+}
+
+func gabsEqualsString(parsed *gabs.Container, path, expected string) bool {
+	result := parsed.Path(path).Data().(string)
+	result = strings.Replace(result, "\\\"", "", -1)
+	return result == expected
 }
