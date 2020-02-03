@@ -135,7 +135,9 @@ func (h *handler) HandleRemoveNode(n replication.Node) error {
 	return h.r.RemoveNode(n, false)
 }
 
+
 func (h *handler) HandleIntroduction(introducer replication.Node, self replication.Node, node []replication.Node) error {
+	log.Debug().Msgf("HandleIntroduction from inthandler called: introducer=%#v, self=%#v, nodes=%#v", introducer, self, node)
 	err := h.r.Seed(self)
 
 	if err != nil {

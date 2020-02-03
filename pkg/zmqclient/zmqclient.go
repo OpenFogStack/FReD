@@ -105,7 +105,7 @@ func (c *Client) sendMessage(msType byte, addr replication.Address, port int, ms
 		return err
 	}
 
-	log.Debug().Bytes("msg", msg).Msgf("ZMQClient is sending a new message: addr=%s, msType=%v", addr.Addr, msType)
+	log.Debug().Bytes("msg", msg).Msgf("ZMQClient is sending a new message: addr=%s, msType=%#X", addr.Addr, msType)
 	err = cSender.SendMessageWithType(msType, msg)
 	return
 }
