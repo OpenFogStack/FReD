@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"reflect"
 
-	client "gitlab.tu-berlin.de/mcc-fred/fred/tests/3NodeTest/vendor/go-client"
+	client "gitlab.tu-berlin.de/mcc-fred/fred/ext/go-client"
 )
 
 func getRecvBody(recvErr error, recv *http.Response, recvData interface{}) string {
@@ -23,7 +23,7 @@ func getRecvBody(recvErr error, recv *http.Response, recvData interface{}) strin
 		}
 	}
 
-	// if we received an error that is a *client.GenericSwaggerError, that error has a Body attribute that has the response body
+	// if we received an error that is a *go-client.GenericSwaggerError, that error has a Body attribute that has the response body
 	if recvErr != nil {
 		if recvErr, ok := recvErr.(client.GenericSwaggerError); ok {
 			m := recvErr.Model()

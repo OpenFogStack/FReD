@@ -1,7 +1,7 @@
 package node
 
 import (
-	client "gitlab.tu-berlin.de/mcc-fred/fred/tests/3NodeTest/vendor/go-client"
+	client "gitlab.tu-berlin.de/mcc-fred/fred/ext/go-client"
 )
 
 // Node represents the API to a single FReD Node

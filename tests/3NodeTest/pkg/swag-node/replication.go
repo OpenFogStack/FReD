@@ -5,7 +5,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	client "gitlab.tu-berlin.de/mcc-fred/fred/tests/3NodeTest/vendor/go-client"
+	client "gitlab.tu-berlin.de/mcc-fred/fred/ext/go-client"
 )
 
 // RegisterReplica registers a new replica with this node.

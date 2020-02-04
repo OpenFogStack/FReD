@@ -6,7 +6,7 @@
 # 2. docker build -t gitlab-registry.tubit.tu-berlin.de/mcc-fred/fred/fred:$IDENTIFIER .
 # 3. docker push gitlab-registry.tubit.tu-berlin.de/mcc-fred/fred/fred:$IDENTIFIER
 # 4. terraform apply -var="instance_count=2" -var="identifier=$IDENTIFIER" --var-file="terraform/small-test/secret.tfvars" terraform/small-test
-# 5. do the test (sh ./tests/extended-test-client.sh $IDENTIFIER)
+# 5. do the test (sh ./tests/extended-test-go-client.sh $IDENTIFIER)
 # 6. terraform destroy -var="instance_count=2" -var="identifier=$IDENTIFIER" --var-file="terraform/small-test/secret.tfvars" terraform/small-test
 
 # for debugging, connect to the instance with `ssh -i "terraform/small-test/terraform.key" ec2-user@0.nodes.$IDENTIFIER.mcc-f.red`
