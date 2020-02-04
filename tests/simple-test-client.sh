@@ -1,10 +1,18 @@
 #!/usr/bin/env bash
 
 HOST=localhost
-PORT=9001
+PORT=9002
 APIVERSION=v0
 KEYGROUP_NAME=testgroup
 ID=1
+
+printf "\n"
+printf "Deleting the Keygroup...\n"
+printf "Calling DELETE http://%s:%s/%s/keygroupsdsd/%s\n" $HOST $PORT $APIVERSION $KEYGROUP_NAME
+
+curl --request DELETE -sL \
+     --url http://$HOST:$PORT/$APIVERSION/keygroup/$KEYGROUP_NAME \
+     -i
 
 printf "\n"
 printf "Creating a Keygroup...\n"
@@ -18,10 +26,22 @@ printf "\n"
 printf "Creating a Data Item in Keygroup...\n"
 printf "Calling PUT http://%s:%s/%s/keygroup/%s/data/%s\n" $HOST $PORT $APIVERSION $KEYGROUP_NAME $ID
 
-curl --request PUT -sL \
-     --url http://$HOST:$PORT/$APIVERSION/keygroup/"$KEYGROUP_NAME"/data/"$ID" \
-     --data '{"data":"hello other world!"}' \
-     -i
+curl \
+--request PUT -sL \
+--url http://$HOST:$PORT/$APIVERSION/keygroup/"$KEYGROUP_NAME"/data/"$ID" \
+-i \
+-d \
+'
+{
+  "data": {
+    "id": "$ID",
+    "type": "item",
+    "attributes": {
+      "value": "Hello World!"
+    }
+  }
+}'
+
 
 printf "\n"
 printf "Reading Data Item from Keygroup...\n"
@@ -37,8 +57,18 @@ printf "Calling PUT http://%s:%s/%s/keygroup/%s/data/%s\n" $HOST $PORT $APIVERSI
 
 curl --request PUT -sL \
      --url http://$HOST:$PORT/$APIVERSION/keygroup/"$KEYGROUP_NAME"/data/"$ID" \
-     --data '{"data":"hello other world!"}' \
-     -i
+     -i \
+     --data-binary @- << EOF
+{
+  "data": {
+    "id": "1",
+    "type": "item",
+    "attributes": {
+      "value": "Hello Other World!"
+    }
+  }
+}
+EOF
 
 printf "\n"
 printf "Reading Data Item from Keygroup...\n"

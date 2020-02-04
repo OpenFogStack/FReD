@@ -362,6 +362,10 @@ func (s *service) RemoveNode(n replication.Node, relay bool) error {
 	return nil
 }
 
+func (s *service) GetNode(n replication.Node) (replication.Node, error) {
+	return s.n.GetNode(n)
+}
+
 // GetReplica returns a list of all known nodes.
 func (s *service) GetNodes() ([]replication.Node, error) {
 	return s.n.GetNodes()

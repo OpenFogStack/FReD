@@ -15,13 +15,33 @@ func getKeygroupReplica(h exthandler.Handler) func(context *gin.Context) {
 	return func(context *gin.Context) {
 		kgname := context.Params.ByName("kgname")
 
-		r, err := h.HandleGetKeygroupReplica(keygroup.Keygroup{
+		nodes, err := h.HandleGetKeygroupReplica(keygroup.Keygroup{
 			Name: commons.KeygroupName(kgname),
 		})
 
 		if err != nil {
 			_ = abort(context, err)
 			return
+		}
+
+		/*
+			{
+			  "nodes": [
+			    "nodeB",
+			    "nodeC",
+			    "nodeD"
+			  ]
+			}
+		*/
+
+		var r = struct {
+			Nodes []string `json:"nodes" binding:"required"`
+		}{
+			Nodes: make([]string, len(nodes)),
+		}
+
+		for i, node := range nodes {
+			r.Nodes[i] = string(node.ID)
 		}
 
 		context.JSON(http.StatusOK, r)

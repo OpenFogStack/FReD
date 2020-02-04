@@ -1,7 +1,7 @@
 swagger: "2.0"
 info:
   description: "FReD - Fog Replicated Data Storage."
-  version: "1.0.0"
+  version: "0.0.3"
   title: "FReD"
   contact:
     email: "tp@mcc.tu-berlin.de"
@@ -11,13 +11,17 @@ info:
 host: "[node-id].nodes.mcc-f.red"
 basePath: "/v0"
 tags:
-- name: "keygroup"
-  description: "Contains all keygroup"
-- name: "data"
-  description: "All data of a particular keygroup"
+  - name: "keygroup"
+    description: "contains all keygroups"
+  - name: "data"
+    description: "all data of a particular keygroup"
+  - name: "seed"
+    description: "set up a new P2P network of FReD nodes"
+  - name: "replication"
+    description: "manage replication between nodes"
 schemes:
-- "https"
-- "http"
+  - "https"
+  - "http"
 paths:
   /seed:
     post:
@@ -25,16 +29,25 @@ paths:
         - "seed"
       summary: "Seeds the Node"
       description: "Seeds the Node so replication can begin."
+      consumes:
+        - "application/json"
+      produces:
+        - "text/plain"
+        - "application/json"
       responses:
         200:
           description: OK
         404:
           description: Bad Request, request body is malformed
+          schema:
+            $ref: "#/definitions/Error"
         409:
           description: Conflict, node is seeded already
+          schema:
+            $ref: "#/definitions/Error"
       parameters:
-        - name: "body"
-          in: "body"
+        - in: "body"
+          name: "body"
           description: "Seed, contains public IP address and ID for the node."
           required: true
           schema:
@@ -43,54 +56,72 @@ paths:
   /keygroup/{group_id}:
     post:
       tags:
-      - "keygroup"
+        - "keygroup"
       summary: "Create a new Keygroup"
       description: "Creates a new Keygroup with the name `group_id` if it does not exist already."
+      produces:
+        - "text/plain"
+        - "application/json"
       responses:
         200:
           description: OK
         409:
           description: Conflict, Keygroup exists already
+          schema:
+            $ref: "#/definitions/Error"
       parameters:
-      - name: "group_id"
-        in: "path"
-        description: "Name of Keygroup"
-        required: true
-        type: "string"
-        format: "string"
-    
+        - in: "path"
+          name: "group_id"
+          description: "Name of Keygroup"
+          required: true
+          type: "string"
+          format: "string"
+
     delete:
       tags:
-      - "keygroup"
+        - "keygroup"
       summary: "Delete an existing Keygroup"
       description: "Deletes the Keygroup with the name `group_id` if it exists."
+      produces:
+        - "text/plain"
+        - "application/json"
       responses:
         200:
           description: OK
         404:
           description: Keygroup not found
+          schema:
+            $ref: "#/definitions/Error"
       parameters:
-      - name: "group_id"
-        in: "path"
-        description: "Name of Keygroup"
-        required: true
-        type: "string"
-        format: "string"
+        - in: "path"
+          name: "group_id"
+          description: "Name of Keygroup"
+          required: true
+          type: "string"
+          format: "string"
 
   /keygroup/{group_id}/replica:
     get:
       tags:
         - "keygroup"
+        - "replication"
       summary: "Gets all Replica Nodes for a Keygroup"
       description: "Returns replica nodes for a Keygroup with the name `group_id` if it does not exist already."
+      produces:
+        - "text/plain"
+        - "application/json"
       responses:
         200:
           description: OK
+          schema:
+            $ref: "#/definitions/ReplicationList"
         404:
           description: Keygroup not Found
+          schema:
+            $ref: "#/definitions/Error"
       parameters:
-        - name: "group_id"
-          in: "path"
+        - in: "path"
+          name: "group_id"
           description: "Name of Keygroup"
           required: true
           type: "string"
@@ -100,22 +131,28 @@ paths:
     post:
       tags:
         - "keygroup"
+        - "replication"
       summary: "Create a new Replica node for a Keygroup"
       description: "Registers the node with the name `node_id` as a replica node for a Keygroup with the name `group_id` if it does not exist already."
+      produces:
+        - "text/plain"
+        - "application/json"
       responses:
         200:
           description: OK
         409:
           description: Conflict, Replica Node or Keygroup exists already
+          schema:
+            $ref: "#/definitions/Error"
       parameters:
-        - name: "group_id"
-          in: "path"
+        - in: "path"
+          name: "group_id"
           description: "Name of Keygroup"
           required: true
           type: "string"
           format: "string"
-        - name: "node_id"
-          in: "path"
+        - in: "path"
+          name: "node_id"
           description: "Name of Replica Node"
           required: true
           type: "string"
@@ -124,22 +161,28 @@ paths:
     delete:
       tags:
         - "keygroup"
+        - "replication"
       summary: "Remove an existing replica node for a Keygroup"
       description: "De-registers the node with the name {node_id} as a replica node for the Keygroup with the name `group_id` if it exists."
+      produces:
+        - "text/plain"
+        - "application/json"
       responses:
         200:
           description: OK
         404:
           description: Replica Node or Keygroup not found
+          schema:
+            $ref: "#/definitions/Error"
       parameters:
-        - name: "group_id"
-          in: "path"
+        - in: "path"
+          name: "group_id"
           description: "Name of Keygroup"
           required: true
           type: "string"
           format: "string"
-        - name: "node_id"
-          in: "path"
+        - in: "path"
+          name: "node_id"
           description: "Name of Replica Node"
           required: true
           type: "string"
@@ -148,83 +191,106 @@ paths:
   /keygroup/{group_id}/data/{item_id}:
     get:
       tags:
-      - "data"
+        - "data"
       summary: "Gets an item value from a Keygroup"
       description: "Gets the value of item `item_id` in Keygroup with the name `group_id`."
+      produces:
+        - "application/json"
       responses:
         200:
           description: OK
+          schema:
+            $ref: "#/definitions/Item"
         404:
           description: The item ID or Keygroup could not be found
+          schema:
+            $ref: "#/definitions/Error"
       parameters:
-      - name: "group_id"
-        in: "path"
-        description: "Name of Keygroup"
-        required: true
-        type: "string"
-        format: "string"
-      - name: "item_id"
-        in: "path"
-        description: "ID of item to update"
-        required: true
-        type: "string"
-        format: "string"
+        - in: "path"
+          name: "group_id"
+          description: "Name of Keygroup"
+          required: true
+          type: "string"
+          format: "string"
+        - in: "path"
+          name: "item_id"
+          description: "ID of item to update"
+          required: true
+          type: "string"
+          format: "string"
 
     put:
       tags:
-      - "data"
+        - "data"
       summary: "Sets an item value in a Keygroup"
       description: "Sets the value of item `item_id` in Keygroup with the name `group_id` to the provided value."
+      consumes:
+        - "text/plain"
+        - "application/json"
+      produces:
+        - "application/json"
       responses:
         200:
           description: OK
         400:
           description: Bad Request, the request is malformed
+          schema:
+            $ref: "#/definitions/Error"
+        404:
+          description: Not Found, keygroup could not be found
+          schema:
+            $ref: "#/definitions/Error"
         409:
           description: Conflict, item could not be updated
+          schema:
+            $ref: "#/definitions/Error"
       parameters:
-      - name: "group_id"
-        in: "path"
-        description: "Name of Keygroup"
-        required: true
-        type: "string"
-        format: "string"
-      - name: "item_id"
-        in: "path"
-        description: "ID of item to update"
-        required: true
-        type: "string"
-        format: "string"
-      - name: "body"
-        in: "body"
-        description: "Data that should be saved in this item."
-        required: true
-        schema:
-          $ref: "#/definitions/Item"
+        - in: "path"
+          name: "group_id"
+          description: "Name of Keygroup"
+          required: true
+          type: "string"
+          format: "string"
+        - in: "path"
+          name: "item_id"
+          description: "ID of item to update"
+          required: true
+          type: "string"
+          format: "string"
+        - in: "body"
+          name: "body"
+          description: "Data that should be saved in this item."
+          required: true
+          schema:
+            $ref: "#/definitions/Item"
 
     delete:
       tags:
-      - "data"
+        - "data"
       summary: "Deletes an item value from a Keygroup"
       description: "Deletes the value of item `item_id` in Keygroup with the name `group_id`."
+      produces:
+        - "application/json"
       responses:
         200:
           description: OK
         404:
           description: The item ID or Keygroup could not be found
+          schema:
+            $ref: "#/definitions/Error"
       parameters:
-      - name: "group_id"
-        in: "path"
-        description: "Name of Keygroup"
-        required: true
-        type: "string"
-        format: "string"
-      - name: "item_id"
-        in: "path"
-        description: "ID of item to update"
-        required: true
-        type: "string"
-        format: "string"
+        - in: "path"
+          name: "group_id"
+          description: "Name of Keygroup"
+          required: true
+          type: "string"
+          format: "string"
+        - in: "path"
+          name: "item_id"
+          description: "ID of item to update"
+          required: true
+          type: "string"
+          format: "string"
 
   /replica:
     get:
@@ -232,93 +298,192 @@ paths:
         - "replication"
       summary: "Gets all Replica Nodes"
       description: "Returns all known replica nodes."
+      produces:
+        - "application/json"
       responses:
         200:
           description: OK
-        404:
-          description: Keygroup not Found
+          schema:
+            $ref: "#/definitions/ReplicationList"
 
     post:
       tags:
         - "replication"
       summary: "Register a new Replica Node"
       description: "Creates a new replica node if it does not exist already or updates existing data."
+      consumes:
+        - "application/json"
+      produces:
+        - "text/plain"
+        - "application/json"
       responses:
         200:
           description: OK
         400:
           description: Bad Request, post body does not mach definition
+          schema:
+            $ref: "#/definitions/Error"
         409:
           description: Conflict, Replica Node exists already
+          schema:
+            $ref: "#/definitions/Error"
       parameters:
-        - name: "body"
-          in: "body"
+        - in: "body"
+          name: "body"
           description: "ID, Address and Port of Replica Node."
           required: true
           schema:
             $ref: "#/definitions/Replica"
 
   /replica/{node_id}:
+    get:
+      tags:
+        - "replication"
+      summary: "Gets a Replica Node"
+      description: "Returns the replica node `node_id` if it exists."
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/Node"
+        404:
+          description: Replica Node not found
+          schema:
+            $ref: "#/definitions/Error"
+      parameters:
+        - in: "path"
+          name: "node_id"
+          description: "ID of node to return"
+          required: true
+          type: "string"
+          format: "string"
+
     delete:
       tags:
         - "replication"
       summary: "Remove an existing replica node"
       description: "Removes the replica node `node_id` if it exists."
+      produces:
+        - "text/plain"
+        - "application/json"
       responses:
         200:
           description: OK
         404:
           description: Replica Node not found
+          schema:
+            $ref: "#/definitions/Error"
       parameters:
-        - name: "node_id"
-          in: "path"
-          description: "ID of pet to return"
+        - in: "path"
+          name: "node_id"
+          description: "ID of node to delete"
           required: true
           type: "string"
           format: "string"
 
 definitions:
-    Item:
-      type: "object"
-      required:
-      - "data"
-      properties:
-        data:
+  Item:
+    type: "object"
+    required:
+      - "id"
+      - "type"
+      - "attributes"
+    properties:
+      id:
+        type: "string"
+        format: "utf-8"
+        example: hello
+      value:
+        type: "string"
+        format: "utf-8"
+        example: Hello World!
+      keygroup:
+        type: "string"
+        format: "utf-8"
+        example: Test-Keygroup
+    example:
+      id: hello
+      value: Hello World!
+      keygroup: Test-Keygroup
+  Replica:
+    type: "object"
+    required:
+      - "nodes"
+    properties:
+      nodes:
+        type: "array"
+        items:
+          $ref: "#/definitions/Node"
+    example:
+      nodes:
+        - id: nodeB
+          addr: 172.12.0.3
+          zmqPort: 5555
+        - id: nodeC
+          addr: nodeC.nodes.mcc-f.red
+          zmqPort: 5554
+        - id: nodeD
+          addr: localhost
+          zmqPort: 5553
+  Seed:
+    type: "object"
+    required:
+      - "id"
+      - "addr"
+    properties:
+      id:
+        type: "string"
+        format: "utf-8"
+        example: nodeA
+      addr:
+        type: "string"
+        format: "utf-8"
+        example: 172.12.0.3
+    example:
+      id: nodeA
+      addr: 172.12.0.3
+  Node:
+    type: "object"
+    required:
+      - "id"
+      - "addr"
+      - "zmqPort"
+    properties:
+      id:
+        type: "string"
+        format: "utf-8"
+        example: nodeA
+      addr:
+        type: "string"
+        format: "utf-8"
+        example: 172.12.0.3
+      zmqPort:
+        type: "integer"
+        example: 5555
+  Error:
+    type: "object"
+    required:
+      - "error"
+    properties:
+      error:
+        type: "string"
+        format: "utf-8"
+        example: "object not found"
+  ReplicationList:
+    type: "object"
+    required:
+      - "nodes"
+    properties:
+      nodes:
+        type: "array"
+        items:
           type: "string"
           format: "utf-8"
-    Replica:
-      type: "object"
-      required:
-        - "nodes"
-      properties:
-        nodes:
-          items:
-            $ref: "#/definitions/Node"
-    Seed:
-      type: "object"
-      required:
-        - "id"
-        - "addr"
-      properties:
-        id:
-          type: "string"
-          format: "utf-8"
-        addr:
-          type: "string"
-          format: "utf-8"
-    Node:
-      type: "object"
-      required:
-        - "id"
-        - "addr"
-        - "port"
-      properties:
-        id:
-          type: "string"
-          format: "utf-8"
-        addr:
-          type: "string"
-          format: "utf-8"
-        port:
-          type: "integer"
-          format: "utf-8"
+          example: nodeA
+    example:
+      nodes:
+        - nodeB
+        - nodeC
+        - nodeD

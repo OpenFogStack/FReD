@@ -1,4 +1,4 @@
-package pkg
+package node
 
 import (
 	"bytes"
@@ -16,7 +16,7 @@ type Node struct {
 	Errors int
 }
 
-// NewNode creates a new Node with the specified url (shuld have format: http://%s:%d/v%d/)
+// NewNode creates a new Node with the specified url (should have format: http://%s:%d/v%d/)
 func NewNode(url string) (node *Node) {
 	node = &Node{URL: url, Errors: 0}
 	return
@@ -48,7 +48,9 @@ func (n *Node) DeleteKeygroup(kgname string, expectedStatusCode int, expectEmpty
 func (n *Node) PutItem(kgname, item string, data string, expectedStatusCode int, expectEmptyResponse bool) (responseBody []byte) {
 	log.Debug().Str("node", n.URL).Msgf("Sending a Put for Item %s in KG %s; expecting %d", item, kgname, expectedStatusCode)
 	reqBody := map[string]string{
-		"data": data,
+		"value":    data,
+		"id":       item,
+		"keygroup": kgname,
 	}
 	responseBody = n.sendPut(fmt.Sprintf("keygroup/%s/data/%s", kgname, item), reqBody, expectedStatusCode)
 	if expectEmptyResponse && (responseBody != nil) {
@@ -139,7 +141,7 @@ func (n *Node) AddReplicaNode(kgname, replicaNodeID string, expectedStatusCode i
 	responseBody = n.sendPost("keygroup/"+kgname+"/replica/"+replicaNodeID, nil, expectedStatusCode)
 	if expectEmptyResponse && (responseBody != nil && len(responseBody) != 0) {
 		n.Errors++
-		log.Warn().Str("node", n.URL).Msgf("AddReplica expected an empty response but got %#v", string(responseBody))
+		log.Warn().Str("node", n.URL).Msgf("AddReplicaNode expected an empty response but got %#v", string(responseBody))
 	}
 	return
 }

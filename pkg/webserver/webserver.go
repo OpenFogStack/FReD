@@ -8,7 +8,7 @@ import (
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/exthandler"
 )
 
-// Setup sets up a web server client interface for the Fred node.
+// Setup sets up a web server go-client interface for the Fred node.
 func Setup(addr string, h exthandler.Handler, apiversion string) error {
 	gin.SetMode("release")
 	r := gin.New()
@@ -20,8 +20,9 @@ func Setup(addr string, h exthandler.Handler, apiversion string) error {
 
 	r.POST(apiversion+"/seed", postSeed(h))
 
-	r.GET(apiversion+"/replica", getReplica(h))
+	r.GET(apiversion+"/replica", getAllReplica(h))
 	r.POST(apiversion+"/replica", postReplica(h))
+	r.GET(apiversion+"/replica/:nodeid", getReplica(h))
 	r.DELETE(apiversion+"/replica/:nodeid", deleteReplica(h))
 
 	r.POST(apiversion+"/keygroup/:kgname", postKeygroup(h))
