@@ -5,5 +5,7 @@ type Store interface {
 	Update(i Item) error
 	Delete(i Item) error
 	Read(i Item) (Item, error)
+	ReadAll(i Item) ([]Item, error)
+	Keys(i Item) ([]Item, error)
 	Exists(i Item) bool
 }

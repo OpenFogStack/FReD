@@ -57,7 +57,7 @@ func (h *handler) HandleCreateKeygroup(k keygroup.Keygroup, nodes []replication.
 	ec := 0
 
 	for _, node := range nodes {
-		if err := h.r.AddReplica(kg, node, false); err != nil {
+		if err := h.r.AddReplica(kg, node, nil, false); err != nil {
 			log.Err(err).Msgf("inthandler: cannot remove node %#v)", node)
 			e[ec] = fmt.Sprintf("%v", err)
 			ec++
@@ -120,7 +120,7 @@ func (h *handler) HandleDelete(i data.Item) error {
 }
 
 func (h *handler) HandleAddReplica(k keygroup.Keygroup, n replication.Node) error {
-	return h.r.AddReplica(k, n, false)
+	return h.r.AddReplica(k, n, nil,false)
 }
 
 func (h *handler) HandleRemoveReplica(k keygroup.Keygroup, n replication.Node) error {

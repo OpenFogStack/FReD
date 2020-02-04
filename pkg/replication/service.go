@@ -14,7 +14,7 @@ type Service interface {
 	RelayDelete(i data.Item) error
 	AddNode(n Node, relay bool) error
 	RemoveNode(n Node, relay bool) error
-	AddReplica(k keygroup.Keygroup, n Node, relay bool) error
+	AddReplica(k keygroup.Keygroup, n Node, i []data.Item, relay bool) error
 	RemoveReplica(k keygroup.Keygroup, n Node, relay bool) error
 	GetNode(n Node) (Node, error)
 	GetNodes() ([]Node, error)
