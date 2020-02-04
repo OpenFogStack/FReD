@@ -28,6 +28,19 @@ func (s *service) Read(i Item) (Item, error) {
 	return data, nil
 }
 
+// ReadAll returns all items of a particular keygroup from the key-value store.
+func (s *service) ReadAll(i Item) ([]Item, error) {
+	err := checkKeygroup(i)
+
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := s.iS.ReadAll(i)
+
+	return data, err
+}
+
 // Update updates an item in the key-value store.
 func (s *service) Update(i Item) error {
 	err := checkItem(i)

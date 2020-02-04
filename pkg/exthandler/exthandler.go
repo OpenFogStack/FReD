@@ -26,7 +26,7 @@ func New(i data.Service, k keygroup.Service, r replication.Service) Handler {
 	}
 }
 
-// HandleCreateKeygroup handles requests to the CreateKeygroup endpoint of the go-client interface.
+// HandleCreateKeygroup handles requests to the CreateKeygroup endpoint of the client interface.
 func (h *handler) HandleCreateKeygroup(k keygroup.Keygroup) error {
 	if err := h.k.Create(keygroup.Keygroup{
 		Name: k.Name,
@@ -50,7 +50,7 @@ func (h *handler) HandleCreateKeygroup(k keygroup.Keygroup) error {
 	return nil
 }
 
-// HandleDeleteKeygroup handles requests to the DeleteKeygroup endpoint of the go-client interface.
+// HandleDeleteKeygroup handles requests to the DeleteKeygroup endpoint of the client interface.
 func (h *handler) HandleDeleteKeygroup(k keygroup.Keygroup) error {
 	if err := h.k.Delete(keygroup.Keygroup{
 		Name: k.Name,
@@ -76,7 +76,7 @@ func (h *handler) HandleDeleteKeygroup(k keygroup.Keygroup) error {
 	return nil
 }
 
-// HandleRead handles requests to the Read endpoint of the go-client interface.
+// HandleRead handles requests to the Read endpoint of the client interface.
 func (h *handler) HandleRead(i data.Item) (data.Item, error) {
 	if !h.k.Exists(keygroup.Keygroup{
 		Name: i.Keygroup,
@@ -87,7 +87,7 @@ func (h *handler) HandleRead(i data.Item) (data.Item, error) {
 	return h.i.Read(i)
 }
 
-// HandleUpdate handles requests to the Update endpoint of the go-client interface.
+// HandleUpdate handles requests to the Update endpoint of the client interface.
 func (h *handler) HandleUpdate(i data.Item) error {
 	if !h.k.Exists(keygroup.Keygroup{
 		Name: i.Keygroup,
@@ -108,7 +108,7 @@ func (h *handler) HandleUpdate(i data.Item) error {
 	return nil
 }
 
-// HandleDelete handles requests to the Delete endpoint of the go-client interface.
+// HandleDelete handles requests to the Delete endpoint of the client interface.
 func (h *handler) HandleDelete(i data.Item) error {
 	if !h.k.Exists(keygroup.Keygroup{
 		Name: i.Keygroup,
@@ -129,7 +129,7 @@ func (h *handler) HandleDelete(i data.Item) error {
 	return nil
 }
 
-// HandleAddReplica handles requests to the AddKeygroupReplica endpoint of the go-client interface.
+// HandleAddReplica handles requests to the AddKeygroupReplica endpoint of the client interface.
 func (h *handler) HandleAddReplica(k keygroup.Keygroup, n replication.Node) error {
 	if !h.k.Exists(keygroup.Keygroup{
 		Name: k.Name,
@@ -137,7 +137,15 @@ func (h *handler) HandleAddReplica(k keygroup.Keygroup, n replication.Node) erro
 		return errors.New(errors.StatusNotFound, "exthandler: keygroup does not exist")
 	}
 
-	if err := h.r.AddReplica(k, n, true); err != nil {
+	i, err := h.i.ReadAll(data.Item{
+		Keygroup: k.Name,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	if err := h.r.AddReplica(k, n, i, true); err != nil {
 		log.Err(err).Msg("Exthandler cannot add a new keygroup replica")
 		return err
 	}
@@ -145,7 +153,7 @@ func (h *handler) HandleAddReplica(k keygroup.Keygroup, n replication.Node) erro
 	return nil
 }
 
-// HandleGetKeygroupReplica handles requests to the GetKeygroupReplica endpoint of the go-client interface.
+// HandleGetKeygroupReplica handles requests to the GetKeygroupReplica endpoint of the client interface.
 func (h *handler) HandleGetKeygroupReplica(k keygroup.Keygroup) ([]replication.Node, error) {
 	if !h.k.Exists(keygroup.Keygroup{
 		Name: k.Name,
@@ -156,7 +164,7 @@ func (h *handler) HandleGetKeygroupReplica(k keygroup.Keygroup) ([]replication.N
 	return h.r.GetReplica(k)
 }
 
-// HandleRemoveReplica handles requests to the RemoveKeygroupReplica( endpoint of the go-client interface.
+// HandleRemoveReplica handles requests to the RemoveKeygroupReplica endpoint of the client interface.
 func (h *handler) HandleRemoveReplica(k keygroup.Keygroup, n replication.Node) error {
 	if !h.k.Exists(keygroup.Keygroup{
 		Name: k.Name,
@@ -171,7 +179,7 @@ func (h *handler) HandleRemoveReplica(k keygroup.Keygroup, n replication.Node) e
 	return nil
 }
 
-// HandleAddNode handles requests to the AddReplica endpoint of the go-client interface.
+// HandleAddNode handles requests to the AddReplica endpoint of the client interface.
 func (h *handler) HandleAddNode(n []replication.Node) error {
 	e := make([]string, len(n))
 	ec := 0
@@ -191,17 +199,17 @@ func (h *handler) HandleAddNode(n []replication.Node) error {
 	return nil
 }
 
-// HandleGetReplica handles requests to the GetAllReplica endpoint of the go-client interface.
+// HandleGetReplica handles requests to the GetAllReplica endpoint of the client interface.
 func (h *handler) HandleGetReplica(n replication.Node) (replication.Node, error) {
 	return h.r.GetNode(n)
 }
 
-// HandleGetAllReplica handles requests to the GetAllReplica endpoint of the go-client interface.
+// HandleGetAllReplica handles requests to the GetAllReplica endpoint of the client interface.
 func (h *handler) HandleGetAllReplica() ([]replication.Node, error) {
 	return h.r.GetNodes()
 }
 
-// HandleRemoveNode handles requests to the RemoveReplica endpoint of the go-client interface.
+// HandleRemoveNode handles requests to the RemoveReplica endpoint of the client interface.
 func (h *handler) HandleRemoveNode(n replication.Node) error {
 	return h.r.RemoveNode(n, true)
 }

@@ -23,7 +23,7 @@ func getRecvBody(recvErr error, recv *http.Response, recvData interface{}) strin
 		}
 	}
 
-	// if we received an error that is a *go-client.GenericSwaggerError, that error has a Body attribute that has the response body
+	// if we received an error that is a *client.GenericSwaggerError, that error has a Body attribute that has the response body
 	if recvErr != nil {
 		if recvErr, ok := recvErr.(client.GenericSwaggerError); ok {
 			m := recvErr.Model()

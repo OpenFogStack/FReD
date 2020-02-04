@@ -53,6 +53,62 @@ func (s *Storage) Read(i data.Item) (data.Item, error) {
 	return i, nil
 }
 
+// ReadAll returns all items in the specified keygroup.
+func (s *Storage) ReadAll(i data.Item) ([]data.Item, error) {
+	s.RLock()
+	kg, ok := s.keygroups[i.Keygroup]
+	s.RUnlock()
+
+	if !ok {
+		return nil, errors.New(errors.StatusNotFound, "memorysd: no such keygroup")
+	}
+
+	kg.RLock()
+	items := make([]data.Item, len(kg.items))
+
+	x := 0
+
+	for k := range kg.items {
+		items[x] = data.Item{
+			Keygroup: i.Keygroup,
+			ID:       k,
+			Data:     kg.items[k],
+		}
+		x++
+	}
+
+	kg.RUnlock()
+
+	return items, nil
+}
+
+// Keys returns the keys of all items in the specified keygroup.
+func (s *Storage) Keys(i data.Item) ([]data.Item, error) {
+	s.RLock()
+	kg, ok := s.keygroups[i.Keygroup]
+	s.RUnlock()
+
+	if !ok {
+		return nil, errors.New(errors.StatusNotFound, "memorysd: no such keygroup")
+	}
+
+	kg.RLock()
+	keys := make([]data.Item, len(kg.items))
+
+	x := 0
+
+	for k := range kg.items {
+		keys[x] = data.Item{
+			Keygroup: i.Keygroup,
+			ID:       k,
+		}
+		x++
+	}
+	kg.RUnlock()
+
+	return keys, nil
+}
+
 // Update updates the item with the specified id in the specified keygroup.
 func (s *Storage) Update(i data.Item) error {
 	s.RLock()

@@ -169,8 +169,10 @@ func (s *service) RelayDelete(i data.Item) error {
 }
 
 // AddReplica handles replication after requests to the AddReplica endpoint. It relays this command if "relay" is set to "true".
-func (s *service) AddReplica(k keygroup.Keygroup, n replication.Node, relay bool) error {
+func (s *service) AddReplica(k keygroup.Keygroup, n replication.Node, i []data.Item, relay bool) error {
 	log.Debug().Msgf("AddReplica from replservice: in kg=%#v no=%#v", k, n)
+
+	// first get the keygroup from the kgname in k
 	kg := replication.Keygroup{
 		Name: k.Name,
 	}
@@ -186,20 +188,39 @@ func (s *service) AddReplica(k keygroup.Keygroup, n replication.Node, relay bool
 		return err
 	}
 
+	// if relay is set to true, we got the request from the external interface
+	// and are responsible to bring the new replica up to speed
+	// (-> send them past data, send them all other replicas, inform all other replicas)
 	if relay {
-		node, err := s.n.GetNode(n)
+		// let's get the information about this new replica first
+		newNode, err := s.n.GetNode(n)
 
 		if err != nil {
 			return err
 		}
 
-		log.Debug().Msgf("AddReplica from replservice: sending %#v to %#v", k, node)
-		if err := s.c.SendCreateKeygroup(node.Addr, node.Port, kg.Name); err != nil {
+		// tell this new node to create the keygroup they're now replicating
+		log.Debug().Msgf("AddReplica from replservice: sending %#v to %#v", k, newNode)
+		if err := s.c.SendCreateKeygroup(newNode.Addr, newNode.Port, kg.Name); err != nil {
 			return err
 		}
 
+		// now tell this new node that we are also a replica node for that keygroup
+		self, err := s.n.GetSelf()
+
+		if err != nil {
+			return err
+		}
+
+		log.Debug().Msgf("AddReplica from replservice: sending %#v to %#v", self, newNode)
+		if err := s.c.SendAddReplica(newNode.Addr, newNode.Port, kg.Name, self); err != nil {
+			return err
+		}
+
+		// now let's iterate over all other currently known replicas for this node (except ourselves)
 		for rn := range kg.Replica {
-			node, err := s.n.GetNode(replication.Node{
+			// get a replica node
+			replNode, err := s.n.GetNode(replication.Node{
 				ID: rn,
 			})
 
@@ -207,14 +228,33 @@ func (s *service) AddReplica(k keygroup.Keygroup, n replication.Node, relay bool
 				return err
 			}
 
-			log.Debug().Msgf("AddReplica from replservice: sending %#v to %#v", k, node)
-			if err := s.c.SendAddReplica(node.Addr, node.Port, kg.Name, node); err != nil {
+			// tell that replica node about the new node
+			log.Debug().Msgf("AddReplica from replservice: sending %#v to %#v", newNode, replNode)
+			if err := s.c.SendAddReplica(replNode.Addr, replNode.Port, kg.Name, newNode); err != nil {
+				return err
+			}
+
+			// then tell the new node about that replica node
+			log.Debug().Msgf("AddReplica from replservice: sending %#v to %#v", replNode, newNode)
+			if err := s.c.SendAddReplica(newNode.Addr, newNode.Port, kg.Name, replNode); err != nil {
+				return err
+			}
+		}
+
+		// request came from external client interface, send past data as well
+		for _, item := range i {
+			// iterate over all data for that keygroup and send it to the new node
+			// a batch might be better here
+			log.Debug().Msgf("AddReplica from replservice: sending %#v to %#v", item, n)
+			if err := s.c.SendUpdate(newNode.Addr, newNode.Port, kg.Name, item.ID, item.Data); err != nil {
 				return err
 			}
 		}
 	}
 
+	// finally, in either case, save that the new node is now also a replica for the keygroup
 	err = s.n.AddReplica(kg, n)
+
 	if err != nil {
 		return err
 	}
