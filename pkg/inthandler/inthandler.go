@@ -35,9 +35,7 @@ func (h *handler) HandleCreateKeygroup(k keygroup.Keygroup, nodes []replication.
 		return err
 	}
 
-	if err := h.i.CreateKeygroup(data.Item{
-		Keygroup: k.Name,
-	}); err != nil {
+	if err := h.i.CreateKeygroup(k.Name); err != nil {
 		log.Err(err).Msg("Inthandler cannot create keygroup with data service")
 		return err
 	}
@@ -80,9 +78,7 @@ func (h *handler) HandleDeleteKeygroup(k keygroup.Keygroup) error {
 		return err
 	}
 
-	if err := h.i.DeleteKeygroup(data.Item{
-		Keygroup: k.Name,
-	}); err != nil {
+	if err := h.i.DeleteKeygroup(k.Name); err != nil {
 		log.Err(err).Msg("Inthandler cannot delete keygroup with data service")
 		return err
 	}
@@ -116,7 +112,7 @@ func (h *handler) HandleDelete(i data.Item) error {
 		return errors.New(errors.StatusNotFound, "inthandler: keygroup does not exist")
 	}
 
-	return h.i.Delete(i)
+	return h.i.Delete(i.Keygroup, i.ID)
 }
 
 func (h *handler) HandleAddReplica(k keygroup.Keygroup, n replication.Node) error {

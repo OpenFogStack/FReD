@@ -30,81 +30,79 @@ func New() (s *Storage) {
 }
 
 // Read returns an item with the specified id from the specified keygroup.
-func (s *Storage) Read(i data.Item) (data.Item, error) {
+func (s *Storage) Read(kg commons.KeygroupName, id string) (string, error) {
 	s.RLock()
-	kg, ok := s.keygroups[i.Keygroup]
+	keygroup, ok := s.keygroups[kg]
 	s.RUnlock()
 
 	if !ok {
-		return i, errors.New(errors.StatusNotFound, "memorysd: no such keygroup")
+		return "", errors.New(errors.StatusNotFound, "memorysd: no such keygroup")
 	}
 
-	kg.RLock()
+	keygroup.RLock()
 	var value string
-	value, ok = kg.items[i.ID]
-	kg.RUnlock()
+	value, ok = keygroup.items[id]
+	keygroup.RUnlock()
 
 	if !ok {
-		return i, errors.New(errors.StatusNotFound, "memorysd: no such item")
+		return "", errors.New(errors.StatusNotFound, "memorysd: no such item")
 	}
 
-	i.Data = value
-
-	return i, nil
+	return value, nil
 }
 
 // ReadAll returns all items in the specified keygroup.
-func (s *Storage) ReadAll(i data.Item) ([]data.Item, error) {
+func (s *Storage) ReadAll(kg commons.KeygroupName) ([]data.Item, error) {
 	s.RLock()
-	kg, ok := s.keygroups[i.Keygroup]
+	keygroup, ok := s.keygroups[kg]
 	s.RUnlock()
 
 	if !ok {
 		return nil, errors.New(errors.StatusNotFound, "memorysd: no such keygroup")
 	}
 
-	kg.RLock()
-	items := make([]data.Item, len(kg.items))
+	keygroup.RLock()
+	items := make([]data.Item, len(keygroup.items))
 
 	x := 0
 
-	for k := range kg.items {
+	for k := range keygroup.items {
 		items[x] = data.Item{
-			Keygroup: i.Keygroup,
+			Keygroup: kg,
 			ID:       k,
-			Data:     kg.items[k],
+			Data:     keygroup.items[k],
 		}
 		x++
 	}
 
-	kg.RUnlock()
+	keygroup.RUnlock()
 
 	return items, nil
 }
 
-// Keys returns the keys of all items in the specified keygroup.
-func (s *Storage) Keys(i data.Item) ([]data.Item, error) {
+// IDs returns the keys of all items in the specified keygroup.
+func (s *Storage) IDs(kg commons.KeygroupName) ([]data.Item, error) {
 	s.RLock()
-	kg, ok := s.keygroups[i.Keygroup]
+	keygroup, ok := s.keygroups[kg]
 	s.RUnlock()
 
 	if !ok {
 		return nil, errors.New(errors.StatusNotFound, "memorysd: no such keygroup")
 	}
 
-	kg.RLock()
-	keys := make([]data.Item, len(kg.items))
+	keygroup.RLock()
+	keys := make([]data.Item, len(keygroup.items))
 
 	x := 0
 
-	for k := range kg.items {
+	for k := range keygroup.items {
 		keys[x] = data.Item{
-			Keygroup: i.Keygroup,
+			Keygroup: kg,
 			ID:       k,
 		}
 		x++
 	}
-	kg.RUnlock()
+	keygroup.RUnlock()
 
 	return keys, nil
 }
@@ -131,9 +129,9 @@ func (s *Storage) Update(i data.Item) error {
 }
 
 // Delete deletes the item with the specified id from the specified keygroup.
-func (s *Storage) Delete(i data.Item) error {
+func (s *Storage) Delete(kg commons.KeygroupName, id string) error {
 	s.RLock()
-	kg, ok := s.keygroups[i.Keygroup]
+	keygroup, ok := s.keygroups[kg]
 
 	if !ok {
 		s.RUnlock()
@@ -142,35 +140,35 @@ func (s *Storage) Delete(i data.Item) error {
 
 	s.RUnlock()
 
-	kg.RLock()
-	_, ok = kg.items[i.ID]
-	kg.RUnlock()
+	keygroup.RLock()
+	_, ok = keygroup.items[id]
+	keygroup.RUnlock()
 
 	if !ok {
 		return errors.New(errors.StatusNotFound, "memorysd: no such item")
 	}
 
-	kg.Lock()
-	delete(kg.items, i.ID)
-	kg.Unlock()
+	keygroup.Lock()
+	delete(keygroup.items, id)
+	keygroup.Unlock()
 
 	return nil
 
 }
 
 // Exists checks if the given item exists in the given keygroups map.
-func (s *Storage) Exists(i data.Item) bool {
+func (s *Storage) Exists(kg commons.KeygroupName, id string) bool {
 	s.RLock()
-	kg, ok := s.keygroups[i.Keygroup]
+	keygroup, ok := s.keygroups[kg]
 	s.RUnlock()
 
 	if !ok {
 		return false
 	}
 
-	kg.RLock()
-	_, ok = kg.items[i.ID]
-	kg.RUnlock()
+	keygroup.RLock()
+	_, ok = keygroup.items[id]
+	keygroup.RUnlock()
 
 	return ok
 }
@@ -186,9 +184,9 @@ func (s *Storage) ExistsKeygroup(i data.Item) bool {
 }
 
 // CreateKeygroup creates a new keygroup with the specified name in Storage.
-func (s *Storage) CreateKeygroup(i data.Item) error {
+func (s *Storage) CreateKeygroup(kg commons.KeygroupName) error {
 	s.RLock()
-	kg, exists := s.keygroups[i.Keygroup]
+	keygroup, exists := s.keygroups[kg]
 
 	if exists {
 		s.RUnlock()
@@ -197,21 +195,21 @@ func (s *Storage) CreateKeygroup(i data.Item) error {
 
 	s.RUnlock()
 
-	kg = Keygroup{
+	keygroup = Keygroup{
 		items: make(map[string]string),
 	}
 
 	s.Lock()
-	s.keygroups[i.Keygroup] = kg
+	s.keygroups[kg] = keygroup
 	s.Unlock()
 
 	return nil
 }
 
 // DeleteKeygroup removes the keygroup with the specified name from Storage.
-func (s *Storage) DeleteKeygroup(i data.Item) error {
+func (s *Storage) DeleteKeygroup(kg commons.KeygroupName) error {
 	s.RLock()
-	_, ok := s.keygroups[i.Keygroup]
+	_, ok := s.keygroups[kg]
 	s.RUnlock()
 
 	if !ok {
@@ -219,7 +217,7 @@ func (s *Storage) DeleteKeygroup(i data.Item) error {
 	}
 
 	s.Lock()
-	delete(s.keygroups, i.Keygroup)
+	delete(s.keygroups, kg)
 	s.Unlock()
 
 	return nil

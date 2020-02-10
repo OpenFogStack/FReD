@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+service Database {
+	rpc Update (Item) returns (Response) {}
+    rpc Delete (Key) returns (Response) {}
+    rpc Read (Key) returns (Data) {}
+    rpc ReadAll (Keygroup) returns (stream Item) {}
+    rpc IDs (Keygroup) returns (stream Key) {}
+    rpc Exists (Key) returns (Response) {}
+    rpc CreateKeygroup (Keygroup) returns (Response) {}
+    rpc DeleteKeygroup (Keygroup) returns (Response) {}
+}
+
+message Item {
+    string keygroup = 1;
+    string id = 2;
+    string data = 3;
+}
+
+// A Key uniquely identifies data. In our case it contains a keygroup and the id
+message Key {
+    string keygroup = 1;
+    string id = 2;
+}
+
+message Data {
+    string data = 1;
+}
+
+message Keygroup {
+    string keygroup = 1;
+}
+
+message Response {
+    bool success = 1;
+    string message = 2;
+}

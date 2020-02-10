@@ -40,21 +40,19 @@ func New(dbPath string) (s *Storage) {
 }
 
 // Read returns an item with the specified id from the specified keygroup.
-func (s *Storage) Read(i data.Item) (data.Item, error) {
-	key := makeKeyName(i.Keygroup, i.ID)
+func (s *Storage) Read(kg commons.KeygroupName, id string) (string, error) {
+	key := makeKeyName(kg, id)
 
 	value, err := s.db.Get([]byte(key), nil)
 
-	i.Data = string(value)
+	log.Debug().Err(err).Msgf("Read from levedbsd: in %#v, %#v, out %s", kg, id, string(value))
 
-	log.Debug().Err(err).Msgf("Read from levedbsd: in %#v, out %s", i, string(value))
-
-	return i, err
+	return string(value), err
 }
 
 // ReadAll returns all items in the specified keygroup.
-func (s *Storage) ReadAll(i data.Item) ([]data.Item, error) {
-	key := makeKeygroupKeyName(i.Keygroup)
+func (s *Storage) ReadAll(kg commons.KeygroupName) ([]data.Item, error) {
+	key := makeKeygroupKeyName(kg)
 
 	iter := s.db.NewIterator(util.BytesPrefix([]byte(key)), nil)
 
@@ -77,7 +75,7 @@ func (s *Storage) ReadAll(i data.Item) ([]data.Item, error) {
 		}
 
 		items[len(items)-l] = data.Item{
-			Keygroup: i.Keygroup,
+			Keygroup: kg,
 			ID:       string(iter.Key()),
 			Data:     string(iter.Value()),
 		}
@@ -89,14 +87,14 @@ func (s *Storage) ReadAll(i data.Item) ([]data.Item, error) {
 
 	err := iter.Error()
 
-	log.Debug().Err(err).Msgf("ReadAll from levedbsd: in %#v, out %#v", i, items)
+	log.Debug().Err(err).Msgf("ReadAll from levedbsd: in %#v, out %#v", kg, items)
 
 	return items, err
 }
 
-// Keys returns the keys of all items in the specified keygroup.
-func (s *Storage) Keys(i data.Item) ([]data.Item, error) {
-	key := makeKeygroupKeyName(i.Keygroup)
+// IDs returns the keys of all items in the specified keygroup.
+func (s *Storage) IDs(kg commons.KeygroupName) ([]data.Item, error) {
+	key := makeKeygroupKeyName(kg)
 
 	iter := s.db.NewIterator(util.BytesPrefix([]byte(key)), nil)
 
@@ -119,7 +117,7 @@ func (s *Storage) Keys(i data.Item) ([]data.Item, error) {
 		}
 
 		keys[len(keys)-l] = data.Item{
-			Keygroup: i.Keygroup,
+			Keygroup: kg,
 			ID:       string(iter.Key()),
 		}
 
@@ -130,7 +128,7 @@ func (s *Storage) Keys(i data.Item) ([]data.Item, error) {
 
 	err := iter.Error()
 
-	log.Debug().Err(err).Msgf("Keys from levedbsd: in %#v, out %#v", i, keys)
+	log.Debug().Err(err).Msgf("IDs from levedbsd: in %#v, out %#v", kg, keys)
 
 	return keys, err
 }
@@ -147,23 +145,23 @@ func (s *Storage) Update(i data.Item) error {
 }
 
 // Delete deletes the item with the specified id from the specified keygroup.
-func (s *Storage) Delete(i data.Item) error {
-	key := makeKeyName(i.Keygroup, i.ID)
+func (s *Storage) Delete(kg commons.KeygroupName, id string) error {
+	key := makeKeyName(kg, id)
 
 	err := s.db.Delete([]byte(key), nil)
 
-	log.Debug().Err(err).Msgf("Delete from levedbsd: in %#v", i)
+	log.Debug().Err(err).Msgf("Delete from levedbsd: in %#v, %#v", kg, id)
 
 	return err
 }
 
 // Exists checks if the given data item exists in the leveldb database.
-func (s *Storage) Exists(i data.Item) bool {
-	key := makeKeyName(i.Keygroup, i.ID)
+func (s *Storage) Exists(kg commons.KeygroupName, id string) bool {
+	key := makeKeyName(kg, id)
 
 	has, _ := s.db.Has([]byte(key), nil)
 
-	log.Debug().Msgf("Exists from levedbsd: in %#v, out: %t", i, has)
+	log.Debug().Msgf("Exists from levedbsd: in %#v, %#v, out: %t", kg, id, has)
 
 	return has
 }
@@ -180,19 +178,20 @@ func (s *Storage) ExistsKeygroup(i data.Item) bool {
 }
 
 // CreateKeygroup creates the given keygroup in the leveldb database.
-func (s *Storage) CreateKeygroup(i data.Item) error {
-	key := makeKeyName(i.Keygroup, i.ID)
+func (s *Storage) CreateKeygroup(kg commons.KeygroupName) error {
+	// TODO Tobias this used to also use the data of the item passed, was this necessary?
+	key := makeKeygroupKeyName(kg)
 
-	err := s.db.Put([]byte(key), []byte(i.Data), nil)
+	err := s.db.Put([]byte(key), nil, nil)
 
-	log.Debug().Err(err).Msgf("CreateKeygroup from levedbsd: in %#v", i)
+	log.Debug().Err(err).Msgf("CreateKeygroup from levedbsd: in %#v", kg)
 
 	return err
 }
 
 // DeleteKeygroup deletes the given keygroup from the leveldb database.
-func (s *Storage) DeleteKeygroup(i data.Item) (err error) {
-	key := makeKeygroupKeyName(i.Keygroup)
+func (s *Storage) DeleteKeygroup(kg commons.KeygroupName) (err error) {
+	key := makeKeygroupKeyName(kg)
 
 	iter := s.db.NewIterator(util.BytesPrefix([]byte(key)), nil)
 	defer iter.Release()
@@ -201,7 +200,7 @@ func (s *Storage) DeleteKeygroup(i data.Item) (err error) {
 		err = s.db.Delete(iter.Key(), nil)
 	}
 
-	log.Debug().Err(err).Msgf("DeleteKeygroup from levedbsd: in %#v", i)
+	log.Debug().Err(err).Msgf("DeleteKeygroup from levedbsd: in %#v", kg)
 
 	return err
 }

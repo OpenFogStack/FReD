@@ -12,14 +12,18 @@ port = 9001
 ssl = false
 
 [storage]
-# adaptor can be either "leveldb" or "memory"
-adaptor = "leveldb"
+# adaptor can be either "leveldb" or "memory" or "remote"
+adaptor = "remote"
 
 [zmq]
 port = 5555
 
 [leveldb]
 path = "./db"
+
+[remote]
+host = "localhost"
+port = 1337
 
 [log]
 # debug,info,warn,error,fatal,panic

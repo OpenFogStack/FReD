@@ -11,14 +11,17 @@ require (
 	github.com/gin-contrib/logger v0.0.2
 	github.com/gin-gonic/autotls v0.0.0-20191129055149-ffaac874b99f
 	github.com/gin-gonic/gin v1.5.0
+	github.com/golang/protobuf v1.3.2
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/mmcloughlin/geohash v0.9.0
 	github.com/rs/zerolog v1.17.2
 	github.com/syndtr/goleveldb v1.0.0
 	github.com/zeromq/goczmq v4.1.0+incompatible
-	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550 // indirect
+	golang.org/x/lint v0.0.0-20200130185559-910be7a94367 // indirect
 	golang.org/x/net v0.0.0-20190827160401-ba9fcec4b297 // indirect
-	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
+	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8dttt
+	golang.org/x/tools v0.0.0-20200221224223-e1da425f72fd // indirect
+	google.golang.org/grpc v1.27.1
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/yaml.v2 v2.2.4 // indirect
 )
