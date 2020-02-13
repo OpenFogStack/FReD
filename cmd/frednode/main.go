@@ -5,7 +5,7 @@ package main
 import "C"
 
 import (
-	"fmt"
+	"encoding/json"
 	"os"
 
 	"github.com/BurntSushi/toml"
@@ -36,8 +36,9 @@ type fredConfig struct {
 		Lng float64 `toml:"lng"`
 	} `toml:"location"`
 	Server struct {
-		Host string `toml:"host"`
-		Port int    `toml:"port"`
+		Host   string `toml:"host"`
+		Port   int    `toml:"port"`
+		UseTLS bool   `toml:"ssl"`
 	} `toml:"webserver"`
 	Storage struct {
 		Adaptor string `toml:"adaptor"`
@@ -59,7 +60,8 @@ var (
 	lng        = kingpin.Flag("lng", "Longitude of the node.").PlaceHolder("LONGITUDE").Default("-200").Float64() // Domain: ]-180,180]
 	wsHost     = kingpin.Flag("ws-host", "Host address of webserver.").String()
 	wsPort     = kingpin.Flag("ws-port", "Port of webserver.").PlaceHolder("WS-PORT").Default("-1").Int() // Domain: [0,9999]
-	zmqPort    = kingpin.Flag("zmq-port", "Port of ZeroMQ.").PlaceHolder("ZMQ-PORT").Default("-1").Int()  // Domain: [0,9999]
+	wsSSL      = kingpin.Flag("use-tls", "Use TLS/SSL to serve over HTTPS. Works only if host argument is a FQDN.").PlaceHolder("USE-SSL").Bool()
+	zmqPort    = kingpin.Flag("zmq-port", "Port of ZeroMQ.").PlaceHolder("ZMQ-PORT").Default("-1").Int() // Domain: [0,9999]
 	adaptor    = kingpin.Flag("adaptor", "Storage adaptor, can be \"leveldb\", \"memory\".").Enum("leveldb", "memory")
 	logLevel   = kingpin.Flag("log-level", "Log level, can be \"debug\", \"info\" ,\"warn\", \"error\", \"fatal\", \"panic\".").Enum("debug", "info", "warn", "errors", "fatal", "panic")
 	handler    = kingpin.Flag("handler", "Mode of log handler, can be \"dev\", \"prod\".").Enum("dev", "prod")
@@ -94,6 +96,9 @@ func main() {
 	if *wsPort >= 0 {
 		fc.Server.Port = *wsPort
 	}
+	if *wsSSL != false {
+		fc.Server.UseTLS = *wsSSL
+	}
 	if *zmqPort >= 0 {
 		fc.ZMQ.Port = *zmqPort
 	}
@@ -106,6 +111,11 @@ func main() {
 	if *handler != "" {
 		fc.Log.Handler = *handler
 	}
+
+	log.Debug().Msgf("Configuration: %s", (func() string {
+		s, _ := json.MarshalIndent(fc, "", "    ")
+		return string(s)
+	})())
 
 	// Setup Logging
 	// In Dev the ConsoleWriter has nice colored output, but is not very fast.
@@ -182,8 +192,6 @@ func main() {
 
 	rs = replhandler.New(n, c)
 
-	addr := fmt.Sprintf("%s:%d", fc.Server.Host, fc.Server.Port)
-
 	extH := exthandler.New(is, ks, rs)
 	intH := inthandler.New(is, ks, rs)
 
@@ -196,7 +204,7 @@ func main() {
 		panic("Cannot start zmqServer")
 	}
 
-	log.Fatal().Err(webserver.Setup(addr, extH, apiversion)).Msg("Webserver.Setup")
+	log.Fatal().Err(webserver.Setup(fc.Server.Host, fc.Server.Port, extH, apiversion, fc.Server.UseTLS)).Msg("Webserver.Setup")
 
 	// Shutdown
 	zmqServer.Shutdown()

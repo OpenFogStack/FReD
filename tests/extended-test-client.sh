@@ -12,6 +12,9 @@
 # for debugging, connect to the instance with `ssh -i "terraform/small-test/terraform.key" ec2-user@0.nodes.$IDENTIFIER.mcc-f.red`
 # enter `sudo docker logs fred --follow` there to see the logs
 
+# PRTCL=https
+PRTCL=http
+
 IDENTIFIER=$1
 DEFAULT_WEB_PORT=80
 #DEFAULT_WEB_PORT=9001
@@ -46,10 +49,10 @@ wait () {
 # Seed Host 1
 printf "\n"
 printf "Seed Host 1\n"
-printf "Calling http://%s:%s/%s/seed\n" $HOST_1 $PORT_1 $APIVERSION
+printf "Calling %s://%s:%s/%s/seed\n" $PRTCL $HOST_1 $PORT_1 $APIVERSION
 
 curl --request POST -sL \
-     --url http://$HOST_1:$PORT_1/$APIVERSION/seed \
+     --url $PRTCL://$HOST_1:$PORT_1/$APIVERSION/seed \
      --data "{\"id\":\"$ID_1\",\"addr\":\"$HOST_1\"}" \
      -i \
 EOF
@@ -59,10 +62,10 @@ wait
 # Create a Keygroup with Host 1
 printf "\n"
 printf "Create a Keygroup with Host 1\n"
-printf "Calling http://%s:%s/%s/keygroup/%s\n" $HOST_1 $PORT_1 $APIVERSION $KEYGROUP_NAME
+printf "Calling %s://%s:%s/%s/keygroup/%s\n" $PRTCL $HOST_1 $PORT_1 $APIVERSION $KEYGROUP_NAME
 
 curl --request POST -sL \
-     --url http://$HOST_1:$PORT_1/$APIVERSION/keygroup/$KEYGROUP_NAME \
+     --url $PRTCL://$HOST_1:$PORT_1/$APIVERSION/keygroup/$KEYGROUP_NAME \
      -i
 
 wait
@@ -70,10 +73,10 @@ wait
 # Write an item to Node 1
 printf "\n"
 printf "Write an item to Node 1\n"
-printf "Calling PUT http://%s:%s/%s/keygroup/%s/data/%s\n" $HOST_1 $PORT_1 $APIVERSION $KEYGROUP_NAME $ITEM_ID_1
+printf "Calling PUT %s://%s:%s/%s/keygroup/%s/data/%s\n" $PRTCL $HOST_1 $PORT_1 $APIVERSION $KEYGROUP_NAME $ITEM_ID_1
 
 curl --request PUT -sL \
-     --url http://$HOST_1:$PORT_1/$APIVERSION/keygroup/"$KEYGROUP_NAME"/data/"$ITEM_ID_1" \
+     --url $PRTCL://$HOST_1:$PORT_1/$APIVERSION/keygroup/"$KEYGROUP_NAME"/data/"$ITEM_ID_1" \
      --data "{\"id\":\"$ITEM_ID_1\",\"value\":\"hello other world!\",\"keygroup\":\"$KEYGROUP_NAME\"}" \
      -i
 
@@ -82,10 +85,10 @@ wait
 # Register Node 2 at Node 1
 printf "\n"
 printf "Register Node 2 at Node 1\n"
-printf "Calling http://%s:%s/%s/replica\n" $HOST_1 $PORT_1 $APIVERSION
+printf "Calling %s://%s:%s/%s/replica\n" $PRTCL $HOST_1 $PORT_1 $APIVERSION
 
 curl --request POST -sL \
-     --url http://$HOST_1:$PORT_1/$APIVERSION/replica \
+     --url $PRTCL://$HOST_1:$PORT_1/$APIVERSION/replica \
      --data "{\"nodes\":[{\"id\":\"$ID_2\",\"addr\":\"$HOST_2\",\"zmqPort\":$Z_PORT_2}]}" \
      -i
 
@@ -94,10 +97,10 @@ wait
 # Add Node 2 as a Replica Node for the Keygroup at Node 1
 printf "\n"
 printf "Add Node 2 as a Replica Node for the Keygroup at Node 1\n"
-printf "Calling http://%s:%s/%s/keygroup/%s/replica/%s\n" $HOST_1 $PORT_1 $APIVERSION $KEYGROUP_NAME ID_2
+printf "Calling %s://%s:%s/%s/keygroup/%s/replica/%s\n" $PRTCL $HOST_1 $PORT_1 $APIVERSION $KEYGROUP_NAME ID_2
 
 curl --request POST -sL \
-     --url http://$HOST_1:$PORT_1/$APIVERSION/keygroup/$KEYGROUP_NAME/replica/$ID_2 \
+     --url $PRTCL://$HOST_1:$PORT_1/$APIVERSION/keygroup/$KEYGROUP_NAME/replica/$ID_2 \
      -i
 
 wait
@@ -105,10 +108,10 @@ wait
 # Read the item at Node 1
 printf "\n"
 printf "Read this item at Node 1\n"
-printf "Calling GET http://%s:%s/%s/keygroup/%s/data/%s\n" $HOST_1 $PORT_1 $APIVERSION $KEYGROUP_NAME $ITEM_ID_1
+printf "Calling GET %s://%s:%s/%s/keygroup/%s/data/%s\n" $PRTCL $HOST_1 $PORT_1 $APIVERSION $KEYGROUP_NAME $ITEM_ID_1
 
 curl --request GET -sL \
-     --url http://$HOST_1:$PORT_1/$APIVERSION/keygroup/"$KEYGROUP_NAME"/data/"$ITEM_ID_1" \
+     --url $PRTCL://$HOST_1:$PORT_1/$APIVERSION/keygroup/"$KEYGROUP_NAME"/data/"$ITEM_ID_1" \
      -i
 
 wait
@@ -116,10 +119,10 @@ wait
 # Read this item at Node 2
 printf "\n"
 printf "Read this item at Node 2\n"
-printf "Calling GET http://%s:%s/%s/keygroup/%s/data/%s\n" $HOST_2 $PORT_2 $APIVERSION $KEYGROUP_NAME $ITEM_ID_1
+printf "Calling GET %s://%s:%s/%s/keygroup/%s/data/%s\n" $PRTCL $HOST_2 $PORT_2 $APIVERSION $KEYGROUP_NAME $ITEM_ID_1
 
 curl --request GET -sL \
-     --url http://$HOST_2:$PORT_2/$APIVERSION/keygroup/"$KEYGROUP_NAME"/data/"$ITEM_ID_1" \
+     --url $PRTCL://$HOST_2:$PORT_2/$APIVERSION/keygroup/"$KEYGROUP_NAME"/data/"$ITEM_ID_1" \
      -i
 
 wait
@@ -127,7 +130,7 @@ wait
 # Write another item to Node 1
 printf "\n"
 printf "Write another item to Node 1\n"
-printf "Calling PUT http://%s:%s/%s/keygroup/%s/data/%s\n" $HOST_1 $PORT_1 $APIVERSION $KEYGROUP_NAME $ITEM_ID_2
+printf "Calling PUT %s://%s:%s/%s/keygroup/%s/data/%s\n" $PRTCL $HOST_1 $PORT_1 $APIVERSION $KEYGROUP_NAME $ITEM_ID_2
 
 curl --request PUT -sL \
      --url http://$HOST_1:$PORT_1/$APIVERSION/keygroup/"$KEYGROUP_NAME"/data/"$ITEM_ID_2" \
@@ -139,7 +142,7 @@ wait
 # Read the other item at Node 1
 printf "\n"
 printf "Read the other item at Node 1\n"
-printf "Calling GET http://%s:%s/%s/keygroup/%s/data/%s\n" $HOST_1 $PORT_1 $APIVERSION $KEYGROUP_NAME $ITEM_ID_2
+printf "Calling GET %s://%s:%s/%s/keygroup/%s/data/%s\n" $PRTCL $HOST_1 $PORT_1 $APIVERSION $KEYGROUP_NAME $ITEM_ID_2
 
 curl --request GET -sL \
      --url http://$HOST_1:$PORT_1/$APIVERSION/keygroup/"$KEYGROUP_NAME"/data/"$ITEM_ID_2" \
@@ -150,7 +153,7 @@ wait
 # Read this other item at Node 2
 printf "\n"
 printf "Read this other item at Node 2\n"
-printf "Calling GET http://%s:%s/%s/keygroup/%s/data/%s\n" $HOST_2 $PORT_2 $APIVERSION $KEYGROUP_NAME $ITEM_ID_2
+printf "Calling GET %s://%s:%s/%s/keygroup/%s/data/%s\n" $PRTCL $HOST_2 $PORT_2 $APIVERSION $KEYGROUP_NAME $ITEM_ID_2
 
 curl --request GET -sL \
      --url http://$HOST_2:$PORT_2/$APIVERSION/keygroup/"$KEYGROUP_NAME"/data/"$ITEM_ID_2" \
@@ -161,7 +164,7 @@ wait
 # Delete the item at Node 2
 printf "\n"
 printf "Delete the item at Node 2\n"
-printf "Calling DELETE http://%s:%s/%s/keygroup/%s/data/%s\n" $HOST_2 $PORT_2 $APIVERSION $KEYGROUP_NAME $ITEM_ID_1
+printf "Calling DELETE %s://%s:%s/%s/keygroup/%s/data/%s\n" $PRTCL $HOST_2 $PORT_2 $APIVERSION $KEYGROUP_NAME $ITEM_ID_1
 
 curl --request DELETE -sL \
      --url http://$HOST_2:$PORT_2/$APIVERSION/keygroup/"$KEYGROUP_NAME"/data/"$ITEM_ID_1" \
@@ -172,7 +175,7 @@ wait
 # Read the item at Node 1
 printf "\n"
 printf "Read this item at Node 1\n"
-printf "Calling GET http://%s:%s/%s/keygroup/%s/data/%s\n" $HOST_1 $PORT_1 $APIVERSION $KEYGROUP_NAME $ITEM_ID_1
+printf "Calling GET %s://%s:%s/%s/keygroup/%s/data/%s\n" $PRTCL $HOST_1 $PORT_1 $APIVERSION $KEYGROUP_NAME $ITEM_ID_1
 
 curl --request GET -sL \
      --url http://$HOST_1:$PORT_1/$APIVERSION/keygroup/"$KEYGROUP_NAME"/data/"$ITEM_ID_1" \
@@ -183,7 +186,7 @@ wait
 # Delete the Keygroup at Node 1
 printf "\n"
 printf "Delete the Keygroup at Node 1\n"
-printf "Calling DELETE http://%s:%s/%s/keygroup/%s\n" $HOST_1 $PORT_1 $APIVERSION $KEYGROUP_NAME
+printf "Calling DELETE %s://%s:%s/%s/keygroup/%s\n" $PRTCL $HOST_1 $PORT_1 $APIVERSION $KEYGROUP_NAME
 
 curl --request DELETE -sL \
      --url http://$HOST_1:$PORT_1/$APIVERSION/keygroup/$KEYGROUP_NAME \

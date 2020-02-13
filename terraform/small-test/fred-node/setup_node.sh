@@ -17,7 +17,8 @@ sudo docker run -it \
       --name=fred \
       -d \
       --restart=unless-stopped \
-      -p 80:9001 \
+      -p 443:443 \
+      -p 80:80 \
       -p 5555:5555 \
       -v /tmp/config.toml:/config.toml \
-      gitlab-registry.tubit.tu-berlin.de/mcc-fred/fred/fred:"$3" --config config.toml $4
+      gitlab-registry.tubit.tu-berlin.de/mcc-fred/fred/fred:"$3" --config config.toml --ws-host "$4" $5
