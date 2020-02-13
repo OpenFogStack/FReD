@@ -120,7 +120,7 @@ func (h *handler) HandleDelete(i data.Item) error {
 }
 
 func (h *handler) HandleAddReplica(k keygroup.Keygroup, n replication.Node) error {
-	return h.r.AddReplica(k, n, nil,false)
+	return h.r.AddReplica(k, n, nil, false)
 }
 
 func (h *handler) HandleRemoveReplica(k keygroup.Keygroup, n replication.Node) error {

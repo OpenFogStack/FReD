@@ -22,6 +22,18 @@ resource "aws_security_group" "allow_fred_web" {
   }
 }
 
+resource "aws_security_group" "allow_fred_sec_web" {
+  name        = "allow_fred_sec_web"
+  description = "Allow FReD inbound HTTPS traffic"
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
 resource "aws_security_group" "allow_fred_zmq" {
   name        = "allow_fred_zmq"
   description = "Allow FReD inbound ZMQ traffic"

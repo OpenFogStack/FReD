@@ -30,6 +30,8 @@ func main() {
 	)
 
 	// Parse Flags
+	useTLS := *flag.Bool("useTLS", false, "Use TLS (HTTPS instead of HTTP)")
+
 	apiVersion := *flag.String("apiVersion", "v0", "API Version (e.g. v0)")
 
 	nodeAhost := *flag.String("nodeAhost", "localhost", "host of nodeA (e.g. localhost)")                                                // Docker: localhost
@@ -52,13 +54,21 @@ func main() {
 
 	flag.Parse()
 
-	nodeAurl := fmt.Sprintf("http://%s:%s/%s", nodeAhost, nodeAhttpPort, apiVersion)
+	var protocol string
+
+	if useTLS {
+		protocol = "https"
+	} else {
+		protocol = "http"
+	}
+
+	nodeAurl := fmt.Sprintf("%s://%s:%s/%s", protocol, nodeAhost, nodeAhttpPort, apiVersion)
 	log.Debug().Msgf("Node A: %s with ZMQ Port %d and ID %s", nodeAurl, nodeAzmqPort, nodeAzmqID)
 
-	nodeBurl := fmt.Sprintf("http://%s:%s/%s", nodeBhost, nodeBhttpPort, apiVersion)
+	nodeBurl := fmt.Sprintf("%s://%s:%s/%s", protocol, nodeBhost, nodeBhttpPort, apiVersion)
 	log.Debug().Msgf("Node B: %s with ZMQ Port %d and ID %s", nodeBurl, nodeBzmqPort, nodeBzmqID)
 
-	nodeCurl := fmt.Sprintf("http://%s:%s/%s", nodeChost, nodeChttpPort, apiVersion)
+	nodeCurl := fmt.Sprintf("%s://%s:%s/%s", protocol, nodeChost, nodeChttpPort, apiVersion)
 	log.Debug().Msgf("Node C: %s with ZMQ Port %d and ID %s", nodeCurl, nodeCzmqPort, nodeCzmqID)
 
 	nodeA := node.NewNode(nodeAurl)

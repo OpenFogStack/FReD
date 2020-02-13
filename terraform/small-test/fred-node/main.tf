@@ -20,7 +20,13 @@ resource "aws_instance" "fred_instance" {
   provisioner "remote-exec" {
     inline = [
       "chmod +x /tmp/script.sh",
-      "/tmp/script.sh ${var.gitlab_repo_username} ${var.gitlab_repo_password} ${var.identifier} ${var.fred_flags[count.index]}",
+      # Args:
+      # $1: username to access gitlab registry
+      # $2: password to access gitlab registry
+      # $3: identifier to use the correct Docker container
+      # $4: "host" argument for FReD, in this case the domain name returned from R53
+      # $5: flags that should be passed to FReD
+      "/tmp/script.sh ${var.gitlab_repo_username} ${var.gitlab_repo_password} ${var.identifier} ${aws_route53_record.dns_record[count.index].fqdn} ${var.fred_flags[count.index]}",
     ]
   }
 

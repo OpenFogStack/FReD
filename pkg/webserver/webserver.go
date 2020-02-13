@@ -1,7 +1,10 @@
 package webserver
 
 import (
+	"fmt"
+
 	"github.com/gin-contrib/logger"
+	"github.com/gin-gonic/autotls"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 
@@ -9,7 +12,7 @@ import (
 )
 
 // Setup sets up a web server client interface for the Fred node.
-func Setup(addr string, h exthandler.Handler, apiversion string) error {
+func Setup(host string, port int, h exthandler.Handler, apiversion string, useTLS bool) error {
 	gin.SetMode("release")
 	r := gin.New()
 
@@ -36,5 +39,14 @@ func Setup(addr string, h exthandler.Handler, apiversion string) error {
 	r.PUT(apiversion+"/keygroup/:kgname/data/:id", putItem(h))
 	r.DELETE(apiversion+"/keygroup/:kgname/data/:id", deleteItem(h))
 
+	if useTLS {
+		if port != 443 {
+			log.Warn().Msgf("HTTPS server needs to run on port 443 but port %d was given. Port 443 will be used anyway. To request a certificate, port 80 also needs to be available.", port)
+		}
+
+		return autotls.Run(r, host)
+	}
+
+	addr := fmt.Sprintf("%s:%d", host, port)
 	return r.Run(addr)
 }

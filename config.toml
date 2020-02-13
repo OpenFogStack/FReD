@@ -9,6 +9,7 @@ lng = 13.32676300345363
 [webserver]
 # host = "localhost"
 port = 9001
+ssl = false
 
 [storage]
 # adaptor can be either "leveldb" or "memory"
