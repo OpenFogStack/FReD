@@ -21,6 +21,4 @@ func (n *Node) SeedNode(nodeID, nodeHost string, expectedStatusCode int, expectE
 		log.Warn().Str("node", n.URL).Msgf("SeedNode: %s", err.Error())
 		n.Errors++
 	}
-
-	return
 }

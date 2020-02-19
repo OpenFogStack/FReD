@@ -43,7 +43,6 @@ func getAllReplica(h exthandler.Handler) func(context *gin.Context) {
 		}
 
 		context.JSON(http.StatusOK, r)
-		return
 	}
 }
 
@@ -113,7 +112,6 @@ func postReplica(h exthandler.Handler) func(context *gin.Context) {
 		}
 
 		context.Status(http.StatusOK)
-		return
 	}
 }
 
@@ -150,7 +148,6 @@ func getReplica(h exthandler.Handler) func(context *gin.Context) {
 		}
 
 		context.JSON(http.StatusOK, r)
-		return
 	}
 }
 
@@ -169,6 +166,5 @@ func deleteReplica(h exthandler.Handler) func(context *gin.Context) {
 		}
 
 		context.Status(http.StatusOK)
-		return
 	}
 }

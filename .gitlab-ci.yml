@@ -6,6 +6,7 @@ cache:
 
 stages:
   - test
+  - static_check
   - build
   - release
 #  - test_aws
@@ -47,6 +48,11 @@ lint_code:
   stage: test
   script:
     - make lint
+
+static_check:
+  stage: static_check
+  script:
+    - make staticcheck
 
 build:
   stage: build

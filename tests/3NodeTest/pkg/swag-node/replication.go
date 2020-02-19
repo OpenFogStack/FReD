@@ -26,8 +26,6 @@ func (n *Node) RegisterReplica(nodeID, nodeIP string, nodePort int, expectedStat
 		log.Warn().Str("node", n.URL).Msgf("RegisterReplica: %s", err.Error())
 		n.Errors++
 	}
-
-	return
 }
 
 // GetAllReplica returns a list of all replica that this node has stored.
@@ -55,8 +53,6 @@ func (n *Node) GetReplica(nodeID string, expectedStatusCode int, expectEmptyResp
 		log.Warn().Str("node", n.URL).Msgf("GetReplica: %s", err.Error())
 		n.Errors++
 	}
-
-	return
 }
 
 // DeleteReplica deletes a replica.
@@ -69,6 +65,4 @@ func (n *Node) DeleteReplica(nodeID string, expectedStatusCode int, expectEmptyR
 		log.Warn().Str("node", n.URL).Msgf("DeleteReplica: %s", err.Error())
 		n.Errors++
 	}
-
-	return
 }

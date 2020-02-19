@@ -106,7 +106,7 @@ func main() {
 	if *wsPort >= 0 {
 		fc.Server.Port = *wsPort
 	}
-	if *wsSSL != false {
+	if *wsSSL {
 		fc.Server.UseTLS = *wsSSL
 	}
 	if *zmqPort >= 0 {

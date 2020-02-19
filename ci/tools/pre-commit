@@ -9,6 +9,8 @@
 
 # -------------------------------------- CHECK FOR AWS ACCESS KEYS ------------------------------------------------
 
+echo "Checking for AWS access keys..."
+
 if git rev-parse --verify HEAD >/dev/null 2>&1
 then
     against=HEAD
@@ -55,6 +57,8 @@ fi
 
 # -------------------------------------- PREVENT PUSH TO MASTER ----------------------------------------------------
 
+echo "Checking if you're trying to push to master..."
+
 if [ "$branch" = "master" ]; then
   echo "You can't commit directly to '"${branch}"' branch" # webstorm or intellij will show this as popup
   exit 1 # if you remove this line then it won't block commit but send message to group and on command line
@@ -62,4 +66,12 @@ fi
 
 # ------------------------------------------- GO LINT --------------------------------------------------------------
 
+echo "Linting your code..."
+
 make lint
+
+# --------------------------------------- GO STATIC CHECK ----------------------------------------------------------
+
+echo "Doing static code analysis..."
+
+make staticcheck

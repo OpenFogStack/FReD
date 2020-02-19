@@ -45,7 +45,6 @@ func getKeygroupReplica(h exthandler.Handler) func(context *gin.Context) {
 		}
 
 		context.JSON(http.StatusOK, r)
-		return
 	}
 }
 
@@ -67,7 +66,6 @@ func postKeygroupReplica(h exthandler.Handler) func(context *gin.Context) {
 		}
 
 		context.Status(http.StatusOK)
-		return
 	}
 }
 
@@ -89,6 +87,5 @@ func deleteKeygroupReplica(h exthandler.Handler) func(context *gin.Context) {
 		}
 
 		context.Status(http.StatusOK)
-		return
 	}
 }

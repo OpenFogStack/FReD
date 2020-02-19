@@ -16,8 +16,6 @@ func (n *Node) CreateKeygroup(kgname string, expectedStatusCode int, expectEmpty
 		log.Warn().Str("node", n.URL).Msgf("CreateKeygroup: %s", err.Error())
 		n.Errors++
 	}
-
-	return
 }
 
 // DeleteKeygroup deletes the specified keygroup.
@@ -30,8 +28,6 @@ func (n *Node) DeleteKeygroup(kgname string, expectedStatusCode int, expectEmpty
 		log.Warn().Str("node", n.URL).Msgf("DeleteKeygroup: %s", err.Error())
 		n.Errors++
 	}
-
-	return
 }
 
 // GetKeygroupReplica deletes the specified keygroup.
@@ -44,8 +40,6 @@ func (n *Node) GetKeygroupReplica(kgname string, expectedStatusCode int, expectE
 		log.Warn().Str("node", n.URL).Msgf("GetKeygroupReplica: %s", err.Error())
 		n.Errors++
 	}
-
-	return
 }
 
 // AddKeygroupReplica adds a new Replica node to the provided keygroup.
@@ -58,8 +52,6 @@ func (n *Node) AddKeygroupReplica(kgname, replicaNodeID string, expectedStatusCo
 		log.Warn().Str("node", n.URL).Msgf("AddReplica: %s", err.Error())
 		n.Errors++
 	}
-
-	return
 }
 
 // DeleteKeygroupReplica deletes the specified keygroup.
@@ -72,6 +64,4 @@ func (n *Node) DeleteKeygroupReplica(kgname, replicaNodeID string, expectedStatu
 		log.Warn().Str("node", n.URL).Msgf("DeleteKeygroupReplica: %s", err.Error())
 		n.Errors++
 	}
-
-	return
 }
