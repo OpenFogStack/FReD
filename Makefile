@@ -39,7 +39,7 @@ container: ## Create a Docker container
 	@docker build . -t gitlab-registry.tubit.tu-berlin.de/mcc-fred/fred/fred
 
 staticcheck: ## Do a static code check
-	@go get honnef.co/go/tools/cmd/staticcheck
+	@go get -u honnef.co/go/tools/cmd/staticcheck
 	@staticcheck ${PKG_LIST}
 
 help: ## Display this help screen
