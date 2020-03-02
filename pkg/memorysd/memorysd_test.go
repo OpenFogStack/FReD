@@ -70,7 +70,7 @@ func TestStorage_CreateKeygroup(t *testing.T) {
 				keygroups: tt.fields.keygroups,
 				RWMutex:   tt.fields.RWMutex,
 			}
-			if err := s.CreateKeygroup(tt.args.Item); (err != nil) != tt.wantErr {
+			if err := s.CreateKeygroup(tt.args.Item.Keygroup); (err != nil) != tt.wantErr {
 				t.Errorf("CreateKeygroup() errors = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -111,7 +111,7 @@ func TestStorage_Delete(t *testing.T) {
 				keygroups: tt.fields.keygroups,
 				RWMutex:   tt.fields.RWMutex,
 			}
-			if err := s.Delete(tt.args.Item); (err != nil) != tt.wantErr {
+			if err := s.Delete(tt.args.Item.Keygroup, tt.args.Item.ID); (err != nil) != tt.wantErr {
 				t.Errorf("Delete() errors = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -162,7 +162,7 @@ func TestStorage_DeleteKeygroup(t *testing.T) {
 				keygroups: tt.fields.keygroups,
 				RWMutex:   tt.fields.RWMutex,
 			}
-			if err := s.DeleteKeygroup(tt.args.Item); (err != nil) != tt.wantErr {
+			if err := s.DeleteKeygroup(tt.args.Item.Keygroup); (err != nil) != tt.wantErr {
 				t.Errorf("DeleteKeygroup() errors = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -208,12 +208,12 @@ func TestStorage_Read(t *testing.T) {
 				keygroups: tt.fields.keygroups,
 				RWMutex:   tt.fields.RWMutex,
 			}
-			got, err := s.Read(tt.args.Item)
+			got, err := s.Read(tt.args.Item.Keygroup, tt.args.Item.ID)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Read() errors = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if got != tt.want {
+			if got != tt.want.Data {
 				t.Errorf("Read() got = %v, want %v", got, tt.want)
 			}
 		})

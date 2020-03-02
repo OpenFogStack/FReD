@@ -2,41 +2,71 @@ version: "3.7"
 
 services:
   nodeA:
+    depends_on:
+      - storeA
     build: ../../../FReD
     image: fred:3nodetest
     container_name: nodeA
     volumes:
       - ./config.toml:/config.toml
-    command: --config config.toml
+    command: --config config.toml --remote-storage-host "172.26.0.20"
     ports:
       - 9002:9001
     networks:
       fredwork:
         ipv4_address: 172.26.0.10
 
+  storeA:
+    build:
+      context: ../../../FReD
+      dockerfile: storage-leveldb.Dockerfile
+    image: fred:store
+    container_name: storeA
+    networks:
+      fredwork:
+        ipv4_address: 172.26.0.20
+
   nodeB:
+    depends_on:
+      - storeB
     image: fred:3nodetest
     container_name: nodeB
     volumes:
       - ./config.toml:/config.toml
-    command: --config config.toml
+    command: --config config.toml --remote-storage-host "172.26.0.21"
     ports:
       - 9003:9001
     networks:
       fredwork:
         ipv4_address: 172.26.0.11
 
+  storeB:
+    image: fred:store
+    container_name: storeB
+    networks:
+      fredwork:
+        ipv4_address: 172.26.0.21
+
   nodeC:
+    depends_on:
+      - storeC
     image: fred:3nodetest
     container_name: nodeC
     volumes:
       - ./config.toml:/config.toml
-    command: --config config.toml
+    command: --config config.toml  --remote-storage-host "172.26.0.22"
     ports:
       - 9004:9001
     networks:
       fredwork:
         ipv4_address: 172.26.0.12
+
+  storeC:
+    image: fred:store
+    container_name: storeC
+    networks:
+      fredwork:
+        ipv4_address: 172.26.0.22
 
 networks:
   fredwork:

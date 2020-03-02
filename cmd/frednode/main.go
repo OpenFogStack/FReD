@@ -5,7 +5,6 @@ package main
 import "C"
 
 import (
-	"encoding/json"
 	"os"
 
 	"github.com/BurntSushi/toml"
@@ -25,6 +24,7 @@ import (
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/memoryzmq"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/replhandler"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/replication"
+	storage "gitlab.tu-berlin.de/mcc-fred/fred/pkg/storageconnection"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/webserver"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/zmqclient"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/zmqserver"
@@ -50,21 +50,31 @@ type fredConfig struct {
 		Level   string `toml:"level"`
 		Handler string `toml:"handler"`
 	} `toml:"log"`
+	Remote struct {
+		Host string `toml:"host"`
+		Port int    `toml:"port""`
+	} `toml:"remote""`
+	Ldb struct {
+		Path string `toml:"path"`
+	} `toml:"leveldb"`
 }
 
 const apiversion string = "/v0"
 
 var (
-	configPath = kingpin.Flag("config", "Path to .toml configuration file.").PlaceHolder("PATH").String()
-	lat        = kingpin.Flag("lat", "Latitude of the node.").PlaceHolder("LATITUDE").Default("-200").Float64()   // Domain: [-90,90]
-	lng        = kingpin.Flag("lng", "Longitude of the node.").PlaceHolder("LONGITUDE").Default("-200").Float64() // Domain: ]-180,180]
-	wsHost     = kingpin.Flag("ws-host", "Host address of webserver.").String()
-	wsPort     = kingpin.Flag("ws-port", "Port of webserver.").PlaceHolder("WS-PORT").Default("-1").Int() // Domain: [0,9999]
-	wsSSL      = kingpin.Flag("use-tls", "Use TLS/SSL to serve over HTTPS. Works only if host argument is a FQDN.").PlaceHolder("USE-SSL").Bool()
-	zmqPort    = kingpin.Flag("zmq-port", "Port of ZeroMQ.").PlaceHolder("ZMQ-PORT").Default("-1").Int() // Domain: [0,9999]
-	adaptor    = kingpin.Flag("adaptor", "Storage adaptor, can be \"leveldb\", \"memory\".").Enum("leveldb", "memory")
-	logLevel   = kingpin.Flag("log-level", "Log level, can be \"debug\", \"info\" ,\"warn\", \"error\", \"fatal\", \"panic\".").Enum("debug", "info", "warn", "errors", "fatal", "panic")
-	handler    = kingpin.Flag("handler", "Mode of log handler, can be \"dev\", \"prod\".").Enum("dev", "prod")
+	configPath        = kingpin.Flag("config", "Path to .toml configuration file.").PlaceHolder("PATH").String()
+	lat               = kingpin.Flag("lat", "Latitude of the node.").PlaceHolder("LATITUDE").Default("-200").Float64()   // Domain: [-90,90]
+	lng               = kingpin.Flag("lng", "Longitude of the node.").PlaceHolder("LONGITUDE").Default("-200").Float64() // Domain: ]-180,180]
+	wsHost            = kingpin.Flag("ws-host", "Host address of webserver.").String()
+	wsPort            = kingpin.Flag("ws-port", "Port of webserver.").PlaceHolder("WS-PORT").Default("-1").Int() // Domain: [0,9999]
+	wsSSL             = kingpin.Flag("use-tls", "Use TLS/SSL to serve over HTTPS. Works only if host argument is a FQDN.").PlaceHolder("USE-SSL").Bool()
+	zmqPort           = kingpin.Flag("zmq-port", "Port of ZeroMQ.").PlaceHolder("ZMQ-PORT").Default("-1").Int() // Domain: [0,9999]
+	adaptor           = kingpin.Flag("adaptor", "Storage adaptor, can be \"leveldb\", \"memory\".").Enum("leveldb", "memory")
+	logLevel          = kingpin.Flag("log-level", "Log level, can be \"debug\", \"info\" ,\"warn\", \"error\", \"fatal\", \"panic\".").Enum("debug", "info", "warn", "errors", "fatal", "panic")
+	handler           = kingpin.Flag("handler", "Mode of log handler, can be \"dev\", \"prod\".").Enum("dev", "prod")
+	remoteStorageHost = kingpin.Flag("remote-storage-host", "Host address of GRPC Server.").String()
+	remoteStoragePort = kingpin.Flag("remote-storage-port", "Port of GRPC Server.").PlaceHolder("WS-PORT").Default("-1").Int()
+	ldbPath           = kingpin.Flag("leveldb-path", "Path to the leveldb database").String()
 )
 
 func main() {
@@ -111,11 +121,15 @@ func main() {
 	if *handler != "" {
 		fc.Log.Handler = *handler
 	}
-
-	log.Debug().Msgf("Configuration: %s", (func() string {
-		s, _ := json.MarshalIndent(fc, "", "    ")
-		return string(s)
-	})())
+	if *remoteStorageHost != "" {
+		fc.Remote.Host = *remoteStorageHost
+	}
+	if *remoteStoragePort >= 0 {
+		fc.Remote.Port = *remoteStoragePort
+	}
+	if *ldbPath != "" {
+		fc.Ldb.Path = *ldbPath
+	}
 
 	// Setup Logging
 	// In Dev the ConsoleWriter has nice colored output, but is not very fast.
@@ -130,6 +144,14 @@ func main() {
 	} else if fc.Log.Handler != "prod" {
 		log.Fatal().Msg("Log Handler has to be either dev or prod")
 	}
+
+	// Uncomment to print json config
+	// log.Debug().Msgf("Configuration: %s", (func() string {
+	// 	s, _ := json.MarshalIndent(fc, "", "    ")
+	// 	return string(s)
+	// })())
+	log.Debug().Msg("Current configuration:")
+	log.Debug().Msgf("%v", fc)
 
 	switch fc.Log.Level {
 	case "debug":
@@ -161,22 +183,13 @@ func main() {
 
 	switch fc.Storage.Adaptor {
 	case "leveldb":
-		var ldbc struct {
-			Config struct {
-				Path string `toml:"path"`
-			} `toml:"leveldb"`
-		}
-
-		if _, err := toml.DecodeFile(*configPath, &ldbc); err != nil {
-			log.Fatal().Err(err).Msg("invalid leveldb configuration!")
-		}
-
 		// "%v": unly print field values. "%#v": also print field names
-		log.Debug().Msgf("leveldb struct is: %#v", ldbc)
-
-		i = leveldbsd.New(ldbc.Config.Path)
+		log.Debug().Msgf("leveldb struct is: %#v", fc.Ldb)
+		i = leveldbsd.New(fc.Ldb.Path)
 	case "memory":
 		i = memorysd.New()
+	case "remote":
+		i = storage.NewClient(fc.Remote.Host, fc.Remote.Port)
 	default:
 		log.Fatal().Msg("unknown storage backend")
 	}

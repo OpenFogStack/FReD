@@ -1,5 +1,9 @@
 package data
 
+import (
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/commons"
+)
+
 type service struct {
 	iS Store
 }
@@ -12,31 +16,31 @@ func New(iS Store) Service {
 }
 
 // Read returns an item from the key-value store.
-func (s *service) Read(i Item) (Item, error) {
-	err := checkItem(i)
+func (s *service) Read(kg commons.KeygroupName, id string) (string, error) {
+	err := checkKGandID(kg, id)
 
 	if err != nil {
-		return Item{}, err
+		return "", err
 	}
 
-	data, err := s.iS.Read(i)
+	data, err := s.iS.Read(kg, id)
 
 	if err != nil {
-		return Item{}, err
+		return "", err
 	}
 
 	return data, nil
 }
 
 // ReadAll returns all items of a particular keygroup from the key-value store.
-func (s *service) ReadAll(i Item) ([]Item, error) {
-	err := checkKeygroup(i)
+func (s *service) ReadAll(kg commons.KeygroupName) ([]Item, error) {
+	err := checkKeygroup(kg)
 
 	if err != nil {
 		return nil, err
 	}
 
-	data, err := s.iS.ReadAll(i)
+	data, err := s.iS.ReadAll(kg)
 
 	return data, err
 }
@@ -59,14 +63,14 @@ func (s *service) Update(i Item) error {
 }
 
 // Delete removes an item from the key-value store.
-func (s *service) Delete(i Item) error {
-	err := checkItem(i)
+func (s *service) Delete(kg commons.KeygroupName, id string) error {
+	err := checkKGandID(kg, id)
 
 	if err != nil {
 		return err
 	}
 
-	err = s.iS.Delete(i)
+	err = s.iS.Delete(kg, id)
 
 	if err != nil {
 		return err
@@ -75,9 +79,11 @@ func (s *service) Delete(i Item) error {
 	return nil
 }
 
+// TODO Tobias check whether the CreateKeygroup function was populated the right way
+// Should be in exthandler and inthandler
 // CreateKeygroup creates a new keygroup in the store.
-func (s *service) CreateKeygroup(i Item) error {
-	err := checkKeygroup(i)
+func (s *service) CreateKeygroup(kg commons.KeygroupName) error {
+	err := checkKeygroup(kg)
 
 	if err != nil {
 		return err
@@ -86,9 +92,10 @@ func (s *service) CreateKeygroup(i Item) error {
 	return nil
 }
 
+// TODO implement me!
 // DeleteKeygroup deletes a keygroup from the store.
-func (s *service) DeleteKeygroup(i Item) error {
-	err := checkKeygroup(i)
+func (s *service) DeleteKeygroup(kg commons.KeygroupName) error {
+	err := checkKeygroup(kg)
 
 	if err != nil {
 		return err

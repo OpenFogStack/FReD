@@ -35,9 +35,7 @@ func (h *handler) HandleCreateKeygroup(k keygroup.Keygroup) error {
 		return err
 	}
 
-	if err := h.i.CreateKeygroup(data.Item{
-		Keygroup: k.Name,
-	}); err != nil {
+	if err := h.i.CreateKeygroup(k.Name); err != nil {
 		log.Err(err).Msg("Exthandler cannot create keygroup with data service")
 		return err
 	}
@@ -59,9 +57,7 @@ func (h *handler) HandleDeleteKeygroup(k keygroup.Keygroup) error {
 		return err
 	}
 
-	if err := h.i.DeleteKeygroup(data.Item{
-		Keygroup: k.Name,
-	}); err != nil {
+	if err := h.i.DeleteKeygroup(k.Name); err != nil {
 		log.Err(err).Msg("Exthandler cannot delete keygroup with data service")
 		return err
 	}
@@ -84,7 +80,13 @@ func (h *handler) HandleRead(i data.Item) (data.Item, error) {
 		return i, errors.New(errors.StatusNotFound, "exthandler: keygroup does not exist")
 	}
 
-	return h.i.Read(i)
+	result, err := h.i.Read(i.Keygroup, i.ID)
+	if err != nil {
+		return i, errors.New(errors.StatusNotFound, "exthandler: item does not exist")
+	}
+	// Store result in passed object to return a data.Item and not only the result string
+	i.Data = result
+	return i, nil
 }
 
 // HandleUpdate handles requests to the Update endpoint of the client interface.
@@ -116,7 +118,7 @@ func (h *handler) HandleDelete(i data.Item) error {
 		return errors.New(errors.StatusNotFound, "exthandler: keygroup does not exist")
 	}
 
-	if err := h.i.Delete(i); err != nil {
+	if err := h.i.Delete(i.Keygroup, i.ID); err != nil {
 		log.Err(err).Msg("Exthandler cannot delete data item with data service")
 		return err
 	}
@@ -137,9 +139,7 @@ func (h *handler) HandleAddReplica(k keygroup.Keygroup, n replication.Node) erro
 		return errors.New(errors.StatusNotFound, "exthandler: keygroup does not exist")
 	}
 
-	i, err := h.i.ReadAll(data.Item{
-		Keygroup: k.Name,
-	})
+	i, err := h.i.ReadAll(k.Name)
 
 	if err != nil {
 		return err
