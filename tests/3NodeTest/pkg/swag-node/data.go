@@ -22,8 +22,6 @@ func (n *Node) PutItem(kgname, item string, data string, expectedStatusCode int,
 		log.Warn().Str("node", n.URL).Msgf("PutItem: %s", err.Error())
 		n.Errors++
 	}
-
-	return
 }
 
 // GetItem returns the stored item.
@@ -50,6 +48,4 @@ func (n *Node) DeleteItem(kgname, item string, expectedStatusCode int, expectEmp
 		log.Warn().Str("node", n.URL).Msgf("DeleteItem: %s", err.Error())
 		n.Errors++
 	}
-
-	return
 }

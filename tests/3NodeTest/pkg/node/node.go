@@ -93,10 +93,10 @@ func (n *Node) RegisterReplica(nodeID, nodeIP string, nodePort int, expectedStat
 	log.Debug().Str("node", n.URL).Msgf("Registering Replica %s ; expecting %d", nodeID, expectedStatusCode)
 	json := []byte(fmt.Sprintf(`{"nodes":[{"id":"%s","addr":"%s","port":%d}]}`, nodeID, nodeIP, nodePort))
 	responseBody = n.sendPost("replica", json, expectedStatusCode)
-	if expectEmptyResponse && (responseBody != nil && len(responseBody) != 0) {
+	if expectEmptyResponse && len(responseBody) != 0 {
 		log.Warn().Str("node", n.URL).Msgf("RegisterReplica expected an empty response but got %#v with len %d", string(responseBody), len(responseBody))
 		n.Errors++
-	} else if !expectEmptyResponse && (responseBody == nil || len(responseBody) == 0) {
+	} else if !expectEmptyResponse && len(responseBody) == 0 {
 		n.Errors++
 		log.Warn().Str("node", n.URL).Msg("RegisterReplica expected a response but got nothing")
 	}
@@ -109,10 +109,10 @@ func (n *Node) GetAllReplica(expectedStatusCode int, expectEmptyResponse bool) (
 	rawResponseBody := n.sendGet("replica", expectedStatusCode)
 	parsed, _ = gabs.ParseJSON(rawResponseBody)
 	log.Debug().Msgf("All Replicas: %s", parsed.String())
-	if expectEmptyResponse && (rawResponseBody != nil && len(rawResponseBody) != 0) {
+	if expectEmptyResponse && len(rawResponseBody) != 0 {
 		n.Errors++
 		log.Warn().Str("node", n.URL).Msgf("GetAllReplica expected an empty response but got %#v with len %d", string(rawResponseBody), len(rawResponseBody))
-	} else if !expectEmptyResponse && (rawResponseBody == nil || len(rawResponseBody) == 0) {
+	} else if !expectEmptyResponse && len(rawResponseBody) == 0 {
 		n.Errors++
 		log.Warn().Str("node", n.URL).Msg("GetAllReplica expected a response but got nothing")
 	}
@@ -125,10 +125,10 @@ func (n *Node) SeedNode(nodeID, nodeHost string, expectedStatusCode int, expectE
 	json := []byte(fmt.Sprintf(`{"id":"%s","addr":"%s"}`, nodeID, nodeHost))
 	responseBody = n.sendPost("seed", json, expectedStatusCode)
 
-	if expectEmptyResponse && (responseBody != nil && len(responseBody) != 0) {
+	if expectEmptyResponse && len(responseBody) != 0 {
 		n.Errors++
 		log.Warn().Str("node", n.URL).Msgf("SeedNode expected an empty response but got %#v with len %d", string(responseBody), len(responseBody))
-	} else if !expectEmptyResponse && (responseBody == nil || len(responseBody) == 0) {
+	} else if !expectEmptyResponse && len(responseBody) == 0 {
 		n.Errors++
 		log.Warn().Str("node", n.URL).Msg("SeedNode expected a response but got nothing")
 	}
@@ -139,7 +139,7 @@ func (n *Node) SeedNode(nodeID, nodeHost string, expectedStatusCode int, expectE
 func (n *Node) AddReplicaNode(kgname, replicaNodeID string, expectedStatusCode int, expectEmptyResponse bool) (responseBody []byte) {
 	log.Debug().Str("node", n.URL).Msgf("Sending a AddReplicaNode for group %s; expecting %d", kgname, expectedStatusCode)
 	responseBody = n.sendPost("keygroup/"+kgname+"/replica/"+replicaNodeID, nil, expectedStatusCode)
-	if expectEmptyResponse && (responseBody != nil && len(responseBody) != 0) {
+	if expectEmptyResponse && len(responseBody) != 0 {
 		n.Errors++
 		log.Warn().Str("node", n.URL).Msgf("AddReplicaNode expected an empty response but got %#v", string(responseBody))
 	}
@@ -148,19 +148,31 @@ func (n *Node) AddReplicaNode(kgname, replicaNodeID string, expectedStatusCode i
 
 func (n *Node) sendGet(path string, expectedStatusCode int) (responseBody []byte) {
 	resp, err := http.Get(n.URL + path)
-	defer resp.Body.Close()
 
 	if err != nil {
 		log.Fatal().Str("node", n.URL).Err(err).Msg("SendGet got HTTP error")
 		return nil
 	}
+
+	defer func() {
+		err = resp.Body.Close()
+		if err != nil {
+			log.Fatal().Str("node", n.URL).Err(err).Msg("SendGet got HTTP error")
+		}
+	}()
+
 	if resp.StatusCode != expectedStatusCode {
 		n.Errors++
 		log.Error().Str("node", n.URL).Msgf("SendGet got wrong HTTP Status Code Response. Expected: %d, Got: %d", expectedStatusCode, resp.StatusCode)
 	}
 
 	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
+	_, err = buf.ReadFrom(resp.Body)
+
+	if err != nil {
+		log.Fatal().Str("node", n.URL).Err(err).Msg("SendGet got HTTP error")
+		return nil
+	}
 
 	// return if the response is empty
 	if buf.Len() == 0 {
@@ -169,20 +181,9 @@ func (n *Node) sendGet(path string, expectedStatusCode int) (responseBody []byte
 	return buf.Bytes()
 }
 
-func (n *Node) sendGetResponseArray(path string, expectedStatusCode int) (responseBody []map[string]string) {
-	response := n.sendGet(path, expectedStatusCode)
-	if response != nil && len(response) != 0 {
-		err := json.Unmarshal(response, &responseBody)
-		if err != nil {
-			log.Err(err).Str("node", n.URL).Str("json", string(response)).Msg("sendGet got a response with invalid json")
-		}
-	}
-	return
-}
-
 func (n *Node) sendGetResponseMap(path string, expectedStatusCode int) (responseBody map[string]string) {
 	response := n.sendGet(path, expectedStatusCode)
-	if response != nil && len(response) != 0 {
+	if len(response) != 0 {
 		err := json.Unmarshal(response, &responseBody)
 		if err != nil {
 			log.Err(err).Str("node", n.URL).Str("json", string(response)).Msg("sendGet got a response with invalid json")
@@ -235,17 +236,6 @@ func (n *Node) sendPost(path string, jsonBytes []byte, expectedStatusCode int) (
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(resp.Body)
 	return buf.Bytes()
-}
-
-func (n *Node) sendPostReturnArray(path string, jsonBytes []byte, expectedStatusCode int) (responseBody []string) {
-
-	response := n.sendPost(path, jsonBytes, expectedStatusCode)
-	// Load buf into responseBody
-	err := json.Unmarshal(response, &responseBody)
-	if err != nil && err.Error() != "unexpected end of JSON input" {
-		log.Err(err).Str("node", n.URL).Str("jsonBytes", string(response)).Msg("sendPost got a response with invalid jsonBytes")
-	}
-	return
 }
 
 func (n *Node) sendPostReturnMap(path string, jsonBytes []byte, expectedStatusCode int) (responseBody map[string]string) {

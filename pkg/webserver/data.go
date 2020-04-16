@@ -46,7 +46,6 @@ func getItem(h exthandler.Handler) func(context *gin.Context) {
 		}
 
 		context.JSON(http.StatusOK, r)
-		return
 	}
 }
 
@@ -88,7 +87,6 @@ func putItem(h exthandler.Handler) func(context *gin.Context) {
 		}
 
 		context.Status(http.StatusOK)
-		return
 	}
 }
 
@@ -109,7 +107,6 @@ func deleteItem(h exthandler.Handler) func(context *gin.Context) {
 		}
 
 		context.Status(http.StatusOK)
-		return
 	}
 
 }

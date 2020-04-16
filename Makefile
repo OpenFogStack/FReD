@@ -3,7 +3,7 @@ PKG := "gitlab.tu-berlin.de/mcc-fred/$(PROJECT_NAME)"
 PKG_LIST := $(shell go list ${PKG}/... | grep -v /vendor/ | grep -v /ext/)
 GO_FILES := $(shell find . -name '*.go' | grep -v /vendor/ | grep -v /ext/ | grep -v _test.go)
 
-.PHONY: all dep build clean test coverage coverhtml lint
+.PHONY: all dep build clean test coverage coverhtml lint staticcheck container
 
 all: build
 
@@ -37,6 +37,10 @@ clean: ## Remove previous build
 
 container: ## Create a Docker container
 	@docker build . -t gitlab-registry.tubit.tu-berlin.de/mcc-fred/fred/fred
+
+staticcheck: ## Do a static code check
+	@go get -u honnef.co/go/tools/cmd/staticcheck
+	@staticcheck ${PKG_LIST}
 
 help: ## Display this help screen
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'

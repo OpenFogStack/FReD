@@ -168,7 +168,7 @@ func main() {
 	nodeB.DeleteItem("KG1", "KG1-Item", 200, true)
 
 	logNodeAction(nodeB, "Getting the deleted value in KG1")
-	resp = nodeB.GetItem("KG1", "KG1-Item", 404, false)
+	_ = nodeB.GetItem("KG1", "KG1-Item", 404, false)
 
 	// Test sending data between nodes
 	logNodeAction(nodeB, "Creating a new Keygroup (KGN) in nodeB, setting nodeA as Replica node")

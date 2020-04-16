@@ -85,59 +85,71 @@ func pollForever(c *Server) error {
 			switch msgType {
 			case zmqcommon.CreateKeygroup: // Create keygroup
 				var req = &zmqcommon.KeygroupRequest{}
-				err = json.Unmarshal(msg, &req)
-				go c.handler.HandleCreateKeygroup(req, src)
+				if err = json.Unmarshal(msg, &req); err == nil {
+					go c.handler.HandleCreateKeygroup(req, src)
+				}
 			case zmqcommon.DeleteKeygroup: // Delete keygroup
 				var req = &zmqcommon.KeygroupRequest{}
-				err = json.Unmarshal(msg, &req)
-				go c.handler.HandleDeleteKeygroup(req, src)
-			//case 0x12: // Get from Keygroup
+
+				if err = json.Unmarshal(msg, &req); err == nil {
+					go c.handler.HandleDeleteKeygroup(req, src)
+				}
+			// case 0x12: // Get from Keygroup
 			//	var req = &DataRequest{}
 			//	err = json.Unmarshal(msg, &req)
 			//	go c.handler.HandleGetValueFromKeygroup(req, src)
 			case zmqcommon.PutItem: // Put into keygroup
 				var req = &zmqcommon.DataRequest{}
-				err = json.Unmarshal(msg, &req)
-				go c.handler.HandlePutValueIntoKeygroup(req, src)
+
+				if err = json.Unmarshal(msg, &req); err == nil {
+					go c.handler.HandlePutValueIntoKeygroup(req, src)
+				}
 			case zmqcommon.DeleteItem: // Delete in Keygroup
 				var req = &zmqcommon.DataRequest{}
-				err = json.Unmarshal(msg, &req)
-				go c.handler.HandleDeleteFromKeygroup(req, src)
+				if err = json.Unmarshal(msg, &req); err == nil {
+					go c.handler.HandleDeleteFromKeygroup(req, src)
+				}
 			case zmqcommon.AddNode: // Add Node
 				var req = &zmqcommon.ReplicationRequest{}
-				err = json.Unmarshal(msg, &req)
-				go c.handler.HandleAddNode(req, src)
+				if err = json.Unmarshal(msg, &req); err == nil {
+					go c.handler.HandleAddNode(req, src)
+				}
 			case zmqcommon.RemoveNode: // Remove Node
 				var req = &zmqcommon.ReplicationRequest{}
-				err = json.Unmarshal(msg, &req)
-				go c.handler.HandleRemoveNode(req, src)
+				if err = json.Unmarshal(msg, &req); err == nil {
+					go c.handler.HandleRemoveNode(req, src)
+				}
 			case zmqcommon.AddReplica: // Add Replica in Keygroup
 				var req = &zmqcommon.ReplicationRequest{}
-				err = json.Unmarshal(msg, &req)
-				go c.handler.HandleAddReplica(req, src)
+				if err = json.Unmarshal(msg, &req); err == nil {
+					go c.handler.HandleAddReplica(req, src)
+				}
 			case zmqcommon.RemoveReplica: // Remove Replica in Keygroup
 				var req = &zmqcommon.ReplicationRequest{}
-				err = json.Unmarshal(msg, &req)
-				go c.handler.HandleRemoveReplica(req, src)
+				if err = json.Unmarshal(msg, &req); err == nil {
+					go c.handler.HandleRemoveReplica(req, src)
+				}
 			case zmqcommon.Introduction: // Introduction DataRequest
 				var req = &zmqcommon.IntroductionRequest{}
-				err = json.Unmarshal(msg, &req)
-				go c.handler.HandleIntroduction(req, src)
+				if err = json.Unmarshal(msg, &req); err == nil {
+					go c.handler.HandleIntroduction(req, src)
+				}
 			case zmqcommon.Detroduction: // Detroduction DataRequest (opposite of Introduction
 				var req = &zmqcommon.IntroductionRequest{}
-				err = json.Unmarshal(msg, &req)
-				go c.handler.HandleDetroduction(req, src)
+				if err = json.Unmarshal(msg, &req); err == nil {
+					go c.handler.HandleDetroduction(req, src)
+				}
 			}
-		} else {
-			// Not necessary because we only need eventual consistency, so we dont receive answers to our questions
-			//switch msgType {
-			//case 0x12: // Answer to a get request received
-			//	var res = &Response{}
-			//	err = json.Unmarshal(msg, &res)
-			//	log.Println("Yeah! My get request was answered! ")
-			//	log.Println(res)
-			//}
 		}
+		//if newMessageSocket.Identity() != c.receiver.GetSocket().Identity() {
+		// Not necessary because we only need eventual consistency, so we dont receive answers to our questions
+		//switch msgType {
+		//case 0x12: // Answer to a get request received
+		//	var res = &Response{}
+		//	err = json.Unmarshal(msg, &res)
+		//	log.Println("Yeah! My get request was answered! ")
+		//	log.Println(res)
+		//}
 	}
 	c.destroy()
 	return nil

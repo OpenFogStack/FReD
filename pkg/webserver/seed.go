@@ -49,6 +49,5 @@ func postSeed(h exthandler.Handler) func(context *gin.Context) {
 		}
 
 		context.Status(http.StatusOK)
-		return
 	}
 }

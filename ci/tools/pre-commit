@@ -7,7 +7,13 @@
 #
 # To enable this hook, rename this file to "pre-commit".
 
+GREEN='\033[1;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
 # -------------------------------------- CHECK FOR AWS ACCESS KEYS ------------------------------------------------
+
+echo "${YELLOW}Checking for AWS access keys...${NC}"
 
 if git rev-parse --verify HEAD >/dev/null 2>&1
 then
@@ -53,13 +59,31 @@ if [ -n "$FILES" ]; then
     fi
 fi
 
+echo "${GREEN}No AWS access keys found!${NC}"
+
 # -------------------------------------- PREVENT PUSH TO MASTER ----------------------------------------------------
+
+echo "${YELLOW}Checking if you're trying to push to master...${NC}"
 
 if [ "$branch" = "master" ]; then
   echo "You can't commit directly to '"${branch}"' branch" # webstorm or intellij will show this as popup
   exit 1 # if you remove this line then it won't block commit but send message to group and on command line
 fi
 
+echo "${GREEN}You're not trying to push to master!${NC}"
+
 # ------------------------------------------- GO LINT --------------------------------------------------------------
 
+echo "${YELLOW}Linting your code...${NC}"
+
 make lint
+
+echo "${GREEN}Linter did not find mistakes!${NC}"
+
+# --------------------------------------- GO STATIC CHECK ----------------------------------------------------------
+
+echo "${YELLOW}Doing static code analysis...${NC}"
+
+make staticcheck
+
+echo "${GREEN}Staticcheck did not find mistakes!${NC}"
