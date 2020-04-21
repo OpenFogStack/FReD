@@ -12,6 +12,4 @@ const (
 	RemoveNode    byte = 0x16
 	AddReplica    byte = 0x17
 	RemoveReplica byte = 0x18
-	Introduction  byte = 0x19
-	Detroduction  byte = 0x1A
 )

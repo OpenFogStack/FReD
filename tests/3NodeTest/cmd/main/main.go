@@ -15,7 +15,7 @@ import (
 
 var (
 	// Wait for the user to press enter to continue
-	waitUser = true
+	waitUser = false
 	reader   = bufio.NewReader(os.Stdin)
 )
 
@@ -36,19 +36,19 @@ func main() {
 
 	nodeAhost := *flag.String("nodeAhost", "localhost", "host of nodeA (e.g. localhost)")                                                // Docker: localhost
 	nodeAhttpPort := *flag.String("nodeAhttp", "9002", "port of nodeA (e.g. 9001)")                                                      // Docker: 9002
-	nodeAzmqhost := *flag.String("nodeAzmqhost", "172.26.0.10", "host of nodeA (e.g. localhost) that can be reached by the other nodes") // Docker: 172.26.0.10
+	//nodeAzmqhost := *flag.String("nodeAzmqhost", "172.26.0.10", "host of nodeA (e.g. localhost) that can be reached by the other nodes") // Docker: 172.26.0.10
 	nodeAzmqPort := *flag.Int("nodeAzmqPort", 5555, "ZMQ Port of nodeA")
 	nodeAzmqID := *flag.String("nodeAzmqID", "nodeA", "ZMQ Id of nodeA")
 
 	nodeBhost := *flag.String("nodeBhost", "localhost", "host of nodeB (e.g. localhost)")
 	nodeBhttpPort := *flag.String("nodeBhttp", "9003", "port of nodeB (e.g. 9001)")
-	nodeBzmqhost := *flag.String("nodeBzmqhost", "172.26.0.11", "host of nodeB (e.g. localhost) that can be reached by the other nodes")
+	//nodeBzmqhost := *flag.String("nodeBzmqhost", "172.26.0.11", "host of nodeB (e.g. localhost) that can be reached by the other nodes")
 	nodeBzmqPort := *flag.Int("nodeBzmqPort", 5555, "ZMQ Port of nodeB")
 	nodeBzmqID := *flag.String("nodeBzmqID", "nodeB", "ZMQ Id of nodeB")
 
 	nodeChost := *flag.String("nodeChost", "localhost", "host of nodeC (e.g. localhost)")
 	nodeChttpPort := *flag.String("nodeChttp", "9004", "port of nodeC (e.g. 9001)")
-	nodeCzmqhost := *flag.String("nodeCzmqhost", "172.26.0.12", "host of nodeC (e.g. localhost) that can be reached by the other nodes")
+	//nodeCzmqhost := *flag.String("nodeCzmqhost", "172.26.0.12", "host of nodeC (e.g. localhost) that can be reached by the other nodes")
 	nodeCzmqPort := *flag.Int("nodeCzmqPort", 5555, "ZMQ Port of nodeC")
 	nodeCzmqID := *flag.String("nodeCzmqID", "nodeC", "ZMQ Id of nodeC")
 
@@ -74,10 +74,6 @@ func main() {
 	nodeA := node.NewNode(nodeAurl)
 	nodeB := node.NewNode(nodeBurl)
 	nodeC := node.NewNode(nodeCurl)
-
-	// Seed NodeA
-	logNodeAction(nodeA, "Seeding nodeA")
-	nodeA.SeedNode(nodeAzmqID, nodeAzmqhost, 200, true)
 
 	// Test Keygroups
 	logNodeAction(nodeA, "Creating keygroup testing")
@@ -121,24 +117,17 @@ func main() {
 		logDebugInfo(nodeA, "Got "+resp)
 	}
 
-	// Connect the nodes
-	logNodeAction(nodeA, "Telling nodeA about nodeB")
-	nodeA.RegisterReplica(nodeBzmqID, nodeBzmqhost, nodeBzmqPort, 200, true)
-
-	logNodeAction(nodeA, "Telling nodeA about nodeC")
-	nodeA.RegisterReplica(nodeCzmqID, nodeCzmqhost, nodeCzmqPort, 200, true)
-
 	logNodeAction(nodeA, "Getting all Replicas that nodeA has")
 	parsed := nodeA.GetAllReplica(200, false)
 	// Example Response: ["nodeB", "nodeC"]
 	// Test for nodeA
 
-	if len(parsed) != 2 {
-		logNodeFailure(nodeA, "len(parsed) == 2", fmt.Sprintf("%d", len(parsed)))
+	if len(parsed) != 3 {
+		logNodeFailure(nodeA, "len(parsed) == 3", fmt.Sprintf("%d", len(parsed)))
 	}
 
 	// sorry but i still love go
-	check := (len(parsed) != 2) && func() bool {
+	check := (len(parsed) != 3) && func() bool {
 		for _, elem := range parsed {
 			if elem == nodeBzmqID {
 				return true
@@ -157,7 +146,7 @@ func main() {
 	}()
 
 	if check {
-		logNodeFailure(nodeA, "parsed == ["+nodeBzmqID+", "+nodeCzmqID+"]", fmt.Sprintf("%#v", parsed))
+		logNodeFailure(nodeA, "parsed == ["+nodeBzmqID+", "+nodeCzmqID+ "," + nodeAzmqID + "]", fmt.Sprintf("%#v", parsed))
 	}
 
 	// Fun with replicas
@@ -194,27 +183,41 @@ func main() {
 	logNodeAction(nodeA, "Adding a replica for a nonexisting Keygroup")
 	nodeA.AddKeygroupReplica("trololololo", nodeBzmqID, 404, false)
 
-	logNodeAction(nodeA, "Creating a new Keygroup (KGB) in nodeC and nodeA and then telling nodeA that nodeC is a Replica node")
-	nodeA.CreateKeygroup("KGB", 200, true)
-	nodeC.CreateKeygroup("KGB", 200, true)
-	nodeC.CreateKeygroup("KGB", 200, true)
-	logNodeAction(nodeA, "...Adding the replica should throw an error since the keygroup already exists in the replica and is not already a replica")
-	nodeA.AddKeygroupReplica("KGB", nodeCzmqID, 409, false)
-	nodeA.DeleteKeygroup("KGB", 200, true)
-	nodeC.DeleteKeygroup("KGB", 200, true)
+	logNodeAction(nodeC, "Creating an already existing keygroup with another node")
+	nodeC.CreateKeygroup("KGN", 404, false)
 
-	logNodeAction(nodeA, "Adding stuff to existing KG KG1 and then adding nodeB as replica (sleep 1.5s in between)")
-	nodeA.PutItem("KG1", "KG1-Item1", "KG1-Value1", 200, true)
-	nodeA.PutItem("KG1", "KG1-Item2", "KG1-Value2", 200, true)
-	nodeA.PutItem("KG1", "KG1-Item3", "KG1-Value3", 200, true)
-	nodeA.AddKeygroupReplica("KG1", nodeBzmqID, 200, true)
+	logNodeAction(nodeC, "Telling a node that is not part of the keygroup that it is now part of that keygroup")
+	nodeC.AddKeygroupReplica("KGN", nodeCzmqID,200, true)
+
+	logNodeAction(nodeA, "Creating a new Keygroup (kgall) with all three nodes as replica")
+	nodeA.CreateKeygroup("kgall", 200, true)
+	nodeA.AddKeygroupReplica("kgall", nodeBzmqID, 200, true)
+	nodeB.AddKeygroupReplica("kgall", nodeCzmqID, 200, true)
+
+	logNodeAction(nodeC, "... sending data to one node, checking whether all nodes get the replica (sleep 1.5s)")
+	nodeC.PutItem("kgall", "item", "value", 200, true)
 	time.Sleep(1500 * time.Millisecond)
-	logNodeAction(nodeA, "...Getting values from nodeB, they should have propagated")
-	resp = nodeB.GetItem("KG1", "KG-Item1", 200, false)
-	if resp != "KG1-Value1" {
-		logNodeFailure(nodeA, "resp is \"KG1-Value1\"", resp)
-	} else {
-		logDebugInfo(nodeA, "Got "+resp)
+	respA := nodeA.GetItem("kgall", "item", 200, false)
+	respB := nodeB.GetItem("kgall", "item", 200, false)
+
+	if respA != "value" || respB != "value" {
+		logNodeFailure(nodeA, "both nodes respond with 'value'", fmt.Sprintf("NodeA: %s, NodeB: %s", respA, respB))
+	}
+
+	logNodeAction(nodeB, "...removing node from the keygroup all and checking whether it still has the data (sleep 1.5s)")
+	nodeB.DeleteKeygroupReplica("kgall", nodeBzmqID, 200, true)
+	time.Sleep(1500 * time.Millisecond)
+	respB = nodeB.GetItem("kgall", "item", 404, false)
+
+	logNodeAction(nodeB, fmt.Sprintf("Got Response %s", respB))
+
+	logNodeAction(nodeB, "...re-adding the node to the keygroup all and checking whether it now gets the data (sleep 1.5s)")
+	nodeA.AddKeygroupReplica("kgall", nodeBzmqID, 200, true)
+	time.Sleep(1500 * time.Millisecond)
+	respB = nodeB.GetItem("kgall","item", 200, false)
+
+	if respB != "value" {
+		logNodeFailure(nodeA, "resp is \"value\"", resp)
 	}
 
 	if nodeA.Errors != 0 || nodeB.Errors != 0 || nodeC.Errors != 0 {

@@ -16,21 +16,22 @@ import (
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/data"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/exthandler"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/inthandler"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/keygroup"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/leveldbsd"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/memorykg"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/memoryrs"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/memorysd"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/memoryzmq"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/nameservice"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/replhandler"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/replication"
 	storage "gitlab.tu-berlin.de/mcc-fred/fred/pkg/storageconnection"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/webserver"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/zmqclient"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/zmqserver"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/zmqtointhandler"
 )
 
 type fredConfig struct {
+	General struct {
+		nodeID string `toml:nodeID`
+	} `toml:general`
 	Location struct {
 		Lat float64 `toml:"lat"`
 		Lng float64 `toml:"lng"`
@@ -44,7 +45,8 @@ type fredConfig struct {
 		Adaptor string `toml:"adaptor"`
 	} `toml:"storage"`
 	ZMQ struct {
-		Port int `toml:"port"`
+		Port int    `toml:"port"`
+		Host string `toml:"host"`
 	} `toml:"zmq"`
 	Log struct {
 		Level   string `toml:"level"`
@@ -57,11 +59,15 @@ type fredConfig struct {
 	Ldb struct {
 		Path string `toml:"path"`
 	} `toml:"leveldb"`
+	NaSe struct {
+		Host string `toml:"host"`
+	} `toml:"nase"`
 }
 
 const apiversion string = "/v0"
 
 var (
+	nodeID            = kingpin.Flag("nodeID", "Unique ID of this node. Will be calculated from lat/long if omitted").String()
 	configPath        = kingpin.Flag("config", "Path to .toml configuration file.").PlaceHolder("PATH").String()
 	lat               = kingpin.Flag("lat", "Latitude of the node.").PlaceHolder("LATITUDE").Default("-200").Float64()   // Domain: [-90,90]
 	lng               = kingpin.Flag("lng", "Longitude of the node.").PlaceHolder("LONGITUDE").Default("-200").Float64() // Domain: ]-180,180]
@@ -69,12 +75,15 @@ var (
 	wsPort            = kingpin.Flag("ws-port", "Port of webserver.").PlaceHolder("WS-PORT").Default("-1").Int() // Domain: [0,9999]
 	wsSSL             = kingpin.Flag("use-tls", "Use TLS/SSL to serve over HTTPS. Works only if host argument is a FQDN.").PlaceHolder("USE-SSL").Bool()
 	zmqPort           = kingpin.Flag("zmq-port", "Port of ZeroMQ.").PlaceHolder("ZMQ-PORT").Default("-1").Int() // Domain: [0,9999]
+	zmqHost           = kingpin.Flag("zmq-host", "(Publicly reachable) address of this zmq server.").String()
 	adaptor           = kingpin.Flag("adaptor", "Storage adaptor, can be \"leveldb\", \"memory\".").Enum("leveldb", "memory")
 	logLevel          = kingpin.Flag("log-level", "Log level, can be \"debug\", \"info\" ,\"warn\", \"error\", \"fatal\", \"panic\".").Enum("debug", "info", "warn", "errors", "fatal", "panic")
 	handler           = kingpin.Flag("handler", "Mode of log handler, can be \"dev\", \"prod\".").Enum("dev", "prod")
 	remoteStorageHost = kingpin.Flag("remote-storage-host", "Host address of GRPC Server.").String()
 	remoteStoragePort = kingpin.Flag("remote-storage-port", "Port of GRPC Server.").PlaceHolder("WS-PORT").Default("-1").Int()
 	ldbPath           = kingpin.Flag("leveldb-path", "Path to the leveldb database").String()
+	// TODO this should be a list of nodes. One node is enough, but if we want reliability we should accept multiple etcd nodes
+	naseHost          = kingpin.Flag("naseHost", "Host where the etcd-server runs").String()
 )
 
 func main() {
@@ -94,11 +103,18 @@ func main() {
 	// default value means unset -> don't replace
 	// numbers have negative defaults outside their domain, simple domain checks are implemented
 	// e.g. lat < -90 is ignored and toml is used (if available)
+	if *nodeID != "" {
+		fc.General.nodeID = *nodeID
+	}
 	if *lat >= -90 && *lat <= 90 {
 		fc.Location.Lat = *lat
 	}
 	if *lng >= -180 && *lng <= 180 {
 		fc.Location.Lng = *lng
+	}
+	// If no NodeID is provided use lat/long as NodeID
+	if fc.General.nodeID == "" {
+		fc.General.nodeID = geohash.Encode(fc.Location.Lat, fc.Location.Lng)
 	}
 	if *wsHost != "" {
 		fc.Server.Host = *wsHost
@@ -108,6 +124,9 @@ func main() {
 	}
 	if *wsSSL {
 		fc.Server.UseTLS = *wsSSL
+	}
+	if *zmqHost != "" {
+		fc.ZMQ.Host = *zmqHost
 	}
 	if *zmqPort >= 0 {
 		fc.ZMQ.Port = *zmqPort
@@ -129,6 +148,9 @@ func main() {
 	}
 	if *ldbPath != "" {
 		fc.Ldb.Path = *ldbPath
+	}
+	if *naseHost != "" {
+		fc.NaSe.Host = *naseHost
 	}
 
 	// Setup Logging
@@ -171,15 +193,10 @@ func main() {
 		log.Info().Msg("No Loglevel specified, using 'info'")
 	}
 
-	var nodeID = geohash.Encode(fc.Location.Lat, fc.Location.Lng)
-
 	var is data.Service
-	var ks keygroup.Service
 	var rs replication.Service
 
 	var i data.Store
-	var k keygroup.Store
-	var n replication.Store
 
 	switch fc.Storage.Adaptor {
 	case "leveldb":
@@ -194,24 +211,20 @@ func main() {
 		log.Fatal().Msg("unknown storage backend")
 	}
 
-	// Add more options here
-	k = memorykg.New()
-	n = memoryrs.New(fc.ZMQ.Port)
-
 	is = data.New(i)
 	c := zmqclient.NewClient()
 
-	ks = keygroup.New(k, nodeID)
+	nase := nameservice.New(fc.General.nodeID, []string{fc.NaSe.Host})
+	nase.RegisterSelf(replication.Address{Addr: fc.ZMQ.Host}, fc.ZMQ.Port)
+	rs = replhandler.New(c, *nase, i)
 
-	rs = replhandler.New(n, c)
-
-	extH := exthandler.New(is, ks, rs)
-	intH := inthandler.New(is, ks, rs)
+	extH := exthandler.New(is, rs)
+	intH := inthandler.New(is, rs)
 
 	// Add more options here
-	zmqH := memoryzmq.New(intH)
+	zmqH := zmqtointhandler.New(intH)
 
-	zmqServer, err := zmqserver.Setup(fc.ZMQ.Port, nodeID, zmqH)
+	zmqServer, err := zmqserver.Setup(fc.ZMQ.Port, fc.General.nodeID, zmqH)
 
 	if err != nil {
 		panic("Cannot start zmqServer")

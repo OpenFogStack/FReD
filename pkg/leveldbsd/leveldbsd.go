@@ -1,6 +1,8 @@
 package leveldbsd
 
 import (
+	"strings"
+
 	"github.com/rs/zerolog/log"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/util"
@@ -55,34 +57,31 @@ func (s *Storage) ReadAll(kg commons.KeygroupName) ([]data.Item, error) {
 	key := makeKeygroupKeyName(kg)
 
 	iter := s.db.NewIterator(util.BytesPrefix([]byte(key)), nil)
-
 	defer iter.Release()
 
+	var items []data.Item
 	l := 0
 
 	for iter.Next() {
 		l++
 	}
-
-	items := make([]data.Item, l)
+	log.Debug().Msgf("ReadAll from levekdbsd: Fount %d items with this prefix", l)
 
 	next := iter.First()
-
 	for next {
 		if string(iter.Key()) == key {
 			next = iter.Next()
 			continue
 		}
 
-		items[len(items)-l] = data.Item{
+		items = append(items, data.Item{
 			Keygroup: kg,
-			ID:       string(iter.Key()),
+			// The Key is kg-name/key, so only take the key part
+			ID:       strings.Split(string(iter.Key()), "/")[1],
 			Data:     string(iter.Value()),
-		}
+		})
 
 		next = iter.Next()
-
-		l--
 	}
 
 	err := iter.Error()
@@ -192,11 +191,13 @@ func (s *Storage) CreateKeygroup(kg commons.KeygroupName) error {
 // DeleteKeygroup deletes the given keygroup from the leveldb database.
 func (s *Storage) DeleteKeygroup(kg commons.KeygroupName) (err error) {
 	key := makeKeygroupKeyName(kg)
+	log.Debug().Msgf("DeleteKeygroup called for KG %s", kg)
 
 	iter := s.db.NewIterator(util.BytesPrefix([]byte(key)), nil)
 	defer iter.Release()
 
 	for iter.Next() {
+		log.Debug().Msgf("DeleteKeygroup deleting item %s", iter.Key())
 		err = s.db.Delete(iter.Key(), nil)
 	}
 

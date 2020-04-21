@@ -109,16 +109,6 @@ func pollForever(c *Server) error {
 				if err = json.Unmarshal(msg, &req); err == nil {
 					go c.handler.HandleDeleteFromKeygroup(req, src)
 				}
-			case zmqcommon.AddNode: // Add Node
-				var req = &zmqcommon.ReplicationRequest{}
-				if err = json.Unmarshal(msg, &req); err == nil {
-					go c.handler.HandleAddNode(req, src)
-				}
-			case zmqcommon.RemoveNode: // Remove Node
-				var req = &zmqcommon.ReplicationRequest{}
-				if err = json.Unmarshal(msg, &req); err == nil {
-					go c.handler.HandleRemoveNode(req, src)
-				}
 			case zmqcommon.AddReplica: // Add Replica in Keygroup
 				var req = &zmqcommon.ReplicationRequest{}
 				if err = json.Unmarshal(msg, &req); err == nil {
@@ -128,16 +118,6 @@ func pollForever(c *Server) error {
 				var req = &zmqcommon.ReplicationRequest{}
 				if err = json.Unmarshal(msg, &req); err == nil {
 					go c.handler.HandleRemoveReplica(req, src)
-				}
-			case zmqcommon.Introduction: // Introduction DataRequest
-				var req = &zmqcommon.IntroductionRequest{}
-				if err = json.Unmarshal(msg, &req); err == nil {
-					go c.handler.HandleIntroduction(req, src)
-				}
-			case zmqcommon.Detroduction: // Detroduction DataRequest (opposite of Introduction
-				var req = &zmqcommon.IntroductionRequest{}
-				if err = json.Unmarshal(msg, &req); err == nil {
-					go c.handler.HandleDetroduction(req, src)
 				}
 			}
 		}

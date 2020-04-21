@@ -1,12 +1,18 @@
 # Shamelessly stolen from the original dockerfile
 # building the binary
-FROM golang:1.13-alpine as golang
+FROM golang:1.14-alpine as golang
 
 MAINTAINER Tobias Pfandzelter <tp@mcc.tu-berlin.de>
 
 RUN apk add --no-cache build-base util-linux-dev
 
 WORKDIR /go/src/gitlab.tu-berlin.de/mcc-fred/fred/
+
+# Make an extra layer for the installed packages so that they dont have to be downloaded everytime
+COPY go.mod .
+COPY go.sum .
+
+RUN go mod download
 
 COPY . .
 

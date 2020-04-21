@@ -12,10 +12,15 @@ RUN mkdir /lib64 && ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
 
 WORKDIR /go/src/gitlab.tu-berlin.de/mcc-fred/fred/
 
+# Make an extra layer for the installed packages so that they dont have to be downloaded everytime
+COPY go.mod .
+COPY go.sum .
+
+RUN go mod download
+
 COPY . .
 
 # Static build required so that we can safely copy the binary over.
-RUN ls
 RUN touch ./cmd/frednode/dummy.cc
 RUN go install -a -ldflags '-linkmode external -w -s -extldflags "-static -luuid" ' ./cmd/frednode/
 
