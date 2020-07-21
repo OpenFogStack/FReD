@@ -1,4 +1,4 @@
-package zmqcommon
+package zmq
 
 // Different types of messages that the zmqclient can send to other nodes
 // Currently no messages are received

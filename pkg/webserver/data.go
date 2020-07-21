@@ -6,18 +6,16 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/commons"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/data"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/exthandler"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/fred"
 )
 
-func getItem(h exthandler.Handler) func(context *gin.Context) {
+func getItem(h fred.ExtHandler) func(context *gin.Context) {
 	return func(context *gin.Context) {
-		kgname := commons.KeygroupName(context.Params.ByName("kgname"))
+		kgname := fred.KeygroupName(context.Params.ByName("kgname"))
 
 		id := context.Params.ByName("id")
 
-		d, err := h.HandleRead(data.Item{
+		d, err := h.HandleRead(fred.Item{
 			Keygroup: kgname,
 			ID:       id,
 		})
@@ -41,7 +39,7 @@ func getItem(h exthandler.Handler) func(context *gin.Context) {
 			Keygroup string `json:"keygroup" binding:"required"`
 		}{
 			d.ID,
-			d.Data,
+			d.Val,
 			string(d.Keygroup),
 		}
 
@@ -49,9 +47,9 @@ func getItem(h exthandler.Handler) func(context *gin.Context) {
 	}
 }
 
-func putItem(h exthandler.Handler) func(context *gin.Context) {
+func putItem(h fred.ExtHandler) func(context *gin.Context) {
 	return func(context *gin.Context) {
-		kgname := commons.KeygroupName(context.Params.ByName("kgname"))
+		kgname := fred.KeygroupName(context.Params.ByName("kgname"))
 
 		id := context.Params.ByName("id")
 
@@ -75,10 +73,10 @@ func putItem(h exthandler.Handler) func(context *gin.Context) {
 		}
 
 		arg := jsonstruct.Value
-		err := h.HandleUpdate(data.Item{
+		err := h.HandleUpdate(fred.Item{
 			Keygroup: kgname,
 			ID:       id,
-			Data:     arg,
+			Val:      arg,
 		})
 
 		if err != nil {
@@ -90,13 +88,13 @@ func putItem(h exthandler.Handler) func(context *gin.Context) {
 	}
 }
 
-func deleteItem(h exthandler.Handler) func(context *gin.Context) {
+func deleteItem(h fred.ExtHandler) func(context *gin.Context) {
 	return func(context *gin.Context) {
-		kgname := commons.KeygroupName(context.Params.ByName("kgname"))
+		kgname := fred.KeygroupName(context.Params.ByName("kgname"))
 
 		id := context.Params.ByName("id")
 
-		err := h.HandleDelete(data.Item{
+		err := h.HandleDelete(fred.Item{
 			Keygroup: kgname,
 			ID:       id,
 		})

@@ -1,9 +1,11 @@
 syntax = "proto3";
 
+option go_package = "gitlab.tu-berlin.de/mcc-fred/fred/pkg/storageconnection";
+
 service Database {
 	rpc Update (Item) returns (Response) {}
     rpc Delete (Key) returns (Response) {}
-    rpc Read (Key) returns (Data) {}
+    rpc Read (Key) returns (Val) {}
     rpc ReadAll (Keygroup) returns (stream Item) {}
     rpc IDs (Keygroup) returns (stream Key) {}
     rpc Exists (Key) returns (Response) {}
@@ -14,7 +16,7 @@ service Database {
 message Item {
     string keygroup = 1;
     string id = 2;
-    string data = 3;
+    string val = 3;
 }
 
 // A Key uniquely identifies data. In our case it contains a keygroup and the id
@@ -23,8 +25,8 @@ message Key {
     string id = 2;
 }
 
-message Data {
-    string data = 1;
+message Val {
+    string val = 1;
 }
 
 message Keygroup {

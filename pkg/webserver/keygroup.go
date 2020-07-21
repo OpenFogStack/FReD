@@ -5,17 +5,15 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/commons"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/exthandler"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/keygroup"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/fred"
 )
 
-func postKeygroup(h exthandler.Handler) func(context *gin.Context) {
+func postKeygroup(h fred.ExtHandler) func(context *gin.Context) {
 	return func(context *gin.Context) {
 		kgname := context.Params.ByName("kgname")
 
-		err := h.HandleCreateKeygroup(keygroup.Keygroup{
-			Name: commons.KeygroupName(kgname),
+		err := h.HandleCreateKeygroup(fred.Keygroup{
+			Name: fred.KeygroupName(kgname),
 		})
 
 		if err != nil {
@@ -27,12 +25,12 @@ func postKeygroup(h exthandler.Handler) func(context *gin.Context) {
 	}
 }
 
-func deleteKeygroup(h exthandler.Handler) func(context *gin.Context) {
+func deleteKeygroup(h fred.ExtHandler) func(context *gin.Context) {
 	return func(context *gin.Context) {
 		kgname := context.Params.ByName("kgname")
 
-		err := h.HandleDeleteKeygroup(keygroup.Keygroup{
-			Name: commons.KeygroupName(kgname),
+		err := h.HandleDeleteKeygroup(fred.Keygroup{
+			Name: fred.KeygroupName(kgname),
 		})
 
 		if err != nil {

@@ -1,4 +1,4 @@
-package zmqclient
+package zmq
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/zeromq/goczmq"
 
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/replication"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/fred"
 )
 
 // Sender can send zmqclient messages to a zmqclient socket (both synchronously and asynchronously).
@@ -15,7 +15,7 @@ type Sender struct {
 }
 
 // NewSender creates a zmqclient Sender to send messages to the specified addr and port.
-func NewSender(addr replication.Address, port int) (sen *Sender) {
+func NewSender(addr fred.Address, port int) (sen *Sender) {
 	// Create a dealer socket and connect it to the router.
 	dealer, err := goczmq.NewDealer(fmt.Sprintf("tcp://%s:%d", addr.Addr, port))
 	if err != nil {

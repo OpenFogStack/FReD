@@ -1,4 +1,4 @@
-package zmqcommon
+package zmq
 
 // DataRequest has all data for a ZMQ request.
 // Currently its the same as item.go, but this might change so we use two interfaces

@@ -13,19 +13,12 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/data"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/exthandler"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/inthandler"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/leveldbsd"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/memorysd"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/fred"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/leveldb"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/nameservice"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/replhandler"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/replication"
 	storage "gitlab.tu-berlin.de/mcc-fred/fred/pkg/storageconnection"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/webserver"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/zmqclient"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/zmqserver"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/zmqtointhandler"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/zmq"
 )
 
 type fredConfig struct {
@@ -54,8 +47,8 @@ type fredConfig struct {
 	} `toml:"log"`
 	Remote struct {
 		Host string `toml:"host"`
-		Port int    `toml:"port""`
-	} `toml:"remote""`
+		Port int    `toml:"port"`
+	} `toml:"remote"`
 	Ldb struct {
 		Path string `toml:"path"`
 	} `toml:"leveldb"`
@@ -83,7 +76,7 @@ var (
 	remoteStoragePort = kingpin.Flag("remote-storage-port", "Port of GRPC Server.").PlaceHolder("WS-PORT").Default("-1").Int()
 	ldbPath           = kingpin.Flag("leveldb-path", "Path to the leveldb database").String()
 	// TODO this should be a list of nodes. One node is enough, but if we want reliability we should accept multiple etcd nodes
-	naseHost          = kingpin.Flag("naseHost", "Host where the etcd-server runs").String()
+	naseHost = kingpin.Flag("naseHost", "Host where the etcd-server runs").String()
 )
 
 func main() {
@@ -164,7 +157,7 @@ func main() {
 			},
 		)
 	} else if fc.Log.Handler != "prod" {
-		log.Fatal().Msg("Log Handler has to be either dev or prod")
+		log.Fatal().Msg("Log ExtHandler has to be either dev or prod")
 	}
 
 	// Uncomment to print json config
@@ -193,44 +186,44 @@ func main() {
 		log.Info().Msg("No Loglevel specified, using 'info'")
 	}
 
-	var is data.Service
-	var rs replication.Service
+	var nodeID = geohash.Encode(fc.Location.Lat, fc.Location.Lng)
 
-	var i data.Store
+	var store fred.Store
 
 	switch fc.Storage.Adaptor {
 	case "leveldb":
 		// "%v": unly print field values. "%#v": also print field names
 		log.Debug().Msgf("leveldb struct is: %#v", fc.Ldb)
-		i = leveldbsd.New(fc.Ldb.Path)
-	case "memory":
-		i = memorysd.New()
+		store = leveldb.New(fc.Ldb.Path)
 	case "remote":
-		i = storage.NewClient(fc.Remote.Host, fc.Remote.Port)
+		store = storage.NewClient(fc.Remote.Host, fc.Remote.Port)
 	default:
 		log.Fatal().Msg("unknown storage backend")
 	}
 
-	is = data.New(i)
-	c := zmqclient.NewClient()
+	c := zmq.NewClient()
 
 	nase := nameservice.New(fc.General.nodeID, []string{fc.NaSe.Host})
 	nase.RegisterSelf(replication.Address{Addr: fc.ZMQ.Host}, fc.ZMQ.Port)
-	rs = replhandler.New(c, *nase, i)
 
-	extH := exthandler.New(is, rs)
-	intH := inthandler.New(is, rs)
+	f := fred.New(&fred.Config{
+		Store:   store,
+		Client:  c,
+		ZmqPort: fc.ZMQ.Port,
+		NodeID:  nodeID,
+		NaSe:    nase,
+	})
 
 	// Add more options here
-	zmqH := zmqtointhandler.New(intH)
+	zmqH := zmq.New(f.I)
 
-	zmqServer, err := zmqserver.Setup(fc.ZMQ.Port, fc.General.nodeID, zmqH)
+	zmqServer, err := zmq.Setup(fc.ZMQ.Port, nodeID, zmqH)
 
 	if err != nil {
 		panic("Cannot start zmqServer")
 	}
 
-	log.Fatal().Err(webserver.Setup(fc.Server.Host, fc.Server.Port, extH, apiversion, fc.Server.UseTLS)).Msg("Webserver.Setup")
+	log.Fatal().Err(webserver.Setup(fc.Server.Host, fc.Server.Port, f.E, apiversion, fc.Server.UseTLS)).Msg("Webserver.Setup")
 
 	// Shutdown
 	zmqServer.Shutdown()

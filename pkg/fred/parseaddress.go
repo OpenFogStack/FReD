@@ -1,4 +1,4 @@
-package replication
+package fred
 
 import (
 	"fmt"
@@ -6,15 +6,7 @@ import (
 	"regexp"
 
 	"github.com/rs/zerolog/log"
-
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/errors"
 )
-
-// Address is an IP address or a hostname of a FReD node.
-type Address struct {
-	Addr string
-	IsIP bool
-}
 
 // ParseAddress parses a string and returns it as an Address if it is a valid address.
 // It returns true if the address is an IP address (opposed to a hostname).
@@ -46,7 +38,7 @@ func ParseAddress(a string) (Address, error) {
 	}
 
 	if !matched {
-		return Address{}, errors.New(errors.StatusBadRequest, fmt.Sprintf("replication.address: could not validate %s as IP address or hostname", a))
+		return Address{}, newError(StatusBadRequest, fmt.Sprintf("replication.address: could not validate %s as IP address or hostname", a))
 	}
 
 	return Address{

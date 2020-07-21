@@ -1,4 +1,4 @@
-package zmqclient
+package zmq
 
 import (
 	"encoding/json"
@@ -6,9 +6,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/commons"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/replication"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/zmqcommon"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/fred"
 )
 
 // Client : Linter wants a comment here. Linter is dumb.
@@ -30,8 +28,8 @@ func (c *Client) Destroy() {
 }
 
 // SendCreateKeygroup sends the message to the specified node.
-func (c *Client) SendCreateKeygroup(addr replication.Address, port int, kgname commons.KeygroupName) (err error) {
-	req, err := json.Marshal(&zmqcommon.DataRequest{
+func (c *Client) SendCreateKeygroup(addr fred.Address, port int, kgname fred.KeygroupName) (err error) {
+	req, err := json.Marshal(&DataRequest{
 		Keygroup: string(kgname),
 	})
 
@@ -39,13 +37,13 @@ func (c *Client) SendCreateKeygroup(addr replication.Address, port int, kgname c
 		return
 	}
 
-	err = c.sendMessage(zmqcommon.CreateKeygroup, addr, port, req)
+	err = c.sendMessage(CreateKeygroup, addr, port, req)
 	return
 }
 
 // SendDeleteKeygroup sends the message to the specified node.
-func (c *Client) SendDeleteKeygroup(addr replication.Address, port int, kgname commons.KeygroupName) (err error) {
-	req, err := json.Marshal(&zmqcommon.DataRequest{
+func (c *Client) SendDeleteKeygroup(addr fred.Address, port int, kgname fred.KeygroupName) (err error) {
+	req, err := json.Marshal(&DataRequest{
 		Keygroup: string(kgname),
 	})
 
@@ -53,13 +51,13 @@ func (c *Client) SendDeleteKeygroup(addr replication.Address, port int, kgname c
 		return
 	}
 
-	err = c.sendMessage(zmqcommon.DeleteKeygroup, addr, port, req)
+	err = c.sendMessage(DeleteKeygroup, addr, port, req)
 	return
 }
 
 // SendUpdate sends a PUT message to the specified node.
-func (c *Client) SendUpdate(addr replication.Address, port int, kgname commons.KeygroupName, id, value string) (err error) {
-	req, err := json.Marshal(&zmqcommon.DataRequest{
+func (c *Client) SendUpdate(addr fred.Address, port int, kgname fred.KeygroupName, id, value string) (err error) {
+	req, err := json.Marshal(&DataRequest{
 		Keygroup: string(kgname),
 		ID:       id,
 		Value:    value,
@@ -69,13 +67,13 @@ func (c *Client) SendUpdate(addr replication.Address, port int, kgname commons.K
 		return
 	}
 
-	err = c.sendMessage(zmqcommon.PutItem, addr, port, req)
+	err = c.sendMessage(PutItem, addr, port, req)
 	return
 }
 
 // SendDelete sends the message to the specified node.
-func (c *Client) SendDelete(addr replication.Address, port int, kgname commons.KeygroupName, id string) (err error) {
-	req, err := json.Marshal(&zmqcommon.DataRequest{
+func (c *Client) SendDelete(addr fred.Address, port int, kgname fred.KeygroupName, id string) (err error) {
+	req, err := json.Marshal(&DataRequest{
 		Keygroup: string(kgname),
 		ID:       id,
 	})
@@ -84,12 +82,12 @@ func (c *Client) SendDelete(addr replication.Address, port int, kgname commons.K
 		return
 	}
 
-	err = c.sendMessage(zmqcommon.DeleteItem, addr, port, req)
+	err = c.sendMessage(DeleteItem, addr, port, req)
 	return
 }
 
 // sendMessage to the specified Addr.
-func (c *Client) sendMessage(msType byte, addr replication.Address, port int, msg []byte) (err error) {
+func (c *Client) sendMessage(msType byte, addr fred.Address, port int, msg []byte) (err error) {
 	endpoint := fmt.Sprintf("%s:%d", addr.Addr, port)
 	cSender, exists := c.senders[endpoint]
 	if !exists {
@@ -111,8 +109,8 @@ func (c *Client) sendMessage(msType byte, addr replication.Address, port int, ms
 }
 
 // SendAddNode sends the message to the specified node. Receiver should add the node to the list of known nodes.
-func (c *Client) SendAddNode(addr replication.Address, port int, node replication.Node) (err error) {
-	req, err := json.Marshal(&zmqcommon.ReplicationRequest{
+func (c *Client) SendAddNode(addr fred.Address, port int, node fred.Node) (err error) {
+	req, err := json.Marshal(&ReplicationRequest{
 		Node: node,
 	})
 
@@ -120,13 +118,13 @@ func (c *Client) SendAddNode(addr replication.Address, port int, node replicatio
 		return
 	}
 
-	err = c.sendMessage(zmqcommon.AddNode, addr, port, req)
+	err = c.sendMessage(AddNode, addr, port, req)
 	return
 }
 
 // SendRemoveNode sends the message to the specified node.
-func (c *Client) SendRemoveNode(addr replication.Address, port int, node replication.Node) (err error) {
-	req, err := json.Marshal(&zmqcommon.ReplicationRequest{
+func (c *Client) SendRemoveNode(addr fred.Address, port int, node fred.Node) (err error) {
+	req, err := json.Marshal(&ReplicationRequest{
 		Node: node,
 	})
 
@@ -134,13 +132,13 @@ func (c *Client) SendRemoveNode(addr replication.Address, port int, node replica
 		return
 	}
 
-	err = c.sendMessage(zmqcommon.RemoveNode, addr, port, req)
+	err = c.sendMessage(RemoveNode, addr, port, req)
 	return
 }
 
 // SendAddReplica sends the message to the specified node.
-func (c *Client) SendAddReplica(addr replication.Address, port int, kgname commons.KeygroupName, node replication.Node) (err error) {
-	req, err := json.Marshal(&zmqcommon.ReplicationRequest{
+func (c *Client) SendAddReplica(addr fred.Address, port int, kgname fred.KeygroupName, node fred.Node) (err error) {
+	req, err := json.Marshal(&ReplicationRequest{
 		Keygroup: kgname,
 		Node:     node,
 	})
@@ -149,13 +147,13 @@ func (c *Client) SendAddReplica(addr replication.Address, port int, kgname commo
 		return
 	}
 
-	err = c.sendMessage(zmqcommon.AddReplica, addr, port, req)
+	err = c.sendMessage(AddReplica, addr, port, req)
 	return
 }
 
 // SendRemoveReplica sends the message to the specified node.
-func (c *Client) SendRemoveReplica(addr replication.Address, port int, kgname commons.KeygroupName, node replication.Node) (err error) {
-	req, err := json.Marshal(&zmqcommon.ReplicationRequest{
+func (c *Client) SendRemoveReplica(addr fred.Address, port int, kgname fred.KeygroupName, node fred.Node) (err error) {
+	req, err := json.Marshal(&ReplicationRequest{
 		Keygroup: kgname,
 		Node:     node,
 	})
@@ -164,6 +162,6 @@ func (c *Client) SendRemoveReplica(addr replication.Address, port int, kgname co
 		return
 	}
 
-	err = c.sendMessage(zmqcommon.RemoveReplica, addr, port, req)
+	err = c.sendMessage(RemoveReplica, addr, port, req)
 	return
 }

@@ -1,31 +1,26 @@
-package inthandler
+package fred
 
 import (
 	"fmt"
 
 	"github.com/rs/zerolog/log"
-
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/data"
-	errors "gitlab.tu-berlin.de/mcc-fred/fred/pkg/errors"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/keygroup"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/replication"
 )
 
-type handler struct {
-	dataService data.Service
-	replService replication.Service
+type inthandler struct {
+	i *storeService
+	r *replicationService
 }
 
-// New creates a new handler for internal request (dataService.e. from peer nodes or the naming service).
-func New(i data.Service, r replication.Service) Handler {
-	return &handler{
-		dataService: i,
-		replService: r,
+// newInthandler creates a new handler for internal request (i.e. from peer nodes or the naming service).
+func newInthandler(i *storeService, r *replicationService) *inthandler {
+	return &inthandler{
+		i: i,
+		r: r,
 	}
 }
 
 // HandleCreateKeygroup handles requests to the CreateKeygroup endpoint of the internal interface.
-func (h *handler) HandleCreateKeygroup(k keygroup.Keygroup, nodes []replication.Node) error {
+func (h *inthandler) HandleCreateKeygroup(k Keygroup, nodes []Node) error {
 	if err := h.dataService.CreateKeygroup(k.Name); err != nil {
 		log.Err(err).Msg("Inthandler cannot create keygroup with data service")
 		return err
@@ -38,7 +33,7 @@ func (h *handler) HandleCreateKeygroup(k keygroup.Keygroup, nodes []replication.
 		return err
 	}
 
-	kg := keygroup.Keygroup{
+	kg := Keygroup{
 		Name: k.Name,
 	}
 
@@ -54,14 +49,14 @@ func (h *handler) HandleCreateKeygroup(k keygroup.Keygroup, nodes []replication.
 	}
 
 	if ec > 0 {
-		return errors.New(errors.StatusInternalError, fmt.Sprintf("exthandler: %v", e))
+		return newError(StatusInternalError, fmt.Sprintf("exthandler: %v", e))
 	}
 
 	return nil
 }
 
 // HandleDeleteKeygroup handles requests to the DeleteKeygroup endpoint of the internal interface.
-func (h *handler) HandleDeleteKeygroup(k keygroup.Keygroup) error {
+func (h *inthandler) HandleDeleteKeygroup(k Keygroup) error {
 	if err := h.dataService.DeleteKeygroup(k.Name); err != nil {
 		log.Err(err).Msg("Inthandler cannot delete keygroup with data service")
 		return err
@@ -78,19 +73,19 @@ func (h *handler) HandleDeleteKeygroup(k keygroup.Keygroup) error {
 }
 
 // HandleUpdate handles requests to the Update endpoint of the internal interface.
-func (h *handler) HandleUpdate(i data.Item) error {
-	return h.dataService.Update(i)
+func (h *inthandler) HandleUpdate(i Item) error {
+	return h.i.Update(i)
 }
 
 // HandleDelete handles requests to the Delete endpoint of the internal interface.
-func (h *handler) HandleDelete(i data.Item) error {
-	return h.dataService.Delete(i.Keygroup, i.ID)
+func (h *inthandler) HandleDelete(i Item) error {
+	return h.i.Delete(i.Keygroup, i.ID)
 }
 
-func (h *handler) HandleAddReplica(k keygroup.Keygroup, n replication.Node) error {
+func (h *inthandler) HandleAddReplica(k Keygroup, n Node) error {
 	return h.replService.AddReplica(k, n, nil, false)
 }
 
-func (h *handler) HandleRemoveReplica(k keygroup.Keygroup, n replication.Node) error {
-	return h.replService.RemoveReplica(k, n, false)
+func (h *inthandler) HandleRemoveReplica(k Keygroup, n Node) error {
+	return h.r.RemoveReplica(k, n, false)
 }

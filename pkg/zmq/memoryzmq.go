@@ -1,21 +1,18 @@
-package zmqtointhandler
+package zmq
 
 import (
 	"github.com/rs/zerolog/log"
 
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/fred"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/zmqcommon"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/zmqserver"
 )
 
 type zmqToInthandler struct {
-	i fred.IntHandler
+	i fred.Handler
 }
 
-// New creates a new zmqToInthandler that uses the given handler.
-// It translates calls from the ZMQ Layer to the Inthandler
-func New(h fred.IntHandler) (l zmqserver.MessageHandler) {
-	l = &zmqToInthandler{
+// New creates a new localMemoryMessageHandler that uses the given handler.
+func New(h fred.IntHandler) (l MessageHandler) {
+	l = &localMemoryMessageHandler{
 		i: h,
 	}
 
@@ -23,7 +20,7 @@ func New(h fred.IntHandler) (l zmqserver.MessageHandler) {
 }
 
 // HandleCreateKeygroup handles requests to the CreateKeygroup endpoint of the internal zmqclient interface.
-func (l *zmqToInthandler) HandleCreateKeygroup(req *zmqcommon.KeygroupRequest, from string) {
+func (l *localMemoryMessageHandler) HandleCreateKeygroup(req *KeygroupRequest, from string) {
 	err := l.i.HandleCreateKeygroup(fred.Keygroup{Name: req.Keygroup}, req.Nodes)
 
 	if err != nil {
@@ -33,11 +30,11 @@ func (l *zmqToInthandler) HandleCreateKeygroup(req *zmqcommon.KeygroupRequest, f
 }
 
 // HandlePutValueIntoKeygroup handles requests to the Update endpoint of the internal zmqclient interface.
-func (l *zmqToInthandler) HandlePutValueIntoKeygroup(req *zmqcommon.DataRequest, from string) {
+func (l *localMemoryMessageHandler) HandlePutValueIntoKeygroup(req *DataRequest, from string) {
 	err := l.i.HandleUpdate(fred.Item{
 		Keygroup: fred.KeygroupName(req.Keygroup),
 		ID:       req.ID,
-		Data:     req.Value,
+		Val:      req.Value,
 	})
 	if err != nil {
 		log.Err(err).Msg("error in HandlePutValueIntoKeygroup")
@@ -45,7 +42,7 @@ func (l *zmqToInthandler) HandlePutValueIntoKeygroup(req *zmqcommon.DataRequest,
 }
 
 // HandleDeleteFromKeygroup handles requests to the Delete endpoint of the internal zmqclient interface.
-func (l *zmqToInthandler) HandleDeleteFromKeygroup(req *zmqcommon.DataRequest, from string) {
+func (l *localMemoryMessageHandler) HandleDeleteFromKeygroup(req *DataRequest, from string) {
 	err := l.i.HandleDelete(fred.Item{
 		Keygroup: fred.KeygroupName(req.Keygroup),
 		ID:       req.ID,
@@ -57,7 +54,7 @@ func (l *zmqToInthandler) HandleDeleteFromKeygroup(req *zmqcommon.DataRequest, f
 }
 
 // HandleDeleteKeygroup handles requests to the DeleteKeygroup endpoint of the internal zmqclient interface.
-func (l *zmqToInthandler) HandleDeleteKeygroup(req *zmqcommon.KeygroupRequest, from string) {
+func (l *localMemoryMessageHandler) HandleDeleteKeygroup(req *KeygroupRequest, from string) {
 	err := l.i.HandleDeleteKeygroup(fred.Keygroup{Name: req.Keygroup})
 
 	if err != nil {
@@ -73,7 +70,7 @@ func (l *zmqToInthandler) HandleAddReplica(req *zmqcommon.ReplicationRequest, fr
 	}
 }
 
-func (l *zmqToInthandler) HandleRemoveReplica(req *zmqcommon.ReplicationRequest, from string) {
+func (l *localMemoryMessageHandler) HandleRemoveReplica(req *ReplicationRequest, from string) {
 	err := l.i.HandleRemoveReplica(fred.Keygroup{Name: req.Keygroup}, req.Node)
 
 	if err != nil {

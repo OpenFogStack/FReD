@@ -1,12 +1,10 @@
-package zmqserver
+package zmq
 
 import (
 	"encoding/json"
 
 	"github.com/rs/zerolog/log"
 	"github.com/zeromq/goczmq"
-
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/zmqcommon"
 )
 
 // Server is a ZMQ server that accepts incoming requests within the fred system.
@@ -83,13 +81,13 @@ func pollForever(c *Server) error {
 		// We dont want to send the answer in the current thread because that would block polling
 		if newMessageSocket.Identity() == c.receiver.GetSocket().Identity() {
 			switch msgType {
-			case zmqcommon.CreateKeygroup: // Create keygroup
-				var req = &zmqcommon.KeygroupRequest{}
+			case CreateKeygroup: // Create keygroup
+				var req = &KeygroupRequest{}
 				if err = json.Unmarshal(msg, &req); err == nil {
 					go c.handler.HandleCreateKeygroup(req, src)
 				}
-			case zmqcommon.DeleteKeygroup: // Delete keygroup
-				var req = &zmqcommon.KeygroupRequest{}
+			case DeleteKeygroup: // Delete keygroup
+				var req = &KeygroupRequest{}
 
 				if err = json.Unmarshal(msg, &req); err == nil {
 					go c.handler.HandleDeleteKeygroup(req, src)
@@ -98,14 +96,14 @@ func pollForever(c *Server) error {
 			//	var req = &DataRequest{}
 			//	err = json.Unmarshal(msg, &req)
 			//	go c.handler.HandleGetValueFromKeygroup(req, src)
-			case zmqcommon.PutItem: // Put into keygroup
-				var req = &zmqcommon.DataRequest{}
+			case PutItem: // Put into keygroup
+				var req = &DataRequest{}
 
 				if err = json.Unmarshal(msg, &req); err == nil {
 					go c.handler.HandlePutValueIntoKeygroup(req, src)
 				}
-			case zmqcommon.DeleteItem: // Delete in Keygroup
-				var req = &zmqcommon.DataRequest{}
+			case DeleteItem: // Delete in Keygroup
+				var req = &DataRequest{}
 				if err = json.Unmarshal(msg, &req); err == nil {
 					go c.handler.HandleDeleteFromKeygroup(req, src)
 				}
@@ -114,8 +112,8 @@ func pollForever(c *Server) error {
 				if err = json.Unmarshal(msg, &req); err == nil {
 					go c.handler.HandleAddReplica(req, src)
 				}
-			case zmqcommon.RemoveReplica: // Remove Replica in Keygroup
-				var req = &zmqcommon.ReplicationRequest{}
+			case RemoveReplica: // Remove Replica in Keygroup
+				var req = &ReplicationRequest{}
 				if err = json.Unmarshal(msg, &req); err == nil {
 					go c.handler.HandleRemoveReplica(req, src)
 				}

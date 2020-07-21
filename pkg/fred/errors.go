@@ -1,4 +1,4 @@
-package errors
+package fred
 
 import (
 	"fmt"
@@ -24,8 +24,8 @@ func (e *Error) Error() string {
 	return fmt.Sprintf("%s (Status Code %d)", e.error, e.Code)
 }
 
-// New creates a new custom Error.
-func New(code int, error string) *Error {
+// newError creates a new custom Error.
+func newError(code int, error string) *Error {
 	return &Error{
 		Code:  code,
 		error: error,

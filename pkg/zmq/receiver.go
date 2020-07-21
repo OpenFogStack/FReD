@@ -1,4 +1,4 @@
-package zmqserver
+package zmq
 
 import (
 	"fmt"

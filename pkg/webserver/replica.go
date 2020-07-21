@@ -6,11 +6,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/exthandler"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/replication"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/fred"
 )
 
-func getAllReplica(h exthandler.Handler) func(context *gin.Context) {
+func getAllReplica(h fred.ExtHandler) func(context *gin.Context) {
 	return func(context *gin.Context) {
 
 		d, err := h.HandleGetAllReplica()
@@ -46,7 +45,7 @@ func getAllReplica(h exthandler.Handler) func(context *gin.Context) {
 	}
 }
 
-func postReplica(h exthandler.Handler) func(context *gin.Context) {
+func postReplica(h fred.ExtHandler) func(context *gin.Context) {
 	return func(context *gin.Context) {
 
 		/*
@@ -87,18 +86,18 @@ func postReplica(h exthandler.Handler) func(context *gin.Context) {
 			return
 		}
 
-		n := make([]replication.Node, len(jsonstruct.Nodes))
+		n := make([]fred.Node, len(jsonstruct.Nodes))
 
 		for i, node := range jsonstruct.Nodes {
-			addr, err := replication.ParseAddress(node.Addr)
+			addr, err := fred.ParseAddress(node.Addr)
 
 			if err != nil {
 				_ = abort(context, err)
 				return
 			}
 
-			n[i] = replication.Node{
-				ID:   replication.ID(node.ID),
+			n[i] = fred.Node{
+				ID:   fred.NodeID(node.ID),
 				Addr: addr,
 				Port: node.Port,
 			}
@@ -115,13 +114,13 @@ func postReplica(h exthandler.Handler) func(context *gin.Context) {
 	}
 }
 
-func getReplica(h exthandler.Handler) func(context *gin.Context) {
+func getReplica(h fred.ExtHandler) func(context *gin.Context) {
 	return func(context *gin.Context) {
 
 		nodeid := context.Params.ByName("nodeid")
 
-		d, err := h.HandleGetReplica(replication.Node{
-			ID: replication.ID(nodeid),
+		d, err := h.HandleGetReplica(fred.Node{
+			ID: fred.NodeID(nodeid),
 		})
 
 		if err != nil {
@@ -151,13 +150,13 @@ func getReplica(h exthandler.Handler) func(context *gin.Context) {
 	}
 }
 
-func deleteReplica(h exthandler.Handler) func(context *gin.Context) {
+func deleteReplica(h fred.ExtHandler) func(context *gin.Context) {
 	return func(context *gin.Context) {
 
 		nodeid := context.Params.ByName("nodeid")
 
-		err := h.HandleRemoveNode(replication.Node{
-			ID: replication.ID(nodeid),
+		err := h.HandleRemoveNode(fred.Node{
+			ID: fred.NodeID(nodeid),
 		})
 
 		if err != nil {
