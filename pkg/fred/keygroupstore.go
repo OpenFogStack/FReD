@@ -3,6 +3,7 @@ package fred
 import (
 	"sync"
 
+	"github.com/go-errors/errors"
 	"github.com/rs/zerolog/log"
 )
 
@@ -28,7 +29,6 @@ func (kS *keygroupStore) create(k Keygroup) error {
 	err := checkKeygroup(k.Name)
 
 	if err != nil {
-		log.Err(err).Msg("Keygroup service cannot create a new keygroup")
 		return err
 	}
 
@@ -63,7 +63,7 @@ func (kS *keygroupStore) delete(k Keygroup) error {
 	kS.RUnlock()
 
 	if !ok {
-		return newError(StatusNotFound, "no such keygroup")
+		return errors.Errorf("no such keygroup: %#v", k)
 	}
 
 	kS.Lock()

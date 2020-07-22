@@ -1,8 +1,7 @@
 package fred
 
 import (
-	"fmt"
-
+	"github.com/go-errors/errors"
 	"github.com/rs/zerolog/log"
 )
 
@@ -22,34 +21,33 @@ func newInthandler(i *storeService, r *replicationService) *inthandler {
 // HandleCreateKeygroup handles requests to the CreateKeygroup endpoint of the internal interface.
 func (h *inthandler) HandleCreateKeygroup(k Keygroup, nodes []Node) error {
 	if err := h.dataService.CreateKeygroup(k.Name); err != nil {
-		log.Err(err).Msg("Inthandler cannot create keygroup with data service")
-		return err
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		return errors.Errorf("error creating keygroup")
 	}
 
 	if err := h.replService.CreateKeygroup(keygroup.Keygroup{
 		Name: k.Name,
 	}); err != nil {
-		log.Err(err).Msg("Inthandler cannot create keygroup with replication service")
-		return err
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+
+		return errors.Errorf("error creating keygroup")
 	}
 
 	kg := Keygroup{
 		Name: k.Name,
 	}
 
-	e := make([]string, len(nodes))
-	ec := 0
+	var ec int
 
 	for _, node := range nodes {
-		if err := h.replService.AddReplica(kg, node, nil, false); err != nil {
-			log.Err(err).Msgf("inthandler: cannot remove node %#v)", node)
-			e[ec] = fmt.Sprintf("%v", err)
+		if err := h.r.AddReplica(kg, node, nil, false); err != nil {
+			log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 			ec++
 		}
 	}
 
 	if ec > 0 {
-		return newError(StatusInternalError, fmt.Sprintf("exthandler: %v", e))
+		return errors.Errorf("error updating %d nodes", ec)
 	}
 
 	return nil
@@ -58,15 +56,15 @@ func (h *inthandler) HandleCreateKeygroup(k Keygroup, nodes []Node) error {
 // HandleDeleteKeygroup handles requests to the DeleteKeygroup endpoint of the internal interface.
 func (h *inthandler) HandleDeleteKeygroup(k Keygroup) error {
 	if err := h.dataService.DeleteKeygroup(k.Name); err != nil {
-		log.Err(err).Msg("Inthandler cannot delete keygroup with data service")
-		return err
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		return errors.Errorf("error deleting keygroup")
 	}
 
 	if err := h.replService.DeleteKeygroup(keygroup.Keygroup{
 		Name: k.Name,
 	}); err != nil {
-		log.Err(err).Msg("Inthandler cannot delete keygroup with replication service")
-		return err
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		return errors.Errorf("error deleting keygroup")
 	}
 
 	return nil

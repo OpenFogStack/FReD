@@ -3,6 +3,7 @@ package fred
 import (
 	"sync"
 
+	"github.com/go-errors/errors"
 	"github.com/rs/zerolog/log"
 )
 
@@ -43,7 +44,7 @@ func newReplicationService(nodePort int, c Client) *replicationService {
 
 // CreateKeygroup handles replication after requests to the CreateKeygroup endpoint of the internal interface.
 func (s *replicationService) CreateKeygroup(k Keygroup) error {
-	log.Debug().Msgf("CreateKeygroup from replservice: in %#v", k)
+	log.Debug().Msgf("CreateKeygroup: in %#v", k)
 	kg := Keygroup{
 		Name: k.Name,
 	}
@@ -52,7 +53,6 @@ func (s *replicationService) CreateKeygroup(k Keygroup) error {
 		return nil
 	}
 
-	log.Debug().Msgf("CreateKeygroup from memoryrs: in %#v", k)
 	s.kgLock.RLock()
 	_, ok := s.kg[kg.Name]
 	s.kgLock.RUnlock()
@@ -70,18 +70,17 @@ func (s *replicationService) CreateKeygroup(k Keygroup) error {
 
 // DeleteKeygroup handles replication after requests to the DeleteKeygroup endpoint of the internal interface.
 func (s *replicationService) DeleteKeygroup(k Keygroup) error {
-	log.Debug().Msgf("RelayCreateKeygroup from replservice: in %#v", k)
+	log.Debug().Msgf("RelayCreateKeygroup: in %#v", k)
 	kg := Keygroup{
 		Name: k.Name,
 	}
 
-	log.Debug().Msgf("DeleteKeygroup from memoryrs: in %#v", k)
 	s.kgLock.RLock()
 	_, ok := s.kg[kg.Name]
 	s.kgLock.RUnlock()
 
 	if !ok {
-		return newError(StatusNotFound, "memoryrs: no such node")
+		return errors.Errorf("no such keygroup: %#v", k)
 	}
 
 	s.kgLock.Lock()
@@ -93,14 +92,13 @@ func (s *replicationService) DeleteKeygroup(k Keygroup) error {
 
 // RelayDeleteKeygroup handles replication after requests to the DeleteKeygroup endpoint of the external interface.
 func (s *replicationService) RelayDeleteKeygroup(k Keygroup) error {
-	log.Debug().Msgf("RelayDeleteKeygroup from replservice: in %#v", k)
+	log.Debug().Msgf("RelayDeleteKeygroup: in %#v", k)
 	kg := Keygroup{
 		Name: k.Name,
 	}
 
 	if !s.existsKeygroup(kg) {
-		log.Error().Msgf("RelayDeleteKeygroup from replservice: Keygroup does not exist: in %#v", k)
-		return newError(StatusNotFound, "replservice: no such keygroup")
+		return errors.Errorf("keygroup does not exist: in %#v", k)
 	}
 
 	kg, err := s.getKeygroup(kg)
@@ -109,13 +107,12 @@ func (s *replicationService) RelayDeleteKeygroup(k Keygroup) error {
 		return err
 	}
 
-	log.Debug().Msgf("DeleteKeygroup from memoryrs: in %#v", k)
 	s.kgLock.RLock()
 	_, ok := s.kg[kg.Name]
 	s.kgLock.RUnlock()
 
 	if !ok {
-		return newError(StatusNotFound, "memoryrs: no such node")
+		return errors.Errorf("no such keygroup: %#v", k)
 	}
 
 	s.kgLock.Lock()
@@ -131,7 +128,7 @@ func (s *replicationService) RelayDeleteKeygroup(k Keygroup) error {
 			return err
 		}
 
-		log.Debug().Msgf("RelayDeleteKeygroup from replservice: sending %#v to %#v", k, node)
+		log.Debug().Msgf("RelayDeleteKeygroup: sending keygroup %#v to node %#v", k, node)
 		if err := s.c.SendDeleteKeygroup(node.Addr, node.Port, k.Name); err != nil {
 			return err
 		}
@@ -142,14 +139,13 @@ func (s *replicationService) RelayDeleteKeygroup(k Keygroup) error {
 
 // RelayUpdate handles replication after requests to the Update endpoint of the external interface.
 func (s *replicationService) RelayUpdate(i Item) error {
-	log.Debug().Msgf("RelayUpdate from replservice: in %#v", i)
+	log.Debug().Msgf("RelayUpdate: in %#v", i)
 	kg := Keygroup{
 		Name: i.Keygroup,
 	}
 
 	if !s.existsKeygroup(kg) {
-		log.Error().Msgf("RelayUpdate from replservice: Keygroup does not exist: in %#v", i)
-		return newError(StatusNotFound, "replservice: no such keygroup")
+		return errors.Errorf("keygroup does not exist: %#v", i)
 	}
 
 	kg, err := s.getKeygroup(kg)
@@ -158,7 +154,7 @@ func (s *replicationService) RelayUpdate(i Item) error {
 		return err
 	}
 
-	log.Debug().Msgf("RelayUpdate sending to: in %#v", kg.Replica)
+	log.Debug().Msgf("RelayUpdate: in %#v", kg.Replica)
 
 	for rn := range kg.Replica {
 		node, err := s.getNode(Node{
@@ -169,7 +165,7 @@ func (s *replicationService) RelayUpdate(i Item) error {
 			return err
 		}
 
-		log.Debug().Msgf("RelayUpdate from replservice: sending %#v to %#v", i, node)
+		log.Debug().Msgf("RelayUpdate: sending item %#v to node %#v", i, node)
 		if err := s.c.SendUpdate(node.Addr, node.Port, kg.Name, i.ID, i.Val); err != nil {
 			return err
 		}
@@ -180,14 +176,13 @@ func (s *replicationService) RelayUpdate(i Item) error {
 
 // RelayDelete handles replication after requests to the Delete endpoint of the external interface.
 func (s *replicationService) RelayDelete(i Item) error {
-	log.Debug().Msgf("RelayDelete from replservice: in %#v", i)
+	log.Debug().Msgf("RelayDelete: in %#v", i)
 	kg := Keygroup{
 		Name: i.Keygroup,
 	}
 
 	if !s.existsKeygroup(kg) {
-		log.Error().Msgf("RelayDelete from replservice: Keygroup does not exist: in %#v", i)
-		return newError(StatusNotFound, "replservice: no such keygroup")
+		return errors.Errorf("keygroup does not exist: %#v", i)
 	}
 
 	kg, err := s.getKeygroup(kg)
@@ -205,7 +200,7 @@ func (s *replicationService) RelayDelete(i Item) error {
 			return err
 		}
 
-		log.Debug().Msgf("RelayDelete from replservice: sending %#v to %#v", i, node)
+		log.Debug().Msgf("RelayDelete: sending %#v to %#v", i, node)
 		if err := s.c.SendDelete(node.Addr, node.Port, kg.Name, i.ID); err != nil {
 			return err
 		}
@@ -216,7 +211,7 @@ func (s *replicationService) RelayDelete(i Item) error {
 
 // AddReplica handles replication after requests to the AddReplica endpoint. It relays this command if "relay" is set to "true".
 func (s *replicationService) AddReplica(k Keygroup, n Node, i []Item, relay bool) error {
-	log.Debug().Msgf("AddReplica from replservice: in kg=%#v no=%#v", k, n)
+	log.Debug().Msgf("AddReplica: kg=%#v node=%#v", k, n)
 
 	// first get the keygroup from the kgname in k
 	kg := Keygroup{
@@ -224,8 +219,7 @@ func (s *replicationService) AddReplica(k Keygroup, n Node, i []Item, relay bool
 	}
 
 	if !s.existsKeygroup(kg) {
-		log.Error().Msgf("AddReplica from replservice: Keygroup does not exist: in %#v", k)
-		return newError(StatusNotFound, "replservice: no such keygroup")
+		return errors.Errorf("keygroup does not exist: %#v", k)
 	}
 
 	kg, err := s.getKeygroup(kg)
@@ -246,7 +240,7 @@ func (s *replicationService) AddReplica(k Keygroup, n Node, i []Item, relay bool
 		}
 
 		// tell this new node to create the keygroup they're now replicating
-		log.Debug().Msgf("AddReplica from replservice: sending %#v to %#v", k, newNode)
+		log.Debug().Msgf("AddReplica: sending keygroup %#v to new node %#v", k, newNode)
 		if err := s.c.SendCreateKeygroup(newNode.Addr, newNode.Port, kg.Name); err != nil {
 			return err
 		}
@@ -258,7 +252,7 @@ func (s *replicationService) AddReplica(k Keygroup, n Node, i []Item, relay bool
 			return err
 		}
 
-		log.Debug().Msgf("AddReplica from replservice: sending %#v to %#v", self, newNode)
+		log.Debug().Msgf("AddReplica: sending self %#v to new node %#v", self, newNode)
 		if err := s.c.SendAddReplica(newNode.Addr, newNode.Port, kg.Name, self); err != nil {
 			return err
 		}
@@ -275,13 +269,13 @@ func (s *replicationService) AddReplica(k Keygroup, n Node, i []Item, relay bool
 			}
 
 			// tell that replica node about the new node
-			log.Debug().Msgf("AddReplica from replservice: sending %#v to %#v", newNode, replNode)
+			log.Debug().Msgf("AddReplica: sending new node %#v to replica node %#v", newNode, replNode)
 			if err := s.c.SendAddReplica(replNode.Addr, replNode.Port, kg.Name, newNode); err != nil {
 				return err
 			}
 
 			// then tell the new node about that replica node
-			log.Debug().Msgf("AddReplica from replservice: sending %#v to %#v", replNode, newNode)
+			log.Debug().Msgf("AddReplica: sending replica node %#v to new node %#v", replNode, newNode)
 			if err := s.c.SendAddReplica(newNode.Addr, newNode.Port, kg.Name, replNode); err != nil {
 				return err
 			}
@@ -291,7 +285,7 @@ func (s *replicationService) AddReplica(k Keygroup, n Node, i []Item, relay bool
 		for _, item := range i {
 			// iterate over all val for that keygroup and send it to the new node
 			// a batch might be better here
-			log.Debug().Msgf("AddReplica from replservice: sending %#v to %#v", item, n)
+			log.Debug().Msgf("AddReplica: sending %#v to %#v", item, n)
 			if err := s.c.SendUpdate(newNode.Addr, newNode.Port, kg.Name, item.ID, item.Val); err != nil {
 				return err
 			}
@@ -299,21 +293,21 @@ func (s *replicationService) AddReplica(k Keygroup, n Node, i []Item, relay bool
 	}
 
 	// finally, in either case, save that the new node is now also a replica for the keygroup
-	log.Debug().Msgf("AddReplica from memoryrs: in kg=%#v no=%#v", k, n)
+	log.Debug().Msgf("AddReplica: in kg=%#v no=%#v", k, n)
 
 	s.kgLock.RLock()
 	_, ok := s.kg[kg.Name]
 	s.kgLock.RUnlock()
 
 	if !ok {
-		return newError(StatusNotFound, "memoryrs: no such keygroup")
+		return errors.Errorf("error retrieving keygroup: %#v", k)
 	}
 
 	s.nodesLock.RLock()
 	_, ok = s.nodes[n.ID]
 	s.nodesLock.RUnlock()
 	if !ok {
-		return newError(StatusNotFound, "memoryrs: no such node")
+		return errors.Errorf("no such node: %#v", n)
 	}
 
 	s.kgLock.RLock()
@@ -321,7 +315,7 @@ func (s *replicationService) AddReplica(k Keygroup, n Node, i []Item, relay bool
 	s.kgLock.RUnlock()
 
 	if ok {
-		return newError(StatusConflict, "memoryrs: node is already a replica node of keygroup")
+		return errors.Errorf("node is already a replica node of keygroup %#v: %#v", k, n)
 	}
 
 	s.kgLock.Lock()
@@ -333,15 +327,14 @@ func (s *replicationService) AddReplica(k Keygroup, n Node, i []Item, relay bool
 
 // RemoveReplica handles replication after requests to the RemoveReplica endpoint. It relays this command if "relay" is set to "true".
 func (s *replicationService) RemoveReplica(k Keygroup, n Node, relay bool) error {
-	log.Debug().Msgf("RemoveReplica from replservice: in kg=%#v no=%#v", k, n)
+	log.Debug().Msgf("RemoveReplica: in kg=%#v no=%#v", k, n)
 
 	kg := Keygroup{
 		Name: k.Name,
 	}
 
 	if !s.existsKeygroup(kg) {
-		log.Error().Msgf("RemoveReplica from replservice: Keygroup does not exist: in %#v", k)
-		return newError(StatusNotFound, "replservice: no such keygroup")
+		return errors.Errorf("keygroup does not exist: %#v", k)
 	}
 
 	kg, err := s.getKeygroup(kg)
@@ -350,13 +343,13 @@ func (s *replicationService) RemoveReplica(k Keygroup, n Node, relay bool) error
 		return err
 	}
 
-	log.Debug().Msgf("RemoveReplica from memoryrs: in kg=%#v no=%#v", k, n)
+	log.Debug().Msgf("RemoveReplica: in kg=%#v node=%#v", k, n)
 	s.kgLock.RLock()
 	_, ok := s.kg[kg.Name]
 	s.kgLock.RUnlock()
 
 	if !ok {
-		return newError(StatusNotFound, "memoryrs: no such keygroup")
+		return errors.Errorf("error retrieving keygroup: #%v", k)
 	}
 
 	s.kgLock.RLock()
@@ -364,7 +357,7 @@ func (s *replicationService) RemoveReplica(k Keygroup, n Node, relay bool) error
 	s.kgLock.RUnlock()
 
 	if !ok {
-		return newError(StatusNotFound, "memoryrs: no such node")
+		return errors.Errorf("no such node in keygroup %#v: %#v", k, n)
 	}
 
 	s.kgLock.Lock()
@@ -378,7 +371,7 @@ func (s *replicationService) RemoveReplica(k Keygroup, n Node, relay bool) error
 			return err
 		}
 
-		log.Debug().Msgf("RemoveReplica from replservice: sending %#v to %#v", k, node)
+		log.Debug().Msgf("RemoveReplica: sending %#v to %#v", k, node)
 		if err := s.c.SendDeleteKeygroup(node.Addr, node.Port, kg.Name); err != nil {
 			return err
 		}
@@ -392,7 +385,7 @@ func (s *replicationService) RemoveReplica(k Keygroup, n Node, relay bool) error
 				return err
 			}
 
-			log.Debug().Msgf("RemoveReplica from replservice: sending %#v to %#v", k, node)
+			log.Debug().Msgf("RemoveReplica: sending %#v to %#v", k, node)
 			if err := s.c.SendRemoveReplica(node.Addr, node.Port, kg.Name, node); err != nil {
 				log.Err(err).Msg("")
 				return err
@@ -433,7 +426,7 @@ func (s *replicationService) AddNode(n Node, relay bool) error {
 				return err
 			}
 
-			log.Debug().Msgf("AddNode from replservice: sending %#v to %#v", n, node)
+			log.Debug().Msgf("AddNode: sending %#v to %#v", n, node)
 			if err := s.c.SendAddNode(node.Addr, node.Port, n); err != nil {
 				log.Err(err).Msg("")
 				return err
@@ -442,7 +435,7 @@ func (s *replicationService) AddNode(n Node, relay bool) error {
 	}
 
 	// add the node afterwards to prevent it from being sent to itself
-	log.Debug().Msgf("CreateNode from memoryrs: in %#v", n)
+	log.Debug().Msgf("CreateNode in: %#v", n)
 	s.nodesLock.RLock()
 	_, ok := s.nodes[n.ID]
 	s.nodesLock.RUnlock()
@@ -465,13 +458,13 @@ func (s *replicationService) AddNode(n Node, relay bool) error {
 // RemoveNode handles replication after requests to the RemoveNode endpoint. It relays this command if "relay" is set to "true".
 func (s *replicationService) RemoveNode(n Node, relay bool) error {
 
-	log.Debug().Msgf("DeleteNode from memoryrs: in %#v", n)
+	log.Debug().Msgf("RemoveNode in: %#v", n)
 	s.nodesLock.RLock()
 	_, ok := s.nodes[n.ID]
 	s.nodesLock.RUnlock()
 
 	if !ok {
-		return newError(StatusNotFound, "memoryrs: no such node")
+		return errors.Errorf("no such node: %#v", n)
 	}
 
 	s.nodesLock.Lock()
@@ -495,7 +488,7 @@ func (s *replicationService) RemoveNode(n Node, relay bool) error {
 				return err
 			}
 
-			log.Debug().Msgf("RemoveNode from replservice: sending %#v to %#v", n, node)
+			log.Debug().Msgf("RemoveNode: sending %#v to %#v", n, node)
 			if err := s.c.SendRemoveNode(node.Addr, node.Port, n); err != nil {
 				log.Err(err).Msg("")
 				return err
@@ -523,15 +516,13 @@ func (s *replicationService) GetReplica(k Keygroup) ([]Node, error) {
 	}
 
 	if !s.existsKeygroup(kg) {
-		log.Error().Msgf("GetReplica from replservice: Keygroup does not exist: in %#v", k)
-		return nil, newError(StatusNotFound, "replservice: no such keygroup")
+		return nil, errors.Errorf("keygroup does not exist: %#v", k)
 	}
 
 	kg, err := s.getKeygroup(kg)
 
 	if err != nil {
-		log.Err(err).Msgf("GetReplica from replservice: GetReplica did not work: in %#v", k)
-		return nil, err
+		return nil, errors.Errorf("keygroup could not be retrieved: %#v", k)
 	}
 
 	return s.getReplica(kg)
@@ -539,13 +530,13 @@ func (s *replicationService) GetReplica(k Keygroup) ([]Node, error) {
 
 // getNode returns a node from the node storage in ReplicationStorage.
 func (s *replicationService) getNode(n Node) (Node, error) {
-	log.Debug().Msgf("GetNode from memoryrs: in %#v", n)
+	log.Debug().Msgf("getNode from: in %#v", n)
 	s.nodesLock.RLock()
 	node, ok := s.nodes[n.ID]
 	s.nodesLock.RUnlock()
 
 	if !ok {
-		return n, newError(StatusNotFound, "memoryrs: no such node")
+		return n, errors.Errorf("no such node: %#v", n)
 	}
 
 	return Node{
@@ -557,13 +548,13 @@ func (s *replicationService) getNode(n Node) (Node, error) {
 
 // getKeygroup returns a keygroup from the keygroup storage in ReplicationStorage.
 func (s *replicationService) getKeygroup(k Keygroup) (Keygroup, error) {
-	log.Debug().Msgf("GetKeygroup from memoryrs: in %#v", k)
+	log.Debug().Msgf("getKeygroup: in %#v", k)
 	s.kgLock.RLock()
 	replicas, ok := s.kg[k.Name]
 	s.kgLock.RUnlock()
 
 	if !ok {
-		return k, newError(StatusNotFound, "memoryrs: no such node")
+		return k, errors.Errorf("no such keygroup: %#v", k)
 	}
 
 	return Keygroup{
@@ -578,7 +569,7 @@ func (s *replicationService) existsKeygroup(k Keygroup) bool {
 	_, ok := s.kg[k.Name]
 	s.kgLock.RUnlock()
 
-	log.Debug().Msgf("ExistsKeygroup from memoryrs: in %#v, out %t", k, ok)
+	log.Debug().Msgf("existsKeygroup: in %#v, out %t", k, ok)
 
 	return ok
 }
@@ -601,7 +592,7 @@ func (s *replicationService) getNodes() ([]Node, error) {
 		i++
 	}
 
-	log.Debug().Msgf("GetNodes from memoryrs: found %d nodes", i)
+	log.Debug().Msgf("getNodes: found %d nodes", i)
 
 	return nodes, nil
 }
@@ -614,7 +605,7 @@ func (s *replicationService) getReplica(k Keygroup) ([]Node, error) {
 	n, ok := s.kg[k.Name]
 
 	if !ok {
-		return nil, newError(StatusNotFound, "memoryrs: no such keygroup")
+		return nil, errors.Errorf("no such keygroup: %#v", k)
 	}
 
 	s.nodesLock.RLock()
@@ -633,7 +624,7 @@ func (s *replicationService) getReplica(k Keygroup) ([]Node, error) {
 
 		i++
 	}
-	log.Debug().Msgf("GetReplica from memoryrs: found %d nodes", i)
+	log.Debug().Msgf("getReplica from: found %d nodes", i)
 
 	return nodes, nil
 }

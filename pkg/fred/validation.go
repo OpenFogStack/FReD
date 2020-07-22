@@ -1,19 +1,17 @@
 package fred
 
 import (
-	"github.com/rs/zerolog/log"
+	"github.com/go-errors/errors"
 )
 
 func checkItem(params ...Item) error {
 	for _, p := range params {
 		if p.Keygroup == "" {
-			log.Error().Msgf("checkItem failed for item %#v because the keygroup is empty", p)
-			return newError(StatusBadRequest, "val: empty keygroup")
+			return errors.Errorf("checkItem failed for item %#v because the keygroup is empty", p)
 		}
 
 		if p.ID == "" {
-			log.Error().Msgf("checkItem failed for item %#v because the ID is empty", p)
-			return newError(StatusBadRequest, "val: empty ID")
+			return errors.Errorf("checkItem failed for item %#v because the ID is empty", p)
 		}
 	}
 
@@ -23,8 +21,7 @@ func checkItem(params ...Item) error {
 func checkKeygroup(params ...KeygroupName) error {
 	for _, p := range params {
 		if string(p) == "" {
-			log.Error().Msgf("checkKeygroup failed for item %#v because the keygroup is empty", p)
-			return newError(StatusBadRequest, "val: empty keygroup")
+			return errors.Errorf("checkKeygroup failed for item %#v because the keygroup is empty", p)
 		}
 	}
 
@@ -34,8 +31,7 @@ func checkKeygroup(params ...KeygroupName) error {
 func checkID(params ...string) error {
 	for _, p := range params {
 		if p == "" {
-			log.Error().Msgf("checkID failed for item %#v because the id is an empty string", p)
-			return newError(StatusBadRequest, "val: empty keygroup")
+			return errors.Errorf("checkID failed for item %#v because the id is an empty string", p)
 		}
 	}
 

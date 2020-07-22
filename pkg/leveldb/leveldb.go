@@ -126,7 +126,7 @@ func (s *Storage) Update(kg, id, val string) error {
 
 	err := s.db.Put([]byte(key), []byte(val), nil)
 
-	log.Debug().Err(err).Msgf("Update from levedbsd: in %#v, %#v, ##v", kg, id, val)
+	log.Debug().Err(err).Msgf("Update from levedbsd: in %#v, %#v, %#v", kg, id, val)
 
 	return err
 }

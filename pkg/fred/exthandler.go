@@ -1,6 +1,7 @@
 package fred
 
 import (
+	"github.com/go-errors/errors"
 	"github.com/rs/zerolog/log"
 )
 
@@ -21,13 +22,13 @@ func newExthandler(i *storeService, r *replicationService) *exthandler {
 // HandleCreateKeygroup handles requests to the CreateKeygroup endpoint of the client interface.
 func (h *exthandler) HandleCreateKeygroup(k Keygroup) error {
 	if err := h.d.CreateKeygroup(k.Name); err != nil {
-		log.Err(err).Msg("Exthandler cannot create keygroup with data service")
-		return err
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		return errors.Errorf("error creating keygroup")
 	}
 
 	if err := h.r.CreateKeygroup(k); err != nil {
-		log.Err(err).Msg("Exthandler cannot create keygroup with replication service")
-		return err
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		return errors.Errorf("error creating keygroup")
 	}
 
 	return nil
@@ -36,15 +37,15 @@ func (h *exthandler) HandleCreateKeygroup(k Keygroup) error {
 // HandleDeleteKeygroup handles requests to the DeleteKeygroup endpoint of the client interface.
 func (h *exthandler) HandleDeleteKeygroup(k Keygroup) error {
 	if err := h.d.DeleteKeygroup(k.Name); err != nil {
-		log.Err(err).Msg("Exthandler cannot delete keygroup with data service")
-		return err
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		return errors.Errorf("error deleting keygroup")
 	}
 
 	if err := h.r.RelayDeleteKeygroup(fred.Keygroup{
 		Name: k.Name,
 	}); err != nil {
-		log.Err(err).Msg("Exthandler cannot delete keygroup with replication service")
-		return err
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		return errors.Errorf("error deleting keygroup")
 	}
 
 	return nil
@@ -54,7 +55,8 @@ func (h *exthandler) HandleDeleteKeygroup(k Keygroup) error {
 func (h *exthandler) HandleRead(i Item) (Item, error) {
 	result, err := h.i.Read(i.Keygroup, i.ID)
 	if err != nil {
-		return i, newError(StatusNotFound, "exthandler: item does not exist")
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		return i, errors.Errorf("error reading item keygroup")
 	}
 	// KeygroupStore result in passed object to return an Item and not only the result string
 	i.Val = result
@@ -64,13 +66,13 @@ func (h *exthandler) HandleRead(i Item) (Item, error) {
 // HandleUpdate handles requests to the Update endpoint of the client interface.
 func (h *exthandler) HandleUpdate(i Item) error {
 	if err := h.d.Update(i); err != nil {
-		log.Err(err).Msg("Exthandler cannot relay update with data service")
-		return err
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		return errors.Errorf("error updating item")
 	}
 
 	if err := h.r.RelayUpdate(i); err != nil {
-		log.Err(err).Msg("Exthandler cannot relay update with replication service")
-		return err
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		return errors.Errorf("error updating item")
 	}
 
 	return nil
@@ -79,13 +81,13 @@ func (h *exthandler) HandleUpdate(i Item) error {
 // HandleDelete handles requests to the Delete endpoint of the client interface.
 func (h *exthandler) HandleDelete(i Item) error {
 	if err := h.d.Delete(i.Keygroup, i.ID); err != nil {
-		log.Err(err).Msg("Exthandler cannot delete data item with data service")
-		return err
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		return errors.Errorf("error deleting item")
 	}
 
 	if err := h.r.RelayDelete(i); err != nil {
-		log.Err(err).Msg("Exthandler cannot delete val item with val service")
-		return err
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		return errors.Errorf("error deleting item")
 	}
 
 	return nil
@@ -96,12 +98,13 @@ func (h *exthandler) HandleAddReplica(k Keygroup, n Node) error {
 	i, err := h.d.ReadAll(k.Name)
 
 	if err != nil {
-		return err
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		return errors.Errorf("error adding replica")
 	}
 
 	if err := h.r.AddReplica(k, n, i, true); err != nil {
-		log.Err(err).Msg("Exthandler cannot add a new keygroup replica")
-		return err
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		return errors.Errorf("error adding replica")
 	}
 
 	return nil
@@ -115,7 +118,8 @@ func (h *exthandler) HandleGetKeygroupReplica(k Keygroup) ([]Node, error) {
 // HandleRemoveReplica handles requests to the RemoveKeygroupReplica endpoint of the client interface.
 func (h *exthandler) HandleRemoveReplica(k Keygroup, n Node) error {
 	if err := h.r.RemoveReplica(k, n, true); err != nil {
-		return err
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		return errors.Errorf("error removing replica")
 	}
 
 	return nil

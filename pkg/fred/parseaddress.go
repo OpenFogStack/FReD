@@ -1,10 +1,10 @@
 package fred
 
 import (
-	"fmt"
 	"net"
 	"regexp"
 
+	"github.com/go-errors/errors"
 	"github.com/rs/zerolog/log"
 )
 
@@ -38,7 +38,7 @@ func ParseAddress(a string) (Address, error) {
 	}
 
 	if !matched {
-		return Address{}, newError(StatusBadRequest, fmt.Sprintf("replication.address: could not validate %s as IP address or hostname", a))
+		return Address{}, errors.Errorf("replication.address: could not validate %s as IP address or hostname", a)
 	}
 
 	return Address{
