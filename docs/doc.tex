@@ -1,0 +1,38 @@
+\documentclass[12pt,a4paper,oneside]{report}
+
+\usepackage{hyperref}
+
+\title{FogStore}
+\author{
+    Tobias Pfandzelter,
+Nils Japke,
+Trever Schirmer}
+\date{September 2019 - August 2022}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+    Your abstract goes here...
+    ...
+\end{abstract}
+
+\tableofcontents
+\listoffigures
+\listoftables
+
+%now include the files of latex for each of the chapters etc
+\include{chapters/010_Introduction}
+\include{chapters/020_WP1}
+\include{chapters/030_WP2}
+\include{chapters/040_WP3}
+\include{chapters/010_WP4}
+
+\appendix
+%\include{chapters/902_Miscellaneous}
+
+\bibliography{refs}        %use a bibtex bibliography file refs.bib
+\bibliographystyle{plain}  %use the plain bibliography style
+
+\end{document}
