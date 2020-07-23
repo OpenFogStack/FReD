@@ -1,6 +1,8 @@
 package badgerdb
 
 import (
+	"time"
+
 	badger "github.com/dgraph-io/badger/v2"
 	"github.com/go-errors/errors"
 )
@@ -20,6 +22,16 @@ func makeKeygroupKeyName(kgname string) []byte {
 	return []byte(kgname + "/")
 }
 
+// garbageCollection manages triggering garbage collection for the BadgerDB database. For now, we stick to a schedule.
+func garbageCollection(db *badger.DB) {
+	ticker := time.NewTicker(5 * time.Minute)
+	defer ticker.Stop()
+	for range ticker.C {
+		for err := db.RunValueLogGC(0.7); err == nil; err = db.RunValueLogGC(0.7) {
+		}
+	}
+}
+
 // New creates a new BadgerDB Storage on disk.
 func New(dbPath string) (s *Storage) {
 	db, err := badger.Open(badger.DefaultOptions(dbPath))
@@ -30,6 +42,8 @@ func New(dbPath string) (s *Storage) {
 	s = &Storage{
 		db: db,
 	}
+
+	go garbageCollection(db)
 
 	return
 }
@@ -44,6 +58,8 @@ func NewMemory() (s *Storage) {
 	s = &Storage{
 		db: db,
 	}
+
+	go garbageCollection(db)
 
 	return
 }
