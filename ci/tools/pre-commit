@@ -11,6 +11,15 @@ GREEN='\033[1;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
+# ---------------------------------------- UPDATE PRE-COMMIT HOOK -------------------------------------------------
+
+if ! cmp -s ./.git/hooks/pre-commit ./ci/tools/pre-commit; then
+  cp ./ci/tools/pre-commit ./.git/hooks/pre-commit
+  chmod +x ./.git/hooks/pre-commit
+  echo "${RED}Pre-commit hook not up-to-date, updated now. Please try to commit again.${NC}"
+  exit 1
+fi
+
 # -------------------------------------- CHECK FOR AWS ACCESS KEYS ------------------------------------------------
 
 echo "${YELLOW}Checking for AWS access keys...${NC}"
@@ -63,20 +72,23 @@ echo "${GREEN}No AWS access keys found!${NC}"
 
 # -------------------------------------- PREVENT PUSH TO MASTER ----------------------------------------------------
 
-echo "${YELLOW}Checking if you're trying to push to master...${NC}"
+echo "${YELLOW}Checking if you're trying to commit to master...${NC}"
 
 if [ "$branch" = "master" ]; then
   echo "You can't commit directly to '"${branch}"' branch" # webstorm or intellij will show this as popup
   exit 1 # if you remove this line then it won't block commit but send message to group and on command line
 fi
 
-echo "${GREEN}You're not trying to push to master!${NC}"
+echo "${GREEN}You're not trying to commit to master!${NC}"
 
 # ------------------------------------------- GO LINT --------------------------------------------------------------
 
 echo "${YELLOW}Linting your code...${NC}"
 
-make lint
+if ! make lint; then
+  echo "${RED}Linter found mistakes!${NC}"
+  exit 1
+fi
 
 echo "${GREEN}Linter did not find mistakes!${NC}"
 
@@ -84,6 +96,9 @@ echo "${GREEN}Linter did not find mistakes!${NC}"
 
 echo "${YELLOW}Doing static code analysis...${NC}"
 
-make staticcheck
+if ! make staticcheck; then
+  echo "${RED}Staticcheck found mistakes!${NC}"
+  exit 1
+fi
 
 echo "${GREEN}Staticcheck did not find mistakes!${NC}"
