@@ -13,6 +13,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/badgerdb"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/fred"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/leveldb"
 	storage "gitlab.tu-berlin.de/mcc-fred/fred/pkg/storageconnection"
@@ -54,6 +55,9 @@ type fredConfig struct {
 	NaSe struct {
 		Host string `toml:"host"`
 	} `toml:"nase"`
+	Bdb struct {
+		Path string `toml:"path"`
+	} `toml:"badgerdb"`
 }
 
 const apiversion string = "/v0"
@@ -68,7 +72,7 @@ var (
 	wsSSL             = kingpin.Flag("use-tls", "Use TLS/SSL to serve over HTTPS. Works only if host argument is a FQDN.").PlaceHolder("USE-SSL").Bool()
 	zmqPort           = kingpin.Flag("zmq-port", "Port of ZeroMQ.").PlaceHolder("ZMQ-PORT").Default("-1").Int() // Domain: [0,9999]
 	zmqHost           = kingpin.Flag("zmq-host", "(Publicly reachable) address of this zmq server.").String()
-	adaptor           = kingpin.Flag("adaptor", "Storage adaptor, can be \"leveldb\", \"memory\".").Enum("leveldb", "memory")
+	adaptor           = kingpin.Flag("adaptor", "Storage adaptor, can be \"leveldb\", \"remote\", \"badgerdb\", \"memory\".").Enum("leveldb", "remote", "badgerdb", "memory")
 	logLevel          = kingpin.Flag("log-level", "Log level, can be \"debug\", \"info\" ,\"warn\", \"error\", \"fatal\", \"panic\".").Enum("debug", "info", "warn", "errors", "fatal", "panic")
 	handler           = kingpin.Flag("handler", "Mode of log handler, can be \"dev\", \"prod\".").Enum("dev", "prod")
 	remoteStorageHost = kingpin.Flag("remote-storage-host", "Host address of GRPC Server.").String()
@@ -76,6 +80,7 @@ var (
 	ldbPath           = kingpin.Flag("leveldb-path", "Path to the leveldb database").String()
 	// TODO this should be a list of nodes. One node is enough, but if we want reliability we should accept multiple etcd nodes
 	naseHost = kingpin.Flag("naseHost", "Host where the etcd-server runs").String()
+	bdbPath  = kingpin.Flag("badgerdb-path", "Path to the badgerdb database").String()
 )
 
 func main() {
@@ -144,6 +149,9 @@ func main() {
 	if *naseHost != "" {
 		fc.NaSe.Host = *naseHost
 	}
+	if *bdbPath != "" {
+		fc.Bdb.Path = *bdbPath
+	}
 
 	// Setup Logging
 	// In Dev the ConsoleWriter has nice colored output, but is not very fast.
@@ -194,8 +202,17 @@ func main() {
 		// "%v": unly print field values. "%#v": also print field names
 		log.Debug().Msgf("leveldb struct is: %#v", fc.Ldb)
 		store = leveldb.New(fc.Ldb.Path)
+		defer log.Err(store.Close()).Msg("error closing database")
+	case "badgerdb":
+		log.Debug().Msgf("badgerdb struct is: %#v", fc.Ldb)
+		store = badgerdb.New(fc.Bdb.Path)
+		defer log.Err(store.Close()).Msg("error closing database")
+	case "memory":
+		store = badgerdb.NewMemory()
+		defer log.Err(store.Close()).Msg("error closing database")
 	case "remote":
 		store = storage.NewClient(fc.Remote.Host, fc.Remote.Port)
+		defer log.Err(store.Close()).Msg("error closing database")
 	default:
 		log.Fatal().Msg("unknown storage backend")
 	}

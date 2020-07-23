@@ -27,6 +27,7 @@ func NewClient(host string, port int) *Client {
 	return &Client{dbClient: NewDatabaseClient(conn), con: conn}
 }
 
+// Close closes the connection to the storage service.
 func (c *Client) Close() error {
 	return c.con.Close()
 }

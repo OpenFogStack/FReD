@@ -13,6 +13,7 @@ type Storage struct {
 	db *leveldb.DB
 }
 
+// Close closes the underlying LevelDB database connection.
 func (s *Storage) Close() error {
 	return s.db.Close()
 }
