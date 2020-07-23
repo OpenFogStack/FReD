@@ -11,6 +11,15 @@ GREEN='\033[1;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
+# ---------------------------------------- UPDATE PRE-COMMIT HOOK -------------------------------------------------
+
+if ! cmp -s ./.git/hooks/pre-commit ./ci/tools/pre-commit; then
+  cp ./ci/tools/pre-commit ./.git/hooks/pre-commit
+  chmod +x ./.git/hooks/pre-commit
+  echo "${RED}Pre-commit hook not up-to-date, updated now. Please try to commit again.${NC}"
+  exit 1
+fi
+
 # -------------------------------------- CHECK FOR AWS ACCESS KEYS ------------------------------------------------
 
 echo "${YELLOW}Checking for AWS access keys...${NC}"
