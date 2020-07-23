@@ -1,11 +1,8 @@
 package leveldb
 
 import (
-	"strings"
-
+	badger "github.com/dgraph-io/badger/v2"
 	"github.com/rs/zerolog/log"
-	"github.com/syndtr/goleveldb/leveldb"
-	"github.com/syndtr/goleveldb/leveldb/util"
 )
 
 // Storage is a struct that saves all necessary information to access the database, in this case just a pointer to the LevelDB database.
@@ -13,23 +10,14 @@ type Storage struct {
 	db *leveldb.DB
 }
 
-func (s *Storage) Close() error {
-	return s.db.Close()
-}
-
 // makeKeyName creates the internal LevelDB key given a keygroup name and an id
 func makeKeyName(kgname string, id string) string {
-	return kgname + "/" + id
+	return string(kgname) + "/" + id
 }
 
 // makeKeygroupKeyName creates the internal LevelDB key given a keygroup name
 func makeKeygroupKeyName(kgname string) string {
-	return kgname + "/"
-}
-
-// getKey returns the keygroup and id of a key.
-func getKey(key string) (kg, id string) {
-	return strings.Split(key, "/")[0], strings.Split(key, "/")[1]
+	return string(kgname) + "/"
 }
 
 // New create a new Storage.
@@ -63,6 +51,7 @@ func (s *Storage) ReadAll(kg string) (map[string]string, error) {
 	key := makeKeygroupKeyName(kg)
 
 	iter := s.db.NewIterator(util.BytesPrefix([]byte(key)), nil)
+
 	defer iter.Release()
 
 	l := 0
@@ -74,17 +63,18 @@ func (s *Storage) ReadAll(kg string) (map[string]string, error) {
 	items := make(map[string]string)
 
 	next := iter.First()
-	for next {
-		_, key = getKey(string(iter.Key()))
 
-		if string(iter.Key()) == "" {
+	for next {
+		if string(iter.Key()) == key {
 			next = iter.Next()
 			continue
 		}
 
-		items[key] = string(iter.Value())
+		items[string(iter.Key())] = string(iter.Value())
 
 		next = iter.Next()
+
+		l--
 	}
 
 	err := iter.Error()
@@ -113,15 +103,12 @@ func (s *Storage) IDs(kg string) ([]string, error) {
 	next := iter.First()
 
 	for next {
-
-		_, key = getKey(string(iter.Key()))
-
-		if string(iter.Key()) == "" {
+		if string(iter.Key()) == key {
 			next = iter.Next()
 			continue
 		}
 
-		keys[l] = key
+		keys[l] = string(iter.Key())
 
 		next = iter.Next()
 
@@ -194,13 +181,11 @@ func (s *Storage) CreateKeygroup(kg string) error {
 // DeleteKeygroup deletes the given keygroup from the leveldb database.
 func (s *Storage) DeleteKeygroup(kg string) (err error) {
 	key := makeKeygroupKeyName(kg)
-	log.Debug().Msgf("DeleteKeygroup called for KG %s", kg)
 
 	iter := s.db.NewIterator(util.BytesPrefix([]byte(key)), nil)
 	defer iter.Release()
 
 	for iter.Next() {
-		log.Debug().Msgf("DeleteKeygroup deleting item %s", iter.Key())
 		err = s.db.Delete(iter.Key(), nil)
 	}
 

@@ -27,6 +27,10 @@ func NewClient(host string, port int) *Client {
 	return &Client{dbClient: NewDatabaseClient(conn), con: conn}
 }
 
+func (c *Client) Close() error {
+	return c.con.Close()
+}
+
 // Read calls the same method on the remote server
 func (c *Client) Read(kg string, id string) (string, error) {
 	response, err := c.dbClient.Read(context.Background(), &Key{Keygroup: kg, Id: id})
