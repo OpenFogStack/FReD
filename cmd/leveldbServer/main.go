@@ -11,8 +11,8 @@ import (
 
 	"google.golang.org/grpc"
 
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/data"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/leveldbsd"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/fred"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/leveldb"
 	storage "gitlab.tu-berlin.de/mcc-fred/fred/pkg/storageconnection"
 )
 
@@ -40,7 +40,7 @@ func main() {
 		log.Fatal().Msg("Log Handler has to be either dev or prod")
 	}
 
-	var store data.Store = leveldbsd.New(*path)
+	var store fred.Store = leveldb.New(*path)
 	grpcServer := grpc.NewServer()
 	storage.RegisterDatabaseServer(grpcServer, storage.NewStorageServer(&store))
 	log.Debug().Msgf("Server is listening on port %d", *port)

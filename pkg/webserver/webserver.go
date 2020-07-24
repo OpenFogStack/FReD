@@ -8,11 +8,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/exthandler"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/fred"
 )
 
 // Setup sets up a web server client interface for the Fred node.
-func Setup(host string, port int, h exthandler.Handler, apiversion string, useTLS bool) error {
+func Setup(host string, port int, h fred.ExtHandler, apiversion string, useTLS bool) error {
 	gin.SetMode("release")
 	r := gin.New()
 

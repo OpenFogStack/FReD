@@ -5,18 +5,15 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/commons"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/exthandler"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/keygroup"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/replication"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/fred"
 )
 
-func getKeygroupReplica(h exthandler.Handler) func(context *gin.Context) {
+func getKeygroupReplica(h fred.ExtHandler) func(context *gin.Context) {
 	return func(context *gin.Context) {
 		kgname := context.Params.ByName("kgname")
 
-		nodes, err := h.HandleGetKeygroupReplica(keygroup.Keygroup{
-			Name: commons.KeygroupName(kgname),
+		nodes, err := h.HandleGetKeygroupReplica(fred.Keygroup{
+			Name: fred.KeygroupName(kgname),
 		})
 
 		if err != nil {
@@ -48,16 +45,16 @@ func getKeygroupReplica(h exthandler.Handler) func(context *gin.Context) {
 	}
 }
 
-func postKeygroupReplica(h exthandler.Handler) func(context *gin.Context) {
+func postKeygroupReplica(h fred.ExtHandler) func(context *gin.Context) {
 	return func(context *gin.Context) {
 		kgname := context.Params.ByName("kgname")
 
 		nodeid := context.Params.ByName("nodeid")
 
-		err := h.HandleAddReplica(keygroup.Keygroup{
-			Name: commons.KeygroupName(kgname),
-		}, replication.Node{
-			ID: replication.ID(nodeid),
+		err := h.HandleAddReplica(fred.Keygroup{
+			Name: fred.KeygroupName(kgname),
+		}, fred.Node{
+			ID: fred.NodeID(nodeid),
 		})
 
 		if err != nil {
@@ -69,16 +66,16 @@ func postKeygroupReplica(h exthandler.Handler) func(context *gin.Context) {
 	}
 }
 
-func deleteKeygroupReplica(h exthandler.Handler) func(context *gin.Context) {
+func deleteKeygroupReplica(h fred.ExtHandler) func(context *gin.Context) {
 	return func(context *gin.Context) {
 		kgname := context.Params.ByName("kgname")
 
 		nodeid := context.Params.ByName("nodeid")
 
-		err := h.HandleRemoveReplica(keygroup.Keygroup{
-			Name: commons.KeygroupName(kgname),
-		}, replication.Node{
-			ID: replication.ID(nodeid),
+		err := h.HandleRemoveReplica(fred.Keygroup{
+			Name: fred.KeygroupName(kgname),
+		}, fred.Node{
+			ID: fred.NodeID(nodeid),
 		})
 
 		if err != nil {
