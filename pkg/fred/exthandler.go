@@ -6,22 +6,21 @@ import (
 )
 
 type exthandler struct {
-	i *storeService
+	s *storeService
 	r *replicationService
 }
 
 // newExthandler creates a new handler for external request (i.e. from clients).
-func newExthandler(i *storeService, r *replicationService) *exthandler {
+func newExthandler(s *storeService, r *replicationService) *exthandler {
 	return &exthandler{
-		i: i,
-		k: k,
+		s: s,
 		r: r,
 	}
 }
 
 // HandleCreateKeygroup handles requests to the CreateKeygroup endpoint of the client interface.
 func (h *exthandler) HandleCreateKeygroup(k Keygroup) error {
-	if err := h.d.CreateKeygroup(k.Name); err != nil {
+	if err := h.s.createKeygroup(k.Name); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error creating keygroup")
 	}
@@ -36,12 +35,12 @@ func (h *exthandler) HandleCreateKeygroup(k Keygroup) error {
 
 // HandleDeleteKeygroup handles requests to the DeleteKeygroup endpoint of the client interface.
 func (h *exthandler) HandleDeleteKeygroup(k Keygroup) error {
-	if err := h.d.DeleteKeygroup(k.Name); err != nil {
+	if err := h.s.deleteKeygroup(k.Name); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error deleting keygroup")
 	}
 
-	if err := h.r.RelayDeleteKeygroup(fred.Keygroup{
+	if err := h.r.RelayDeleteKeygroup(Keygroup{
 		Name: k.Name,
 	}); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
@@ -53,7 +52,7 @@ func (h *exthandler) HandleDeleteKeygroup(k Keygroup) error {
 
 // HandleRead handles requests to the Read endpoint of the client interface.
 func (h *exthandler) HandleRead(i Item) (Item, error) {
-	result, err := h.i.Read(i.Keygroup, i.ID)
+	result, err := h.s.read(i.Keygroup, i.ID)
 	if err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return i, errors.Errorf("error reading item keygroup")
@@ -65,7 +64,7 @@ func (h *exthandler) HandleRead(i Item) (Item, error) {
 
 // HandleUpdate handles requests to the Update endpoint of the client interface.
 func (h *exthandler) HandleUpdate(i Item) error {
-	if err := h.d.Update(i); err != nil {
+	if err := h.s.update(i); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error updating item")
 	}
@@ -80,7 +79,7 @@ func (h *exthandler) HandleUpdate(i Item) error {
 
 // HandleDelete handles requests to the Delete endpoint of the client interface.
 func (h *exthandler) HandleDelete(i Item) error {
-	if err := h.d.Delete(i.Keygroup, i.ID); err != nil {
+	if err := h.s.delete(i.Keygroup, i.ID); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error deleting item")
 	}
@@ -95,7 +94,7 @@ func (h *exthandler) HandleDelete(i Item) error {
 
 // HandleAddReplica handles requests to the AddKeygroupReplica endpoint of the client interface.
 func (h *exthandler) HandleAddReplica(k Keygroup, n Node) error {
-	i, err := h.d.ReadAll(k.Name)
+	i, err := h.s.readAll(k.Name)
 
 	if err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
@@ -158,7 +157,7 @@ func (h *exthandler) HandleGetAllReplica() ([]Node, error) {
 }
 
 // HandleRemoveNode handles requests to the RemoveReplica endpoint of the client interface.
-func (h *handler) HandleRemoveNode(n Node) error {
+func (h *exthandler) HandleRemoveNode(n Node) error {
 	// TODO why would this be called and what to do now.
 	//return h.replService.RemoveNode(n, true)
 	return nil

@@ -107,8 +107,8 @@ func pollForever(c *Server) error {
 				if err = json.Unmarshal(msg, &req); err == nil {
 					go c.handler.HandleDeleteFromKeygroup(req, src)
 				}
-			case zmqcommon.AddReplica: // Add Replica in Keygroup
-				var req = &zmqcommon.ReplicationRequest{}
+			case AddReplica: // Add Replica in Keygroup
+				var req = &ReplicationRequest{}
 				if err = json.Unmarshal(msg, &req); err == nil {
 					go c.handler.HandleAddReplica(req, src)
 				}

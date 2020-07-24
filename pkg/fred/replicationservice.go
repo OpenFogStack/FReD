@@ -1,8 +1,6 @@
 package fred
 
 import (
-	"sync"
-
 	"github.com/go-errors/errors"
 	"github.com/rs/zerolog/log"
 )
@@ -17,156 +15,146 @@ type Client interface {
 	SendRemoveNode(addr Address, port int, node Node) error
 	SendAddReplica(addr Address, port int, kgname KeygroupName, node Node) error
 	SendRemoveReplica(addr Address, port int, kgname KeygroupName, node Node) error
-	SendIntroduce(addr Address, port int, self Node, other Node, nodes []Node) error
-	SendDetroduce(addr Address, port int) error
 }
 
 type replicationService struct {
-	nodes     map[NodeID]Node
-	kg        map[KeygroupName]map[NodeID]struct{}
-	nodesLock sync.RWMutex
-	kgLock    sync.RWMutex
-	self      Node
-	c         Client
+	c Client
+	s Store
+	n *nameService
 }
 
 // newReplicationService creates a new handler for internal request (i.e. from peer nodes or the naming service).
-func newReplicationService(nodePort int, c Client) *replicationService {
+// The nameservice makes sure that the information is synced with the other nodes
+func newReplicationService(nodePort int, s Store, c Client, n *nameService) *replicationService {
 	return &replicationService{
-		nodes: make(map[NodeID]Node),
-		kg:    make(map[KeygroupName]map[NodeID]struct{}),
-		self: Node{
-			Port: nodePort,
-		},
+		s: s,
 		c: c,
+		n: n,
 	}
 }
 
-// CreateKeygroup handles replication after requests to the CreateKeygroup endpoint of the internal interface.
+// CreateKeygroup creates the keygroup with the NaSe and saves its existence locally
 func (s *replicationService) CreateKeygroup(k Keygroup) error {
-	log.Debug().Msgf("CreateKeygroup: in %#v", k)
-	kg := Keygroup{
-		Name: k.Name,
-	}
+	log.Debug().Msgf("CreateKeygroup from replservice: in %#v", k)
 
-	if s.existsKeygroup(kg) {
-		return nil
-	}
-
-	s.kgLock.RLock()
-	_, ok := s.kg[kg.Name]
-	s.kgLock.RUnlock()
-
-	if ok {
-		return nil
-	}
-
-	s.kgLock.Lock()
-	s.kg[kg.Name] = make(map[NodeID]struct{})
-	s.kgLock.Unlock()
-
-	return nil
-}
-
-// DeleteKeygroup handles replication after requests to the DeleteKeygroup endpoint of the internal interface.
-func (s *replicationService) DeleteKeygroup(k Keygroup) error {
-	log.Debug().Msgf("RelayCreateKeygroup: in %#v", k)
-	kg := Keygroup{
-		Name: k.Name,
-	}
-
-	s.kgLock.RLock()
-	_, ok := s.kg[kg.Name]
-	s.kgLock.RUnlock()
-
-	if !ok {
-		return errors.Errorf("no such keygroup: %#v", k)
-	}
-
-	s.kgLock.Lock()
-	delete(s.kg, k.Name)
-	s.kgLock.Unlock()
-
-	return nil
-}
-
-// RelayDeleteKeygroup handles replication after requests to the DeleteKeygroup endpoint of the external interface.
-func (s *replicationService) RelayDeleteKeygroup(k Keygroup) error {
-	log.Debug().Msgf("RelayDeleteKeygroup: in %#v", k)
-	kg := Keygroup{
-		Name: k.Name,
-	}
-
-	if !s.existsKeygroup(kg) {
-		return errors.Errorf("keygroup does not exist: in %#v", k)
-	}
-
-	kg, err := s.getKeygroup(kg)
-
+	// Check if Keygroup already exists in NaSe
+	exists, err := s.n.existsKeygroup(k.Name)
 	if err != nil {
+		log.Err(err).Msg("Error checking whether Kg exists in NaSe")
+		return err
+	}
+	if exists {
+		log.Error().Msg("Cannot Create Keygroup since NaSe says the Kg already exists. Existing Keygroups can only be joined")
+		// TODO s.localReplStore.ExistsKeygroup returns nil, but this returns an error. Whats better?
+		err = errors.Errorf("keygroup already exists, cannot create it: %#v", k)
+		return err
+	}
+	// Create Keygroup with nase, it returns an error
+	err = s.n.createKeygroup(k.Name)
+	if err != nil {
+		log.Err(err).Msg("Error creating Keygroup in NaSe")
 		return err
 	}
 
-	s.kgLock.RLock()
-	_, ok := s.kg[kg.Name]
-	s.kgLock.RUnlock()
+	// kg := replication.Keygroup{
+	// 	Name: k.Name,
+	// }
+	// TODO save a local copy of the keygroup here
+	return err
+}
 
-	if !ok {
-		return errors.Errorf("no such keygroup: %#v", k)
+// DeleteKeygroup deletes the keygroup on the NaSe and deletes the local copy.
+// It does not delete all the locally stored data from the keygroup.
+// This gets called by every node that is in a keygroup if it is to be deleted (via RelayDeleteKeygroup, right below this method)
+func (s *replicationService) DeleteKeygroup(k Keygroup) error {
+	log.Debug().Msgf("DeleteKeygroup from replservice (does nothing): in %#v", k)
+
+	// Deleting the Keygroup with the NaSe happens in RelayDeleteKeygroup, so this would just be double duty
+	// err := s.nase.DeleteKeygroup(k.Name)
+
+	// TODO delete the local copy of the keygroup here
+
+	return nil
+}
+
+// RelayDeleteKeygroup deletes a keygroup locally and relays the deletion of a keygroup to all other nodes in this keygroup
+// Calls DeleteKeygroup on every other node that is in this keygroup
+// TODO is this really necessary with the nase? Maybe
+func (s *replicationService) RelayDeleteKeygroup(k Keygroup) error {
+	log.Debug().Msgf("RelayDeleteKeygroup from replservice: in %#v", k)
+
+	exists, err := s.n.existsKeygroup(k.Name)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		err = errors.Errorf("no such keygroup according to NaSe: %#v", k)
+		return err
 	}
 
-	s.kgLock.Lock()
-	delete(s.kg, kg.Name)
-	s.kgLock.Unlock()
+	// Inform all other nodes about the deletion so that they can delete their local copy
+	ids, err := s.n.getKeygroupMembers(k.Name, true)
+	if err != nil {
+		log.Err(err).Msg("Cannot delete keygroup because the nase threw an error")
+		return err
+	}
 
-	for rn := range kg.Replica {
-		node, err := s.getNode(Node{
-			ID: rn,
-		})
+	for _, id := range ids {
+		addr, port, err := s.n.getNodeAdress(id)
 
 		if err != nil {
+			log.Err(err).Msg("Cannot Get node adress from NaSe")
 			return err
 		}
 
-		log.Debug().Msgf("RelayDeleteKeygroup: sending keygroup %#v to node %#v", k, node)
-		if err := s.c.SendDeleteKeygroup(node.Addr, node.Port, k.Name); err != nil {
+		log.Debug().Msgf("RelayDeleteKeygroup from replservice: sending %#v to %#v", k, addr)
+		if err := s.c.SendDeleteKeygroup(addr, port, k.Name); err != nil {
 			return err
 		}
+	}
+
+	// Only now delete the keygroup with the nase
+	err = s.n.deleteKeygroup(k.Name)
+
+	if err != nil {
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		return err
 	}
 
 	return nil
 }
 
 // RelayUpdate handles replication after requests to the Update endpoint of the external interface.
+// It sends the update to all other nodes by calling their Update method
 func (s *replicationService) RelayUpdate(i Item) error {
-	log.Debug().Msgf("RelayUpdate: in %#v", i)
-	kg := Keygroup{
-		Name: i.Keygroup,
-	}
+	log.Debug().Msgf("RelayUpdate from replservice: in %#v", i)
 
-	if !s.existsKeygroup(kg) {
-		return errors.Errorf("keygroup does not exist: %#v", i)
-	}
-
-	kg, err := s.getKeygroup(kg)
-
+	exists, err := s.n.existsKeygroup(i.Keygroup)
 	if err != nil {
 		return err
 	}
+	if !exists {
+		err = errors.Errorf("no such keygroup according to NaSe: %#v", i.Keygroup)
+		return err
+	}
 
-	log.Debug().Msgf("RelayUpdate: in %#v", kg.Replica)
+	// inform all other nodes about the update, get a list of all nodes subscribed to this keygroup
+	ids, err := s.n.getKeygroupMembers(i.Keygroup, true)
+	if err != nil {
+		log.Err(err).Msg("Cannot delete keygroup because the nase threw an error")
+		return err
+	}
 
-	for rn := range kg.Replica {
-		node, err := s.getNode(Node{
-			ID: rn,
-		})
+	for _, id := range ids {
+		addr, port, err := s.n.getNodeAdress(id)
 
 		if err != nil {
+			log.Err(err).Msg("Cannot Get node adress from NaSe")
 			return err
 		}
 
-		log.Debug().Msgf("RelayUpdate: sending item %#v to node %#v", i, node)
-		if err := s.c.SendUpdate(node.Addr, node.Port, kg.Name, i.ID, i.Val); err != nil {
+		log.Debug().Msgf("RelayUpdate from replservice: sending %#v to %#v", i, addr)
+		if err := s.c.SendUpdate(addr, port, i.Keygroup, i.ID, i.Val); err != nil {
 			return err
 		}
 	}
@@ -176,32 +164,29 @@ func (s *replicationService) RelayUpdate(i Item) error {
 
 // RelayDelete handles replication after requests to the Delete endpoint of the external interface.
 func (s *replicationService) RelayDelete(i Item) error {
-	log.Debug().Msgf("RelayDelete: in %#v", i)
-	kg := Keygroup{
-		Name: i.Keygroup,
-	}
+	log.Debug().Msgf("RelayDelete from replservice: in %#v", i)
 
-	if !s.existsKeygroup(kg) {
-		return errors.Errorf("keygroup does not exist: %#v", i)
-	}
-
-	kg, err := s.getKeygroup(kg)
-
+	exists, err := s.n.existsKeygroup(i.Keygroup)
 	if err != nil {
 		return err
 	}
+	if !exists {
+		err = errors.Errorf("no such keygroup according to NaSe: %#v", i.Keygroup)
+		return err
+	}
 
-	for rn := range kg.Replica {
-		node, err := s.getNode(Node{
-			ID: rn,
-		})
+	ids, err := s.n.getKeygroupMembers(i.Keygroup, true)
+
+	for _, id := range ids {
+		addr, port, err := s.n.getNodeAdress(id)
 
 		if err != nil {
+			log.Err(err).Msg("Cannot Get node adress from NaSe")
 			return err
 		}
 
-		log.Debug().Msgf("RelayDelete: sending %#v to %#v", i, node)
-		if err := s.c.SendDelete(node.Addr, node.Port, kg.Name, i.ID); err != nil {
+		log.Debug().Msgf("RelayDelete from replservice: sending %#v to %#v", i, addr)
+		if err := s.c.SendDelete(addr, port, i.Keygroup, i.ID); err != nil {
 			return err
 		}
 	}
@@ -211,425 +196,219 @@ func (s *replicationService) RelayDelete(i Item) error {
 
 // AddReplica handles replication after requests to the AddReplica endpoint. It relays this command if "relay" is set to "true".
 func (s *replicationService) AddReplica(k Keygroup, n Node, i []Item, relay bool) error {
-	log.Debug().Msgf("AddReplica: kg=%#v node=%#v", k, n)
-
-	// first get the keygroup from the kgname in k
-	kg := Keygroup{
-		Name: k.Name,
-	}
-
-	if !s.existsKeygroup(kg) {
-		return errors.Errorf("keygroup does not exist: %#v", k)
-	}
-
-	kg, err := s.getKeygroup(kg)
-
-	if err != nil {
-		return err
-	}
+	log.Debug().Msgf("AddReplica from replservice: in kg=%#v no=%#v", k, n)
 
 	// if relay is set to true, we got the request from the external interface
 	// and are responsible to bring the new replica up to speed
-	// (-> send them past val, send them all other replicas, inform all other replicas)
+	// (-> send them past data, send them all other replicas, inform all other replicas)
 	if relay {
-		// let's get the information about this new replica first
-		newNode, err := s.getNode(n)
+
+		exists, err := s.n.existsKeygroup(k.Name)
+		if err != nil {
+			return err
+		}
+		if !exists {
+			err = errors.Errorf("no such keygroup according to NaSe: %#v", k)
+			return err
+		}
+
+		// let's get the information about this new replica
+		newNodeAddr, newNodePort, err := s.n.getNodeAdress(n.ID)
+		newNode := &Node{
+			ID:   n.ID,
+			Addr: newNodeAddr,
+			Port: newNodePort,
+		}
 
 		if err != nil {
 			return err
 		}
 
-		// tell this new node to create the keygroup they're now replicating
-		log.Debug().Msgf("AddReplica: sending keygroup %#v to new node %#v", k, newNode)
-		if err := s.c.SendCreateKeygroup(newNode.Addr, newNode.Port, kg.Name); err != nil {
-			return err
-		}
-
-		// now tell this new node that we are also a replica node for that keygroup
-		self, err := s.getSelf()
+		// Write the news into the NaSe first
+		err = s.n.joinOtherNodeIntoKeygroup(k.Name, n.ID)
 
 		if err != nil {
-			return err
-		}
-
-		log.Debug().Msgf("AddReplica: sending self %#v to new node %#v", self, newNode)
-		if err := s.c.SendAddReplica(newNode.Addr, newNode.Port, kg.Name, self); err != nil {
+			log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 			return err
 		}
 
 		// now let's iterate over all other currently known replicas for this node (except ourselves)
-		for rn := range kg.Replica {
+		// this also includes the newly added node, so it will receive a AddReplica that with itself as the new node.
+		ids, err := s.n.getKeygroupMembers(k.Name, true)
+		if err != nil {
+			return err
+		}
+		for _, currID := range ids {
 			// get a replica node
-			replNode, err := s.getNode(Node{
-				ID: rn,
-			})
+			replAddr, replPort, err := s.n.getNodeAdress(currID)
+			replNode := &Node{
+				ID:   currID,
+				Addr: replAddr,
+				Port: replPort,
+			}
 
 			if err != nil {
 				return err
 			}
 
 			// tell that replica node about the new node
-			log.Debug().Msgf("AddReplica: sending new node %#v to replica node %#v", newNode, replNode)
-			if err := s.c.SendAddReplica(replNode.Addr, replNode.Port, kg.Name, newNode); err != nil {
+			log.Debug().Msgf("AddReplica from replservice: sending %#v to %#v", newNode, replNode)
+			if err := s.c.SendAddReplica(replAddr, replPort, k.Name, *newNode); err != nil {
 				return err
 			}
 
 			// then tell the new node about that replica node
-			log.Debug().Msgf("AddReplica: sending replica node %#v to new node %#v", replNode, newNode)
-			if err := s.c.SendAddReplica(newNode.Addr, newNode.Port, kg.Name, replNode); err != nil {
+			log.Debug().Msgf("AddReplica from replservice: sending %#v to %#v", replNode, newNode)
+			if err := s.c.SendAddReplica(newNode.Addr, newNode.Port, k.Name, *replNode); err != nil {
 				return err
 			}
 		}
 
-		// request came from external client interface, send past val as well
+		// send all existing data to the new node
+		// TODO so this one array contains all data items? Maybe not a good idea if there is a lot of data to be sent
+		log.Debug().Msgf("AddReplica from replservice: About to send %d Elements to new node", len(i))
 		for _, item := range i {
-			// iterate over all val for that keygroup and send it to the new node
+			// iterate over all data for that keygroup and send it to the new node
 			// a batch might be better here
-			log.Debug().Msgf("AddReplica: sending %#v to %#v", item, n)
-			if err := s.c.SendUpdate(newNode.Addr, newNode.Port, kg.Name, item.ID, item.Val); err != nil {
+			log.Debug().Msgf("AddReplica from replservice: sending %#v to %#v", item, n)
+			if err := s.c.SendUpdate(newNodeAddr, newNodePort, k.Name, item.ID, item.Val); err != nil {
 				return err
 			}
 		}
 	}
-
-	// finally, in either case, save that the new node is now also a replica for the keygroup
-	log.Debug().Msgf("AddReplica: in kg=%#v no=%#v", k, n)
-
-	s.kgLock.RLock()
-	_, ok := s.kg[kg.Name]
-	s.kgLock.RUnlock()
-
-	if !ok {
-		return errors.Errorf("error retrieving keygroup: %#v", k)
-	}
-
-	s.nodesLock.RLock()
-	_, ok = s.nodes[n.ID]
-	s.nodesLock.RUnlock()
-	if !ok {
-		return errors.Errorf("no such node: %#v", n)
-	}
-
-	s.kgLock.RLock()
-	_, ok = s.kg[kg.Name][n.ID]
-	s.kgLock.RUnlock()
-
-	if ok {
-		return errors.Errorf("node is already a replica node of keygroup %#v: %#v", k, n)
-	}
-
-	s.kgLock.Lock()
-	s.kg[k.Name][n.ID] = struct{}{}
-	s.kgLock.Unlock()
-
+	// else {
+	// 	// This request is not from the external interface, but from the internal one.
+	// 	// TODO Nils the information received here should be cached locally
+	// 	if string(n.ID) == s.nase.NodeID {
+	// 		// TODO Nils this node just has been informed that it is now a loyal replicating member of a KG
+	// 	} else {
+	// 		// TODO Nils a third node has been informed that n.ID is a new member of a keygroup it is also replicating
+	// 	}
+	//
+	// }
 	return nil
 }
 
-// RemoveReplica handles replication after requests to the RemoveReplica endpoint. It relays this command if "relay" is set to "true".
+// RemoveReplica handles replication after requests to the RemoveReplica endpoint
+// If relay==true this call comes from the exthandler => relay it to other nodes.
+// The other nodes will be called with relay=false
 func (s *replicationService) RemoveReplica(k Keygroup, n Node, relay bool) error {
-	log.Debug().Msgf("RemoveReplica: in kg=%#v no=%#v", k, n)
-
-	kg := Keygroup{
-		Name: k.Name,
-	}
-
-	if !s.existsKeygroup(kg) {
-		return errors.Errorf("keygroup does not exist: %#v", k)
-	}
-
-	kg, err := s.getKeygroup(kg)
-
-	if err != nil {
-		return err
-	}
-
-	log.Debug().Msgf("RemoveReplica: in kg=%#v node=%#v", k, n)
-	s.kgLock.RLock()
-	_, ok := s.kg[kg.Name]
-	s.kgLock.RUnlock()
-
-	if !ok {
-		return errors.Errorf("error retrieving keygroup: #%v", k)
-	}
-
-	s.kgLock.RLock()
-	_, ok = s.kg[kg.Name][n.ID]
-	s.kgLock.RUnlock()
-
-	if !ok {
-		return errors.Errorf("no such node in keygroup %#v: %#v", k, n)
-	}
-
-	s.kgLock.Lock()
-	delete(s.kg[kg.Name], n.ID)
-	s.kgLock.Unlock()
+	log.Debug().Msgf("RemoveReplica from replservice: in kg=%#v no=%#v", k, n)
 
 	if relay {
-		node, err := s.getNode(n)
+		// This is the first removedNode to learn about it
+		removedNodeAddr, removedNodePort, err := s.n.getNodeAdress(n.ID)
+		if err != nil {
+			return err
+		}
+		removedNode := &Node{
+			ID:   n.ID,
+			Addr: removedNodeAddr,
+			Port: removedNodePort,
+		}
 
+		exists, err := s.n.existsKeygroup(k.Name)
+		if !exists {
+			err = errors.Errorf("no such keygroup according to NaSe: %#v", k)
+			return err
+		}
 		if err != nil {
 			return err
 		}
 
-		log.Debug().Msgf("RemoveReplica: sending %#v to %#v", k, node)
-		if err := s.c.SendDeleteKeygroup(node.Addr, node.Port, kg.Name); err != nil {
+		// First get all Replicas of this Keygroup to send the update to them
+		kgMembers, err := s.n.getKeygroupMembers(k.Name, true)
+		if err != nil {
+			return err
+		}
+		// Now exit node from keygroup with nase.
+		// Now one node (this node) will get the message that a node is removed from a keygroup
+		// that it itself is not a member of ==> Delete the local copy (see after big if relay statement)
+		err = s.n.exitOtherNodeFromKeygroup(k.Name, n.ID)
+		if err != nil {
+			return err
+		}
+		log.Debug().Msgf("RemoveReplica from replservice: sendingDeleteKeygroup %#v to %#v", k, removedNode)
+		if err := s.c.SendDeleteKeygroup(removedNodeAddr, removedNodePort, k.Name); err != nil {
 			return err
 		}
 
-		for rn := range kg.Replica {
-			node, err := s.getNode(Node{
-				ID: rn,
-			})
+		for _, idToInform := range kgMembers {
+			nodeToInformAddr, nodeToInformPort, err := s.n.getNodeAdress(idToInform)
 
 			if err != nil {
 				return err
 			}
 
-			log.Debug().Msgf("RemoveReplica: sending %#v to %#v", k, node)
-			if err := s.c.SendRemoveReplica(node.Addr, node.Port, kg.Name, node); err != nil {
+			log.Debug().Msgf("RemoveReplica from replservice: sending RemoveReplica %#v to %#v", k, nodeToInformAddr)
+			if err := s.c.SendRemoveReplica(nodeToInformAddr, nodeToInformPort, k.Name, Node{ID: n.ID}); err != nil {
 				log.Err(err).Msg("")
 				return err
 			}
 		}
 	}
-
-	return nil
-}
-
-// AddNode handles replication after requests to the AddNode endpoint. It relays this command if "relay" is set to "true".
-func (s *replicationService) AddNode(n Node, relay bool) error {
-	if relay {
-		nodes, err := s.getNodes()
+	member, err := s.n.isKeygroupMember(s.n.NodeID, k.Name)
+	if !member {
+		log.Debug().Msgf("RemoveReplica from Replservice: deleting local copy of this keygroup")
+		err = s.s.DeleteKeygroup(string(k.Name))
 
 		if err != nil {
+			log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 			return err
-		}
-
-		self, err := s.getSelf()
-
-		if err != nil {
-			return err
-		}
-
-		if err := s.c.SendIntroduce(n.Addr, n.Port, self, n, nodes); err != nil {
-			log.Err(err).Msg("")
-			return err
-		}
-
-		for _, rn := range nodes {
-			node, err := s.getNode(Node{
-				ID: rn.ID,
-			})
-
-			if err != nil {
-				log.Err(err).Msg("")
-				return err
-			}
-
-			log.Debug().Msgf("AddNode: sending %#v to %#v", n, node)
-			if err := s.c.SendAddNode(node.Addr, node.Port, n); err != nil {
-				log.Err(err).Msg("")
-				return err
-			}
 		}
 	}
 
-	// add the node afterwards to prevent it from being sent to itself
-	log.Debug().Msgf("CreateNode in: %#v", n)
-	s.nodesLock.RLock()
-	_, ok := s.nodes[n.ID]
-	s.nodesLock.RUnlock()
+	// TODO Nils delete the local copy that this node is in this keygroup
 
-	if ok {
-		return nil
-	}
-
-	s.nodesLock.Lock()
-	s.nodes[n.ID] = Node{
-		Addr: n.Addr,
-		Port: n.Port,
-		ID:   n.ID,
-	}
-	s.nodesLock.Unlock()
-
-	return nil
+	return err
 }
 
-// RemoveNode handles replication after requests to the RemoveNode endpoint. It relays this command if "relay" is set to "true".
-func (s *replicationService) RemoveNode(n Node, relay bool) error {
-
-	log.Debug().Msgf("RemoveNode in: %#v", n)
-	s.nodesLock.RLock()
-	_, ok := s.nodes[n.ID]
-	s.nodesLock.RUnlock()
-
-	if !ok {
-		return errors.Errorf("no such node: %#v", n)
-	}
-
-	s.nodesLock.Lock()
-	delete(s.nodes, n.ID)
-	s.nodesLock.Unlock()
-
-	if relay {
-		nodes, err := s.getNodes()
-
-		if err != nil {
-			return err
-		}
-
-		for _, rn := range nodes {
-			node, err := s.getNode(Node{
-				ID: rn.ID,
-			})
-
-			if err != nil {
-				log.Err(err).Msg("")
-				return err
-			}
-
-			log.Debug().Msgf("RemoveNode: sending %#v to %#v", n, node)
-			if err := s.c.SendRemoveNode(node.Addr, node.Port, n); err != nil {
-				log.Err(err).Msg("")
-				return err
-			}
-		}
-	}
-
-	return nil
-}
-
+// GetNode returns the locally saved node with this ID
 func (s *replicationService) GetNode(n Node) (Node, error) {
-	return s.getNode(n)
+	addr, port, err := s.n.getNodeAdress(n.ID)
+	n = Node{
+		ID:   n.ID,
+		Addr: addr,
+		Port: port,
+	}
+	return n, err
 }
 
-// GetReplica returns a list of all known nodes.
+// GetNodes returns a list of all known nodes.
 func (s *replicationService) GetNodes() ([]Node, error) {
-	return s.getNodes()
+	return s.n.getAllNodes()
 }
 
 // GetReplica returns a list of all replica nodes for a given keygroup.
-func (s *replicationService) GetReplica(k Keygroup) ([]Node, error) {
+func (s *replicationService) GetReplica(k Keygroup) (nodes []Node, err error) {
 	log.Debug().Msgf("GetReplica from replservice: in %#v", k)
-	kg := Keygroup{
-		Name: k.Name,
+
+	exists, err := s.n.existsKeygroup(k.Name)
+	if !exists {
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		return nil, errors.Errorf("no such keygroup according to NaSe")
 	}
-
-	if !s.existsKeygroup(kg) {
-		return nil, errors.Errorf("keygroup does not exist: %#v", k)
-	}
-
-	kg, err := s.getKeygroup(kg)
-
 	if err != nil {
-		return nil, errors.Errorf("keygroup could not be retrieved: %#v", k)
+		return nil, err
 	}
 
-	return s.getReplica(kg)
-}
-
-// getNode returns a node from the node storage in ReplicationStorage.
-func (s *replicationService) getNode(n Node) (Node, error) {
-	log.Debug().Msgf("getNode from: in %#v", n)
-	s.nodesLock.RLock()
-	node, ok := s.nodes[n.ID]
-	s.nodesLock.RUnlock()
-
-	if !ok {
-		return n, errors.Errorf("no such node: %#v", n)
-	}
-
-	return Node{
-		ID:   n.ID,
-		Addr: node.Addr,
-		Port: node.Port,
-	}, nil
-}
-
-// getKeygroup returns a keygroup from the keygroup storage in ReplicationStorage.
-func (s *replicationService) getKeygroup(k Keygroup) (Keygroup, error) {
-	log.Debug().Msgf("getKeygroup: in %#v", k)
-	s.kgLock.RLock()
-	replicas, ok := s.kg[k.Name]
-	s.kgLock.RUnlock()
-
-	if !ok {
-		return k, errors.Errorf("no such keygroup: %#v", k)
-	}
-
-	return Keygroup{
-		Name:    k.Name,
-		Replica: replicas,
-	}, nil
-}
-
-// existsKeygroup checks whether a keygroup exists in the keygroup storage in ReplicationStorage.
-func (s *replicationService) existsKeygroup(k Keygroup) bool {
-	s.kgLock.RLock()
-	_, ok := s.kg[k.Name]
-	s.kgLock.RUnlock()
-
-	log.Debug().Msgf("existsKeygroup: in %#v, out %t", k, ok)
-
-	return ok
-}
-
-// getNodes returns all known replica nodes from the node storage in ReplicationStorage.
-func (s *replicationService) getNodes() ([]Node, error) {
-	s.nodesLock.RLock()
-	defer s.nodesLock.RUnlock()
-
-	nodes := make([]Node, len(s.nodes))
-
-	i := 0
-	for id, node := range s.nodes {
-		nodes[i] = Node{
-			ID:   id,
-			Addr: node.Addr,
-			Port: node.Port,
+	ids, err := s.n.getKeygroupMembers(k.Name, true)
+	for _, id := range ids {
+		addr, port, err := s.n.getNodeAdress(id)
+		if err != nil {
+			return nil, err
 		}
-
-		i++
-	}
-
-	log.Debug().Msgf("getNodes: found %d nodes", i)
-
-	return nodes, nil
-}
-
-// getReplica returns all known replica nodes for the given keygroup from the node storage in ReplicationStorage.
-func (s *replicationService) getReplica(k Keygroup) ([]Node, error) {
-	s.kgLock.RLock()
-	defer s.kgLock.RUnlock()
-
-	n, ok := s.kg[k.Name]
-
-	if !ok {
-		return nil, errors.Errorf("no such keygroup: %#v", k)
-	}
-
-	s.nodesLock.RLock()
-	defer s.nodesLock.RUnlock()
-
-	nodes := make([]Node, len(n))
-
-	i := 0
-	for id := range n {
-		node := s.nodes[id]
-		nodes[i] = Node{
+		newNode := &Node{
 			ID:   id,
-			Addr: node.Addr,
-			Port: node.Port,
+			Addr: addr,
+			Port: port,
 		}
-
-		i++
+		// TODO is this the optimal solution?
+		nodes = append(nodes, *newNode)
 	}
-	log.Debug().Msgf("getReplica from: found %d nodes", i)
-
-	return nodes, nil
+	return
 }
 
-// getSelf returns val about the self node from ReplicationStorage.
-func (s *replicationService) getSelf() (Node, error) {
-	return s.self, nil
+func (s *replicationService) ExistsKeygroup(name KeygroupName) (bool, error) {
+	return s.n.existsKeygroup(name)
 }

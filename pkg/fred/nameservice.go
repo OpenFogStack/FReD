@@ -1,21 +1,17 @@
-package nameservice
+package fred
 
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/go-errors/errors"
 	"github.com/rs/zerolog/log"
 	"go.etcd.io/etcd/clientv3"
 	"go.etcd.io/etcd/mvcc/mvccpb"
-
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/commons"
-	frederrors "gitlab.tu-berlin.de/mcc-fred/fred/pkg/errors"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/replication"
 )
 
 const (
@@ -27,15 +23,15 @@ const (
 	nodePrefixString    = "node-"
 )
 
-// NameService is the interface to the etcd server that serves as NaSe
+// nameService is the interface to the etcd server that serves as NaSe
 // It is used by the replservice to sync updates to keygroups with other nodes and thereby makes sure that ReplicationStorage always has up to date information
-type NameService struct {
+type nameService struct {
 	cli    *clientv3.Client
 	NodeID string
 }
 
-// New creates a new NameService
-func New(nodeID string, endpoints []string) *NameService {
+// newNameService creates a new NameService
+func newNameService(nodeID string, endpoints []string) (*nameService, error) {
 	cli, err := clientv3.New(clientv3.Config{
 		Endpoints:   endpoints,
 		DialTimeout: 5 * time.Second,
@@ -43,30 +39,34 @@ func New(nodeID string, endpoints []string) *NameService {
 
 	if err != nil {
 		// Deadline Exceeded
-		log.Err(err).Msg("Error starting the etcd client")
+		return nil, errors.Errorf("Error starting the etcd client")
 	}
 
-	return &NameService{cli: cli, NodeID: nodeID}
+	return &nameService{
+		cli: cli, NodeID: nodeID,
+	}, nil
 }
 
-// RegisterSelf stores information about this node
-func (n *NameService) RegisterSelf(address replication.Address, port int) error {
+// registerSelf stores information about this node
+func (n *nameService) registerSelf(address Address, port int) error {
 	key := fmt.Sprintf(fmtNodeAdressString, n.NodeID)
 	value := fmt.Sprintf("%s:%d", string(address.Addr), port)
 	log.Debug().Msgf("NaSe: registering self as %s // %s", key, value)
 	return n.put(key, value)
 }
 
-// RegisterOtherNode stores information about another node in NaSe
-func (n *NameService) RegisterOtherNode(id replication.ID, adress replication.Address, port int) error {
+/*
+// registerOtherNode stores information about another node in NaSe
+func (n *nameService) registerOtherNode(id NodeID, adress Address, port int) error {
 	key := fmt.Sprintf(fmtNodeAdressString, id)
 	value := fmt.Sprintf("%s:%d", string(adress.Addr), port)
 	log.Debug().Msgf("NaSe: registering other node as %s // %s", key, value)
 	return n.put(key, value)
 }
+*/
 
-// ExistsKeygroup checks whether a Keygroup exists by checking whether there are keys with the prefix "kg-[kgname]-
-func (n *NameService) ExistsKeygroup(key commons.KeygroupName) (bool, error) {
+// existsKeygroup checks whether a Keygroup exists by checking whether there are keys with the prefix "kg-[kgname]-
+func (n *nameService) existsKeygroup(key KeygroupName) (bool, error) {
 	status, err := n.getKeygroupStatus(key)
 	if err != nil {
 		return false, err
@@ -74,14 +74,14 @@ func (n *NameService) ExistsKeygroup(key commons.KeygroupName) (bool, error) {
 	return status == "created", nil
 }
 
-// CreateKeygroup created the keygroup status and joins the keygroup
-func (n *NameService) CreateKeygroup(key commons.KeygroupName) error {
-	exists, err := n.ExistsKeygroup(key)
+// createKeygroup created the keygroup status and joins the keygroup
+func (n *nameService) createKeygroup(key KeygroupName) error {
+	exists, err := n.existsKeygroup(key)
 	if err != nil {
 		return err
 	}
 	if exists {
-		return errors.New("keygroup already exists in name service")
+		return errors.Errorf("keygroup already exists in name service")
 	}
 
 	// Save the status of the keygroup
@@ -99,8 +99,8 @@ func (n *NameService) CreateKeygroup(key commons.KeygroupName) error {
 	return n.addOwnKgNodeEntry(key, "ok")
 }
 
-// GetKeygroupMembers returns all IDs of the Members of a Keygroup by iterating over all saved keys that start with the keygroup name
-func (n *NameService) GetKeygroupMembers(key commons.KeygroupName, excludeSelf bool) (ids []replication.ID, err error) {
+// getKeygroupMembers returns all IDs of the Members of a Keygroup by iterating over all saved keys that start with the keygroup name
+func (n *nameService) getKeygroupMembers(key KeygroupName, excludeSelf bool) (ids []NodeID, err error) {
 	resp, err := n.getPrefix(fmt.Sprintf(fmtKgNodeString, string(key), ""))
 	if err != nil {
 		return nil, err
@@ -113,7 +113,7 @@ func (n *NameService) GetKeygroupMembers(key commons.KeygroupName, excludeSelf b
 			if excludeSelf && n.NodeID == getNodeNameFromKgNodeString(string(value.Key)) {
 				log.Debug().Msg("Excluding this node from results since this is the own node")
 			} else {
-				ids = append(ids, replication.ID(getNodeNameFromKgNodeString(string(value.Key))))
+				ids = append(ids, NodeID(getNodeNameFromKgNodeString(string(value.Key))))
 			}
 
 		} else {
@@ -123,44 +123,46 @@ func (n *NameService) GetKeygroupMembers(key commons.KeygroupName, excludeSelf b
 	return
 }
 
-// IsKeygroupMember returns whether nodeID is in the keygroup kg
-func (n *NameService) IsKeygroupMember(nodeID string, kg commons.KeygroupName) (bool, error){
+// isKeygroupMember returns whether nodeID is in the keygroup kg
+func (n *nameService) isKeygroupMember(nodeID string, kg KeygroupName) (bool, error) {
 	resp, err := n.getExact(fmt.Sprintf(fmtKgNodeString, kg, nodeID))
 	if err != nil {
-		return false, frederrors.New(400, fmt.Sprintf("Node %s is not member of keygroup %s", nodeID, kg))
+		return false, errors.Errorf("Node %s is not member of keygroup %s", nodeID, kg)
 	}
 	status := string(resp[0].Value)
 
-	log.Debug().Msgf("NaSe: Is node %s member of keygroup %s ? Status is %s, so %#v", nodeID, kg, status, status=="ok")
+	log.Debug().Msgf("NaSe: Is node %s member of keygroup %s ? Status is %s, so %#v", nodeID, kg, status, status == "ok")
 
 	return status == "ok", nil
 
 }
 
-// JoinKeygroup joins an already existing keygroup
-func (n *NameService) JoinKeygroup(key commons.KeygroupName) error {
-	exists, err := n.ExistsKeygroup(key)
+/*
+// joinKeygroup joins an already existing keygroup
+func (n *nameService) joinKeygroup(key KeygroupName) error {
+	exists, err := n.existsKeygroup(key)
 	if err != nil {
 		return err
 	}
 	if !exists {
-		return errors.New("keygroup does not exists so it cannot be joined")
+		return errors.Errorf("keygroup does not exists so it cannot be joined")
 	}
 	return n.addOwnKgNodeEntry(key, "ok")
 }
+*/
 
-// JoinOtherNodeIntoKeygroup joins the node into an already existing keygroup
-func (n *NameService) JoinOtherNodeIntoKeygroup(key commons.KeygroupName, otherNodeID replication.ID) error {
-	exists, err := n.ExistsKeygroup(key)
+// joinOtherNodeIntoKeygroup joins the node into an already existing keygroup
+func (n *nameService) joinOtherNodeIntoKeygroup(key KeygroupName, otherNodeID NodeID) error {
+	exists, err := n.existsKeygroup(key)
 	if err != nil {
 		return err
 	}
 	if !exists {
-		return errors.New("keygroup does not exists so it cannot be joined by another node")
+		return errors.Errorf("keygroup does not exists so it cannot be joined by another node")
 	}
 
 	// Check whether the other node exists
-	_, _, err = n.GetNodeAdress(otherNodeID)
+	_, _, err = n.getNodeAdress(otherNodeID)
 	if err != nil {
 		log.Err(err).Msgf("Cannot join other node into a keygroup because the other nodes does not exist according to NaSe. Key: %s, otherNode: %s", key, otherNodeID)
 		return err
@@ -169,30 +171,32 @@ func (n *NameService) JoinOtherNodeIntoKeygroup(key commons.KeygroupName, otherN
 	return n.addOtherKgNodeEntry(otherNodeID, key, "ok")
 }
 
-// ExitKeygroup exits the local node from the keygroup
-func (n *NameService) ExitKeygroup(key commons.KeygroupName) error {
-	exists, err := n.ExistsKeygroup(key)
+/*
+// exitKeygroup exits the local node from the keygroup
+func (n *nameService) exitKeygroup(key KeygroupName) error {
+	exists, err := n.existsKeygroup(key)
 	if err != nil {
 		return err
 	}
 	if !exists {
-		return errors.New("keygroup does not exists so it cannot be exited")
+		return errors.Errorf("keygroup does not exists so it cannot be exited")
 	}
 	return n.addOwnKgNodeEntry(key, "removed")
 }
+*/
 
-// ExitOtherNodeFromKeygroup deletes the node from the NaSe
-func (n *NameService) ExitOtherNodeFromKeygroup(key commons.KeygroupName, otherNodeID replication.ID) error {
-	exists, err := n.ExistsKeygroup(key)
+// exitOtherNodeFromKeygroup deletes the node from the NaSe
+func (n *nameService) exitOtherNodeFromKeygroup(key KeygroupName, otherNodeID NodeID) error {
+	exists, err := n.existsKeygroup(key)
 	if err != nil {
 		return err
 	}
 	if !exists {
-		return errors.New("keygroup does not exists so another node cannot exit it")
+		return errors.Errorf("keygroup does not exists so another node cannot exit it")
 	}
 
 	// Check whether the other node exists
-	_, _, err = n.GetNodeAdress(otherNodeID)
+	_, _, err = n.getNodeAdress(otherNodeID)
 	if err != nil {
 		log.Err(err).Msgf("Cannot exit other node from a keygroup because the other nodes does not exist according to NaSe. Key: %s, otherNode: %s", key, otherNodeID)
 		return err
@@ -201,37 +205,37 @@ func (n *NameService) ExitOtherNodeFromKeygroup(key commons.KeygroupName, otherN
 	return n.addOtherKgNodeEntry(otherNodeID, key, "removed")
 }
 
-// DeleteKeygroup marks the keygroup as "deleted" in the NaSe
-func (n *NameService) DeleteKeygroup(key commons.KeygroupName) error {
+// deleteKeygroup marks the keygroup as "deleted" in the NaSe
+func (n *nameService) deleteKeygroup(key KeygroupName) error {
 	return n.put(fmt.Sprintf(fmtKgStatusString, key), "deleted")
 }
 
-// GetNodeAdress returns the ip and port of a node
-func (n *NameService) GetNodeAdress(nodeID replication.ID) (addr replication.Address, port int, err error) {
+// getNodeAdress returns the ip and port of a node
+func (n *nameService) getNodeAdress(nodeID NodeID) (addr Address, port int, err error) {
 	resp, err := n.getExact(fmt.Sprintf(fmtNodeAdressString, nodeID))
 	split := strings.Split(string(resp[0].Value), ":")
-	addr, _ = replication.ParseAddress(split[0])
+	addr, _ = ParseAddress(split[0])
 	port, _ = strconv.Atoi(split[1])
 	log.Debug().Msgf("Getting adress of node %s:: %s:%d", nodeID, addr.Addr, port)
 	return
 }
 
-// GetAllNodes returns all nodes that are stored in the NaSe
-func (n *NameService) GetAllNodes() (nodes []replication.Node, err error) {
+// getAllNodes returns all nodes that are stored in the NaSe
+func (n *nameService) getAllNodes() (nodes []Node, err error) {
 	resp, err := n.getPrefix(nodePrefixString)
 	for _, value := range resp {
 		key := string(value.Key)
 		res := strings.Split(string(value.Value), ":")
 		// TODO status checks
-		if strings.HasSuffix(key,"-status") {
+		if strings.HasSuffix(key, "-status") {
 			continue
 		}
 		// Now add node to return []
-		nodeID := replication.ID(strings.Split(key, "-")[1])
-		addr, _ := replication.ParseAddress(res[0])
+		nodeID := NodeID(strings.Split(key, "-")[1])
+		addr, _ := ParseAddress(res[0])
 		port, _ := strconv.Atoi(res[1])
 		log.Debug().Msgf("NaSe: GetAllNodes: Got Response %s // %s", nodeID, res)
-		node := &replication.Node{
+		node := &Node{
 			ID:   nodeID,
 			Addr: addr,
 			Port: port,
@@ -243,20 +247,20 @@ func (n *NameService) GetAllNodes() (nodes []replication.Node, err error) {
 
 // getPrefix gets every key that starts(!) with the specified string
 // the keys are sorted ascending by key for easier debugging
-func (n *NameService) getPrefix(prefix string) (kv []*mvccpb.KeyValue, err error) {
+func (n *nameService) getPrefix(prefix string) (kv []*mvccpb.KeyValue, err error) {
 	resp, err := n.cli.Get(context.Background(), prefix, clientv3.WithPrefix(), clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend))
 	kv = resp.Kvs
 	return
 }
 
 // getExact gets the exact key
-func (n *NameService) getExact(key string) (kv []*mvccpb.KeyValue, err error) {
+func (n *nameService) getExact(key string) (kv []*mvccpb.KeyValue, err error) {
 	resp, err := n.cli.Get(context.Background(), key)
 	kv = resp.Kvs
 	return
 }
 
-func (n *NameService) getKeygroupStatus(key commons.KeygroupName) (string, error) {
+func (n *nameService) getKeygroupStatus(key KeygroupName) (string, error) {
 	resp, err := n.getExact(fmt.Sprintf(fmtKgStatusString, key))
 	if resp == nil {
 		return "", err
@@ -272,30 +276,30 @@ func (n *NameService) getKeygroupStatus(key commons.KeygroupName) (string, error
 // }
 
 // put puts the value into etcd.
-func (n *NameService) put(key, value string) (err error) {
+func (n *nameService) put(key, value string) (err error) {
 	_, err = n.cli.Put(context.Background(), key, value)
 	return
 }
 
-// add the entry for this node with a status
-func (n *NameService) addOwnKgNodeEntry(keygroup commons.KeygroupName, status string) error {
+// addOwnKgNodeEntry adds the entry for this node with a status.
+func (n *nameService) addOwnKgNodeEntry(keygroup KeygroupName, status string) error {
 	return n.put(n.fmtKgNode(keygroup), status)
 }
 
-// add the entry for a remote node with a status
-func (n *NameService) addOtherKgNodeEntry(node replication.ID, keygroup commons.KeygroupName, status string) error {
+// addOtherKgNodeEntry adds the entry for a remote node with a status.
+func (n *nameService) addOtherKgNodeEntry(node NodeID, keygroup KeygroupName, status string) error {
 	key := fmt.Sprintf(fmtKgNodeString, string(keygroup), node)
 	return n.put(key, status)
 }
 
-// add the entry for a (new!) keygroup with a status
-func (n *NameService) addKgStatusEntry(keygroup commons.KeygroupName, status string) error {
+// addKgStatusEntry adds the entry for a (new!) keygroup with a status.
+func (n *nameService) addKgStatusEntry(keygroup KeygroupName, status string) error {
 	return n.put(fmt.Sprintf(fmtKgStatusString, string(keygroup)), status)
 }
 
-// fmtKgNodeString turns a keygroup name into the key that this node will save its state in
+// fmtKgNode turns a keygroup name into the key that this node will save its state in
 // Currently: kg-[keygroup]-node-[NodeID]
-func (n *NameService) fmtKgNode(keygroup commons.KeygroupName) string {
+func (n *nameService) fmtKgNode(keygroup KeygroupName) string {
 	return fmt.Sprintf(fmtKgNodeString, string(keygroup), n.NodeID)
 }
 

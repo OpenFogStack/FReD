@@ -1,6 +1,8 @@
 package leveldb
 
 import (
+	"strings"
+
 	"github.com/rs/zerolog/log"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/util"
@@ -13,12 +15,17 @@ type Storage struct {
 
 // makeKeyName creates the internal LevelDB key given a keygroup name and an id
 func makeKeyName(kgname string, id string) string {
-	return string(kgname) + "/" + id
+	return kgname + "/" + id
 }
 
 // makeKeygroupKeyName creates the internal LevelDB key given a keygroup name
 func makeKeygroupKeyName(kgname string) string {
-	return string(kgname) + "/"
+	return kgname + "/"
+}
+
+// getKey returns the keygroup and id of a key.
+func getKey(key string) (kg, id string) {
+	return strings.Split(key, "/")[0], strings.Split(key, "/")[1]
 }
 
 // New create a new Storage.
@@ -54,7 +61,6 @@ func (s *Storage) ReadAll(kg string) (map[string]string, error) {
 	iter := s.db.NewIterator(util.BytesPrefix([]byte(key)), nil)
 	defer iter.Release()
 
-	var items []data.Item
 	l := 0
 
 	for iter.Next() {
@@ -65,12 +71,14 @@ func (s *Storage) ReadAll(kg string) (map[string]string, error) {
 
 	next := iter.First()
 	for next {
-		if string(iter.Key()) == key {
+		_, key = getKey(string(iter.Key()))
+
+		if string(iter.Key()) == "" {
 			next = iter.Next()
 			continue
 		}
 
-		items[string(iter.Key())] = string(iter.Value())
+		items[key] = string(iter.Value())
 
 		next = iter.Next()
 	}
@@ -101,12 +109,15 @@ func (s *Storage) IDs(kg string) ([]string, error) {
 	next := iter.First()
 
 	for next {
-		if string(iter.Key()) == key {
+
+		_, key = getKey(string(iter.Key()))
+
+		if string(iter.Key()) == "" {
 			next = iter.Next()
 			continue
 		}
 
-		keys[l] = string(iter.Key())
+		keys[l] = key
 
 		next = iter.Next()
 

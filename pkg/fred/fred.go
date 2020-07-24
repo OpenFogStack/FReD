@@ -1,11 +1,18 @@
 package fred
 
+import (
+	"github.com/go-errors/errors"
+	"github.com/rs/zerolog/log"
+)
+
 // Config holds configuration parameters for an instance of FReD.
 type Config struct {
-	Store   Store
-	Client  Client
-	ZmqPort int
-	NodeID  string
+	Store     Store
+	Client    Client
+	ZmqHost   string
+	ZmqPort   int
+	NodeID    string
+	NaSeHosts []string
 }
 
 // Fred is an instance of FReD.
@@ -22,10 +29,6 @@ type IntHandler interface {
 	HandleDelete(i Item) error
 	HandleAddReplica(k Keygroup, n Node) error
 	HandleRemoveReplica(k Keygroup, n Node) error
-	HandleAddNode(n Node) error
-	HandleRemoveNode(n Node) error
-	HandleIntroduction(introducer Node, self Node, node []Node) error
-	HandleDetroduction() error
 }
 
 // ExtHandler is an interface that abstracts the methods of the handler that handles external requests.
@@ -47,11 +50,25 @@ type ExtHandler interface {
 // New creates a new FReD instance.
 func New(config *Config) (f Fred) {
 	s := newStoreService(config.Store)
-	k := newKeygroupStore(config.NodeID)
-	r := newReplicationService(config.ZmqPort, config.Client)
+
+	n, err := newNameService(config.NodeID, config.NaSeHosts)
+
+	if err != nil {
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		panic(err)
+	}
+
+	err = n.registerSelf(Address{Addr: config.ZmqHost}, config.ZmqPort)
+
+	if err != nil {
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		panic(err)
+	}
+
+	r := newReplicationService(config.ZmqPort, config.Store, config.Client, n)
 
 	return Fred{
-		E: newExthandler(s, k, r),
-		I: newInthandler(s, k, r),
+		E: newExthandler(s, r),
+		I: newInthandler(s, r),
 	}
 }

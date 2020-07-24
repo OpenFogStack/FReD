@@ -15,7 +15,6 @@ import (
 
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/fred"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/leveldb"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/nameservice"
 	storage "gitlab.tu-berlin.de/mcc-fred/fred/pkg/storageconnection"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/webserver"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/zmq"
@@ -203,15 +202,12 @@ func main() {
 
 	c := zmq.NewClient()
 
-	nase := nameservice.New(fc.General.nodeID, []string{fc.NaSe.Host})
-	nase.RegisterSelf(replication.Address{Addr: fc.ZMQ.Host}, fc.ZMQ.Port)
-
 	f := fred.New(&fred.Config{
-		Store:   store,
-		Client:  c,
-		ZmqPort: fc.ZMQ.Port,
-		NodeID:  nodeID,
-		NaSe:    nase,
+		Store:     store,
+		Client:    c,
+		ZmqPort:   fc.ZMQ.Port,
+		NodeID:    nodeID,
+		NaSeHosts: []string{fc.NaSe.Host},
 	})
 
 	// Add more options here
