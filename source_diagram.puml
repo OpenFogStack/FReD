@@ -1,0 +1,739 @@
+@startuml
+namespace commons {
+    class commons.KeygroupName << (T, #FF7700) >>  {
+    }
+}
+
+
+namespace data {
+    class Item << (S,Aquamarine) >> {
+        + Keygroup commons.KeygroupName
+        + ID string
+        + Data string
+
+    }
+    interface Service  {
+        + Read(kg commons.KeygroupName, id string) (string, error)
+        + ReadAll(kg commons.KeygroupName) ([]Item, error)
+        + Update(i Item) error
+        + Delete(kg commons.KeygroupName, id string) error
+        + CreateKeygroup(kg commons.KeygroupName) error
+        + DeleteKeygroup(kg commons.KeygroupName) error
+
+    }
+    interface Store  {
+        + Update(i Item) error
+        + Delete(kg commons.KeygroupName, id string) error
+        + Read(kg commons.KeygroupName, id string) (string, error)
+        + ReadAll(kg commons.KeygroupName) ([]Item, error)
+        + IDs(kg commons.KeygroupName) ([]Item, error)
+        + Exists(kg commons.KeygroupName, id string) bool
+        + CreateKeygroup(kg commons.KeygroupName) error
+        + DeleteKeygroup(kg commons.KeygroupName) error
+
+    }
+    class service << (S,Aquamarine) >> {
+        - iS Store
+
+        + Read(kg commons.KeygroupName, id string) (string, error)
+        + ReadAll(kg commons.KeygroupName) ([]Item, error)
+        + Update(i Item) error
+        + Delete(kg commons.KeygroupName, id string) error
+        + CreateKeygroup(kg commons.KeygroupName) error
+        + DeleteKeygroup(kg commons.KeygroupName) error
+
+    }
+}
+
+"data.Service" <|-- "data.service"
+
+namespace errors {
+    class Error << (S,Aquamarine) >> {
+        - error string
+
+        + Code int
+
+        + Error() string
+
+    }
+}
+
+
+namespace exthandler {
+    interface Handler  {
+        + HandleCreateKeygroup(k keygroup.Keygroup) error
+        + HandleDeleteKeygroup(k keygroup.Keygroup) error
+        + HandleRead(i data.Item) (data.Item, error)
+        + HandleUpdate(i data.Item) error
+        + HandleDelete(i data.Item) error
+        + HandleAddReplica(k keygroup.Keygroup, n replication.Node) error
+        + HandleGetKeygroupReplica(k keygroup.Keygroup) ([]replication.Node, error)
+        + HandleRemoveReplica(k keygroup.Keygroup, n replication.Node) error
+        + HandleAddNode(n []replication.Node) error
+        + HandleGetReplica(n replication.Node) (replication.Node, error)
+        + HandleGetAllReplica() ([]replication.Node, error)
+        + HandleRemoveNode(n replication.Node) error
+        + HandleSeed(n replication.Node) error
+
+    }
+    class handler << (S,Aquamarine) >> {
+        - i data.Service
+        - k keygroup.Service
+        - r replication.Service
+
+        + HandleCreateKeygroup(k keygroup.Keygroup) error
+        + HandleDeleteKeygroup(k keygroup.Keygroup) error
+        + HandleRead(i data.Item) (data.Item, error)
+        + HandleUpdate(i data.Item) error
+        + HandleDelete(i data.Item) error
+        + HandleAddReplica(k keygroup.Keygroup, n replication.Node) error
+        + HandleGetKeygroupReplica(k keygroup.Keygroup) ([]replication.Node, error)
+        + HandleRemoveReplica(k keygroup.Keygroup, n replication.Node) error
+        + HandleAddNode(n []replication.Node) error
+        + HandleGetReplica(n replication.Node) (replication.Node, error)
+        + HandleGetAllReplica() ([]replication.Node, error)
+        + HandleRemoveNode(n replication.Node) error
+        + HandleSeed(n replication.Node) error
+
+    }
+}
+
+"exthandler.Handler" <|-- "exthandler.handler"
+
+namespace inthandler {
+    interface Handler  {
+        + HandleCreateKeygroup(k keygroup.Keygroup, nodes []replication.Node) error
+        + HandleDeleteKeygroup(k keygroup.Keygroup) error
+        + HandleUpdate(i data.Item) error
+        + HandleDelete(i data.Item) error
+        + HandleAddReplica(k keygroup.Keygroup, n replication.Node) error
+        + HandleRemoveReplica(k keygroup.Keygroup, n replication.Node) error
+        + HandleAddNode(n replication.Node) error
+        + HandleRemoveNode(n replication.Node) error
+        + HandleIntroduction(introducer replication.Node, self replication.Node, node []replication.Node) error
+        + HandleDetroduction() error
+
+    }
+    class handler << (S,Aquamarine) >> {
+        - i data.Service
+        - k keygroup.Service
+        - r replication.Service
+
+        + HandleCreateKeygroup(k keygroup.Keygroup, nodes []replication.Node) error
+        + HandleDeleteKeygroup(k keygroup.Keygroup) error
+        + HandleUpdate(i data.Item) error
+        + HandleDelete(i data.Item) error
+        + HandleAddReplica(k keygroup.Keygroup, n replication.Node) error
+        + HandleRemoveReplica(k keygroup.Keygroup, n replication.Node) error
+        + HandleAddNode(n replication.Node) error
+        + HandleRemoveNode(n replication.Node) error
+        + HandleIntroduction(introducer replication.Node, self replication.Node, node []replication.Node) error
+        + HandleDetroduction() error
+
+    }
+}
+
+"inthandler.Handler" <|-- "inthandler.handler"
+
+namespace keygroup {
+    class Keygroup << (S,Aquamarine) >> {
+        + Name commons.KeygroupName
+
+    }
+    interface Service  {
+        + Create(k Keygroup) error
+        + Delete(k Keygroup) error
+        + Exists(k Keygroup) bool
+
+    }
+    interface Store  {
+        + Create(k Keygroup) error
+        + Delete(k Keygroup) error
+        + Exists(k Keygroup) bool
+
+    }
+    class service << (S,Aquamarine) >> {
+        - store Store
+        - nodeID string
+
+        + Create(k Keygroup) error
+        + Delete(k Keygroup) error
+        + Exists(k Keygroup) bool
+
+    }
+}
+
+"keygroup.Service" <|-- "keygroup.service"
+"keygroup.Store" <|-- "keygroup.service"
+
+namespace leveldbsd {
+    class Storage << (S,Aquamarine) >> {
+        - db *leveldb.DB
+
+        + Read(kg commons.KeygroupName, id string) (string, error)
+        + ReadAll(kg commons.KeygroupName) ([]data.Item, error)
+        + IDs(kg commons.KeygroupName) ([]data.Item, error)
+        + Update(i data.Item) error
+        + Delete(kg commons.KeygroupName, id string) error
+        + Exists(kg commons.KeygroupName, id string) bool
+        + ExistsKeygroup(i data.Item) bool
+        + CreateKeygroup(kg commons.KeygroupName) error
+        + DeleteKeygroup(kg commons.KeygroupName) error
+
+    }
+}
+
+"data.Service" <|-- "leveldbsd.Storage"
+"data.Store" <|-- "leveldbsd.Storage"
+
+namespace main {
+    class fredConfig << (S,Aquamarine) >> {
+        + Location <font color=blue>struct</font>{float64, float64}
+        + Server <font color=blue>struct</font>{string, int, bool}
+        + Storage <font color=blue>struct</font>{string}
+        + ZMQ <font color=blue>struct</font>{int}
+        + Log <font color=blue>struct</font>{string, string}
+        + Remote <font color=blue>struct</font>{string, int}
+        + Ldb <font color=blue>struct</font>{string}
+
+    }
+}
+
+
+namespace memorykg {
+    class KeygroupStorage << (S,Aquamarine) >> {
+        - keygroups <font color=blue>map</font>[commons.KeygroupName]<font color=blue>struct</font>{}
+
+        + Create(k keygroup.Keygroup) error
+        + Delete(k keygroup.Keygroup) error
+        + Exists(k keygroup.Keygroup) bool
+
+    }
+}
+"sync.RWMutex" *-- "memorykg.KeygroupStorage"
+
+"keygroup.Service" <|-- "memorykg.KeygroupStorage"
+"keygroup.Store" <|-- "memorykg.KeygroupStorage"
+
+namespace memoryrs {
+    class ReplicationStorage << (S,Aquamarine) >> {
+        - nodes <font color=blue>map</font>[replication.ID]node
+        - kg <font color=blue>map</font>[commons.KeygroupName]<font color=blue>map</font>[replication.ID]<font color=blue>struct</font>{}
+        - nodesLock sync.RWMutex
+        - kgLock sync.RWMutex
+        - self replication.Node
+        - needsSeed bool
+
+        + CreateNode(n replication.Node) error
+        + DeleteNode(n replication.Node) error
+        + GetNode(n replication.Node) (replication.Node, error)
+        + ExistsNode(n replication.Node) bool
+        + CreateKeygroup(k replication.Keygroup) error
+        + DeleteKeygroup(k replication.Keygroup) error
+        + GetKeygroup(k replication.Keygroup) (replication.Keygroup, error)
+        + ExistsKeygroup(k replication.Keygroup) bool
+        + AddReplica(k replication.Keygroup, n replication.Node) error
+        + RemoveReplica(k replication.Keygroup, n replication.Node) error
+        + GetNodes() ([]replication.Node, error)
+        + GetReplica(k replication.Keygroup) ([]replication.Node, error)
+        + Seed(n replication.Node) error
+        + Unseed() error
+        + GetSelf() (replication.Node, error)
+
+    }
+    class node << (S,Aquamarine) >> {
+        - addr replication.Address
+        - port int
+
+    }
+}
+
+"replication.Store" <|-- "memoryrs.ReplicationStorage"
+
+namespace memorysd {
+    class Keygroup << (S,Aquamarine) >> {
+        - items <font color=blue>map</font>[string]string
+
+    }
+    class Storage << (S,Aquamarine) >> {
+        - keygroups <font color=blue>map</font>[commons.KeygroupName]Keygroup
+
+        + Read(kg commons.KeygroupName, id string) (string, error)
+        + ReadAll(kg commons.KeygroupName) ([]data.Item, error)
+        + IDs(kg commons.KeygroupName) ([]data.Item, error)
+        + Update(i data.Item) error
+        + Delete(kg commons.KeygroupName, id string) error
+        + Exists(kg commons.KeygroupName, id string) bool
+        + ExistsKeygroup(i data.Item) bool
+        + CreateKeygroup(kg commons.KeygroupName) error
+        + DeleteKeygroup(kg commons.KeygroupName) error
+
+    }
+}
+"sync.RWMutex" *-- "memorysd.Keygroup"
+"sync.RWMutex" *-- "memorysd.Storage"
+
+"data.Service" <|-- "memorysd.Storage"
+"data.Store" <|-- "memorysd.Storage"
+
+namespace memoryzmq {
+    class localMemoryMessageHandler << (S,Aquamarine) >> {
+        - i inthandler.Handler
+
+        + HandleCreateKeygroup(req *zmqcommon.KeygroupRequest, from string) 
+        + HandlePutValueIntoKeygroup(req *zmqcommon.DataRequest, from string) 
+        + HandleDeleteFromKeygroup(req *zmqcommon.DataRequest, from string) 
+        + HandleDeleteKeygroup(req *zmqcommon.KeygroupRequest, from string) 
+        + HandleAddNode(req *zmqcommon.ReplicationRequest, from string) 
+        + HandleRemoveNode(req *zmqcommon.ReplicationRequest, from string) 
+        + HandleAddReplica(req *zmqcommon.ReplicationRequest, from string) 
+        + HandleRemoveReplica(req *zmqcommon.ReplicationRequest, from string) 
+        + HandleIntroduction(req *zmqcommon.IntroductionRequest, src string) 
+        + HandleDetroduction(req *zmqcommon.IntroductionRequest, src string) 
+
+    }
+}
+
+"zmqserver.MessageHandler" <|-- "memoryzmq.localMemoryMessageHandler"
+
+namespace nameservice {
+    class NameService << (S,Aquamarine) >> {
+        - cli *clientv3.Client
+        - nodeID string
+
+        - getPrefix(prefix string) ([]*mvccpb.KeyValue, error)
+        - getExact(key string) ([]*mvccpb.KeyValue, error)
+        - getCount(prefix string) (int64, error)
+        - put(key string, value string) error
+        - addKgNodeEntry(keygroup commons.KeygroupName, status string) error
+        - addKgStatusEntry(keygroup commons.KeygroupName, status string) error
+        - fmtKgNode(keygroup commons.KeygroupName) string
+
+        + RegisterSelf(address replication.Address, port int) error
+        + ExistsKeygroup(key commons.KeygroupName) (bool, error)
+        + CreateKeygroup(key commons.KeygroupName) error
+        + GetKeygroupMembers(key commons.KeygroupName) ([]replication.ID, error)
+        + JoinKeygroup(key commons.KeygroupName) error
+        + GetNodeAdress(nodeID string) (replication.Address, int, error)
+
+    }
+}
+
+
+namespace replhandler {
+    interface Client  {
+        + SendCreateKeygroup(addr replication.Address, port int, kgname commons.KeygroupName) error
+        + SendDeleteKeygroup(addr replication.Address, port int, kgname commons.KeygroupName) error
+        + SendUpdate(addr replication.Address, port int, kgname commons.KeygroupName, id string, value string) error
+        + SendDelete(addr replication.Address, port int, kgname commons.KeygroupName, id string) error
+        + SendAddNode(addr replication.Address, port int, node replication.Node) error
+        + SendRemoveNode(addr replication.Address, port int, node replication.Node) error
+        + SendAddReplica(addr replication.Address, port int, kgname commons.KeygroupName, node replication.Node) error
+        + SendRemoveReplica(addr replication.Address, port int, kgname commons.KeygroupName, node replication.Node) error
+        + SendIntroduce(addr replication.Address, port int, self replication.Node, other replication.Node, nodes []replication.Node) error
+        + SendDetroduce(addr replication.Address, port int) error
+
+    }
+    class service << (S,Aquamarine) >> {
+        - n replication.Store
+        - c Client
+        - nase nameservice.NameService
+
+        - updateReplStorageFromNaSe() 
+
+        + CreateKeygroup(k keygroup.Keygroup) error
+        + DeleteKeygroup(k keygroup.Keygroup) error
+        + RelayDeleteKeygroup(k keygroup.Keygroup) error
+        + RelayUpdate(i data.Item) error
+        + RelayDelete(i data.Item) error
+        + AddReplica(k keygroup.Keygroup, n replication.Node, i []data.Item, relay bool) error
+        + RemoveReplica(k keygroup.Keygroup, n replication.Node, relay bool) error
+        + AddNode(n replication.Node, relay bool) error
+        + RemoveNode(n replication.Node, relay bool) error
+        + GetNode(n replication.Node) (replication.Node, error)
+        + GetNodes() ([]replication.Node, error)
+        + GetReplica(k keygroup.Keygroup) ([]replication.Node, error)
+        + Seed(n replication.Node) error
+        + Unseed() error
+
+    }
+}
+
+"replication.Service" <|-- "replhandler.service"
+
+namespace replication {
+    class Address << (S,Aquamarine) >> {
+        + Addr string
+        + IsIP bool
+
+    }
+    class Keygroup << (S,Aquamarine) >> {
+        + Name commons.KeygroupName
+        + Replica <font color=blue>map</font>[ID]<font color=blue>struct</font>{}
+
+    }
+    class Node << (S,Aquamarine) >> {
+        + ID ID
+        + Addr Address
+        + Port int
+
+    }
+    interface Service  {
+        + CreateKeygroup(k keygroup.Keygroup) error
+        + DeleteKeygroup(k keygroup.Keygroup) error
+        + RelayDeleteKeygroup(k keygroup.Keygroup) error
+        + RelayUpdate(i data.Item) error
+        + RelayDelete(i data.Item) error
+        + AddNode(n Node, relay bool) error
+        + RemoveNode(n Node, relay bool) error
+        + AddReplica(k keygroup.Keygroup, n Node, i []data.Item, relay bool) error
+        + RemoveReplica(k keygroup.Keygroup, n Node, relay bool) error
+        + GetNode(n Node) (Node, error)
+        + GetNodes() ([]Node, error)
+        + GetReplica(k keygroup.Keygroup) ([]Node, error)
+        + Seed(n Node) error
+        + Unseed() error
+
+    }
+    interface Store  {
+        + CreateNode(n Node) error
+        + DeleteNode(n Node) error
+        + GetNode(n Node) (Node, error)
+        + ExistsNode(n Node) bool
+        + CreateKeygroup(k Keygroup) error
+        + DeleteKeygroup(k Keygroup) error
+        + GetKeygroup(k Keygroup) (Keygroup, error)
+        + ExistsKeygroup(k Keygroup) bool
+        + AddReplica(k Keygroup, n Node) error
+        + RemoveReplica(k Keygroup, n Node) error
+        + GetNodes() ([]Node, error)
+        + GetReplica(k Keygroup) ([]Node, error)
+        + Seed(n Node) error
+        + Unseed() error
+        + GetSelf() (Node, error)
+
+    }
+    class replication.ID << (T, #FF7700) >>  {
+    }
+}
+
+
+namespace storage {
+    class Client << (S,Aquamarine) >> {
+        - dbClient DatabaseClient
+        - con grpc.ClientConn
+
+        + Read(kg commons.KeygroupName, id string) (string, error)
+        + ReadAll(kg commons.KeygroupName) ([]data.Item, error)
+        + Update(i data.Item) error
+        + Delete(kg commons.KeygroupName, id string) error
+        + CreateKeygroup(kg commons.KeygroupName) error
+        + DeleteKeygroup(kg commons.KeygroupName) error
+        + IDs(kg commons.KeygroupName) ([]data.Item, error)
+        + Exists(kg commons.KeygroupName, id string) bool
+        + Destroy() 
+
+    }
+    class Data << (S,Aquamarine) >> {
+        + Data string
+        + XXX_NoUnkeyedLiteral <font color=blue>struct</font>{}
+        + XXX_unrecognized []byte
+        + XXX_sizecache int32
+
+        + Reset() 
+        + String() string
+        + ProtoMessage() 
+        + Descriptor() ([]byte, []int)
+        + XXX_Unmarshal(b []byte) error
+        + XXX_Marshal(b []byte, deterministic bool) ([]byte, error)
+        + XXX_Merge(src proto.Message) 
+        + XXX_Size() int
+        + XXX_DiscardUnknown() 
+        + GetData() string
+
+    }
+    interface DatabaseClient  {
+        + Update(ctx "context.Context, in *Item, opts ...grpc.CallOption) (*Response, error)
+        + Delete(ctx "context.Context, in *Key, opts ...grpc.CallOption) (*Response, error)
+        + Read(ctx "context.Context, in *Key, opts ...grpc.CallOption) (*Data, error)
+        + ReadAll(ctx "context.Context, in *Keygroup, opts ...grpc.CallOption) (Database_ReadAllClient, error)
+        + IDs(ctx "context.Context, in *Keygroup, opts ...grpc.CallOption) (Database_IDsClient, error)
+        + Exists(ctx "context.Context, in *Key, opts ...grpc.CallOption) (*Response, error)
+        + CreateKeygroup(ctx "context.Context, in *Keygroup, opts ...grpc.CallOption) (*Response, error)
+        + DeleteKeygroup(ctx "context.Context, in *Keygroup, opts ...grpc.CallOption) (*Response, error)
+
+    }
+    interface DatabaseServer  {
+        + Update( "context.Context,  *Item) (*Response, error)
+        + Delete( "context.Context,  *Key) (*Response, error)
+        + Read( "context.Context,  *Key) (*Data, error)
+        + ReadAll( *Keygroup,  Database_ReadAllServer) error
+        + IDs( *Keygroup,  Database_IDsServer) error
+        + Exists( "context.Context,  *Key) (*Response, error)
+        + CreateKeygroup( "context.Context,  *Keygroup) (*Response, error)
+        + DeleteKeygroup( "context.Context,  *Keygroup) (*Response, error)
+
+    }
+    interface Database_IDsClient  {
+        + Recv() (*Key, error)
+
+    }
+    interface Database_IDsServer  {
+        + Send( *Key) error
+
+    }
+    interface Database_ReadAllClient  {
+        + Recv() (*Item, error)
+
+    }
+    interface Database_ReadAllServer  {
+        + Send( *Item) error
+
+    }
+    class Item << (S,Aquamarine) >> {
+        + Keygroup string
+        + Id string
+        + Data string
+        + XXX_NoUnkeyedLiteral <font color=blue>struct</font>{}
+        + XXX_unrecognized []byte
+        + XXX_sizecache int32
+
+        + Reset() 
+        + String() string
+        + ProtoMessage() 
+        + Descriptor() ([]byte, []int)
+        + XXX_Unmarshal(b []byte) error
+        + XXX_Marshal(b []byte, deterministic bool) ([]byte, error)
+        + XXX_Merge(src proto.Message) 
+        + XXX_Size() int
+        + XXX_DiscardUnknown() 
+        + GetKeygroup() string
+        + GetId() string
+        + GetData() string
+
+    }
+    class Key << (S,Aquamarine) >> {
+        + Keygroup string
+        + Id string
+        + XXX_NoUnkeyedLiteral <font color=blue>struct</font>{}
+        + XXX_unrecognized []byte
+        + XXX_sizecache int32
+
+        + Reset() 
+        + String() string
+        + ProtoMessage() 
+        + Descriptor() ([]byte, []int)
+        + XXX_Unmarshal(b []byte) error
+        + XXX_Marshal(b []byte, deterministic bool) ([]byte, error)
+        + XXX_Merge(src proto.Message) 
+        + XXX_Size() int
+        + XXX_DiscardUnknown() 
+        + GetKeygroup() string
+        + GetId() string
+
+    }
+    class Keygroup << (S,Aquamarine) >> {
+        + Keygroup string
+        + XXX_NoUnkeyedLiteral <font color=blue>struct</font>{}
+        + XXX_unrecognized []byte
+        + XXX_sizecache int32
+
+        + Reset() 
+        + String() string
+        + ProtoMessage() 
+        + Descriptor() ([]byte, []int)
+        + XXX_Unmarshal(b []byte) error
+        + XXX_Marshal(b []byte, deterministic bool) ([]byte, error)
+        + XXX_Merge(src proto.Message) 
+        + XXX_Size() int
+        + XXX_DiscardUnknown() 
+        + GetKeygroup() string
+
+    }
+    class Response << (S,Aquamarine) >> {
+        + Success bool
+        + Message string
+        + XXX_NoUnkeyedLiteral <font color=blue>struct</font>{}
+        + XXX_unrecognized []byte
+        + XXX_sizecache int32
+
+        + Reset() 
+        + String() string
+        + ProtoMessage() 
+        + Descriptor() ([]byte, []int)
+        + XXX_Unmarshal(b []byte) error
+        + XXX_Marshal(b []byte, deterministic bool) ([]byte, error)
+        + XXX_Merge(src proto.Message) 
+        + XXX_Size() int
+        + XXX_DiscardUnknown() 
+        + GetSuccess() bool
+        + GetMessage() string
+
+    }
+    class Server << (S,Aquamarine) >> {
+        - store data.Store
+
+        + Update(ctx "context.Context, item *Item) (*Response, error)
+        + Delete(ctx "context.Context, key *Key) (*Response, error)
+        + Read(ctx "context.Context, key *Key) (*Data, error)
+        + ReadAll(kg *Keygroup, server Database_ReadAllServer) error
+        + IDs(kg *Keygroup, server Database_IDsServer) error
+        + Exists(ctx "context.Context, key *Key) (*Response, error)
+        + CreateKeygroup(ctx "context.Context, kg *Keygroup) (*Response, error)
+        + DeleteKeygroup(ctx "context.Context, kg *Keygroup) (*Response, error)
+
+    }
+    class UnimplementedDatabaseServer << (S,Aquamarine) >> {
+        + Update(ctx "context.Context, req *Item) (*Response, error)
+        + Delete(ctx "context.Context, req *Key) (*Response, error)
+        + Read(ctx "context.Context, req *Key) (*Data, error)
+        + ReadAll(req *Keygroup, srv Database_ReadAllServer) error
+        + IDs(req *Keygroup, srv Database_IDsServer) error
+        + Exists(ctx "context.Context, req *Key) (*Response, error)
+        + CreateKeygroup(ctx "context.Context, req *Keygroup) (*Response, error)
+        + DeleteKeygroup(ctx "context.Context, req *Keygroup) (*Response, error)
+
+    }
+    class databaseClient << (S,Aquamarine) >> {
+        - cc grpc.ClientConnInterface
+
+        + Update(ctx "context.Context, in *Item, opts ...grpc.CallOption) (*Response, error)
+        + Delete(ctx "context.Context, in *Key, opts ...grpc.CallOption) (*Response, error)
+        + Read(ctx "context.Context, in *Key, opts ...grpc.CallOption) (*Data, error)
+        + ReadAll(ctx "context.Context, in *Keygroup, opts ...grpc.CallOption) (Database_ReadAllClient, error)
+        + IDs(ctx "context.Context, in *Keygroup, opts ...grpc.CallOption) (Database_IDsClient, error)
+        + Exists(ctx "context.Context, in *Key, opts ...grpc.CallOption) (*Response, error)
+        + CreateKeygroup(ctx "context.Context, in *Keygroup, opts ...grpc.CallOption) (*Response, error)
+        + DeleteKeygroup(ctx "context.Context, in *Keygroup, opts ...grpc.CallOption) (*Response, error)
+
+    }
+    class databaseIDsClient << (S,Aquamarine) >> {
+        + Recv() (*Key, error)
+
+    }
+    class databaseIDsServer << (S,Aquamarine) >> {
+        + Send(m *Key) error
+
+    }
+    class databaseReadAllClient << (S,Aquamarine) >> {
+        + Recv() (*Item, error)
+
+    }
+    class databaseReadAllServer << (S,Aquamarine) >> {
+        + Send(m *Item) error
+
+    }
+}
+"grpc.ClientStream" *-- "storage.databaseIDsClient"
+"grpc.ServerStream" *-- "storage.databaseIDsServer"
+"grpc.ClientStream" *-- "storage.databaseReadAllClient"
+"grpc.ServerStream" *-- "storage.databaseReadAllServer"
+
+"data.Service" <|-- "storage.Client"
+"data.Store" <|-- "storage.Client"
+"storage.DatabaseServer" <|-- "storage.Server"
+"storage.DatabaseServer" <|-- "storage.UnimplementedDatabaseServer"
+"storage.DatabaseClient" <|-- "storage.databaseClient"
+"storage.Database_IDsClient" <|-- "storage.databaseIDsClient"
+"storage.Database_IDsServer" <|-- "storage.databaseIDsServer"
+"storage.Database_ReadAllClient" <|-- "storage.databaseReadAllClient"
+"storage.Database_ReadAllServer" <|-- "storage.databaseReadAllServer"
+
+namespace zmqclient {
+    class Client << (S,Aquamarine) >> {
+        - senders <font color=blue>map</font>[string]Sender
+
+        - sendMessage(msType byte, addr replication.Address, port int, msg []byte) error
+
+        + Destroy() 
+        + SendCreateKeygroup(addr replication.Address, port int, kgname commons.KeygroupName) error
+        + SendDeleteKeygroup(addr replication.Address, port int, kgname commons.KeygroupName) error
+        + SendUpdate(addr replication.Address, port int, kgname commons.KeygroupName, id string, value string) error
+        + SendDelete(addr replication.Address, port int, kgname commons.KeygroupName, id string) error
+        + SendAddNode(addr replication.Address, port int, node replication.Node) error
+        + SendRemoveNode(addr replication.Address, port int, node replication.Node) error
+        + SendAddReplica(addr replication.Address, port int, kgname commons.KeygroupName, node replication.Node) error
+        + SendRemoveReplica(addr replication.Address, port int, kgname commons.KeygroupName, node replication.Node) error
+        + SendIntroduce(addr replication.Address, port int, self replication.Node, other replication.Node, nodes []replication.Node) error
+        + SendDetroduce(addr replication.Address, port int) error
+
+    }
+    class Sender << (S,Aquamarine) >> {
+        - socket *goczmq.Sock
+
+        + Destroy() 
+        + GetSocket() *goczmq.Sock
+        + SendBytes(data []byte) error
+        + SendMessageWithType(msType byte, data []byte) error
+
+    }
+}
+
+"replhandler.Client" <|-- "zmqclient.Client"
+
+namespace zmqcommon {
+    class DataRequest << (S,Aquamarine) >> {
+        + Keygroup string
+        + ID string
+        + Value string
+
+    }
+    class IntroductionRequest << (S,Aquamarine) >> {
+        + Self replication.Node
+        + Other replication.Node
+        + Node []replication.Node
+
+    }
+    class KeygroupRequest << (S,Aquamarine) >> {
+        + Keygroup commons.KeygroupName
+        + Nodes []replication.Node
+
+    }
+    class ReplicationRequest << (S,Aquamarine) >> {
+        + Keygroup commons.KeygroupName
+        + Node replication.Node
+
+    }
+}
+
+
+namespace zmqserver {
+    interface MessageHandler  {
+        + HandlePutValueIntoKeygroup(req *zmqcommon.DataRequest, from string) 
+        + HandleDeleteFromKeygroup(req *zmqcommon.DataRequest, from string) 
+        + HandleDeleteKeygroup(req *zmqcommon.KeygroupRequest, from string) 
+        + HandleCreateKeygroup(req *zmqcommon.KeygroupRequest, src string) 
+        + HandleAddNode(req *zmqcommon.ReplicationRequest, src string) 
+        + HandleRemoveNode(req *zmqcommon.ReplicationRequest, src string) 
+        + HandleAddReplica(req *zmqcommon.ReplicationRequest, src string) 
+        + HandleRemoveReplica(req *zmqcommon.ReplicationRequest, src string) 
+        + HandleIntroduction(req *zmqcommon.IntroductionRequest, src string) 
+        + HandleDetroduction(req *zmqcommon.IntroductionRequest, src string) 
+
+    }
+    class Receiver << (S,Aquamarine) >> {
+        - socket *goczmq.Sock
+
+        + GetSocket() *goczmq.Sock
+        + ReplyTo(id string, msType byte, data []byte) error
+        + Destroy() 
+
+    }
+    class Server << (S,Aquamarine) >> {
+        - poller *goczmq.Poller
+        - receiver *Receiver
+        - handler MessageHandler
+        - continueRunning bool
+
+        - destroy() 
+
+        + Shutdown() 
+
+    }
+}
+
+
+"__builtin__.string" #.. "commons.KeygroupName"
+"__builtin__.string" #.. "replication.ID"
+hide methods
+@enduml

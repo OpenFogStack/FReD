@@ -14,7 +14,5 @@ type Store interface {
 	RemoveReplica(k Keygroup, n Node) error
 	GetNodes() ([]Node, error)
 	GetReplica(k Keygroup) ([]Node, error)
-	Seed(n Node) error
-	Unseed() error
 	GetSelf() (Node, error)
 }

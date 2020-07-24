@@ -167,31 +167,3 @@ func (c *Client) SendRemoveReplica(addr replication.Address, port int, kgname co
 	err = c.sendMessage(zmqcommon.RemoveReplica, addr, port, req)
 	return
 }
-
-// SendIntroduce sends an introduction message to the specified node.
-func (c *Client) SendIntroduce(addr replication.Address, port int, self replication.Node, other replication.Node, nodes []replication.Node) (err error) {
-	req, err := json.Marshal(&zmqcommon.IntroductionRequest{
-		Self:  self,
-		Other: other,
-		Node:  nodes,
-	})
-
-	if err != nil {
-		return
-	}
-
-	err = c.sendMessage(zmqcommon.Introduction, addr, port, req)
-	return
-}
-
-// SendDetroduce sends a dedotruction message to the specified node.
-func (c *Client) SendDetroduce(addr replication.Address, port int) (err error) {
-	req, err := json.Marshal(&zmqcommon.IntroductionRequest{})
-
-	if err != nil {
-		return
-	}
-
-	err = c.sendMessage(zmqcommon.Detroduction, addr, port, req)
-	return
-}

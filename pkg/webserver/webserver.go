@@ -21,8 +21,6 @@ func Setup(host string, port int, h exthandler.Handler, apiversion string, useTL
 		UTC:    true,
 	}))
 
-	r.POST(apiversion+"/seed", postSeed(h))
-
 	r.GET(apiversion+"/replica", getAllReplica(h))
 	r.POST(apiversion+"/replica", postReplica(h))
 	r.GET(apiversion+"/replica/:nodeid", getReplica(h))

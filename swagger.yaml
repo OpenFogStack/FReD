@@ -23,36 +23,6 @@ schemes:
   - "https"
   - "http"
 paths:
-  /seed:
-    post:
-      tags:
-        - "seed"
-      summary: "Seeds the Node"
-      description: "Seeds the Node so replication can begin."
-      consumes:
-        - "application/json"
-      produces:
-        - "text/plain"
-        - "application/json"
-      responses:
-        200:
-          description: OK
-        404:
-          description: Bad Request, request body is malformed
-          schema:
-            $ref: "#/definitions/Error"
-        409:
-          description: Conflict, node is seeded already
-          schema:
-            $ref: "#/definitions/Error"
-      parameters:
-        - in: "body"
-          name: "body"
-          description: "Seed, contains public IP address and ID for the node."
-          required: true
-          schema:
-            $ref: "#/definitions/Seed"
-
   /keygroup/{group_id}:
     post:
       tags:
@@ -306,35 +276,6 @@ paths:
           schema:
             $ref: "#/definitions/ReplicationList"
 
-    post:
-      tags:
-        - "replication"
-      summary: "Register a new Replica Node"
-      description: "Creates a new replica node if it does not exist already or updates existing data."
-      consumes:
-        - "application/json"
-      produces:
-        - "text/plain"
-        - "application/json"
-      responses:
-        200:
-          description: OK
-        400:
-          description: Bad Request, post body does not mach definition
-          schema:
-            $ref: "#/definitions/Error"
-        409:
-          description: Conflict, Replica Node exists already
-          schema:
-            $ref: "#/definitions/Error"
-      parameters:
-        - in: "body"
-          name: "body"
-          description: "ID, Address and Port of Replica Node."
-          required: true
-          schema:
-            $ref: "#/definitions/Replica"
-
   /replica/{node_id}:
     get:
       tags:
@@ -427,23 +368,6 @@ definitions:
         - id: nodeD
           addr: localhost
           zmqPort: 5553
-  Seed:
-    type: "object"
-    required:
-      - "id"
-      - "addr"
-    properties:
-      id:
-        type: "string"
-        format: "utf-8"
-        example: nodeA
-      addr:
-        type: "string"
-        format: "utf-8"
-        example: 172.12.0.3
-    example:
-      id: nodeA
-      addr: 172.12.0.3
   Node:
     type: "object"
     required:

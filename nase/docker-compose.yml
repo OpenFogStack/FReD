@@ -1,0 +1,28 @@
+version: "3.7"
+
+services:
+  etcd:
+    image: gcr.io/etcd-development/etcd:v3.4.7
+    container_name: etcd-1
+    entrypoint: "etcd --name s-1 \
+      --data-dir /tmp/etcd/s-1 \
+      --listen-client-urls http://172.26.1.1:2379 \
+      --advertise-client-urls http://172.26.1.1:2379 \
+      --listen-peer-urls http://172.26.1.1:2380 \
+      --initial-advertise-peer-urls http://172.26.1.1:2380 \
+      --initial-cluster s-1=http://172.26.1.1:2380 \
+      --initial-cluster-token tkn \
+      --initial-cluster-state new \
+      --log-level debug \
+      --log-outputs stderr"
+    ports:
+    - 2379:2379
+    - 2380:2380
+    networks:
+      fredwork:
+        ipv4_address: 172.26.1.1
+
+networks:
+  fredwork:
+    external: true
+# docker network create fredwork --gateway 172.26.0.1 --subnet 172.26.0.0/16

@@ -8,18 +8,26 @@ require (
 	github.com/alecthomas/kingpin v2.2.6+incompatible
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
+	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/gin-contrib/logger v0.0.2
 	github.com/gin-gonic/autotls v0.0.0-20191129055149-ffaac874b99f
 	github.com/gin-gonic/gin v1.5.0
+	github.com/gogo/protobuf v1.3.1 // indirect
+	github.com/golang/protobuf v1.3.3
+	github.com/google/uuid v1.1.1 // indirect
 	github.com/mmcloughlin/geohash v0.9.0
 	github.com/rs/zerolog v1.17.2
+	github.com/spf13/afero v1.2.2 // indirect
+	github.com/stretchr/testify v1.4.0
 	github.com/syndtr/goleveldb v1.0.0
 	github.com/zeromq/goczmq v4.1.0+incompatible
-	golang.org/x/lint v0.0.0-20200130185559-910be7a94367 // indirect
-	golang.org/x/net v0.0.0-20190827160401-ba9fcec4b297 // indirect
+	go.etcd.io/etcd v0.5.0-alpha.5.0.20200306183522-221f0cc107cb
+	go.uber.org/zap v1.15.0 // indirect
+	golang.org/x/lint v0.0.0-20200302205851-738671d3881b // indirect
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
-	golang.org/x/tools v0.0.0-20200219054238-753a1d49df85 // indirect
+	golang.org/x/tools v0.0.0-20200724022722-7017fd6b1305 // indirect
+	google.golang.org/grpc v1.28.1
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/yaml.v2 v2.2.4 // indirect
-	honnef.co/go/tools v0.0.1-2019.2.3 // indirect
+	honnef.co/go/tools v0.0.1-2020.1.4 // indirect
 )

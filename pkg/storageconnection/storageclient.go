@@ -10,6 +10,7 @@ import (
 
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/commons"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/data"
+	frederrors "gitlab.tu-berlin.de/mcc-fred/fred/pkg/errors"
 )
 
 // Client to a grpc server
@@ -34,7 +35,11 @@ func NewClient(host string, port int) *Client {
 func (c Client) Read(kg commons.KeygroupName, id string) (string, error) {
 	response, err := c.dbClient.Read(context.Background(), &Key{Keygroup: string(kg), Id: id})
 	log.Debug().Err(err).Msgf("StorageClient: Read in: %#v %#v out: %#v", kg, id, response)
-	return response.Data, err
+	if err != nil {
+		// Just return null, because leveldb throws an error if the item is not found...
+		return "", frederrors.New(404, "Item not found")
+	}
+	return response.Data, nil
 }
 
 // ReadAll calls the same method on the remote server

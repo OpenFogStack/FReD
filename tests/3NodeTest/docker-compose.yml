@@ -9,7 +9,7 @@ services:
     container_name: nodeA
     volumes:
       - ./config.toml:/config.toml
-    command: --config config.toml --remote-storage-host "172.26.0.20"
+    command: --config config.toml --remote-storage-host "172.26.0.20" --zmq-host "172.26.0.10" --nodeID "nodeA"
     ports:
       - 9002:9001
     networks:
@@ -33,7 +33,7 @@ services:
     container_name: nodeB
     volumes:
       - ./config.toml:/config.toml
-    command: --config config.toml --remote-storage-host "172.26.0.21"
+    command: --config config.toml --remote-storage-host "172.26.0.21"  --zmq-host "172.26.0.11" --nodeID "nodeB"
     ports:
       - 9003:9001
     networks:
@@ -54,7 +54,7 @@ services:
     container_name: nodeC
     volumes:
       - ./config.toml:/config.toml
-    command: --config config.toml  --remote-storage-host "172.26.0.22"
+    command: --config config.toml  --remote-storage-host "172.26.0.22"  --zmq-host "172.26.0.12" --nodeID "nodeC"
     ports:
       - 9004:9001
     networks:
@@ -67,6 +67,25 @@ services:
     networks:
       fredwork:
         ipv4_address: 172.26.0.22
+
+  etcd:
+    image: gcr.io/etcd-development/etcd:v3.4.7
+    container_name: etcd-1
+    entrypoint: "etcd --name s-1 \
+      --data-dir /tmp/etcd/s-1 \
+      --listen-client-urls http://172.26.1.1:2379 \
+      --advertise-client-urls http://172.26.1.1:2379 \
+      --listen-peer-urls http://172.26.1.1:2380 \
+      --initial-advertise-peer-urls http://172.26.1.1:2380 \
+      --initial-cluster s-1=http://172.26.1.1:2380 \
+      --initial-cluster-token tkn \
+      --initial-cluster-state new"
+    ports:
+      - 2379:2379
+      - 2380:2380
+    networks:
+      fredwork:
+        ipv4_address: 172.26.1.1
 
 networks:
   fredwork:

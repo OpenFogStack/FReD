@@ -19,7 +19,7 @@ type Store interface {
 	// Needs: keygroup, id
 	Exists(kg commons.KeygroupName, id string) bool
 	// Needs: keygroup, Returns: err
-	// Doesnt really need to store the KG itself, that is keygroup/store.go's job.
+	// Doesnt really need to store the KG itself, that is NaSe's job.
 	// But might be useful for databases using it
 	CreateKeygroup(kg commons.KeygroupName) error
 	// Same as with CreateKeygroup
