@@ -20,6 +20,8 @@ type Store interface {
 	CreateKeygroup(kg string) error
 	// Same as with CreateKeygroup
 	DeleteKeygroup(kg string) error
+	// Close indicates that the underlying store should be closed as it is no longer needed.
+	Close() error
 }
 
 type storeService struct {

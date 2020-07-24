@@ -13,6 +13,11 @@ type Storage struct {
 	db *leveldb.DB
 }
 
+// Close closes the underlying LevelDB database connection.
+func (s *Storage) Close() error {
+	return s.db.Close()
+}
+
 // makeKeyName creates the internal LevelDB key given a keygroup name and an id
 func makeKeyName(kgname string, id string) string {
 	return kgname + "/" + id

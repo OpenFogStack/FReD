@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="b8b6ef1f-1fb0-45b7-ad29-aed6293e4aa1" name="Default Changelist" comment="Add Git Workflow">
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmd/frednode/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/frednode/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmd/leveldbServer/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/leveldbServer/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/badgerdb/badgerdb.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/badgerdb/badgerdb.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/fred/storeservice.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/fred/storeservice.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/leveldb/leveldb.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/leveldb/leveldb.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/storageconnection/storageclient.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/storageconnection/storageclient.go" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="DatabaseView">
+    <option name="SHOW_INTERMEDIATE" value="true" />
+    <option name="GROUP_DATA_SOURCES" value="true" />
+    <option name="GROUP_SCHEMA" value="true" />
+    <option name="GROUP_CONTENTS" value="false" />
+    <option name="SORT_POSITIONED" value="false" />
+    <option name="SHOW_EMPTY_GROUPS" value="false" />
+    <option name="AUTO_SCROLL_FROM_SOURCE" value="false" />
+    <option name="HIDDEN_KINDS">
+      <set />
+    </option>
+    <expand />
+    <select />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Go Application" />
+        <option value="Go File" />
+      </list>
+    </option>
+  </component>
+  <component name="GOROOT" path="/usr/local/opt/go/libexec" />
+  <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="ts/zmq-init" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="ROOT_SYNC" value="DONT_SYNC" />
+  </component>
+  <component name="GoLibraries">
+    <option name="indexEntireGoPath" value="false" />
+  </component>
+  <component name="JupyterTrust" id="641d5dcd-38cd-4411-9de3-7d650df613e1" />
+  <component name="ProjectId" id="1UQHL7qkcnVSusHJnh8xczT8M4H" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
+    <property name="DefaultGoTemplateProperty" value="Go File" />
+    <property name="GO_FMT" value="true" />
+    <property name="Git.Branch.Popup.ShowAllRemotes" value="true" />
+    <property name="NewWatcherDialog.advanced.open" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="add_unversioned_files" value="$PROJECT_DIR$/terraform/small-test/variables.secret.tf&#10;/Users/tobias/tubCloud/Project FReD/FReD/cmd/frednode/dummy.cc" />
+    <property name="go.import.settings.migrated" value="true" />
+    <property name="go.sdk.automatically.set" value="true" />
+    <property name="go.tried.to.enable.integration.vgo.integrator" value="true" />
+    <property name="go.vendoring.notification.had.been.shown" value="true" />
+    <property name="js.buildTools.grunt.grunt-cli.package" value="" />
+    <property name="js.buildTools.gulp.gulp_package_dir" value="" />
+    <property name="last.edited.regexp" value="google.com" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/pkg" />
+    <property name="node.js.detected.package.eslint" value="true" />
+    <property name="node.js.detected.package.tslint" value="true" />
+    <property name="node.js.path.for.package.eslint" value="project" />
+    <property name="node.js.path.for.package.tslint" value="project" />
+    <property name="node.js.selected.package.eslint" value="(autodetect)" />
+    <property name="node.js.selected.package.tslint" value="(autodetect)" />
+    <property name="nodejs.jest.jest_package" value="" />
+    <property name="nodejs.protractor.protractor_package" value="" />
+    <property name="nodejs_package_manager_path" value="npm" />
+    <property name="restartRequiresConfirmation" value="false" />
+    <property name="run.code.analysis.last.selected.profile" value="pProject Default" />
+    <property name="settings.editor.selected.configurable" value="go.sdk" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/pkg" />
+      <recent name="$PROJECT_DIR$/terraform/small-test/fred-node" />
+      <recent name="$PROJECT_DIR$/python" />
+      <recent name="$PROJECT_DIR$/tests/3NodeTest/pkg" />
+      <recent name="$PROJECT_DIR$/pkg/zmqcommon" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/pkg/zmq" />
+      <recent name="$PROJECT_DIR$/cmd/leveldbServer" />
+      <recent name="$PROJECT_DIR$/pkg/fred" />
+      <recent name="$PROJECT_DIR$/ext" />
+      <recent name="$PROJECT_DIR$" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration default="true" type="GoTestRunConfiguration" factoryName="Go Test">
+      <module name="FReD" />
+      <working_directory value="$PROJECT_DIR$/" />
+      <go_parameters value="-i" />
+      <framework value="gotest" />
+      <kind value="DIRECTORY" />
+      <directory value="$PROJECT_DIR$/../" />
+      <filePath value="$PROJECT_DIR$/" />
+      <method v="2" />
+    </configuration>
+    <configuration name="make static check" type="MAKEFILE_TARGET_RUN_CONFIGURATION" factoryName="Makefile">
+      <makefile filename="$PROJECT_DIR$/Makefile" target="staticcheck" workingDirectory="" arguments="">
+        <envs />
+      </makefile>
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="ShConfigurationType">
+      <option name="INDEPENDENT_SCRIPT_PATH" value="true" />
+      <option name="SCRIPT_PATH" value="$PROJECT_DIR$/test-client.sh" />
+      <option name="SCRIPT_OPTIONS" value="" />
+      <option name="INDEPENDENT_SCRIPT_WORKING_DIRECTORY" value="true" />
+      <option name="SCRIPT_WORKING_DIRECTORY" value="" />
+      <option name="INDEPENDENT_INTERPRETER_PATH" value="true" />
+      <option name="INTERPRETER_PATH" value="/usr/local/bin/bash" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="js.build_tools.grunt">
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="js.build_tools.gulp">
+      <node-interpreter>project</node-interpreter>
+      <node-options />
+      <gulpfile />
+      <tasks />
+      <arguments />
+      <envs />
+      <method v="2" />
+    </configuration>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="b8b6ef1f-1fb0-45b7-ad29-aed6293e4aa1" name="Default Changelist" comment="" />
+      <created>1580894241456</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1580894241456</updated>
+      <workItem from="1580894250227" duration="4096000" />
+      <workItem from="1580900705382" duration="13000" />
+      <workItem from="1584884150969" duration="71000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="2" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="oldMeFiltersMigrated" value="true" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
+    <ignored-roots>
+      <path value="$PROJECT_DIR$/src/fred-example-client" />
+      <path value="$PROJECT_DIR$/src/fred-nase" />
+      <path value="$PROJECT_DIR$/src/fred-node" />
+    </ignored-roots>
+    <MESSAGE value="Add Git Workflow" />
+    <option name="LAST_COMMIT_MESSAGE" value="Add Git Workflow" />
+  </component>
+  <component name="VgoProject">
+    <integration-enabled>true</integration-enabled>
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="632" y="462" key="#GOROOT" timestamp="1595337031374">
+      <screen x="0" y="0" width="1680" height="1050" />
+    </state>
+    <state x="632" y="462" key="#GOROOT/0.0.1680.1050@0.0.1680.1050" timestamp="1595337031374" />
+    <state width="1638" height="316" key="GridCell.Tab.0.bottom" timestamp="1595412105182">
+      <screen x="0" y="0" width="1680" height="1050" />
+    </state>
+    <state width="1638" height="316" key="GridCell.Tab.0.bottom/0.0.1680.1050@0.0.1680.1050" timestamp="1595412105182" />
+    <state width="1638" height="316" key="GridCell.Tab.0.center" timestamp="1595412105180">
+      <screen x="0" y="0" width="1680" height="1050" />
+    </state>
+    <state width="1638" height="316" key="GridCell.Tab.0.center/0.0.1680.1050@0.0.1680.1050" timestamp="1595412105180" />
+    <state width="1638" height="316" key="GridCell.Tab.0.left" timestamp="1595412105179">
+      <screen x="0" y="0" width="1680" height="1050" />
+    </state>
+    <state width="1638" height="316" key="GridCell.Tab.0.left/0.0.1680.1050@0.0.1680.1050" timestamp="1595412105179" />
+    <state width="1638" height="316" key="GridCell.Tab.0.right" timestamp="1595412105181">
+      <screen x="0" y="0" width="1680" height="1050" />
+    </state>
+    <state width="1638" height="316" key="GridCell.Tab.0.right/0.0.1680.1050@0.0.1680.1050" timestamp="1595412105181" />
+    <state x="628" y="446" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1595500551609">
+      <screen x="0" y="0" width="1680" height="1050" />
+    </state>
+    <state x="628" y="446" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.0.1680.1050@0.0.1680.1050" timestamp="1595500551609" />
+    <state x="541" y="251" width="598" height="548" key="find.popup" timestamp="1595407237817">
+      <screen x="0" y="0" width="1680" height="1050" />
+    </state>
+    <state x="541" y="251" width="598" height="548" key="find.popup/0.0.1680.1050@0.0.1680.1050" timestamp="1595407237817" />
+  </component>
+</project>
