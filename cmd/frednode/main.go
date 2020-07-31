@@ -5,6 +5,10 @@ package main
 import "C"
 
 import (
+	"fmt"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/interconnection"
+	"google.golang.org/grpc"
+	"net"
 	"os"
 	"time"
 
@@ -19,7 +23,6 @@ import (
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/leveldb"
 	storage "gitlab.tu-berlin.de/mcc-fred/fred/pkg/storageconnection"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/webserver"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/zmq"
 )
 
 type fredConfig struct {
@@ -220,7 +223,7 @@ func main() {
 		log.Fatal().Msg("unknown storage backend")
 	}
 
-	c := zmq.NewClient()
+	c := interconnection.NewClient() //zmq.NewClient()
 
 	f := fred.New(&fred.Config{
 		Store:     store,
@@ -230,20 +233,31 @@ func main() {
 		NodeID:    fc.General.nodeID,
 		NaSeHosts: []string{fc.NaSe.Host},
 	})
-
-	// Add more options here
-	zmqH := zmq.New(f.I)
-
-	zmqServer, err := zmq.Setup(fc.ZMQ.Port, nodeID, zmqH)
-
-	if err != nil {
-		panic("Cannot start zmqServer")
-	}
+	//zmqH := zmq.New(f.I)
+	//zmqServer, err := zmq.Setup(fc.ZMQ.Port, nodeID, zmqH)
+	//if err != nil {
+	//	panic("Cannot start zmqServer")
+	//}
+	go startInterconnectionServer(fc.ZMQ.Port, f.I)
 
 	log.Fatal().Err(webserver.Setup(fc.Server.Host, fc.Server.Port, f.E, apiversion, fc.Server.UseTLS, wsLogLevel)).Msg("Webserver.Setup")
 
 	// Shutdown
-	zmqServer.Shutdown()
 	c.Destroy()
 	log.Err(store.Close()).Msg("error closing database")
+}
+
+// startInterconnectionServer starts a new gprc server. Since it will mostly be started in a goroutine
+// the error will be discarded but it will be logged anyway
+func startInterconnectionServer(port int, handler fred.IntHandler) error{
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to listen")
+		return err
+	}
+	grpcServer := grpc.NewServer()
+	interconnection.RegisterNodeServer(grpcServer, interconnection.NewServer(handler))
+	grpcServer.Serve(lis)
+	log.Debug().Msgf("Interconnection Server is listening on port %d", port)
+	return nil
 }
