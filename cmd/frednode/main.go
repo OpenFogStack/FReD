@@ -223,6 +223,7 @@ func main() {
 		log.Fatal().Msg("unknown storage backend")
 	}
 
+	log.Debug().Msg("Starting Interconnection Client...")
 	c := interconnection.NewClient() //zmq.NewClient()
 
 	f := fred.New(&fred.Config{
@@ -238,6 +239,7 @@ func main() {
 	//if err != nil {
 	//	panic("Cannot start zmqServer")
 	//}
+	log.Debug().Msg("Starting Interconnection Server...")
 	go startInterconnectionServer(fc.ZMQ.Port, f.I)
 
 	log.Fatal().Err(webserver.Setup(fc.Server.Host, fc.Server.Port, f.E, apiversion, fc.Server.UseTLS, wsLogLevel)).Msg("Webserver.Setup")

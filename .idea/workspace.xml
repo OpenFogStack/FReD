@@ -4,9 +4,9 @@
     <list default="true" id="b8b6ef1f-1fb0-45b7-ad29-aed6293e4aa1" name="Default Changelist" comment="Add Git Workflow">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cmd/frednode/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/frednode/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/interconnection/interclient.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/interconnection/interclient.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/storageconnection/storageclient.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/storageconnection/storageclient.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/3NodeTest/cmd/main/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/tests/3NodeTest/cmd/main/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/3NodeTest/config.toml" beforeDir="false" afterPath="$PROJECT_DIR$/tests/3NodeTest/config.toml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -91,7 +91,7 @@
     <property name="nodejs_package_manager_path" value="npm" />
     <property name="restartRequiresConfirmation" value="false" />
     <property name="run.code.analysis.last.selected.profile" value="pProject Default" />
-    <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
+    <property name="settings.editor.selected.configurable" value="Errors" />
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
@@ -109,18 +109,7 @@
       <recent name="$PROJECT_DIR$/terraform/small-test/fred-node" />
     </key>
   </component>
-  <component name="RunManager" selected="Go Build.Run 3NodesTest (all Clients in Container)">
-    <configuration default="true" type="ArquillianJUnit" factoryName="" nameIsGenerated="true">
-      <option name="arquillianRunConfiguration">
-        <value>
-          <option name="containerStateName" value="" />
-        </value>
-      </option>
-      <option name="TEST_OBJECT" value="class" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
+  <component name="RunManager" selected="Go Build.Run fred-node">
     <configuration default="true" type="GoTestRunConfiguration" factoryName="Go Test">
       <module name="FReD" />
       <working_directory value="$PROJECT_DIR$/" />
@@ -217,7 +206,7 @@
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="project-level" UseSingleDictionary="true" transferred="true" />
   <component name="SvnConfiguration">
-    <configuration />
+    <configuration>$USER_HOME$/.subversion</configuration>
   </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
@@ -230,7 +219,8 @@
       <workItem from="1580900705382" duration="13000" />
       <workItem from="1584884150969" duration="71000" />
       <workItem from="1596184542424" duration="703000" />
-      <workItem from="1596185276604" duration="5987000" />
+      <workItem from="1596185276604" duration="8249000" />
+      <workItem from="1596525770865" duration="3560000" />
     </task>
     <servers />
   </component>
@@ -279,34 +269,34 @@
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
     <state x="718" y="183" width="465" height="577" key="#com.intellij.ide.util.MemberChooser/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1595932381779" />
-    <state width="1870" height="343" key="GridCell.Tab.0.bottom" timestamp="1596191434173">
+    <state width="1870" height="343" key="GridCell.Tab.0.bottom" timestamp="1596527016426">
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
     <state width="1638" height="316" key="GridCell.Tab.0.bottom/0.0.1680.1050@0.0.1680.1050" timestamp="1595412105182" />
-    <state width="1870" height="343" key="GridCell.Tab.0.bottom/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1596191434173" />
-    <state width="1870" height="343" key="GridCell.Tab.0.center" timestamp="1596191434173">
+    <state width="1870" height="343" key="GridCell.Tab.0.bottom/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1596527016426" />
+    <state width="1870" height="343" key="GridCell.Tab.0.center" timestamp="1596527016426">
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
     <state width="1638" height="316" key="GridCell.Tab.0.center/0.0.1680.1050@0.0.1680.1050" timestamp="1595412105180" />
-    <state width="1870" height="343" key="GridCell.Tab.0.center/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1596191434173" />
-    <state width="1870" height="343" key="GridCell.Tab.0.left" timestamp="1596191434173">
+    <state width="1870" height="343" key="GridCell.Tab.0.center/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1596527016426" />
+    <state width="1870" height="343" key="GridCell.Tab.0.left" timestamp="1596527016426">
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
     <state width="1638" height="316" key="GridCell.Tab.0.left/0.0.1680.1050@0.0.1680.1050" timestamp="1595412105179" />
-    <state width="1870" height="343" key="GridCell.Tab.0.left/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1596191434173" />
-    <state width="1870" height="343" key="GridCell.Tab.0.right" timestamp="1596191434173">
+    <state width="1870" height="343" key="GridCell.Tab.0.left/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1596527016426" />
+    <state width="1870" height="343" key="GridCell.Tab.0.right" timestamp="1596527016426">
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
     <state width="1638" height="316" key="GridCell.Tab.0.right/0.0.1680.1050@0.0.1680.1050" timestamp="1595412105181" />
-    <state width="1870" height="343" key="GridCell.Tab.0.right/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1596191434173" />
-    <state x="541" y="258" width="828" height="498" key="IDE.errors.dialog" timestamp="1595926201636">
+    <state width="1870" height="343" key="GridCell.Tab.0.right/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1596527016426" />
+    <state x="580" y="211" width="828" height="498" key="IDE.errors.dialog" timestamp="1596526554125">
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
-    <state x="541" y="258" width="828" height="498" key="IDE.errors.dialog/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1595926201636" />
-    <state x="445" y="129" key="SettingsEditor" timestamp="1596185249373">
+    <state x="580" y="211" width="828" height="498" key="IDE.errors.dialog/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1596526554125" />
+    <state x="659" y="85" key="SettingsEditor" timestamp="1596194367246">
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
-    <state x="445" y="129" key="SettingsEditor/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1596185249373" />
+    <state x="659" y="85" key="SettingsEditor/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1596194367246" />
     <state x="628" y="446" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1595500551609">
       <screen x="0" y="0" width="1680" height="1050" />
     </state>
