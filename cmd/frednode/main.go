@@ -7,6 +7,7 @@ import "C"
 import (
 	"fmt"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/interconnection"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/zmq"
 	"google.golang.org/grpc"
 	"net"
 	"os"
@@ -110,15 +111,15 @@ func main() {
 	if *nodeID != "" {
 		fc.General.nodeID = *nodeID
 	}
+	// If no NodeID is provided use lat/long as NodeID
+	if fc.General.nodeID == "" {
+		fc.General.nodeID = geohash.Encode(fc.Location.Lat, fc.Location.Lng)
+	}
 	if *lat >= -90 && *lat <= 90 {
 		fc.Location.Lat = *lat
 	}
 	if *lng >= -180 && *lng <= 180 {
 		fc.Location.Lng = *lng
-	}
-	// If no NodeID is provided use lat/long as NodeID
-	if fc.General.nodeID == "" {
-		fc.General.nodeID = geohash.Encode(fc.Location.Lat, fc.Location.Lng)
 	}
 	if *wsHost != "" {
 		fc.Server.Host = *wsHost
@@ -203,8 +204,6 @@ func main() {
 		log.Info().Msg("No Loglevel specified, using 'info'")
 	}
 
-	var nodeID = geohash.Encode(fc.Location.Lat, fc.Location.Lng)
-
 	var store fred.Store
 
 	switch fc.Storage.Adaptor {
@@ -224,7 +223,7 @@ func main() {
 	}
 
 	log.Debug().Msg("Starting Interconnection Client...")
-	c := interconnection.NewClient() //zmq.NewClient()
+	c := zmq.NewClient()//interconnection.NewClient()
 
 	f := fred.New(&fred.Config{
 		Store:     store,
@@ -234,13 +233,13 @@ func main() {
 		NodeID:    fc.General.nodeID,
 		NaSeHosts: []string{fc.NaSe.Host},
 	})
-	//zmqH := zmq.New(f.I)
-	//zmqServer, err := zmq.Setup(fc.ZMQ.Port, nodeID, zmqH)
-	//if err != nil {
-	//	panic("Cannot start zmqServer")
-	//}
-	log.Debug().Msg("Starting Interconnection Server...")
-	go startInterconnectionServer(fc.ZMQ.Port, f.I)
+	zmqH := zmq.New(f.I)
+	zmqServer, err := zmq.Setup(fc.ZMQ.Port, fc.General.nodeID, zmqH)
+	if err != nil {
+		panic("Cannot start zmqServer")
+	}
+	//log.Debug().Msg("Starting Interconnection Server...")
+	//startInterconnectionServer(fc.ZMQ.Port, &f.I)
 
 	log.Fatal().Err(webserver.Setup(fc.Server.Host, fc.Server.Port, f.E, apiversion, fc.Server.UseTLS, wsLogLevel)).Msg("Webserver.Setup")
 
@@ -251,15 +250,14 @@ func main() {
 
 // startInterconnectionServer starts a new gprc server. Since it will mostly be started in a goroutine
 // the error will be discarded but it will be logged anyway
-func startInterconnectionServer(port int, handler fred.IntHandler) error{
+func startInterconnectionServer(port int, handler *fred.IntHandler) {
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to listen")
-		return err
+		return
 	}
 	grpcServer := grpc.NewServer()
 	interconnection.RegisterNodeServer(grpcServer, interconnection.NewServer(handler))
-	grpcServer.Serve(lis)
 	log.Debug().Msgf("Interconnection Server is listening on port %d", port)
-	return nil
+	go grpcServer.Serve(lis)
 }

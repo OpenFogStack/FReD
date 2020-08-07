@@ -25,7 +25,6 @@ func NewClient() *InterClient {
 // IDK whether this would be faster to store them in a map
 func (i InterClient) getConnAndClient(host fred.Address, port int) (client NodeClient, conn *grpc.ClientConn) {
 	conn, err := grpc.Dial(net.JoinHostPort(host.Addr, string(port)), grpc.WithInsecure())
-
 	if err != nil {
 		log.Fatal().Err(err).Msg("Cannot create Grpc connection")
 		return nil, nil

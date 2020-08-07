@@ -2,6 +2,7 @@
 [general]
 # The unique name this node will have. If no nodeID is provided it will be calculated from the location
 nodeID = "nodeA"
+
 [location]
 # latitude of the server
 lat = 52.514927933123914

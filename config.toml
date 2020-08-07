@@ -13,7 +13,7 @@ ssl = false
 
 [storage]
 # adaptor can be either "leveldb" or "memory" or "remote"
-adaptor = "remote"
+adaptor = "leveldb"
 
 [zmq]
 port = 5555
@@ -31,3 +31,7 @@ level = "debug"
 # dev: print colored output to stdout
 # prod: print json to stdout
 handler = "dev"
+
+[nase]
+# adress of etcd server
+host = "172.26.1.1:2379"

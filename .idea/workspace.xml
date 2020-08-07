@@ -2,11 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="b8b6ef1f-1fb0-45b7-ad29-aed6293e4aa1" name="Default Changelist" comment="Add Git Workflow">
+      <change afterPath="$PROJECT_DIR$/pkg/interconnection/inter.pb.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pkg/interconnection/inter.proto" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/frednode/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/frednode/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/3NodeTest/config.toml" beforeDir="false" afterPath="$PROJECT_DIR$/tests/3NodeTest/config.toml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -35,7 +33,7 @@
       </list>
     </option>
   </component>
-  <component name="GOROOT" path="/usr/local/opt/go/libexec" />
+  <component name="GOROOT" path="/usr/lib/go" />
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
@@ -109,7 +107,7 @@
       <recent name="$PROJECT_DIR$/terraform/small-test/fred-node" />
     </key>
   </component>
-  <component name="RunManager" selected="Go Build.Run fred-node">
+  <component name="RunManager" selected="Go Build.Run 3NodesTest (all Clients in Container)">
     <configuration default="true" type="GoTestRunConfiguration" factoryName="Go Test">
       <module name="FReD" />
       <working_directory value="$PROJECT_DIR$/" />
@@ -220,7 +218,8 @@
       <workItem from="1584884150969" duration="71000" />
       <workItem from="1596184542424" duration="703000" />
       <workItem from="1596185276604" duration="8249000" />
-      <workItem from="1596525770865" duration="3560000" />
+      <workItem from="1596525770865" duration="13185000" />
+      <workItem from="1596786649292" duration="2441000" />
     </task>
     <servers />
   </component>
@@ -256,11 +255,11 @@
     <integration-enabled>true</integration-enabled>
   </component>
   <component name="WindowStateProjectService">
-    <state x="632" y="462" key="#GOROOT" timestamp="1595337031374">
-      <screen x="0" y="0" width="1680" height="1050" />
+    <state x="718" y="439" key="#GOROOT" timestamp="1597740145346">
+      <screen x="0" y="0" width="1920" height="1080" />
     </state>
     <state x="632" y="462" key="#GOROOT/0.0.1680.1050@0.0.1680.1050" timestamp="1595337031374" />
-    <state x="720" y="457" key="#GOROOT/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1595925801848" />
+    <state x="718" y="439" key="#GOROOT/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1597740145346" />
     <state x="416" y="170" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1596185154613">
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
@@ -269,26 +268,30 @@
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
     <state x="718" y="183" width="465" height="577" key="#com.intellij.ide.util.MemberChooser/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1595932381779" />
-    <state width="1870" height="343" key="GridCell.Tab.0.bottom" timestamp="1596527016426">
+    <state x="0" y="0" width="1920" height="1061" key="DiffContextDialog" timestamp="1596789090495">
+      <screen x="0" y="0" width="1920" height="1080" />
+    </state>
+    <state x="0" y="0" width="1920" height="1061" key="DiffContextDialog/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1596789090495" />
+    <state width="1870" height="343" key="GridCell.Tab.0.bottom" timestamp="1596788741302">
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
     <state width="1638" height="316" key="GridCell.Tab.0.bottom/0.0.1680.1050@0.0.1680.1050" timestamp="1595412105182" />
-    <state width="1870" height="343" key="GridCell.Tab.0.bottom/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1596527016426" />
-    <state width="1870" height="343" key="GridCell.Tab.0.center" timestamp="1596527016426">
+    <state width="1870" height="343" key="GridCell.Tab.0.bottom/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1596788741302" />
+    <state width="1870" height="343" key="GridCell.Tab.0.center" timestamp="1596788741302">
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
     <state width="1638" height="316" key="GridCell.Tab.0.center/0.0.1680.1050@0.0.1680.1050" timestamp="1595412105180" />
-    <state width="1870" height="343" key="GridCell.Tab.0.center/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1596527016426" />
-    <state width="1870" height="343" key="GridCell.Tab.0.left" timestamp="1596527016426">
+    <state width="1870" height="343" key="GridCell.Tab.0.center/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1596788741302" />
+    <state width="1870" height="343" key="GridCell.Tab.0.left" timestamp="1596788741302">
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
     <state width="1638" height="316" key="GridCell.Tab.0.left/0.0.1680.1050@0.0.1680.1050" timestamp="1595412105179" />
-    <state width="1870" height="343" key="GridCell.Tab.0.left/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1596527016426" />
-    <state width="1870" height="343" key="GridCell.Tab.0.right" timestamp="1596527016426">
+    <state width="1870" height="343" key="GridCell.Tab.0.left/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1596788741302" />
+    <state width="1870" height="343" key="GridCell.Tab.0.right" timestamp="1596788741302">
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
     <state width="1638" height="316" key="GridCell.Tab.0.right/0.0.1680.1050@0.0.1680.1050" timestamp="1595412105181" />
-    <state width="1870" height="343" key="GridCell.Tab.0.right/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1596527016426" />
+    <state width="1870" height="343" key="GridCell.Tab.0.right/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1596788741302" />
     <state x="580" y="211" width="828" height="498" key="IDE.errors.dialog" timestamp="1596526554125">
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
@@ -297,6 +300,10 @@
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
     <state x="659" y="85" key="SettingsEditor/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1596194367246" />
+    <state x="0" y="0" width="1920" height="1061" key="ShowDiffWithBranchDialog" timestamp="1596789090495">
+      <screen x="0" y="0" width="1920" height="1080" />
+    </state>
+    <state x="0" y="0" width="1920" height="1061" key="ShowDiffWithBranchDialog/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1596789090495" />
     <state x="628" y="446" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1595500551609">
       <screen x="0" y="0" width="1680" height="1050" />
     </state>
