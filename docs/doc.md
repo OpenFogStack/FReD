@@ -133,9 +133,9 @@ This is split into four parts:
 #### WP4.1 - New Metrics and Measurement Approach for Fog Application Benchmarks
 
 First, we determine metrics for fog application benchmarks.
-Next to throughput, we must also consider data consistency and availability of the fog system.
+Next to throughput, we also consider data consistency and availability of the fog system.
 Second, we develop a measurement approach.
-This measurement approach should reflect real-world fog applications and, subsequently, consider different workloads:
+This measurement approach reflects real-world fog applications and, subsequently, consider different workloads:
 
 - stream-based continuous data inflow (e.g. from IoT devices)
 - push-based outflow (e.g. events sent to IoT actuators)
@@ -145,21 +145,19 @@ Another major consideration here is the geo-distribution of clients.
 
 #### WP4.2 - Fog Application Workloads
 
-As mentioned in WP4.2, our fog application benchmarking tool should consider different workloads at the same time.
-For each of these different workloads types, actual workloads will need to be generated.
+As mentioned in WP4.2, our fog application benchmarking tool considers different workloads at the same time.
+For each of these different workloads types, actual workloads are generated.
 To that end, we analyze real world fog applications as well as application workloads encountered by more general geo-distributed systems.
 
 #### WP4.3 - Fog Application Benchmarking Tool
 
 Using the results of WP4.1 and WP4.2 we develop a benchmarking tool for fog applications.
-
-- coordinate geo-distributed, multi-workload benchmarks
-- no negative impact on reproducibility and accuracy
-- prefer retrofitting existing tools, fallback to completely new tool
-
-Geo-Replicated benchmarkinG (GeoRG)
+This benchmarking tool coordinates geo-distributed, multi-workload benchmarks using the workloads developed in WP4.2.
+Its distributed nature does not have a negative impact on reproducibility and accuracy.
+Our Geo-Replicated benchmarkinG (GeoRG) tool is a combination and extension of existing, proven benchmarking tools rather than a completely new development.
 
 #### WP4.4 - Evaluate FogStore
 
-- benchmark different features using new benchmarking tool
-- analyze applicability of FogStore to real applications (external partners + student projects)
+Finally, we use the GeoRG tool as developed in WP4.3 to evaluate FogStore.
+We benchmark different features and deployment options to compare their impact.
+Furthermore, we also analyze the applicability of FogStore to real applications, both from external partners and in student projects.
