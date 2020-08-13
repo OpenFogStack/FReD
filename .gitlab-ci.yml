@@ -70,7 +70,6 @@ container:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker tag gitlab-registry.tubit.tu-berlin.de/mcc-fred/fred/fred gitlab-registry.tubit.tu-berlin.de/mcc-fred/fred/fred:$CONTAINER_TAG
     - docker push gitlab-registry.tubit.tu-berlin.de/mcc-fred/fred/fred:$CONTAINER_TAG
-
 # this adds a new stage to the CI process that tests the terraform files
 #terraform:
 #  stage: test_aws
