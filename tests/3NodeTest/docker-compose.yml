@@ -1,15 +1,35 @@
 version: "3.7"
 
 services:
+  tester:
+    depends_on:
+      - nodeA
+      - nodeB
+      - nodeC
+      - etcd
+    build:
+      context: ../../../fred
+      dockerfile: tester.Dockerfile
+    image: fredtester:3nodetest
+    container_name: tester
+    command: '/go/bin/main --nodeAhost "172.26.0.10" --nodeAhttp 9001 --nodeBhost "172.26.0.11" --nodeBhttp 9001 --nodeChost "172.26.0.12" --nodeChttp 9001'
+    networks:
+      fredwork:
+        ipv4_address: 172.26.2.1
+
   nodeA:
     depends_on:
+      - etcd
       - storeA
-    build: ../../../FReD
-    image: fred:3nodetest
+    build: ../../../fred
+    image: frednode:3nodetest
     container_name: nodeA
     volumes:
-      - ./config.toml:/config.toml
-    command: --config config.toml --remote-storage-host "172.26.0.20" --zmq-host "172.26.0.10" --nodeID "nodeA"
+      - type: bind
+        source: ./config.toml
+        target: /etc/fredconfig.toml
+        read_only: true
+    command: --config "/etc/fredconfig.toml" --remote-storage-host "172.26.0.20" --zmq-host "172.26.0.10" --nodeID "nodeA"
     ports:
       - 9002:9001
     networks:
@@ -18,9 +38,9 @@ services:
 
   storeA:
     build:
-      context: ../../../FReD
+      context: ../../../fred
       dockerfile: storage-leveldb.Dockerfile
-    image: fred:store
+    image: fredstore:3nodetest
     container_name: storeA
     networks:
       fredwork:
@@ -28,12 +48,16 @@ services:
 
   nodeB:
     depends_on:
+      - etcd
       - storeB
-    image: fred:3nodetest
+    image: frednode:3nodetest
     container_name: nodeB
     volumes:
-      - ./config.toml:/config.toml
-    command: --config config.toml --remote-storage-host "172.26.0.21"  --zmq-host "172.26.0.11" --nodeID "nodeB"
+      - type: bind
+        source: ./config.toml
+        target: /etc/fredconfig.toml
+        read_only: true
+    command: --config "/etc/fredconfig.toml" --remote-storage-host "172.26.0.21"  --zmq-host "172.26.0.11" --nodeID "nodeB"
     ports:
       - 9003:9001
     networks:
@@ -41,7 +65,7 @@ services:
         ipv4_address: 172.26.0.11
 
   storeB:
-    image: fred:store
+    image: fredstore:3nodetest
     container_name: storeB
     networks:
       fredwork:
@@ -49,12 +73,16 @@ services:
 
   nodeC:
     depends_on:
+      - etcd
       - storeC
-    image: fred:3nodetest
+    image: frednode:3nodetest
     container_name: nodeC
     volumes:
-      - ./config.toml:/config.toml
-    command: --config config.toml  --remote-storage-host "172.26.0.22"  --zmq-host "172.26.0.12" --nodeID "nodeC"
+      - type: bind
+        source: ./config.toml
+        target: /etc/fredconfig.toml
+        read_only: true
+    command: --config "/etc/fredconfig.toml"  --remote-storage-host "172.26.0.22"  --zmq-host "172.26.0.12" --nodeID "nodeC"
     ports:
       - 9004:9001
     networks:
@@ -62,14 +90,14 @@ services:
         ipv4_address: 172.26.0.12
 
   storeC:
-    image: fred:store
+    image: fredstore:3nodetest
     container_name: storeC
     networks:
       fredwork:
         ipv4_address: 172.26.0.22
 
   etcd:
-    image: gcr.io/etcd-development/etcd:v3.4.7
+    image: quay.io/coreos/etcd:v3.4.10
     container_name: etcd-1
     entrypoint: "etcd --name s-1 \
       --data-dir /tmp/etcd/s-1 \

@@ -77,21 +77,25 @@ func (s *Storage) Read(kg string, id string) (string, error) {
 		item, err := txn.Get(makeKeyName(kg, id))
 
 		if err != nil {
-			return errors.New(err)
+			return err
 		}
 
 		val, err := item.ValueCopy(nil)
 
 		if err != nil {
-			return errors.New(err)
+			return err
 		}
 
 		value = string(val)
 
-		return err
+		return nil
 	})
 
-	return value, err
+	if err != nil {
+		return "", errors.New(err)
+	}
+
+	return value, nil
 
 }
 
@@ -114,7 +118,7 @@ func (s *Storage) ReadAll(kg string) (map[string]string, error) {
 			v, err := item.ValueCopy(nil)
 
 			if err != nil {
-				return errors.New(err)
+				return err
 			}
 
 			items[string(item.Key())] = string(v)
@@ -122,9 +126,13 @@ func (s *Storage) ReadAll(kg string) (map[string]string, error) {
 		return nil
 	})
 
+	if err != nil {
+		return nil, errors.New(err)
+	}
+
 	delete(items, string(makeKeygroupKeyName(kg)))
 
-	return items, err
+	return items, nil
 }
 
 // IDs returns the keys of all items in the specified keygroup.
@@ -149,29 +157,45 @@ func (s *Storage) IDs(kg string) ([]string, error) {
 		return nil
 	})
 
-	return items, err
+	if err != nil {
+		return nil, errors.New(err)
+	}
+
+	return items, nil
 }
 
 // Update updates the item with the specified id in the specified keygroup.
 func (s *Storage) Update(kg, id, val string) error {
-	return s.db.Update(func(txn *badger.Txn) error {
+	err := s.db.Update(func(txn *badger.Txn) error {
 		err := txn.Set(makeKeyName(kg, id), []byte(val))
 		if err != nil {
-			return errors.New(err)
+			return err
 		}
 		return nil
 	})
+
+	if err != nil {
+		return errors.New(err)
+	}
+
+	return nil
 }
 
 // Delete deletes the item with the specified id from the specified keygroup.
 func (s *Storage) Delete(kg string, id string) error {
-	return s.db.Update(func(txn *badger.Txn) error {
+	err := s.db.Update(func(txn *badger.Txn) error {
 		err := txn.Delete(makeKeyName(kg, id))
 		if err != nil {
-			return errors.New(err)
+			return err
 		}
 		return nil
 	})
+
+	if err != nil {
+		return errors.New(err)
+	}
+
+	return nil
 }
 
 // Exists checks if the given data item exists in the leveldb database.
@@ -198,13 +222,19 @@ func (s *Storage) ExistsKeygroup(kg string) bool {
 
 // CreateKeygroup creates the given keygroup in the leveldb database.
 func (s *Storage) CreateKeygroup(kg string) error {
-	return s.db.Update(func(txn *badger.Txn) error {
+	err := s.db.Update(func(txn *badger.Txn) error {
 		err := txn.Set(makeKeygroupKeyName(kg), []byte(nil))
 		if err != nil {
-			return errors.New(err)
+			return err
 		}
 		return nil
 	})
+
+	if err != nil {
+		return errors.New(err)
+	}
+
+	return nil
 }
 
 // DeleteKeygroup deletes the given keygroup from the leveldb database.

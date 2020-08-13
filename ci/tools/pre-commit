@@ -13,7 +13,7 @@ NC='\033[0m'
 
 # ---------------------------------------- UPDATE PRE-COMMIT HOOK -------------------------------------------------
 
-if ! cmp -s ./.git/hooks/pre-commit ./ci/tools/pre-commit; then
+if [ ./.git/hooks/pre-commit -ot ./ci/tools/pre-commit ]; then
   cp ./ci/tools/pre-commit ./.git/hooks/pre-commit
   chmod +x ./.git/hooks/pre-commit
   echo "${RED}Pre-commit hook not up-to-date, updated now. Please try to commit again.${NC}"

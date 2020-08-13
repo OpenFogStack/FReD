@@ -65,6 +65,7 @@ func (h *exthandler) HandleRead(i Item) (Item, error) {
 // HandleUpdate handles requests to the Update endpoint of the client interface.
 func (h *exthandler) HandleUpdate(i Item) error {
 	if err := h.s.update(i); err != nil {
+		log.Printf("%#v", err)
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error updating item")
 	}

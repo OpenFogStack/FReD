@@ -21,6 +21,7 @@ const (
 	fmtNodeAdressString = "node-%s-address"
 	fmtNodeStatusString = "node-%s-status"
 	nodePrefixString    = "node-"
+	timeout             = 5 * time.Second
 )
 
 // nameService is the interface to the etcd server that serves as NaSe
@@ -50,8 +51,12 @@ func newNameService(nodeID string, endpoints []string) (*nameService, error) {
 // registerSelf stores information about this node
 func (n *nameService) registerSelf(address Address, port int) error {
 	key := fmt.Sprintf(fmtNodeAdressString, n.NodeID)
-	value := fmt.Sprintf("%s:%d", string(address.Addr), port)
+	value := fmt.Sprintf("%s:%d", address.Addr, port)
 	log.Debug().Msgf("NaSe: registering self as %s // %s", key, value)
+	err := n.put(key, value)
+	if err != nil {
+		return err
+	}
 	return n.put(key, value)
 }
 
@@ -87,11 +92,16 @@ func (n *nameService) createKeygroup(key KeygroupName) error {
 	// Save the status of the keygroup
 	err = n.addKgStatusEntry(key, "created")
 
+	if err != nil {
+		return err
+	}
+
 	// If the keygroup has existed before and was deleted it still has the old members
 	// Why? Because all the nodes in this keygroup should be able to know that they are in a deleted keygroup
 	// This is only a problem if a node doesn't see the delete state and only the new state in which it is not a member
 	// But in this case it should just delete itself from the keygroup
-	n.cli.Delete(context.Background(), fmt.Sprintf(fmtKgNodeString, key, ""), clientv3.WithPrefix())
+	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	_, err = n.cli.Delete(ctx, fmt.Sprintf(fmtKgNodeString, key, ""), clientv3.WithPrefix())
 
 	if err != nil {
 		return err
@@ -162,7 +172,7 @@ func (n *nameService) joinOtherNodeIntoKeygroup(key KeygroupName, otherNodeID No
 	}
 
 	// Check whether the other node exists
-	_, _, err = n.getNodeAdress(otherNodeID)
+	_, _, err = n.getNodeAddress(otherNodeID)
 	if err != nil {
 		log.Err(err).Msgf("Cannot join other node into a keygroup because the other nodes does not exist according to NaSe. Key: %s, otherNode: %s", key, otherNodeID)
 		return err
@@ -196,7 +206,7 @@ func (n *nameService) exitOtherNodeFromKeygroup(key KeygroupName, otherNodeID No
 	}
 
 	// Check whether the other node exists
-	_, _, err = n.getNodeAdress(otherNodeID)
+	_, _, err = n.getNodeAddress(otherNodeID)
 	if err != nil {
 		log.Err(err).Msgf("Cannot exit other node from a keygroup because the other nodes does not exist according to NaSe. Key: %s, otherNode: %s", key, otherNodeID)
 		return err
@@ -210,14 +220,23 @@ func (n *nameService) deleteKeygroup(key KeygroupName) error {
 	return n.put(fmt.Sprintf(fmtKgStatusString, key), "deleted")
 }
 
-// getNodeAdress returns the ip and port of a node
-func (n *nameService) getNodeAdress(nodeID NodeID) (addr Address, port int, err error) {
+// getNodeAddress returns the ip and port of a node
+func (n *nameService) getNodeAddress(nodeID NodeID) (addr Address, port int, err error) {
 	resp, err := n.getExact(fmt.Sprintf(fmtNodeAdressString, nodeID))
+
+	if err != nil {
+		return Address{}, 0, errors.New(err)
+	}
+
+	if len(resp) == 0 {
+		return Address{}, 0, errors.Errorf("no such node %s", nodeID)
+	}
+
 	split := strings.Split(string(resp[0].Value), ":")
 	addr, _ = ParseAddress(split[0])
 	port, _ = strconv.Atoi(split[1])
 	log.Debug().Msgf("Getting adress of node %s:: %s:%d", nodeID, addr.Addr, port)
-	return
+	return addr, port, nil
 }
 
 // getAllNodes returns all nodes that are stored in the NaSe
@@ -248,14 +267,26 @@ func (n *nameService) getAllNodes() (nodes []Node, err error) {
 // getPrefix gets every key that starts(!) with the specified string
 // the keys are sorted ascending by key for easier debugging
 func (n *nameService) getPrefix(prefix string) (kv []*mvccpb.KeyValue, err error) {
-	resp, err := n.cli.Get(context.Background(), prefix, clientv3.WithPrefix(), clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend))
+	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	resp, err := n.cli.Get(ctx, prefix, clientv3.WithPrefix(), clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend))
+
+	if err != nil {
+		return nil, err
+	}
+
 	kv = resp.Kvs
 	return
 }
 
 // getExact gets the exact key
 func (n *nameService) getExact(key string) (kv []*mvccpb.KeyValue, err error) {
-	resp, err := n.cli.Get(context.Background(), key)
+	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	resp, err := n.cli.Get(ctx, key)
+
+	if err != nil {
+		return nil, err
+	}
+
 	kv = resp.Kvs
 	return
 }
@@ -277,7 +308,8 @@ func (n *nameService) getKeygroupStatus(key KeygroupName) (string, error) {
 
 // put puts the value into etcd.
 func (n *nameService) put(key, value string) (err error) {
-	_, err = n.cli.Put(context.Background(), key, value)
+	ctx, _ := context.WithTimeout(context.TODO(), timeout)
+	_, err = n.cli.Put(ctx, key, value)
 	return
 }
 

@@ -41,10 +41,10 @@ func main() {
 	}
 
 	var store fred.Store = leveldb.New(*path)
-	defer log.Err(store.Close()).Msg("error closing database")
 	grpcServer := grpc.NewServer()
 	storage.RegisterDatabaseServer(grpcServer, storage.NewStorageServer(&store))
 	log.Debug().Msgf("Server is listening on port %d", *port)
-	grpcServer.Serve(lis)
+	log.Fatal().Err(grpcServer.Serve(lis))
+	log.Err(store.Close()).Msg("error closing database")
 	log.Debug().Msg("Server is done.")
 }

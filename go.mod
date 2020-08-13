@@ -1,6 +1,6 @@
 module gitlab.tu-berlin.de/mcc-fred/fred
 
-go 1.14
+go 1.13
 
 require (
 	github.com/BurntSushi/toml v0.3.1
@@ -19,7 +19,6 @@ require (
 	github.com/google/uuid v1.1.1 // indirect
 	github.com/mmcloughlin/geohash v0.9.0
 	github.com/rs/zerolog v1.17.2
-	github.com/spf13/afero v1.2.2 // indirect
 	github.com/stretchr/testify v1.4.0
 	github.com/syndtr/goleveldb v1.0.0
 	github.com/zeromq/goczmq v4.1.0+incompatible
@@ -31,7 +30,6 @@ require (
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/grpc v1.28.1
 	google.golang.org/protobuf v1.25.0
-	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/yaml.v2 v2.2.4 // indirect
 	honnef.co/go/tools v0.0.1-2020.1.5 // indirect
 )

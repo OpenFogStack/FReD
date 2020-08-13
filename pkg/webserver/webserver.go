@@ -12,8 +12,8 @@ import (
 )
 
 // Setup sets up a web server client interface for the Fred node.
-func Setup(host string, port int, h fred.ExtHandler, apiversion string, useTLS bool) error {
-	gin.SetMode("release")
+func Setup(host string, port int, h fred.ExtHandler, apiversion string, useTLS bool, loglevel string) error {
+	gin.SetMode(loglevel)
 	r := gin.New()
 
 	r.Use(logger.SetLogger(logger.Config{
@@ -46,5 +46,6 @@ func Setup(host string, port int, h fred.ExtHandler, apiversion string, useTLS b
 	}
 
 	addr := fmt.Sprintf("%s:%d", host, port)
+	log.Debug().Msgf("Starting web server on %s", addr)
 	return r.Run(addr)
 }

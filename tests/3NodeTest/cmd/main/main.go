@@ -29,25 +29,27 @@ func main() {
 		},
 	)
 
+	time.Sleep(15 * time.Second)
+
 	// Parse Flags
 	useTLS := *flag.Bool("useTLS", false, "Use TLS (HTTPS instead of HTTP)")
 
 	apiVersion := *flag.String("apiVersion", "v0", "API Version (e.g. v0)")
 
-	nodeAhost := *flag.String("nodeAhost", "localhost", "host of nodeA (e.g. localhost)")                                                // Docker: localhost
-	nodeAhttpPort := *flag.String("nodeAhttp", "9002", "port of nodeA (e.g. 9001)")                                                      // Docker: 9002
+	nodeAhost := *flag.String("nodeAhost", "172.26.0.10", "host of nodeA (e.g. localhost)") // Docker: localhost
+	nodeAhttpPort := *flag.String("nodeAhttp", "9001", "port of nodeA (e.g. 9001)")         // Docker: 9002
 	//nodeAzmqhost := *flag.String("nodeAzmqhost", "172.26.0.10", "host of nodeA (e.g. localhost) that can be reached by the other nodes") // Docker: 172.26.0.10
 	nodeAzmqPort := *flag.Int("nodeAzmqPort", 5555, "ZMQ Port of nodeA")
 	nodeAzmqID := *flag.String("nodeAzmqID", "nodeA", "ZMQ Id of nodeA")
 
-	nodeBhost := *flag.String("nodeBhost", "localhost", "host of nodeB (e.g. localhost)")
-	nodeBhttpPort := *flag.String("nodeBhttp", "9003", "port of nodeB (e.g. 9001)")
+	nodeBhost := *flag.String("nodeBhost", "172.26.0.11", "host of nodeB (e.g. localhost)")
+	nodeBhttpPort := *flag.String("nodeBhttp", "9001", "port of nodeB (e.g. 9001)")
 	//nodeBzmqhost := *flag.String("nodeBzmqhost", "172.26.0.11", "host of nodeB (e.g. localhost) that can be reached by the other nodes")
 	nodeBzmqPort := *flag.Int("nodeBzmqPort", 5555, "ZMQ Port of nodeB")
 	nodeBzmqID := *flag.String("nodeBzmqID", "nodeB", "ZMQ Id of nodeB")
 
-	nodeChost := *flag.String("nodeChost", "localhost", "host of nodeC (e.g. localhost)")
-	nodeChttpPort := *flag.String("nodeChttp", "9004", "port of nodeC (e.g. 9001)")
+	nodeChost := *flag.String("nodeChost", "172.26.0.12", "host of nodeC (e.g. localhost)")
+	nodeChttpPort := *flag.String("nodeChttp", "9001", "port of nodeC (e.g. 9001)")
 	//nodeCzmqhost := *flag.String("nodeCzmqhost", "172.26.0.12", "host of nodeC (e.g. localhost) that can be reached by the other nodes")
 	nodeCzmqPort := *flag.Int("nodeCzmqPort", 5555, "ZMQ Port of nodeC")
 	nodeCzmqID := *flag.String("nodeCzmqID", "nodeC", "ZMQ Id of nodeC")
@@ -146,7 +148,7 @@ func main() {
 	}()
 
 	if check {
-		logNodeFailure(nodeA, "parsed == ["+nodeBzmqID+", "+nodeCzmqID+ "," + nodeAzmqID + "]", fmt.Sprintf("%#v", parsed))
+		logNodeFailure(nodeA, "parsed == ["+nodeBzmqID+", "+nodeCzmqID+","+nodeAzmqID+"]", fmt.Sprintf("%#v", parsed))
 	}
 
 	// Fun with replicas
@@ -187,7 +189,7 @@ func main() {
 	nodeC.CreateKeygroup("KGN", 404, false)
 
 	logNodeAction(nodeC, "Telling a node that is not part of the keygroup that it is now part of that keygroup")
-	nodeC.AddKeygroupReplica("KGN", nodeCzmqID,200, true)
+	nodeC.AddKeygroupReplica("KGN", nodeCzmqID, 200, true)
 
 	logNodeAction(nodeA, "Creating a new Keygroup (kgall) with all three nodes as replica")
 	nodeA.CreateKeygroup("kgall", 200, true)
@@ -214,7 +216,7 @@ func main() {
 	logNodeAction(nodeB, "...re-adding the node to the keygroup all and checking whether it now gets the data (sleep 1.5s)")
 	nodeA.AddKeygroupReplica("kgall", nodeBzmqID, 200, true)
 	time.Sleep(1500 * time.Millisecond)
-	respB = nodeB.GetItem("kgall","item", 200, false)
+	respB = nodeB.GetItem("kgall", "item", 200, false)
 
 	if respB != "value" {
 		logNodeFailure(nodeA, "resp is \"value\"", resp)
@@ -245,5 +247,7 @@ func wait() {
 	if waitUser {
 		log.Info().Msg("Please press enter to continue:")
 		_, _, _ = reader.ReadLine()
+	} else {
+		time.Sleep(100 * time.Millisecond)
 	}
 }
