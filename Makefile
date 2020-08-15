@@ -8,7 +8,7 @@ GO_FILES := $(shell find . -name '*.go' | grep -v /vendor/ | grep -v /ext/ | gre
 all: build
 
 lint: ## Lint the files
-	@go get -u golang.org/x/lint/golint
+	@GO111MODULE=off go get -u golang.org/x/lint/golint
 	@golint -set_exit_status ${PKG_LIST}
 
 test: ## Run unittests
@@ -27,7 +27,7 @@ coverhtml: ## Generate global code coverage report in HTML
 	@sh ./ci/tools/coverage.sh html;
 
 dep: ## Get the dependencies
-	@go get -v -d ./...
+	@go get -d ./...
 
 build: dep ## Build the binary file
 	@go build -i -v $(PKG)/cmd/frednode
@@ -39,7 +39,7 @@ container: ## Create a Docker container
 	@docker build . -t gitlab-registry.tubit.tu-berlin.de/mcc-fred/fred/fred
 
 staticcheck: ## Do a static code check
-	@go get -u honnef.co/go/tools/cmd/staticcheck
+	@GO111MODULE=off go get -u honnef.co/go/tools/cmd/staticcheck
 	@staticcheck ${PKG_LIST}
 
 docs: ## Build the FogStore documentation

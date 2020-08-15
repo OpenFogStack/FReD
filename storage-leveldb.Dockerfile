@@ -4,8 +4,6 @@ FROM golang:1.14-alpine as golang
 
 MAINTAINER Tobias Pfandzelter <tp@mcc.tu-berlin.de>
 
-RUN apk add --no-cache build-base util-linux-dev
-
 WORKDIR /go/src/gitlab.tu-berlin.de/mcc-fred/fred/
 
 # Make an extra layer for the installed packages so that they dont have to be downloaded everytime
@@ -14,10 +12,11 @@ COPY go.sum .
 
 RUN go mod download
 
-COPY . .
+COPY pkg pkg
+COPY cmd cmd
 
 # Static build required so that we can safely copy the binary over.
-RUN go install -a -ldflags '-linkmode external -w -s -extldflags "-static -luuid" ' ./cmd/leveldbServer/
+RUN CGO_ENABLED=0 go install ./cmd/leveldbServer/
 
 # actual Docker image
 FROM scratch

@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "gitlab.tu-berlin.de/mcc-fred/fred/pkg/storageconnection";
+option go_package = ".;storageconnection";
 
 service Database {
 	rpc Update (Item) returns (Response) {}

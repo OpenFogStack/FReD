@@ -6,6 +6,7 @@ import "C"
 
 import (
 	"os"
+	"time"
 
 	"github.com/BurntSushi/toml"
 	"github.com/alecthomas/kingpin"
@@ -84,6 +85,9 @@ var (
 )
 
 func main() {
+
+	time.Sleep(5 * time.Second)
+
 	kingpin.Version(apiversion)
 	kingpin.HelpFlag.Short('h')
 	kingpin.CommandLine.Help = "Fog Replicated Database"
@@ -173,11 +177,14 @@ func main() {
 	// 	return string(s)
 	// })())
 	log.Debug().Msg("Current configuration:")
-	log.Debug().Msgf("%v", fc)
+	log.Debug().Msgf("%#v", fc)
+
+	wsLogLevel := "release"
 
 	switch fc.Log.Level {
 	case "debug":
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+		wsLogLevel = "debug"
 	case "info":
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	case "warn":
@@ -202,17 +209,13 @@ func main() {
 		// "%v": unly print field values. "%#v": also print field names
 		log.Debug().Msgf("leveldb struct is: %#v", fc.Ldb)
 		store = leveldb.New(fc.Ldb.Path)
-		defer log.Err(store.Close()).Msg("error closing database")
 	case "badgerdb":
 		log.Debug().Msgf("badgerdb struct is: %#v", fc.Ldb)
 		store = badgerdb.New(fc.Bdb.Path)
-		defer log.Err(store.Close()).Msg("error closing database")
 	case "memory":
 		store = badgerdb.NewMemory()
-		defer log.Err(store.Close()).Msg("error closing database")
 	case "remote":
 		store = storage.NewClient(fc.Remote.Host, fc.Remote.Port)
-		defer log.Err(store.Close()).Msg("error closing database")
 	default:
 		log.Fatal().Msg("unknown storage backend")
 	}
@@ -222,8 +225,9 @@ func main() {
 	f := fred.New(&fred.Config{
 		Store:     store,
 		Client:    c,
+		ZmqHost:   fc.ZMQ.Host,
 		ZmqPort:   fc.ZMQ.Port,
-		NodeID:    nodeID,
+		NodeID:    fc.General.nodeID,
 		NaSeHosts: []string{fc.NaSe.Host},
 	})
 
@@ -236,9 +240,10 @@ func main() {
 		panic("Cannot start zmqServer")
 	}
 
-	log.Fatal().Err(webserver.Setup(fc.Server.Host, fc.Server.Port, f.E, apiversion, fc.Server.UseTLS)).Msg("Webserver.Setup")
+	log.Fatal().Err(webserver.Setup(fc.Server.Host, fc.Server.Port, f.E, apiversion, fc.Server.UseTLS, wsLogLevel)).Msg("Webserver.Setup")
 
 	// Shutdown
 	zmqServer.Shutdown()
 	c.Destroy()
+	log.Err(store.Close()).Msg("error closing database")
 }

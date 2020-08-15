@@ -1,9 +1,9 @@
 # building the binary
-FROM golang:1.13-alpine as golang
+FROM golang:1.14-alpine as golang
 
 MAINTAINER Tobias Pfandzelter <tp@mcc.tu-berlin.de>
 
-RUN apk add --no-cache libzmq-static czmq-dev libsodium-static build-base util-linux-dev
+RUN apk add --no-cache libzmq-static czmq-static czmq-dev libsodium-static build-base util-linux-dev
 
 # stolen from https://github.com/drone/ca-certs/blob/master/Dockerfile
 RUN apk add -U --no-cache ca-certificates
@@ -18,7 +18,9 @@ COPY go.sum .
 
 RUN go mod download
 
-COPY . .
+COPY pkg pkg
+COPY cmd cmd
+
 
 # Static build required so that we can safely copy the binary over.
 RUN touch ./cmd/frednode/dummy.cc

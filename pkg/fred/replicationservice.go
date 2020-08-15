@@ -100,7 +100,7 @@ func (s *replicationService) RelayDeleteKeygroup(k Keygroup) error {
 	}
 
 	for _, id := range ids {
-		addr, port, err := s.n.getNodeAdress(id)
+		addr, port, err := s.n.getNodeAddress(id)
 
 		if err != nil {
 			log.Err(err).Msg("Cannot Get node adress from NaSe")
@@ -146,7 +146,7 @@ func (s *replicationService) RelayUpdate(i Item) error {
 	}
 
 	for _, id := range ids {
-		addr, port, err := s.n.getNodeAdress(id)
+		addr, port, err := s.n.getNodeAddress(id)
 
 		if err != nil {
 			log.Err(err).Msg("Cannot Get node adress from NaSe")
@@ -178,7 +178,7 @@ func (s *replicationService) RelayDelete(i Item) error {
 	ids, err := s.n.getKeygroupMembers(i.Keygroup, true)
 
 	for _, id := range ids {
-		addr, port, err := s.n.getNodeAdress(id)
+		addr, port, err := s.n.getNodeAddress(id)
 
 		if err != nil {
 			log.Err(err).Msg("Cannot Get node adress from NaSe")
@@ -213,7 +213,7 @@ func (s *replicationService) AddReplica(k Keygroup, n Node, i []Item, relay bool
 		}
 
 		// let's get the information about this new replica
-		newNodeAddr, newNodePort, err := s.n.getNodeAdress(n.ID)
+		newNodeAddr, newNodePort, err := s.n.getNodeAddress(n.ID)
 		newNode := &Node{
 			ID:   n.ID,
 			Addr: newNodeAddr,
@@ -240,7 +240,7 @@ func (s *replicationService) AddReplica(k Keygroup, n Node, i []Item, relay bool
 		}
 		for _, currID := range ids {
 			// get a replica node
-			replAddr, replPort, err := s.n.getNodeAdress(currID)
+			replAddr, replPort, err := s.n.getNodeAddress(currID)
 			replNode := &Node{
 				ID:   currID,
 				Addr: replAddr,
@@ -297,7 +297,7 @@ func (s *replicationService) RemoveReplica(k Keygroup, n Node, relay bool) error
 
 	if relay {
 		// This is the first removedNode to learn about it
-		removedNodeAddr, removedNodePort, err := s.n.getNodeAdress(n.ID)
+		removedNodeAddr, removedNodePort, err := s.n.getNodeAddress(n.ID)
 		if err != nil {
 			return err
 		}
@@ -334,7 +334,7 @@ func (s *replicationService) RemoveReplica(k Keygroup, n Node, relay bool) error
 		}
 
 		for _, idToInform := range kgMembers {
-			nodeToInformAddr, nodeToInformPort, err := s.n.getNodeAdress(idToInform)
+			nodeToInformAddr, nodeToInformPort, err := s.n.getNodeAddress(idToInform)
 
 			if err != nil {
 				return err
@@ -365,7 +365,7 @@ func (s *replicationService) RemoveReplica(k Keygroup, n Node, relay bool) error
 
 // GetNode returns the locally saved node with this ID
 func (s *replicationService) GetNode(n Node) (Node, error) {
-	addr, port, err := s.n.getNodeAdress(n.ID)
+	addr, port, err := s.n.getNodeAddress(n.ID)
 	n = Node{
 		ID:   n.ID,
 		Addr: addr,
@@ -394,7 +394,7 @@ func (s *replicationService) GetReplica(k Keygroup) (nodes []Node, err error) {
 
 	ids, err := s.n.getKeygroupMembers(k.Name, true)
 	for _, id := range ids {
-		addr, port, err := s.n.getNodeAdress(id)
+		addr, port, err := s.n.getNodeAddress(id)
 		if err != nil {
 			return nil, err
 		}
