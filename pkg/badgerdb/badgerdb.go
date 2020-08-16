@@ -111,6 +111,11 @@ func (s *Storage) ReadAll(kg string) (map[string]string, error) {
 		// this will remove the entry for our keygroup anchor point which is just "kgname-" without a value in the database
 		// iterator returns keys in lexicographical order, so just remove the first one
 		it.Seek(prefix)
+
+		if !it.ValidForPrefix(prefix) {
+			return nil
+		}
+
 		it.Next()
 
 		for ; it.ValidForPrefix(prefix); it.Next() {
@@ -129,8 +134,6 @@ func (s *Storage) ReadAll(kg string) (map[string]string, error) {
 	if err != nil {
 		return nil, errors.New(err)
 	}
-
-	delete(items, string(makeKeygroupKeyName(kg)))
 
 	return items, nil
 }

@@ -8,6 +8,7 @@ stages:
   - test
   - static_check
   - build
+  - 3nodetest
   - release
 #  - test_aws
 
@@ -59,6 +60,12 @@ build:
   stage: build
   script:
     - make
+
+3nodetest:
+  stage: 3nodetest
+  script:
+    - cd tests/3NodeTest
+    - make test
 
 container:
   stage: release

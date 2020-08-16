@@ -4,6 +4,15 @@
     <list default="true" id="b8b6ef1f-1fb0-45b7-ad29-aed6293e4aa1" name="Default Changelist" comment="Add Git Workflow">
       <change beforePath="$PROJECT_DIR$/.gitlab-ci.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.gitlab-ci.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmd/frednode/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/frednode/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/badgerdb/badgerdb.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/badgerdb/badgerdb.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/zmq/sender.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/zmq/sender.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/zmq/zmqclient.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/zmq/zmqclient.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/3NodeTest/config.toml" beforeDir="false" afterPath="$PROJECT_DIR$/tests/3NodeTest/config.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/3NodeTest/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/tests/3NodeTest/docker-compose.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/3NodeTest/pkg/node/node.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/extended-test-client.sh" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/simple-test-client.sh" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -274,10 +283,10 @@
       <screen x="0" y="0" width="1680" height="1050" />
     </state>
     <state x="628" y="446" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.0.1680.1050@0.0.1680.1050" timestamp="1595500551609" />
-    <state x="541" y="251" width="598" height="548" key="find.popup" timestamp="1597412249222">
+    <state x="541" y="251" width="598" height="548" key="find.popup" timestamp="1597590765200">
       <screen x="0" y="0" width="1680" height="1050" />
     </state>
-    <state x="541" y="251" width="598" height="548" key="find.popup/0.0.1680.1050@0.0.1680.1050" timestamp="1597412249222" />
+    <state x="541" y="251" width="598" height="548" key="find.popup/0.0.1680.1050@0.0.1680.1050" timestamp="1597590765200" />
     <state x="489" y="259" width="700" height="530" key="recent.locations.popup" timestamp="1597410510259">
       <screen x="0" y="0" width="1680" height="1050" />
     </state>

@@ -21,7 +21,7 @@ func NewSender(addr fred.Address, port int) (sen *Sender) {
 	if err != nil {
 		log.Error().Err(err).Msg("cannot create ZMQ Dealer")
 	}
-	log.Printf("Sender has created a dealer to tcp://%s:%d\n", addr.Addr, port)
+	log.Printf("Sender has created a dealer to tcp://%s:%d", addr.Addr, port)
 	sen = &Sender{dealer}
 	return
 }
