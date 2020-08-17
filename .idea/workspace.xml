@@ -4,15 +4,6 @@
     <list default="true" id="b8b6ef1f-1fb0-45b7-ad29-aed6293e4aa1" name="Default Changelist" comment="Add Git Workflow">
       <change beforePath="$PROJECT_DIR$/.gitlab-ci.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.gitlab-ci.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/frednode/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/frednode/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/badgerdb/badgerdb.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/badgerdb/badgerdb.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/zmq/sender.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/zmq/sender.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/zmq/zmqclient.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/zmq/zmqclient.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/3NodeTest/config.toml" beforeDir="false" afterPath="$PROJECT_DIR$/tests/3NodeTest/config.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/3NodeTest/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/tests/3NodeTest/docker-compose.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/3NodeTest/pkg/node/node.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/extended-test-client.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/simple-test-client.sh" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -36,8 +27,8 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="Go Application" />
         <option value="Go File" />
+        <option value="Go Application" />
       </list>
     </option>
   </component>
@@ -65,7 +56,7 @@
   </component>
   <component name="PropertiesComponent">
     <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
-    <property name="DefaultGoTemplateProperty" value="Go File" />
+    <property name="DefaultGoTemplateProperty" value="Go Application" />
     <property name="GO_FMT" value="true" />
     <property name="Git.Branch.Popup.ShowAllRemotes" value="true" />
     <property name="NewWatcherDialog.advanced.open" value="true" />
@@ -80,7 +71,7 @@
     <property name="js.buildTools.grunt.grunt-cli.package" value="" />
     <property name="js.buildTools.gulp.gulp_package_dir" value="" />
     <property name="last.edited.regexp" value="google.com" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/tests/3NodeTest" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/pkg/badgerdb" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.detected.package.tslint" value="true" />
     <property name="node.js.path.for.package.eslint" value="project" />
@@ -103,11 +94,11 @@
       <recent name="$PROJECT_DIR$" />
     </key>
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/pkg/badgerdb" />
       <recent name="$PROJECT_DIR$/tests/3NodeTest" />
       <recent name="$PROJECT_DIR$" />
       <recent name="$PROJECT_DIR$/pkg" />
       <recent name="$PROJECT_DIR$/terraform/small-test/fred-node" />
-      <recent name="$PROJECT_DIR$/python" />
     </key>
   </component>
   <component name="RunManager" selected="Go Build.Run 3NodesTest (all Clients in Container)">
@@ -182,8 +173,6 @@
       <item itemvalue="Docker.3NodeTest: Compose Deployment" />
       <item itemvalue="Docker.ci/Dockerfile" />
       <item itemvalue="Docker.fred/Dockerfile" />
-      <item itemvalue="Docker.3NodeTest.nodeA: Compose Deployment" />
-      <item itemvalue="Docker.3NodeTest.storeA: Compose Deployment" />
       <item itemvalue="Go Build.Build fred-node" />
       <item itemvalue="Go Build.Run fred-node" />
       <item itemvalue="Go Build.Run leveldbServer (./db, Port 1337)" />
@@ -194,9 +183,11 @@
       <item itemvalue="Go Test.go test memorysd" />
       <item itemvalue="Makefile.all" />
       <item itemvalue="Makefile.make lint" />
-      <item itemvalue="Makefile.make static check" />
       <item itemvalue="Node.js.run client.js" />
       <item itemvalue="Shell Script.run simple-test-client.sh" />
+      <item itemvalue="Makefile.make static check" />
+      <item itemvalue="Docker.3NodeTest.nodeA: Compose Deployment" />
+      <item itemvalue="Docker.3NodeTest.storeA: Compose Deployment" />
     </list>
     <recent_temporary>
       <list>
@@ -224,6 +215,9 @@
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="UnknownFeatures">
+    <option featureType="com.intellij.fileTypeFactory" implementationName="swagger.yaml" />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
@@ -283,13 +277,13 @@
       <screen x="0" y="0" width="1680" height="1050" />
     </state>
     <state x="628" y="446" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.0.1680.1050@0.0.1680.1050" timestamp="1595500551609" />
-    <state x="541" y="251" width="598" height="548" key="find.popup" timestamp="1597590765200">
+    <state x="541" y="251" width="598" height="548" key="find.popup" timestamp="1597675238033">
       <screen x="0" y="0" width="1680" height="1050" />
     </state>
-    <state x="541" y="251" width="598" height="548" key="find.popup/0.0.1680.1050@0.0.1680.1050" timestamp="1597590765200" />
-    <state x="489" y="259" width="700" height="530" key="recent.locations.popup" timestamp="1597410510259">
+    <state x="541" y="251" width="598" height="548" key="find.popup/0.0.1680.1050@0.0.1680.1050" timestamp="1597675238033" />
+    <state x="489" y="259" width="700" height="530" key="recent.locations.popup" timestamp="1597674931022">
       <screen x="0" y="0" width="1680" height="1050" />
     </state>
-    <state x="489" y="259" width="700" height="530" key="recent.locations.popup/0.0.1680.1050@0.0.1680.1050" timestamp="1597410510259" />
+    <state x="489" y="259" width="700" height="530" key="recent.locations.popup/0.0.1680.1050@0.0.1680.1050" timestamp="1597674931022" />
   </component>
 </project>

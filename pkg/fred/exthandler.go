@@ -53,10 +53,12 @@ func (h *exthandler) HandleDeleteKeygroup(k Keygroup) error {
 // HandleRead handles requests to the Read endpoint of the client interface.
 func (h *exthandler) HandleRead(i Item) (Item, error) {
 	result, err := h.s.read(i.Keygroup, i.ID)
+
 	if err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
-		return i, errors.Errorf("error reading item keygroup")
+		return i, errors.Errorf("error reading item %s from keygroup %s", i.ID, i.Keygroup)
 	}
+
 	// KeygroupStore result in passed object to return an Item and not only the result string
 	i.Val = result
 	return i, nil

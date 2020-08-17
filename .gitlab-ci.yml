@@ -6,12 +6,10 @@ cache:
 
 stages:
   - test
-  - static_check
   - build
   - 3nodetest
   - release
 #  - test_aws
-
 
 before_script:
   - mkdir -p .cache
@@ -52,7 +50,7 @@ lint_code:
     - make lint
 
 static_check:
-  stage: static_check
+  stage: test
   script:
     - make staticcheck
 
