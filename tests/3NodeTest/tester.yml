@@ -1,0 +1,18 @@
+version: "3.7"
+
+services:
+  tester:
+    build:
+      context: ../../../fred
+      dockerfile: tester.Dockerfile
+    image: fred/tester:local
+    container_name: tester
+    command: '/go/bin/main --nodeAhost "172.26.0.10" --nodeAhttp 9001 --nodeBhost "172.26.0.11" --nodeBhttp 9001 --nodeChost "172.26.0.12" --nodeChttp 9001'
+    networks:
+      fredwork:
+        ipv4_address: 172.26.2.1
+
+networks:
+  fredwork:
+    external: true
+# docker network create fredwork --gateway 172.26.0.1 --subnet 172.26.0.0/16

@@ -1,0 +1,47 @@
+version: "3.7"
+
+services:
+  nodeA:
+    depends_on:
+      - storeA
+    build: ../../../fred
+    image: fred/fred:local
+    container_name: nodeA
+    command: --remote-storage-host "172.26.0.20" --remote-storage-port 1337 --zmq-host "172.26.0.10" --zmq-port 5555 --nodeID "nodeA" --ws-port 9001 --adaptor "remote" --nase-host "172.26.1.1:2379" --log-level "debug" --handler "dev" --badgerdb-path "./db"
+    ports:
+      - 9002:9001
+    networks:
+      fredwork:
+        ipv4_address: 172.26.0.10
+
+  nodeB:
+    build: ../../../fred
+    depends_on:
+      - storeB
+    image: fred/fred:local
+    container_name: nodeB
+
+    command: --remote-storage-host "172.26.0.21" --remote-storage-port 1337 --zmq-host "172.26.0.11" --zmq-port 5555 --nodeID "nodeB" --ws-port 9001 --adaptor "remote" --nase-host "172.26.1.1:2379" --log-level "debug" --handler "dev" --badgerdb-path "./db"
+    ports:
+      - 9003:9001
+    networks:
+      fredwork:
+        ipv4_address: 172.26.0.11
+
+  nodeC:
+    build: ../../../fred
+    depends_on:
+      - storeC
+    image: fred/fred:local
+    container_name: nodeC
+    command: --remote-storage-host "172.26.0.22" --remote-storage-port 1337  --zmq-host "172.26.0.12" --zmq-port 5555 --nodeID "nodeC" --ws-port 9001 --adaptor "remote" --nase-host "172.26.1.1:2379" --log-level "debug" --handler "dev" --badgerdb-path "./db"
+    ports:
+      - 9004:9001
+    networks:
+      fredwork:
+        ipv4_address: 172.26.0.12
+
+networks:
+  fredwork:
+    external: true
+# docker network create fredwork --gateway 172.26.0.1 --subnet 172.26.0.0/16
