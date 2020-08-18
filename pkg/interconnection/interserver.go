@@ -32,14 +32,14 @@ func createResponse(err error) (*StatusResponse, error) {
 // CreateKeygroup calls this Method on the Inthandler
 func (s Server) CreateKeygroup(ctx context.Context, request *CreateKeygroupRequest) (*StatusResponse, error) {
 	log.Debug().Msgf("InterServer has rcvd CreateKeygroup. In: %#v", request)
-	err := s.intHandler.HandleCreateKeygroup(fred.KeygroupName(request.Keygroup))
+	err := s.intHandler.HandleCreateKeygroup(fred.Keygroup{Name: fred.KeygroupName(request.Keygroup)}, nil)
 	return createResponse(err)
 }
 
 // DeleteKeygroup calls this Method on the Inthandler
 func (s Server) DeleteKeygroup(ctx context.Context, request *DeleteKeygroupRequest) (*StatusResponse, error) {
 	log.Debug().Msgf("InterServer has rcvd DeleteKeygroup. In: %#v", request)
-	err := s.intHandler.HandleDeleteKeygroup(fred.KeygroupName(request.Keygroup))
+	err := s.intHandler.HandleDeleteKeygroup(fred.Keygroup{Name: fred.KeygroupName(request.Keygroup)})
 	return createResponse(err)
 }
 
@@ -77,13 +77,13 @@ func (s Server) DeleteItem(ctx context.Context, request *DeleteItemRequest) (*St
 // AddReplica calls this Method on the Inthandler
 func (s Server) AddReplica(ctx context.Context, request *AddReplicaRequest) (*StatusResponse, error) {
 	log.Debug().Msgf("InterServer has rcvd AddReplica. In: %#v", request)
-	err := s.intHandler.HandleAddReplica(fred.KeygroupName(request.Keygroup), fred.Node{ID: fred.NodeID(request.NodeId)})
+	err := s.intHandler.HandleAddReplica(fred.Keygroup{Name: fred.KeygroupName(request.Keygroup)}, fred.Node{ID: fred.NodeID(request.NodeId)})
 	return createResponse(err)
 }
 
 // RemoveReplica calls this Method on the Inthandler
 func (s Server) RemoveReplica(ctx context.Context, request *RemoveReplicaRequest) (*StatusResponse, error) {
 	log.Debug().Msgf("InterServer has rcvd RemoveReplica. In: %#v", request)
-	err := s.intHandler.HandleRemoveReplica(fred.KeygroupName(request.Keygroup), fred.Node{ID: fred.NodeID(request.NodeId)})
+	err := s.intHandler.HandleRemoveReplica(fred.Keygroup{Name: fred.KeygroupName(request.Keygroup)}, fred.Node{ID: fred.NodeID(request.NodeId)})
 	return createResponse(err)
 }

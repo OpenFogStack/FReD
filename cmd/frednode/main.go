@@ -7,7 +7,6 @@ import "C"
 import (
 	"fmt"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/interconnection"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/zmq"
 	"google.golang.org/grpc"
 	"net"
 	"os"
@@ -188,7 +187,7 @@ func main() {
 	switch fc.Log.Level {
 	case "debug":
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
-		wsLogLevel = "debug"
+		//wsLogLevel = "debug"
 	case "info":
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	case "warn":
@@ -223,7 +222,7 @@ func main() {
 	}
 
 	log.Debug().Msg("Starting Interconnection Client...")
-	c := zmq.NewClient()//interconnection.NewClient()
+	c := interconnection.NewClient() //zmq.NewClient()
 
 	f := fred.New(&fred.Config{
 		Store:     store,
@@ -233,31 +232,34 @@ func main() {
 		NodeID:    fc.General.nodeID,
 		NaSeHosts: []string{fc.NaSe.Host},
 	})
-	zmqH := zmq.New(f.I)
-	zmqServer, err := zmq.Setup(fc.ZMQ.Port, fc.General.nodeID, zmqH)
-	if err != nil {
-		panic("Cannot start zmqServer")
-	}
-	//log.Debug().Msg("Starting Interconnection Server...")
-	//startInterconnectionServer(fc.ZMQ.Port, &f.I)
+	//zmqH := zmq.New(f.I)
+	//zmqServer, err := zmq.Setup(fc.ZMQ.Port, fc.General.nodeID, zmqH)
+	//if err != nil {
+	//	panic("Cannot start zmqServer")
+	//}
+	log.Debug().Msg("Starting Interconnection Server...")
+	server := startInterconnectionServer(fc.ZMQ.Port, &f.I)
 
+	log.Debug().Msg("Starting Web Server...")
 	log.Fatal().Err(webserver.Setup(fc.Server.Host, fc.Server.Port, f.E, apiversion, fc.Server.UseTLS, wsLogLevel)).Msg("Webserver.Setup")
 
 	// Shutdown
 	c.Destroy()
 	log.Err(store.Close()).Msg("error closing database")
+	server.GracefulStop()
 }
 
 // startInterconnectionServer starts a new gprc server. Since it will mostly be started in a goroutine
 // the error will be discarded but it will be logged anyway
-func startInterconnectionServer(port int, handler *fred.IntHandler) {
+func startInterconnectionServer(port int, handler *fred.IntHandler) *grpc.Server {
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to listen")
-		return
+		return nil
 	}
 	grpcServer := grpc.NewServer()
 	interconnection.RegisterNodeServer(grpcServer, interconnection.NewServer(handler))
 	log.Debug().Msgf("Interconnection Server is listening on port %d", port)
 	go grpcServer.Serve(lis)
+	return grpcServer
 }

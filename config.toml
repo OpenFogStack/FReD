@@ -12,7 +12,7 @@ port = 9001
 ssl = false
 
 [storage]
-# adaptor can be either "leveldb" or "memory" or "remote"
+# adaptor can be either "leveldb" or "memory" or "badgerdb" or "remote"
 adaptor = "leveldb"
 
 [zmq]

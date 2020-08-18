@@ -11,8 +11,6 @@ type Client interface {
 	SendDeleteKeygroup(addr Address, port int, kgname KeygroupName) error
 	SendUpdate(addr Address, port int, kgname KeygroupName, id string, value string) error
 	SendDelete(addr Address, port int, kgname KeygroupName, id string) error
-	SendAddNode(addr Address, port int, node Node) error
-	SendRemoveNode(addr Address, port int, node Node) error
 	SendAddReplica(addr Address, port int, kgname KeygroupName, node Node) error
 	SendRemoveReplica(addr Address, port int, kgname KeygroupName, node Node) error
 }

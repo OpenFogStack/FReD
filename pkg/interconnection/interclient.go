@@ -3,8 +3,7 @@ package interconnection
 import (
 	"context"
 	"errors"
-	"net"
-
+	"fmt"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 
@@ -24,7 +23,7 @@ func NewClient() *InterClient {
 // Maybe it could be useful to reuse these?
 // IDK whether this would be faster to store them in a map
 func (i InterClient) getConnAndClient(host fred.Address, port int) (client NodeClient, conn *grpc.ClientConn) {
-	conn, err := grpc.Dial(net.JoinHostPort(host.Addr, string(port)), grpc.WithInsecure())
+	conn, err := grpc.Dial(fmt.Sprintf("%s:%d", host.Addr, port), grpc.WithInsecure())
 	if err != nil {
 		log.Fatal().Err(err).Msg("Cannot create Grpc connection")
 		return nil, nil
@@ -36,7 +35,11 @@ func (i InterClient) getConnAndClient(host fred.Address, port int) (client NodeC
 
 // logs the response and returns the correct error message
 func (i InterClient) dealWithStatusResponse(res *StatusResponse, err error, from string) error {
-	log.Debug().Msgf("Interclient got Response from %s, Status %s with Message %s and Error %s", from, res.Status, res.ErrorMessage, err)
+	if res != nil {
+		log.Debug().Msgf("Interclient got Response from %s, Status %s with Message %s and Error %s", from, res.Status, res.ErrorMessage, err)
+	} else {
+		log.Debug().Msgf("Interclient got empty Response from %s", from)
+	}
 	if err != nil {
 		return err
 	} else if res.Status == EnumStatus_ERROR {
