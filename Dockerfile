@@ -1,15 +1,10 @@
 # building the binary
-FROM golang:1.14-alpine as golang
+FROM golang:1.15-alpine as golang
 
 MAINTAINER Tobias Pfandzelter <tp@mcc.tu-berlin.de>
 
-RUN apk add --no-cache libzmq-static czmq-static czmq-dev libsodium-static build-base util-linux-dev
-
 # stolen from https://github.com/drone/ca-certs/blob/master/Dockerfile
 RUN apk add -U --no-cache ca-certificates
-
-RUN mkdir /lib64 && ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
-
 WORKDIR /go/src/gitlab.tu-berlin.de/mcc-fred/fred/
 
 # Make an extra layer for the installed packages so that they dont have to be downloaded everytime
@@ -21,10 +16,7 @@ RUN go mod download
 COPY pkg pkg
 COPY cmd cmd
 
-
-# Static build required so that we can safely copy the binary over.
-RUN touch ./cmd/frednode/dummy.cc
-RUN go install -a -ldflags '-linkmode external -w -s -extldflags "-static -luuid" ' ./cmd/frednode/
+RUN CGO_ENABLED=0 go install ./cmd/frednode/
 
 # actual Docker image
 FROM scratch

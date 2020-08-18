@@ -3,5 +3,6 @@
 !/cmd/*
 !go.mod
 !go.sum
-!tests
+!tests/3NodeTest/cmd
+!tests/3NodeTest/pkg/
 !ext

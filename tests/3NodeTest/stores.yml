@@ -1,0 +1,37 @@
+version: "3.7"
+
+services:
+  storeA:
+    build:
+      context: ../../../fred
+      dockerfile: storage-leveldb.Dockerfile
+    image: fred/store:local
+    container_name: storeA
+    networks:
+      fredwork:
+        ipv4_address: 172.26.0.20
+
+  storeB:
+    build:
+      context: ../../../fred
+      dockerfile: storage-leveldb.Dockerfile
+    image: fred/store:local
+    container_name: storeB
+    networks:
+      fredwork:
+        ipv4_address: 172.26.0.21
+
+  storeC:
+    build:
+      context: ../../../fred
+      dockerfile: storage-leveldb.Dockerfile
+    image: fred/store:local
+    container_name: storeC
+    networks:
+      fredwork:
+        ipv4_address: 172.26.0.22
+
+networks:
+  fredwork:
+    external: true
+# docker network create fredwork --gateway 172.26.0.1 --subnet 172.26.0.0/16
