@@ -12,7 +12,11 @@ lint: ## Lint the files
 	@golint -set_exit_status ${PKG_LIST}
 
 test: ## Run unittests
+	@rm -rf pkg/leveldb/test.db
+	@rm -rf pkg/badgerdb/test.db
 	@go test -short ${PKG_LIST}
+	@rm -rf pkg/leveldb/test.db
+	@rm -rf pkg/badgerdb/test.db
 
 race: dep ## Run data race detector
 	@go test -race -short ${PKG_LIST}

@@ -1,10 +1,12 @@
 package badgerdb
 
 import (
+	"strings"
 	"time"
 
-	badger "github.com/dgraph-io/badger/v2"
+	"github.com/dgraph-io/badger/v2"
 	"github.com/go-errors/errors"
+	"github.com/rs/zerolog/log"
 )
 
 // Storage is a struct that saves all necessary information to access the database, in this case just a pointer to the BadgerDB database.
@@ -22,13 +24,26 @@ func makeKeygroupKeyName(kgname string) []byte {
 	return []byte(kgname + "/")
 }
 
+// getKey returns the keygroup and id of a key.
+func getKey(key string) (kg, id string) {
+	s := strings.Split(key, "/")
+	kg = s[0]
+	if len(s) > 1 {
+		id = s[1]
+	}
+	return
+}
+
 // garbageCollection manages triggering garbage collection for the BadgerDB database. For now, we stick to a schedule.
 func garbageCollection(db *badger.DB) {
 	ticker := time.NewTicker(5 * time.Minute)
 	defer ticker.Stop()
 	for range ticker.C {
+		log.Debug().Msgf("BadgerDB: triggering garbage collection...")
 		for err := db.RunValueLogGC(0.7); err == nil; err = db.RunValueLogGC(0.7) {
+			log.Debug().Msgf("BadgerDB: garbage collected!")
 		}
+		log.Debug().Msgf("BadgerDB: garbage collection done")
 	}
 }
 
@@ -74,7 +89,11 @@ func (s *Storage) Read(kg string, id string) (string, error) {
 	var value string
 
 	err := s.db.View(func(txn *badger.Txn) error {
-		item, err := txn.Get(makeKeyName(kg, id))
+		key := makeKeyName(kg, id)
+
+		log.Debug().Msgf("our key is %s (%#v)", string(key), key)
+
+		item, err := txn.Get(key)
 
 		if err != nil {
 			return err
@@ -92,6 +111,11 @@ func (s *Storage) Read(kg string, id string) (string, error) {
 	})
 
 	if err != nil {
+		// if the error is a "KeyNotFound", there is no need to add a stacktrace
+		if errors.Is(err, badger.ErrKeyNotFound) {
+			return "", errors.Errorf("key not found in database: %s in keygroup %s", id, kg)
+		}
+		// if we have a different error, debug with full stacktrace
 		return "", errors.New(err)
 	}
 
@@ -104,33 +128,37 @@ func (s *Storage) ReadAll(kg string) (map[string]string, error) {
 	items := make(map[string]string)
 
 	err := s.db.View(func(txn *badger.Txn) error {
-		it := txn.NewIterator(badger.DefaultIteratorOptions)
-		defer it.Close()
 		prefix := makeKeygroupKeyName(kg)
 
-		// this will remove the entry for our keygroup anchor point which is just "kgname-" without a value in the database
-		// iterator returns keys in lexicographical order, so just remove the first one
-		it.Seek(prefix)
-		it.Next()
+		opts := badger.DefaultIteratorOptions
+		opts.Prefix = prefix
 
-		for ; it.ValidForPrefix(prefix); it.Next() {
+		it := txn.NewIterator(opts)
+		defer it.Close()
+
+		for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
 			item := it.Item()
+			_, key := getKey(string(item.Key()))
+
+			if key == "" {
+				continue
+			}
+
 			v, err := item.ValueCopy(nil)
 
 			if err != nil {
 				return err
 			}
 
-			items[string(item.Key())] = string(v)
+			items[key] = string(v)
 		}
+
 		return nil
 	})
 
 	if err != nil {
 		return nil, errors.New(err)
 	}
-
-	delete(items, string(makeKeygroupKeyName(kg)))
 
 	return items, nil
 }
@@ -140,19 +168,24 @@ func (s *Storage) IDs(kg string) ([]string, error) {
 	var items []string
 
 	err := s.db.View(func(txn *badger.Txn) error {
-		opts := badger.DefaultIteratorOptions
-		opts.PrefetchValues = false
-		it := txn.NewIterator(opts)
-		defer it.Close()
 		prefix := makeKeygroupKeyName(kg)
 
-		// this will remove the entry for our keygroup anchor point which is just "kgname-" without a value in the database
-		// iterator returns keys in lexicographical order, so just remove the first one
-		it.Seek(prefix)
-		it.Next()
+		opts := badger.DefaultIteratorOptions
+		opts.Prefix = prefix
+		opts.PrefetchValues = false
 
-		for ; it.ValidForPrefix(prefix); it.Next() {
-			items = append(items, string(it.Item().Key()))
+		it := txn.NewIterator(opts)
+		defer it.Close()
+
+		for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
+			item := it.Item()
+			_, key := getKey(string(item.Key()))
+
+			if key == "" {
+				continue
+			}
+
+			items = append(items, key)
 		}
 		return nil
 	})
@@ -167,7 +200,9 @@ func (s *Storage) IDs(kg string) ([]string, error) {
 // Update updates the item with the specified id in the specified keygroup.
 func (s *Storage) Update(kg, id, val string) error {
 	err := s.db.Update(func(txn *badger.Txn) error {
-		err := txn.Set(makeKeyName(kg, id), []byte(val))
+		key := makeKeyName(kg, id)
+
+		err := txn.Set(key, []byte(val))
 		if err != nil {
 			return err
 		}
@@ -192,6 +227,11 @@ func (s *Storage) Delete(kg string, id string) error {
 	})
 
 	if err != nil {
+		// if the error is a "KeyNotFound", there is no need to add a stacktrace
+		if errors.Is(err, badger.ErrKeyNotFound) {
+			return errors.Errorf("key not found in database: %s in keygroup %s", id, kg)
+		}
+		// if we have a different error, debug with full stacktrace
 		return errors.New(err)
 	}
 
@@ -206,7 +246,15 @@ func (s *Storage) Exists(kg string, id string) bool {
 		return err
 	})
 
-	return err == nil
+	if err == nil {
+		return true
+	}
+	// if the error is not a "KeyNotFound", there is something else going on
+	if !errors.Is(err, badger.ErrKeyNotFound) {
+		log.Err(err).Msg("")
+	}
+
+	return false
 }
 
 // ExistsKeygroup checks if the given keygroup exists in the leveldb database.
@@ -217,13 +265,21 @@ func (s *Storage) ExistsKeygroup(kg string) bool {
 		return err
 	})
 
-	return err == nil
+	if err == nil {
+		return true
+	}
+	// if the error is not a "KeyNotFound", there is something else going on
+	if !errors.Is(err, badger.ErrKeyNotFound) {
+		log.Err(err).Msg("")
+	}
+
+	return false
 }
 
 // CreateKeygroup creates the given keygroup in the leveldb database.
 func (s *Storage) CreateKeygroup(kg string) error {
 	err := s.db.Update(func(txn *badger.Txn) error {
-		err := txn.Set(makeKeygroupKeyName(kg), []byte(nil))
+		err := txn.Set(makeKeygroupKeyName(kg), []byte(kg))
 		if err != nil {
 			return err
 		}
@@ -240,7 +296,11 @@ func (s *Storage) CreateKeygroup(kg string) error {
 // DeleteKeygroup deletes the given keygroup from the leveldb database.
 func (s *Storage) DeleteKeygroup(kg string) error {
 
-	var ids [][]byte
+	// first, get all the ids in this keygroup (including the marker that the keygroup exists)
+	// why is this a string? well, it was a [][]byte before, but for some reason the underlying byte array would be
+	// overwritten with older keys in the unit tests, that was really strange
+	// so not it's an array of strings, which are immutable
+	var ids []string
 
 	err := s.db.View(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
@@ -250,7 +310,7 @@ func (s *Storage) DeleteKeygroup(kg string) error {
 		prefix := makeKeygroupKeyName(kg)
 
 		for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
-			ids = append(ids, it.Item().Key())
+			ids = append(ids, string(it.Item().Key()))
 		}
 		return nil
 	})
@@ -259,11 +319,12 @@ func (s *Storage) DeleteKeygroup(kg string) error {
 		return errors.New(err)
 	}
 
+	// then, delete all the keys
 	wb := s.db.NewWriteBatch()
 	defer wb.Cancel()
 
 	for _, id := range ids {
-		err := wb.Delete(id) // Will create txns as needed.
+		err := wb.Delete([]byte(id)) // Will create txns as needed.
 
 		if err != nil {
 			return errors.New(err)

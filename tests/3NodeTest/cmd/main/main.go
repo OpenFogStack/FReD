@@ -216,10 +216,16 @@ func main() {
 	logNodeAction(nodeB, "...re-adding the node to the keygroup all and checking whether it now gets the data (sleep 1.5s)")
 	nodeA.AddKeygroupReplica("kgall", nodeBzmqID, 200, true)
 	time.Sleep(1500 * time.Millisecond)
+	respA = nodeA.GetItem("kgall", "item", 200, false)
+
+	if respA != "value" {
+		logNodeFailure(nodeA, "resp is \"value\"", resp)
+	}
+
 	respB = nodeB.GetItem("kgall", "item", 200, false)
 
 	if respB != "value" {
-		logNodeFailure(nodeA, "resp is \"value\"", resp)
+		logNodeFailure(nodeB, "resp is \"value\"", resp)
 	}
 
 	if nodeA.Errors != 0 || nodeB.Errors != 0 || nodeC.Errors != 0 {

@@ -91,7 +91,7 @@ func (c *Client) sendMessage(msType byte, addr fred.Address, port int, msg []byt
 	endpoint := fmt.Sprintf("%s:%d", addr.Addr, port)
 	cSender, exists := c.senders[endpoint]
 	if !exists {
-		log.Debug().Msgf("Created a new Socket to send to node %s:%d \n", addr.Addr, port)
+		log.Debug().Msgf("Created a new Socket to send to node %s:%d", addr.Addr, port)
 		cSender = *NewSender(addr, port)
 		c.senders[endpoint] = cSender
 		// If the controller also needs to listen to answers

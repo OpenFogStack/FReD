@@ -80,7 +80,7 @@ var (
 	remoteStoragePort = kingpin.Flag("remote-storage-port", "Port of GRPC Server.").PlaceHolder("WS-PORT").Default("-1").Int()
 	ldbPath           = kingpin.Flag("leveldb-path", "Path to the leveldb database").String()
 	// TODO this should be a list of nodes. One node is enough, but if we want reliability we should accept multiple etcd nodes
-	naseHost = kingpin.Flag("naseHost", "Host where the etcd-server runs").String()
+	naseHost = kingpin.Flag("nase-host", "Host where the etcd-server runs").String()
 	bdbPath  = kingpin.Flag("badgerdb-path", "Path to the badgerdb database").String()
 )
 

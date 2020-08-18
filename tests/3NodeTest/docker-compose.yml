@@ -24,12 +24,7 @@ services:
     build: ../../../fred
     image: frednode:3nodetest
     container_name: nodeA
-    volumes:
-      - type: bind
-        source: ./config.toml
-        target: /etc/fredconfig.toml
-        read_only: true
-    command: --config "/etc/fredconfig.toml" --remote-storage-host "172.26.0.20" --zmq-host "172.26.0.10" --nodeID "nodeA"
+    command: --remote-storage-host "172.26.0.20" --remote-storage-port 1337 --zmq-host "172.26.0.10" --zmq-port 5555 --nodeID "nodeA" --ws-port 9001 --adaptor "remote" --nase-host "172.26.1.1:2379" --log-level "debug" --handler "dev" --badgerdb-path "./db"
     ports:
       - 9002:9001
     networks:
@@ -52,12 +47,8 @@ services:
       - storeB
     image: frednode:3nodetest
     container_name: nodeB
-    volumes:
-      - type: bind
-        source: ./config.toml
-        target: /etc/fredconfig.toml
-        read_only: true
-    command: --config "/etc/fredconfig.toml" --remote-storage-host "172.26.0.21"  --zmq-host "172.26.0.11" --nodeID "nodeB"
+
+    command: --remote-storage-host "172.26.0.21" --remote-storage-port 1337 --zmq-host "172.26.0.11" --zmq-port 5555 --nodeID "nodeB" --ws-port 9001 --adaptor "remote" --nase-host "172.26.1.1:2379" --log-level "debug" --handler "dev" --badgerdb-path "./db"
     ports:
       - 9003:9001
     networks:
@@ -77,12 +68,7 @@ services:
       - storeC
     image: frednode:3nodetest
     container_name: nodeC
-    volumes:
-      - type: bind
-        source: ./config.toml
-        target: /etc/fredconfig.toml
-        read_only: true
-    command: --config "/etc/fredconfig.toml"  --remote-storage-host "172.26.0.22"  --zmq-host "172.26.0.12" --nodeID "nodeC"
+    command: --remote-storage-host "172.26.0.22" --remote-storage-port 1337  --zmq-host "172.26.0.12" --zmq-port 5555 --nodeID "nodeC" --ws-port 9001 --adaptor "remote" --nase-host "172.26.1.1:2379" --log-level "debug" --handler "dev" --badgerdb-path "./db"
     ports:
       - 9004:9001
     networks:
