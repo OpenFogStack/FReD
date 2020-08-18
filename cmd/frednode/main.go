@@ -1,9 +1,5 @@
 package main
 
-// leave this in for cgo to work
-
-import "C"
-
 import (
 	"fmt"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/interconnection"
