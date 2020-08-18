@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "gitlab.tu-berlin.de/mcc-fred/fred/pkg/interconnection";
+option go_package = ".;interconnection";
 
 // Represents another node
 service Node {
