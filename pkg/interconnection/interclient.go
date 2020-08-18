@@ -28,7 +28,7 @@ func (i InterClient) getConnAndClient(host fred.Address, port int) (client NodeC
 		log.Fatal().Err(err).Msg("Cannot create Grpc connection")
 		return nil, nil
 	}
-	log.Info().Msgf("Interclient: Created Connection to %s:%d", host, port)
+	log.Info().Msgf("Interclient: Created Connection to %s:%d", host.Addr, port)
 	client = NewNodeClient(conn)
 	return
 }
