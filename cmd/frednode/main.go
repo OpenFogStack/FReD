@@ -2,17 +2,15 @@ package main
 
 import (
 	"fmt"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/interconnection"
-	"google.golang.org/grpc"
-	"net"
-	"os"
-	"time"
-
 	"github.com/BurntSushi/toml"
 	"github.com/alecthomas/kingpin"
 	"github.com/mmcloughlin/geohash"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/interconnection"
+	"google.golang.org/grpc"
+	"net"
+	"os"
 
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/badgerdb"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/fred"
@@ -84,8 +82,6 @@ var (
 )
 
 func main() {
-
-	time.Sleep(5 * time.Second)
 
 	kingpin.Version(apiversion)
 	kingpin.HelpFlag.Short('h')
