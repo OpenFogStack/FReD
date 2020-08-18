@@ -55,6 +55,7 @@ func (h *exthandler) HandleRead(i Item) (Item, error) {
 	result, err := h.s.read(i.Keygroup, i.ID)
 
 	if err != nil {
+		log.Error().Msgf("Error in AddReplica is: %#v", err)
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return i, errors.Errorf("error reading item %s from keygroup %s", i.ID, i.Keygroup)
 	}
@@ -105,6 +106,7 @@ func (h *exthandler) HandleAddReplica(k Keygroup, n Node) error {
 	}
 
 	if err := h.r.AddReplica(k, n, i, true); err != nil {
+		log.Error().Msgf("Error in AddReplica is: %#v", err)
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error adding replica")
 	}

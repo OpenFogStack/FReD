@@ -2,8 +2,18 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="b8b6ef1f-1fb0-45b7-ad29-aed6293e4aa1" name="Default Changelist" comment="Add Git Workflow">
-      <change beforePath="$PROJECT_DIR$/.gitlab-ci.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.gitlab-ci.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmd/frednode/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/frednode/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/zmq/datarequest.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/zmq/handler.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/zmq/keygrouprequest.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/zmq/messagetypes.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/zmq/receiver.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/zmq/replicationrequest.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/zmq/sender.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/zmq/zmqToInthandler.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/zmq/zmqclient.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/zmq/zmqserver.go" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -32,7 +42,7 @@
       </list>
     </option>
   </component>
-  <component name="GOROOT" path="/usr/local/opt/go/libexec" />
+  <component name="GOROOT" path="/usr/lib/go" />
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
@@ -60,10 +70,15 @@
     <property name="GO_FMT" value="true" />
     <property name="Git.Branch.Popup.ShowAllRemotes" value="true" />
     <property name="NewWatcherDialog.advanced.open" value="true" />
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="add_unversioned_files" value="$PROJECT_DIR$/terraform/small-test/variables.secret.tf&#10;/Users/tobias/tubCloud/Project FReD/FReD/cmd/frednode/dummy.cc" />
+    <property name="aspect.path.notification.shown" value="true" />
+    <property name="configurable.Global.GOPATH.is.expanded" value="true" />
+    <property name="configurable.Module.GOPATH.is.expanded" value="false" />
+    <property name="configurable.Project.GOPATH.is.expanded" value="true" />
     <property name="go.import.settings.migrated" value="true" />
     <property name="go.sdk.automatically.set" value="true" />
     <property name="go.tried.to.enable.integration.vgo.integrator" value="true" />
@@ -71,7 +86,7 @@
     <property name="js.buildTools.grunt.grunt-cli.package" value="" />
     <property name="js.buildTools.gulp.gulp_package_dir" value="" />
     <property name="last.edited.regexp" value="google.com" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/pkg/badgerdb" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.detected.package.tslint" value="true" />
     <property name="node.js.path.for.package.eslint" value="project" />
@@ -83,7 +98,7 @@
     <property name="nodejs_package_manager_path" value="npm" />
     <property name="restartRequiresConfirmation" value="false" />
     <property name="run.code.analysis.last.selected.profile" value="pProject Default" />
-    <property name="settings.editor.selected.configurable" value="go.sdk" />
+    <property name="settings.editor.selected.configurable" value="Errors" />
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
@@ -101,9 +116,20 @@
       <recent name="$PROJECT_DIR$/terraform/small-test/fred-node" />
     </key>
   </component>
-  <component name="RunManager" selected="Go Build.Run 3NodesTest (all Clients in Container)">
+  <component name="RunManager" selected="Go Build.Build fred-node">
+    <configuration default="true" type="ArquillianJUnit" factoryName="" nameIsGenerated="true">
+      <option name="arquillianRunConfiguration">
+        <value>
+          <option name="containerStateName" value="" />
+        </value>
+      </option>
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration default="true" type="GoTestRunConfiguration" factoryName="Go Test">
-      <module name="FReD" />
+      <module name="fred" />
       <working_directory value="$PROJECT_DIR$/" />
       <go_parameters value="-i" />
       <framework value="gotest" />
@@ -173,6 +199,8 @@
       <item itemvalue="Docker.3NodeTest: Compose Deployment" />
       <item itemvalue="Docker.ci/Dockerfile" />
       <item itemvalue="Docker.fred/Dockerfile" />
+      <item itemvalue="Docker.3NodeTest.nodeA: Compose Deployment" />
+      <item itemvalue="Docker.3NodeTest.storeA: Compose Deployment" />
       <item itemvalue="Go Build.Build fred-node" />
       <item itemvalue="Go Build.Run fred-node" />
       <item itemvalue="Go Build.Run leveldbServer (./db, Port 1337)" />
@@ -183,11 +211,9 @@
       <item itemvalue="Go Test.go test memorysd" />
       <item itemvalue="Makefile.all" />
       <item itemvalue="Makefile.make lint" />
+      <item itemvalue="Makefile.make static check" />
       <item itemvalue="Node.js.run client.js" />
       <item itemvalue="Shell Script.run simple-test-client.sh" />
-      <item itemvalue="Makefile.make static check" />
-      <item itemvalue="Docker.3NodeTest.nodeA: Compose Deployment" />
-      <item itemvalue="Docker.3NodeTest.storeA: Compose Deployment" />
     </list>
     <recent_temporary>
       <list>
@@ -198,7 +224,7 @@
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="project-level" UseSingleDictionary="true" transferred="true" />
   <component name="SvnConfiguration">
-    <configuration />
+    <configuration>$USER_HOME$/.subversion</configuration>
   </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
@@ -210,6 +236,11 @@
       <workItem from="1580894250227" duration="4096000" />
       <workItem from="1580900705382" duration="13000" />
       <workItem from="1584884150969" duration="71000" />
+      <workItem from="1596184542424" duration="703000" />
+      <workItem from="1596185276604" duration="8249000" />
+      <workItem from="1596525770865" duration="13185000" />
+      <workItem from="1596786649292" duration="2441000" />
+      <workItem from="1597742226448" duration="6988000" />
     </task>
     <servers />
   </component>
@@ -217,7 +248,7 @@
     <option name="version" value="3" />
   </component>
   <component name="UnknownFeatures">
-    <option featureType="com.intellij.fileTypeFactory" implementationName="swagger.yaml" />
+    <option featureType="com.intellij.configurationType" implementationName="MAKEFILE_TARGET_RUN_CONFIGURATION" />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
@@ -245,34 +276,59 @@
     <integration-enabled>true</integration-enabled>
   </component>
   <component name="WindowStateProjectService">
-    <state x="632" y="462" key="#GOROOT" timestamp="1595337031374">
-      <screen x="0" y="0" width="1680" height="1050" />
+    <state x="718" y="439" key="#GOROOT" timestamp="1597740145346">
+      <screen x="0" y="0" width="1920" height="1080" />
     </state>
     <state x="632" y="462" key="#GOROOT/0.0.1680.1050@0.0.1680.1050" timestamp="1595337031374" />
-    <state x="203" y="149" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1597316606847">
-      <screen x="0" y="0" width="1680" height="1050" />
+    <state x="718" y="439" key="#GOROOT/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1597740145346" />
+    <state x="416" y="170" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1596185154613">
+      <screen x="0" y="0" width="1920" height="1080" />
     </state>
-    <state x="203" y="149" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1680.1050@0.0.1680.1050" timestamp="1597316606847" />
-    <state width="1638" height="295" key="GridCell.Tab.0.bottom" timestamp="1597407894734">
-      <screen x="0" y="23" width="1680" height="948" />
+    <state x="416" y="170" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1596185154612" />
+    <state x="718" y="183" width="465" height="577" key="#com.intellij.ide.util.MemberChooser" timestamp="1595932381779">
+      <screen x="0" y="0" width="1920" height="1080" />
     </state>
-    <state width="1638" height="365" key="GridCell.Tab.0.bottom/0.0.1680.1050@0.0.1680.1050" timestamp="1597397709863" />
-    <state width="1638" height="295" key="GridCell.Tab.0.bottom/0.23.1680.948@0.23.1680.948" timestamp="1597407894734" />
-    <state width="1638" height="295" key="GridCell.Tab.0.center" timestamp="1597407894732">
-      <screen x="0" y="23" width="1680" height="948" />
+    <state x="718" y="183" width="465" height="577" key="#com.intellij.ide.util.MemberChooser/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1595932381779" />
+    <state x="0" y="0" width="1920" height="1061" key="DiffContextDialog" timestamp="1597747407028">
+      <screen x="0" y="0" width="1920" height="1080" />
     </state>
-    <state width="1638" height="365" key="GridCell.Tab.0.center/0.0.1680.1050@0.0.1680.1050" timestamp="1597397709861" />
-    <state width="1638" height="295" key="GridCell.Tab.0.center/0.23.1680.948@0.23.1680.948" timestamp="1597407894732" />
-    <state width="1638" height="295" key="GridCell.Tab.0.left" timestamp="1597407894731">
-      <screen x="0" y="23" width="1680" height="948" />
+    <state x="0" y="0" width="1920" height="1061" key="DiffContextDialog/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1597747407028" />
+    <state width="1870" height="343" key="GridCell.Tab.0.bottom" timestamp="1597749789878">
+      <screen x="0" y="0" width="1920" height="1080" />
     </state>
-    <state width="1638" height="365" key="GridCell.Tab.0.left/0.0.1680.1050@0.0.1680.1050" timestamp="1597397709860" />
-    <state width="1638" height="295" key="GridCell.Tab.0.left/0.23.1680.948@0.23.1680.948" timestamp="1597407894731" />
-    <state width="1638" height="295" key="GridCell.Tab.0.right" timestamp="1597407894733">
-      <screen x="0" y="23" width="1680" height="948" />
+    <state width="1638" height="316" key="GridCell.Tab.0.bottom/0.0.1680.1050@0.0.1680.1050" timestamp="1595412105182" />
+    <state width="1870" height="343" key="GridCell.Tab.0.bottom/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1597749789878" />
+    <state width="1870" height="343" key="GridCell.Tab.0.center" timestamp="1597749789878">
+      <screen x="0" y="0" width="1920" height="1080" />
     </state>
-    <state width="1638" height="365" key="GridCell.Tab.0.right/0.0.1680.1050@0.0.1680.1050" timestamp="1597397709862" />
-    <state width="1638" height="295" key="GridCell.Tab.0.right/0.23.1680.948@0.23.1680.948" timestamp="1597407894733" />
+    <state width="1638" height="316" key="GridCell.Tab.0.center/0.0.1680.1050@0.0.1680.1050" timestamp="1595412105180" />
+    <state width="1870" height="343" key="GridCell.Tab.0.center/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1597749789878" />
+    <state width="1870" height="343" key="GridCell.Tab.0.left" timestamp="1597749789878">
+      <screen x="0" y="0" width="1920" height="1080" />
+    </state>
+    <state width="1638" height="316" key="GridCell.Tab.0.left/0.0.1680.1050@0.0.1680.1050" timestamp="1595412105179" />
+    <state width="1870" height="343" key="GridCell.Tab.0.left/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1597749789878" />
+    <state width="1870" height="343" key="GridCell.Tab.0.right" timestamp="1597749789878">
+      <screen x="0" y="0" width="1920" height="1080" />
+    </state>
+    <state width="1638" height="316" key="GridCell.Tab.0.right/0.0.1680.1050@0.0.1680.1050" timestamp="1595412105181" />
+    <state width="1870" height="343" key="GridCell.Tab.0.right/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1597749789878" />
+    <state x="580" y="211" width="828" height="498" key="IDE.errors.dialog" timestamp="1596526554125">
+      <screen x="0" y="0" width="1920" height="1080" />
+    </state>
+    <state x="580" y="211" width="828" height="498" key="IDE.errors.dialog/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1596526554125" />
+    <state x="659" y="85" key="SettingsEditor" timestamp="1596194367246">
+      <screen x="0" y="0" width="1920" height="1080" />
+    </state>
+    <state x="659" y="85" key="SettingsEditor/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1596194367246" />
+    <state x="0" y="0" width="1920" height="1061" key="ShowDiffWithBranchDialog" timestamp="1596789090495">
+      <screen x="0" y="0" width="1920" height="1080" />
+    </state>
+    <state x="0" y="0" width="1920" height="1061" key="ShowDiffWithBranchDialog/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1596789090495" />
+    <state x="680" y="182" width="550" height="651" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser" timestamp="1597741895149">
+      <screen x="0" y="0" width="1920" height="1080" />
+    </state>
+    <state x="680" y="182" width="550" height="651" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1597741895149" />
     <state x="628" y="446" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1595500551609">
       <screen x="0" y="0" width="1680" height="1050" />
     </state>
@@ -282,6 +338,12 @@
     </state>
     <state x="541" y="251" width="598" height="548" key="find.popup/0.0.1680.1050@0.0.1680.1050" timestamp="1597675238033" />
     <state x="489" y="259" width="700" height="530" key="recent.locations.popup" timestamp="1597674931022">
+    <state x="618" y="258" width="684" height="564" key="find.popup" timestamp="1597748544054">
+      <screen x="0" y="0" width="1920" height="1080" />
+    </state>
+    <state x="541" y="251" width="598" height="548" key="find.popup/0.0.1680.1050@0.0.1680.1050" timestamp="1597412249222" />
+    <state x="618" y="258" width="684" height="564" key="find.popup/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1597750022436" />
+    <state x="489" y="259" width="700" height="530" key="recent.locations.popup" timestamp="1597410510259">
       <screen x="0" y="0" width="1680" height="1050" />
     </state>
     <state x="489" y="259" width="700" height="530" key="recent.locations.popup/0.0.1680.1050@0.0.1680.1050" timestamp="1597674931022" />

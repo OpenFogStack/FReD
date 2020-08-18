@@ -10,7 +10,7 @@ services:
     build:
       context: ../../../fred
       dockerfile: tester.Dockerfile
-    image: fredtester:3nodetest
+    image: fredtester:3nodetesttester
     container_name: tester
     command: '/go/bin/main --nodeAhost "172.26.0.10" --nodeAhttp 9001 --nodeBhost "172.26.0.11" --nodeBhttp 9001 --nodeChost "172.26.0.12" --nodeChttp 9001'
     networks:
@@ -35,7 +35,7 @@ services:
     build:
       context: ../../../fred
       dockerfile: storage-leveldb.Dockerfile
-    image: fredstore:3nodetest
+    image: fredstore:3nodeteststore
     container_name: storeA
     networks:
       fredwork:
@@ -45,6 +45,7 @@ services:
     depends_on:
       - etcd
       - storeB
+      - nodeA
     image: frednode:3nodetest
     container_name: nodeB
 
@@ -56,7 +57,7 @@ services:
         ipv4_address: 172.26.0.11
 
   storeB:
-    image: fredstore:3nodetest
+    image: fredstore:3nodeteststore
     container_name: storeB
     networks:
       fredwork:
@@ -66,6 +67,7 @@ services:
     depends_on:
       - etcd
       - storeC
+      - nodeA
     image: frednode:3nodetest
     container_name: nodeC
     command: --remote-storage-host "172.26.0.22" --remote-storage-port 1337  --zmq-host "172.26.0.12" --zmq-port 5555 --nodeID "nodeC" --ws-port 9001 --adaptor "remote" --nase-host "172.26.1.1:2379" --log-level "debug" --handler "dev" --badgerdb-path "./db"
@@ -76,7 +78,7 @@ services:
         ipv4_address: 172.26.0.12
 
   storeC:
-    image: fredstore:3nodetest
+    image: fredstore:3nodeteststore
     container_name: storeC
     networks:
       fredwork:

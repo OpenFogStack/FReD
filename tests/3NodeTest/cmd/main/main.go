@@ -15,7 +15,7 @@ import (
 
 var (
 	// Wait for the user to press enter to continue
-	waitUser = false
+	waitUser = true
 	reader   = bufio.NewReader(os.Stdin)
 )
 

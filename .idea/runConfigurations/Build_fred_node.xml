@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Build fred-node" type="GoApplicationRunConfiguration" factoryName="Go Application">
-    <module name="FReD" />
+    <module name="fred" />
     <working_directory value="$PROJECT_DIR$/" />
     <kind value="FILE" />
     <filePath value="$PROJECT_DIR$/cmd/frednode/main.go" />

@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Run 3NodesTest (nodeA on Machine =&gt; Debugging)" type="GoApplicationRunConfiguration" factoryName="Go Application" singleton="false">
-    <module name="FReD" />
+    <module name="fred" />
     <working_directory value="$PROJECT_DIR$" />
     <parameters value="--nodeAhttp 9001 --nodeAzmqhost localhost --nodeAhost localhost" />
     <kind value="PACKAGE" />

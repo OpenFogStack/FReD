@@ -5,6 +5,10 @@ package main
 import "C"
 
 import (
+	"fmt"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/interconnection"
+	"google.golang.org/grpc"
+	"net"
 	"os"
 	"time"
 
@@ -19,7 +23,6 @@ import (
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/leveldb"
 	storage "gitlab.tu-berlin.de/mcc-fred/fred/pkg/storageconnection"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/webserver"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/zmq"
 )
 
 type fredConfig struct {
@@ -107,15 +110,15 @@ func main() {
 	if *nodeID != "" {
 		fc.General.nodeID = *nodeID
 	}
+	// If no NodeID is provided use lat/long as NodeID
+	if fc.General.nodeID == "" {
+		fc.General.nodeID = geohash.Encode(fc.Location.Lat, fc.Location.Lng)
+	}
 	if *lat >= -90 && *lat <= 90 {
 		fc.Location.Lat = *lat
 	}
 	if *lng >= -180 && *lng <= 180 {
 		fc.Location.Lng = *lng
-	}
-	// If no NodeID is provided use lat/long as NodeID
-	if fc.General.nodeID == "" {
-		fc.General.nodeID = geohash.Encode(fc.Location.Lat, fc.Location.Lng)
 	}
 	if *wsHost != "" {
 		fc.Server.Host = *wsHost
@@ -200,8 +203,6 @@ func main() {
 		log.Info().Msg("No Loglevel specified, using 'info'")
 	}
 
-	var nodeID = geohash.Encode(fc.Location.Lat, fc.Location.Lng)
-
 	var store fred.Store
 
 	switch fc.Storage.Adaptor {
@@ -220,7 +221,8 @@ func main() {
 		log.Fatal().Msg("unknown storage backend")
 	}
 
-	c := zmq.NewClient()
+	log.Debug().Msg("Starting Interconnection Client...")
+	c := interconnection.NewClient() //zmq.NewClient()
 
 	f := fred.New(&fred.Config{
 		Store:     store,
@@ -230,20 +232,29 @@ func main() {
 		NodeID:    fc.General.nodeID,
 		NaSeHosts: []string{fc.NaSe.Host},
 	})
+	log.Debug().Msg("Starting Interconnection Server...")
+	server := startInterconnectionServer(fc.ZMQ.Port, &f.I)
 
-	// Add more options here
-	zmqH := zmq.New(f.I)
-
-	zmqServer, err := zmq.Setup(fc.ZMQ.Port, nodeID, zmqH)
-
-	if err != nil {
-		panic("Cannot start zmqServer")
-	}
-
+	log.Debug().Msg("Starting Web Server...")
 	log.Fatal().Err(webserver.Setup(fc.Server.Host, fc.Server.Port, f.E, apiversion, fc.Server.UseTLS, wsLogLevel)).Msg("Webserver.Setup")
 
 	// Shutdown
-	zmqServer.Shutdown()
 	c.Destroy()
 	log.Err(store.Close()).Msg("error closing database")
+	server.GracefulStop()
+}
+
+// startInterconnectionServer starts a new gprc server. Possible errors will be logged and thrown away.
+// The returned server needs to be GracefulStop()-ed to Shutdown
+func startInterconnectionServer(port int, handler *fred.IntHandler) *grpc.Server {
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to listen")
+		return nil
+	}
+	grpcServer := grpc.NewServer()
+	interconnection.RegisterNodeServer(grpcServer, interconnection.NewServer(handler))
+	log.Debug().Msgf("Interconnection Server is listening on port %d", port)
+	go grpcServer.Serve(lis)
+	return grpcServer
 }

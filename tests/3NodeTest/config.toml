@@ -1,4 +1,7 @@
 # FReD Node Configuration File
+[general]
+# The unique name this node will have. If no nodeID is provided it will be calculated from the location
+nodeID = "nodeA"
 
 [location]
 # latitude of the server
@@ -12,13 +15,18 @@ port = 9001
 ssl = false
 
 [storage]
-# adaptor can be either "leveldb" or "memory" or "badgerdb" or "remote"
-adaptor = "leveldb"
+# adaptor can be either "badgerdb", "leveldb" or "memory" or "remote"
+adaptor = "remote"
 
 [zmq]
+# host is the publicly reachable adress of this node (it will be saved to the NaSe so that other nodes can reach it)
+# host = "172.10.11.12"
 port = 5555
 
 [leveldb]
+path = "./db"
+
+[badgerdb]
 path = "./db"
 
 [remote]
