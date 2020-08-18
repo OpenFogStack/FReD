@@ -187,7 +187,7 @@ func main() {
 	switch fc.Log.Level {
 	case "debug":
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
-		//wsLogLevel = "debug"
+		wsLogLevel = "debug"
 	case "info":
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	case "warn":
@@ -232,11 +232,6 @@ func main() {
 		NodeID:    fc.General.nodeID,
 		NaSeHosts: []string{fc.NaSe.Host},
 	})
-	//zmqH := zmq.New(f.I)
-	//zmqServer, err := zmq.Setup(fc.ZMQ.Port, fc.General.nodeID, zmqH)
-	//if err != nil {
-	//	panic("Cannot start zmqServer")
-	//}
 	log.Debug().Msg("Starting Interconnection Server...")
 	server := startInterconnectionServer(fc.ZMQ.Port, &f.I)
 
@@ -249,8 +244,8 @@ func main() {
 	server.GracefulStop()
 }
 
-// startInterconnectionServer starts a new gprc server. Since it will mostly be started in a goroutine
-// the error will be discarded but it will be logged anyway
+// startInterconnectionServer starts a new gprc server. Possible errors will be logged and thrown away.
+// The returned server needs to be GracefulStop()-ed to Shutdown
 func startInterconnectionServer(port int, handler *fred.IntHandler) *grpc.Server {
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {

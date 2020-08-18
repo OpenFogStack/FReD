@@ -2,24 +2,18 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="b8b6ef1f-1fb0-45b7-ad29-aed6293e4aa1" name="Default Changelist" comment="Add Git Workflow">
-      <change beforePath="$PROJECT_DIR$/.idea/FReD.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/fred.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/runConfigurations/Build_fred_node.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/runConfigurations/Build_fred_node.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/runConfigurations/Run_3NodesTest__all_Clients_in_Container_.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/runConfigurations/Run_3NodesTest__all_Clients_in_Container_.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/runConfigurations/Run_3NodesTest__nodeA_on_Machine____Debugging_.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/runConfigurations/Run_3NodesTest__nodeA_on_Machine____Debugging_.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/runConfigurations/Run_fred_node.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/runConfigurations/Run_fred_node.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/runConfigurations/Run_leveldbServer____db__Port_1337_.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/runConfigurations/Run_leveldbServer____db__Port_1337_.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/runConfigurations/go_test_frednode.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/runConfigurations/go_test_frednode.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/runConfigurations/go_test_memorykg.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/runConfigurations/go_test_memorykg.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/runConfigurations/go_test_memorysd.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/runConfigurations/go_test_memorysd.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cmd/frednode/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/frednode/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config.toml" beforeDir="false" afterPath="$PROJECT_DIR$/config.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/fred/exthandler.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/fred/exthandler.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/fred/replicationservice.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/fred/replicationservice.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/interconnection/interclient.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/interconnection/interclient.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/interconnection/interserver.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/interconnection/interserver.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/3NodeTest/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/tests/3NodeTest/docker-compose.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/zmq/datarequest.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/zmq/handler.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/zmq/keygrouprequest.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/zmq/messagetypes.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/zmq/receiver.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/zmq/replicationrequest.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/zmq/sender.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/zmq/zmqToInthandler.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/zmq/zmqclient.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/zmq/zmqserver.go" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -122,7 +116,18 @@
       <recent name="$PROJECT_DIR$/terraform/small-test/fred-node" />
     </key>
   </component>
-  <component name="RunManager" selected="Go Build.Run 3NodesTest (all Clients in Container)">
+  <component name="RunManager" selected="Go Build.Build fred-node">
+    <configuration default="true" type="ArquillianJUnit" factoryName="" nameIsGenerated="true">
+      <option name="arquillianRunConfiguration">
+        <value>
+          <option name="containerStateName" value="" />
+        </value>
+      </option>
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration default="true" type="GoTestRunConfiguration" factoryName="Go Test">
       <module name="fred" />
       <working_directory value="$PROJECT_DIR$/" />
@@ -235,7 +240,7 @@
       <workItem from="1596185276604" duration="8249000" />
       <workItem from="1596525770865" duration="13185000" />
       <workItem from="1596786649292" duration="2441000" />
-      <workItem from="1597742226448" duration="5954000" />
+      <workItem from="1597742226448" duration="6988000" />
     </task>
     <servers />
   </component>
@@ -288,26 +293,26 @@
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
     <state x="0" y="0" width="1920" height="1061" key="DiffContextDialog/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1597747407028" />
-    <state width="1870" height="343" key="GridCell.Tab.0.bottom" timestamp="1597748981259">
+    <state width="1870" height="343" key="GridCell.Tab.0.bottom" timestamp="1597749789878">
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
     <state width="1638" height="316" key="GridCell.Tab.0.bottom/0.0.1680.1050@0.0.1680.1050" timestamp="1595412105182" />
-    <state width="1870" height="343" key="GridCell.Tab.0.bottom/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1597748981259" />
-    <state width="1870" height="343" key="GridCell.Tab.0.center" timestamp="1597748981259">
+    <state width="1870" height="343" key="GridCell.Tab.0.bottom/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1597749789878" />
+    <state width="1870" height="343" key="GridCell.Tab.0.center" timestamp="1597749789878">
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
     <state width="1638" height="316" key="GridCell.Tab.0.center/0.0.1680.1050@0.0.1680.1050" timestamp="1595412105180" />
-    <state width="1870" height="343" key="GridCell.Tab.0.center/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1597748981259" />
-    <state width="1870" height="343" key="GridCell.Tab.0.left" timestamp="1597748981259">
+    <state width="1870" height="343" key="GridCell.Tab.0.center/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1597749789878" />
+    <state width="1870" height="343" key="GridCell.Tab.0.left" timestamp="1597749789878">
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
     <state width="1638" height="316" key="GridCell.Tab.0.left/0.0.1680.1050@0.0.1680.1050" timestamp="1595412105179" />
-    <state width="1870" height="343" key="GridCell.Tab.0.left/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1597748981259" />
-    <state width="1870" height="343" key="GridCell.Tab.0.right" timestamp="1597748981259">
+    <state width="1870" height="343" key="GridCell.Tab.0.left/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1597749789878" />
+    <state width="1870" height="343" key="GridCell.Tab.0.right" timestamp="1597749789878">
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
     <state width="1638" height="316" key="GridCell.Tab.0.right/0.0.1680.1050@0.0.1680.1050" timestamp="1595412105181" />
-    <state width="1870" height="343" key="GridCell.Tab.0.right/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1597748981259" />
+    <state width="1870" height="343" key="GridCell.Tab.0.right/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1597749789878" />
     <state x="580" y="211" width="828" height="498" key="IDE.errors.dialog" timestamp="1596526554125">
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
@@ -328,20 +333,17 @@
       <screen x="0" y="0" width="1680" height="1050" />
     </state>
     <state x="628" y="446" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.0.1680.1050@0.0.1680.1050" timestamp="1595500551609" />
-<<<<<<< HEAD
     <state x="541" y="251" width="598" height="548" key="find.popup" timestamp="1597675238033">
       <screen x="0" y="0" width="1680" height="1050" />
     </state>
     <state x="541" y="251" width="598" height="548" key="find.popup/0.0.1680.1050@0.0.1680.1050" timestamp="1597675238033" />
     <state x="489" y="259" width="700" height="530" key="recent.locations.popup" timestamp="1597674931022">
-=======
     <state x="618" y="258" width="684" height="564" key="find.popup" timestamp="1597748544054">
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
     <state x="541" y="251" width="598" height="548" key="find.popup/0.0.1680.1050@0.0.1680.1050" timestamp="1597412249222" />
-    <state x="618" y="258" width="684" height="564" key="find.popup/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1597748544054" />
+    <state x="618" y="258" width="684" height="564" key="find.popup/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1597750022436" />
     <state x="489" y="259" width="700" height="530" key="recent.locations.popup" timestamp="1597410510259">
->>>>>>> 7ac0191... Replace ZMQ with GRPC Stuff
       <screen x="0" y="0" width="1680" height="1050" />
     </state>
     <state x="489" y="259" width="700" height="530" key="recent.locations.popup/0.0.1680.1050@0.0.1680.1050" timestamp="1597674931022" />
