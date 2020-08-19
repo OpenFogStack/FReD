@@ -11,13 +11,13 @@ import (
 
 	"google.golang.org/grpc"
 
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/badgerdb"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/fred"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/leveldb"
 	storage "gitlab.tu-berlin.de/mcc-fred/fred/pkg/storageconnection"
 )
 
 func main() {
-	path := flag.String("path", "./db", "Path for leveldb")
+	path := flag.String("path", "./db", "Path for badgerdb")
 	port := flag.Int("port", 1337, "Port for the server to listen to")
 	loglevel := flag.String("loglevel", "dev", "dev=>pretty, prod=>json")
 	flag.Parse()
@@ -40,7 +40,7 @@ func main() {
 		log.Fatal().Msg("Log Handler has to be either dev or prod")
 	}
 
-	var store fred.Store = leveldb.New(*path)
+	var store fred.Store = badgerdb.New(*path)
 	grpcServer := grpc.NewServer()
 	storage.RegisterDatabaseServer(grpcServer, storage.NewStorageServer(&store))
 	log.Debug().Msgf("Server is listening on port %d", *port)

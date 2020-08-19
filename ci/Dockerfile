@@ -52,15 +52,6 @@ RUN set -eux; \
 	\
 	docker --version
 
-# Install zmq
-RUN echo "deb http://download.opensuse.org/repositories/network:/messaging:/zeromq:/release-stable/Debian_10/ ./" >> /etc/apt/sources.list
-RUN wget -O - https://download.opensuse.org/repositories/network:/messaging:/zeromq:/release-stable/Debian_10/Release.key | apt-key add -
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libczmq-dev libzmq3-dev libsodium23 \
-     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
 # Install terraform
 ENV TERRAFORM_VER 0.12.9
 
