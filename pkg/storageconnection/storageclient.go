@@ -2,7 +2,6 @@ package storageconnection
 
 import (
 	"context"
-	"fmt"
 	"io"
 
 	"github.com/go-errors/errors"
@@ -17,14 +16,14 @@ type Client struct {
 }
 
 // NewClient Client creates a new Client to communicate with a GRpc server
-func NewClient(host string, port int) *Client {
-	conn, err := grpc.Dial(fmt.Sprintf("%s:%d", host, port), grpc.WithInsecure())
+func NewClient(host string) *Client {
+	conn, err := grpc.Dial(host, grpc.WithInsecure())
 
 	if err != nil {
 		log.Fatal().Err(err).Msg("Cannot create Grpc connection")
 		return &Client{dbClient: NewDatabaseClient(conn)}
 	}
-	log.Info().Msgf("Creating a connection to remote storage: %s:%d", host, port)
+	log.Info().Msgf("Creating a connection to remote storage: %s", host)
 	return &Client{dbClient: NewDatabaseClient(conn), con: conn}
 }
 

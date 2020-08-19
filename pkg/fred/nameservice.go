@@ -49,15 +49,14 @@ func newNameService(nodeID string, endpoints []string) (*nameService, error) {
 }
 
 // registerSelf stores information about this node
-func (n *nameService) registerSelf(address Address, port int) error {
+func (n *nameService) registerSelf(host Address) error {
 	key := fmt.Sprintf(fmtNodeAdressString, n.NodeID)
-	value := fmt.Sprintf("%s:%d", address.Addr, port)
-	log.Debug().Msgf("NaSe: registering self as %s // %s", key, value)
-	err := n.put(key, value)
+	log.Debug().Msgf("NaSe: registering self as %s // %s", key, host.Addr)
+	err := n.put(key, host.Addr)
 	if err != nil {
 		return err
 	}
-	return n.put(key, value)
+	return n.put(key, host.Addr)
 }
 
 /*

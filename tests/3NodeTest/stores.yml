@@ -4,7 +4,7 @@ services:
   storeA:
     build:
       context: ../../../fred
-      dockerfile: storage-leveldb.Dockerfile
+      dockerfile: storage.Dockerfile
     image: fred/store:local
     container_name: storeA
     networks:
@@ -14,7 +14,7 @@ services:
   storeB:
     build:
       context: ../../../fred
-      dockerfile: storage-leveldb.Dockerfile
+      dockerfile: storage.Dockerfile
     image: fred/store:local
     container_name: storeB
     networks:
@@ -24,7 +24,7 @@ services:
   storeC:
     build:
       context: ../../../fred
-      dockerfile: storage-leveldb.Dockerfile
+      dockerfile: storage.Dockerfile
     image: fred/store:local
     container_name: storeC
     networks:

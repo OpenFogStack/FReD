@@ -7,12 +7,11 @@ import (
 
 // Config holds configuration parameters for an instance of FReD.
 type Config struct {
-	Store     Store
-	Client    Client
-	ZmqHost   string
-	ZmqPort   int
-	NodeID    string
-	NaSeHosts []string
+	Store       Store
+	Client      Client
+	PeeringHost string
+	NodeID      string
+	NaSeHosts   []string
 }
 
 // Fred is an instance of FReD.
@@ -58,14 +57,14 @@ func New(config *Config) (f Fred) {
 		panic(err)
 	}
 
-	err = n.registerSelf(Address{Addr: config.ZmqHost}, config.ZmqPort)
+	err = n.registerSelf(Address{Addr: config.PeeringHost})
 
 	if err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		panic(err)
 	}
 
-	r := newReplicationService(config.ZmqPort, config.Store, config.Client, n)
+	r := newReplicationService(config.Store, config.Client, n)
 
 	return Fred{
 		E: newExthandler(s, r),
