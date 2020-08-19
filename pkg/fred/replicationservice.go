@@ -23,7 +23,7 @@ type replicationService struct {
 
 // newReplicationService creates a new handler for internal request (i.e. from peer nodes or the naming service).
 // The nameservice makes sure that the information is synced with the other nodes
-func newReplicationService(nodePort int, s Store, c Client, n *nameService) *replicationService {
+func newReplicationService(s Store, c Client, n *nameService) *replicationService {
 	return &replicationService{
 		s: s,
 		c: c,

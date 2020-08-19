@@ -7,23 +7,18 @@ lat = 52.514927933123914
 lng = 13.32676300345363
 
 [webserver]
-# host = "localhost"
-port = 9001
+host = ":9001"
 ssl = false
 
 [storage]
-# adaptor can be either "leveldb" or "memory" or "badgerdb" or "remote"
-adaptor = "leveldb"
+# adaptor can be either "memory" or "badgerdb" or "remote"
+adaptor = "badgerdb"
 
 [zmq]
-port = 5555
+host = ":5555"
 
-[leveldb]
-path = "./db"
-
-[remote]
-host = "localhost"
-port = 1337
+[remotestore]
+host = "localhost:1337"
 
 [log]
 # debug,info,warn,error,fatal,panic

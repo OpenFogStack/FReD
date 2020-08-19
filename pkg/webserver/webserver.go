@@ -2,6 +2,8 @@ package webserver
 
 import (
 	"fmt"
+	"github.com/go-errors/errors"
+	"net"
 
 	"github.com/gin-contrib/logger"
 	"github.com/gin-gonic/autotls"
@@ -12,7 +14,7 @@ import (
 )
 
 // Setup sets up a web server client interface for the Fred node.
-func Setup(host string, port int, h fred.ExtHandler, apiversion string, useTLS bool, loglevel string) error {
+func Setup(host string, h fred.ExtHandler, apiversion string, useTLS bool, loglevel string) error {
 	gin.SetMode(loglevel)
 	r := gin.New()
 
@@ -37,15 +39,20 @@ func Setup(host string, port int, h fred.ExtHandler, apiversion string, useTLS b
 	r.PUT(apiversion+"/keygroup/:kgname/data/:id", putItem(h))
 	r.DELETE(apiversion+"/keygroup/:kgname/data/:id", deleteItem(h))
 
-	if useTLS {
-		if port != 443 {
-			log.Warn().Msgf("HTTPS server needs to run on port 443 but port %d was given. Port 443 will be used anyway. To request a certificate, port 80 also needs to be available.", port)
-		}
+	hostname, port, err := net.SplitHostPort(host)
 
-		return autotls.Run(r, host)
+	if err != nil {
+		return errors.New(err)
 	}
 
-	addr := fmt.Sprintf("%s:%d", host, port)
-	log.Debug().Msgf("Starting web server on %s", addr)
-	return r.Run(addr)
+	if useTLS {
+		if port != "443" {
+			log.Warn().Msgf("HTTPS server needs to run on port 443 but port %s was given. Port 443 will be used anyway. To request a certificate, port 80 also needs to be available.", port)
+		}
+
+		return autotls.Run(r, fmt.Sprintf("%s:%s", hostname, "443"))
+	}
+
+	log.Debug().Msgf("Starting web server on %s", host)
+	return r.Run(host)
 }
