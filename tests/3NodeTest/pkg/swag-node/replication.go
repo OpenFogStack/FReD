@@ -4,29 +4,7 @@ import (
 	"context"
 
 	"github.com/rs/zerolog/log"
-
-	client "gitlab.tu-berlin.de/mcc-fred/fred/ext/go-client"
 )
-
-// RegisterReplica registers a new replica with this node.
-func (n *Node) RegisterReplica(nodeID, nodeIP string, nodePort int, expectedStatusCode int, expectEmptyResponse bool) {
-	log.Debug().Str("node", n.URL).Msgf("Registering Replica %s; expecting %d", nodeID, expectedStatusCode)
-
-	nodes := make([]client.Node, 1)
-
-	nodes[0] = client.Node{
-		Id:      nodeID,
-		Addr:    nodeIP,
-		ZmqPort: int32(nodePort),
-	}
-
-	resp, recvErr := n.Client.ReplicationApi.ReplicaPost(context.Background(), client.Replica{Nodes: nodes})
-
-	if err := checkResponse(resp, recvErr, nil, expectedStatusCode, expectEmptyResponse); err != nil {
-		log.Warn().Str("node", n.URL).Msgf("RegisterReplica: %s", err.Error())
-		n.Errors++
-	}
-}
 
 // GetAllReplica returns a list of all replica that this node has stored.
 func (n *Node) GetAllReplica(expectedStatusCode int, expectEmptyResponse bool) []string {

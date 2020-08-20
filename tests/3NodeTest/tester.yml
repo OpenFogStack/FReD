@@ -7,7 +7,7 @@ services:
       dockerfile: tester.Dockerfile
     image: fred/tester:local
     container_name: tester
-    command: '/go/bin/main --nodeAhost "172.26.0.10" --nodeAhttp 9001 --nodeBhost "172.26.0.11" --nodeBhttp 9001 --nodeChost "172.26.0.12" --nodeChttp 9001'
+    command: --nodeAhost=172.26.0.10 --nodeAhttp=9001 --nodeBhost=172.26.0.11 --nodeBhttp=9001 --nodeChost=172.26.0.12 --nodeChttp=9001 --wait-user=false
     networks:
       fredwork:
         ipv4_address: 172.26.2.1

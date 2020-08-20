@@ -138,5 +138,11 @@ func (s *storeService) deleteKeygroup(kg KeygroupName) error {
 		return err
 	}
 
+	err = s.iS.DeleteKeygroup(string(kg))
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

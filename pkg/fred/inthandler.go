@@ -8,46 +8,28 @@ import (
 type inthandler struct {
 	s *storeService
 	r *replicationService
+	t *triggerService
 }
 
 // newInthandler creates a new handler for internal request (i.e. from peer nodes or the naming service).
-func newInthandler(s *storeService, r *replicationService) *inthandler {
+func newInthandler(s *storeService, r *replicationService, t *triggerService) *inthandler {
 	return &inthandler{
 		s: s,
 		r: r,
+		t: t,
 	}
 }
 
 // HandleCreateKeygroup handles requests to the CreateKeygroup endpoint of the internal interface.
-func (h *inthandler) HandleCreateKeygroup(k Keygroup, nodes []Node) error {
+func (h *inthandler) HandleCreateKeygroup(k Keygroup) error {
 	if err := h.s.createKeygroup(k.Name); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error creating keygroup")
 	}
 
-	if err := h.r.CreateKeygroup(Keygroup{
-		Name: k.Name,
-	}); err != nil {
+	if err := h.t.createKeygroup(k); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
-
 		return errors.Errorf("error creating keygroup")
-	}
-
-	kg := Keygroup{
-		Name: k.Name,
-	}
-
-	var ec int
-
-	for _, node := range nodes {
-		if err := h.r.AddReplica(kg, node, nil, false); err != nil {
-			log.Err(err).Msg(err.(*errors.Error).ErrorStack())
-			ec++
-		}
-	}
-
-	if ec > 0 {
-		return errors.Errorf("error updating %d nodes", ec)
 	}
 
 	return nil
@@ -60,9 +42,14 @@ func (h *inthandler) HandleDeleteKeygroup(k Keygroup) error {
 		return errors.Errorf("error deleting keygroup")
 	}
 
-	if err := h.r.DeleteKeygroup(Keygroup{
+	if err := h.r.deleteKeygroup(Keygroup{
 		Name: k.Name,
 	}); err != nil {
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		return errors.Errorf("error deleting keygroup")
+	}
+
+	if err := h.t.deleteKeygroup(k.Name); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error deleting keygroup")
 	}
@@ -72,18 +59,38 @@ func (h *inthandler) HandleDeleteKeygroup(k Keygroup) error {
 
 // HandleUpdate handles requests to the Update endpoint of the internal interface.
 func (h *inthandler) HandleUpdate(i Item) error {
-	return h.s.update(i)
+	if err := h.s.update(i); err != nil {
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		return errors.Errorf("error updating item")
+	}
+
+	if err := h.t.triggerUpdate(i); err != nil {
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		return errors.Errorf("error updating item")
+	}
+
+	return nil
 }
 
 // HandleDelete handles requests to the Delete endpoint of the internal interface.
 func (h *inthandler) HandleDelete(i Item) error {
-	return h.s.delete(i.Keygroup, i.ID)
+	if err := h.s.delete(i.Keygroup, i.ID); err != nil {
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		return errors.Errorf("error deleting item")
+	}
+
+	if err := h.t.triggerDelete(i); err != nil {
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		return errors.Errorf("error deleting item")
+	}
+
+	return nil
 }
 
 func (h *inthandler) HandleAddReplica(k Keygroup, n Node) error {
-	return h.r.AddReplica(k, n, nil, false)
+	return h.r.addReplica(k, n, false)
 }
 
 func (h *inthandler) HandleRemoveReplica(k Keygroup, n Node) error {
-	return h.r.RemoveReplica(k, n, false)
+	return h.r.removeReplica(k, n, false)
 }

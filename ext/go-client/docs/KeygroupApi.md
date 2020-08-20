@@ -71,7 +71,7 @@ No authorization required
 > ReplicationList KeygroupGroupIdReplicaGet(ctx, groupId)
 Gets all Replica Nodes for a Keygroup
 
-Returns replica nodes for a Keygroup with the name `group_id` if it does not exist already.
+Returns replica nodes for a Keygroup with the name `group_id`.
 
 ### Required Parameters
 

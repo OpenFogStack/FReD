@@ -2,8 +2,8 @@ package interconnection
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"github.com/go-errors/errors"
 	"github.com/rs/zerolog/log"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/fred"
 	"google.golang.org/grpc"
@@ -40,7 +40,7 @@ func (c *Client) dealWithStatusResponse(res *StatusResponse, err error, from str
 	}
 
 	if err != nil {
-		return err
+		return errors.New(err)
 	} else if res.Status == EnumStatus_ERROR {
 		return errors.New(res.ErrorMessage)
 	} else {

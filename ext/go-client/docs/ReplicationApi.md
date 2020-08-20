@@ -10,14 +10,13 @@ Method | HTTP request | Description
 [**ReplicaGet**](ReplicationApi.md#ReplicaGet) | **Get** /replica | Gets all Replica Nodes
 [**ReplicaNodeIdDelete**](ReplicationApi.md#ReplicaNodeIdDelete) | **Delete** /replica/{node_id} | Remove an existing replica node
 [**ReplicaNodeIdGet**](ReplicationApi.md#ReplicaNodeIdGet) | **Get** /replica/{node_id} | Gets a Replica Node
-[**ReplicaPost**](ReplicationApi.md#ReplicaPost) | **Post** /replica | Register a new Replica Node
 
 
 # **KeygroupGroupIdReplicaGet**
 > ReplicationList KeygroupGroupIdReplicaGet(ctx, groupId)
 Gets all Replica Nodes for a Keygroup
 
-Returns replica nodes for a Keygroup with the name `group_id` if it does not exist already.
+Returns replica nodes for a Keygroup with the name `group_id`.
 
 ### Required Parameters
 
@@ -176,34 +175,6 @@ No authorization required
 
  - **Content-Type**: Not defined
  - **Accept**: application/json
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **ReplicaPost**
-> ReplicaPost(ctx, body)
-Register a new Replica Node
-
-Creates a new replica node if it does not exist already or updates existing data.
-
-### Required Parameters
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
-  **body** | [**Replica**](Replica.md)| ID, Address and Port of Replica Node. | 
-
-### Return type
-
- (empty response body)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: text/plain, application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

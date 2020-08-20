@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+option go_package = ".;trigger";
+
+// Represents a trigger node
+service TriggerNode {
+  rpc PutItemTrigger (PutItemTriggerRequest) returns (TriggerResponse);
+  rpc DeleteItemTrigger (DeleteItemTriggerRequest) returns (TriggerResponse);
+}
+
+enum EnumTriggerStatus {
+  TRIGGER_OK = 0;
+  TRIGGER_ERROR = 1;
+}
+
+message TriggerResponse {
+  EnumTriggerStatus status = 1;
+  // This is an optional message, only to be sent if the status is not OK
+  string errorMessage = 2;
+}
+
+message PutItemTriggerRequest {
+  string keygroup = 1;
+  string id = 2;
+  string val = 3;
+}
+
+message DeleteItemTriggerRequest {
+  string keygroup = 1;
+  string id = 2;
+}

@@ -57,7 +57,7 @@ func createResponse(err error) (*StatusResponse, error) {
 // CreateKeygroup calls this Method on the Inthandler
 func (s *Server) CreateKeygroup(ctx context.Context, request *CreateKeygroupRequest) (*StatusResponse, error) {
 	log.Debug().Msgf("InterServer has rcvd CreateKeygroup. In: %#v", request)
-	err := s.i.HandleCreateKeygroup(fred.Keygroup{Name: fred.KeygroupName(request.Keygroup)}, nil)
+	err := s.i.HandleCreateKeygroup(fred.Keygroup{Name: fred.KeygroupName(request.Keygroup)})
 	return createResponse(err)
 }
 
