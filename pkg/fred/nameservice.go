@@ -103,7 +103,7 @@ func (n *nameService) createKeygroup(key KeygroupName) error {
 	_, err = n.cli.Delete(ctx, fmt.Sprintf(fmtKgNodeString, key, ""), clientv3.WithPrefix())
 
 	if err != nil {
-		return err
+		return errors.New(err)
 	}
 	return n.addOwnKgNodeEntry(key, "ok")
 }
@@ -132,6 +132,7 @@ func (n *nameService) getKeygroupMembers(key KeygroupName, excludeSelf bool) (id
 	return
 }
 
+/*
 // isKeygroupMember returns whether nodeID is in the keygroup kg
 func (n *nameService) isKeygroupMember(nodeID string, kg KeygroupName) (bool, error) {
 	resp, err := n.getExact(fmt.Sprintf(fmtKgNodeString, kg, nodeID))
@@ -144,7 +145,7 @@ func (n *nameService) isKeygroupMember(nodeID string, kg KeygroupName) (bool, er
 
 	return status == "ok", nil
 
-}
+}*/
 
 /*
 // joinKeygroup joins an already existing keygroup
@@ -270,7 +271,7 @@ func (n *nameService) getPrefix(prefix string) (kv []*mvccpb.KeyValue, err error
 	resp, err := n.cli.Get(ctx, prefix, clientv3.WithPrefix(), clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend))
 
 	if err != nil {
-		return nil, err
+		return nil, errors.New(err)
 	}
 
 	kv = resp.Kvs
@@ -283,7 +284,7 @@ func (n *nameService) getExact(key string) (kv []*mvccpb.KeyValue, err error) {
 	resp, err := n.cli.Get(ctx, key)
 
 	if err != nil {
-		return nil, err
+		return nil, errors.New(err)
 	}
 
 	kv = resp.Kvs
@@ -301,15 +302,22 @@ func (n *nameService) getKeygroupStatus(key KeygroupName) (string, error) {
 // getCount returns the number of results getPrefix would return
 // func (n *NameService) getCount(prefix string) (count int64, err error) {
 // 	resp, err := n.cli.Get(context.Background(), prefix, clientv3.WithPrefix(), clientv3.WithCountOnly())
-// 	count = resp.Count
-// 	return
+// if err != nil {
+// return 0, errors.New(err)
+// }
+// 	return resp.Count, nil
 // }
 
 // put puts the value into etcd.
 func (n *nameService) put(key, value string) (err error) {
 	ctx, _ := context.WithTimeout(context.TODO(), timeout)
 	_, err = n.cli.Put(ctx, key, value)
-	return
+
+	if err != nil {
+		return errors.New(err)
+	}
+
+	return nil
 }
 
 // addOwnKgNodeEntry adds the entry for this node with a status.

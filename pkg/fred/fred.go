@@ -22,7 +22,7 @@ type Fred struct {
 
 // IntHandler is an interface that abstracts the methods of the handler that handles internal requests.
 type IntHandler interface {
-	HandleCreateKeygroup(k Keygroup, nodes []Node) error
+	HandleCreateKeygroup(k Keygroup) error
 	HandleDeleteKeygroup(k Keygroup) error
 	HandleUpdate(i Item) error
 	HandleDelete(i Item) error
@@ -44,6 +44,9 @@ type ExtHandler interface {
 	HandleGetReplica(n Node) (Node, error)
 	HandleGetAllReplica() ([]Node, error)
 	HandleRemoveNode(n Node) error
+	HandleGetKeygroupTriggers(keygroup Keygroup) ([]Trigger, error)
+	HandleAddTriggers(keygroup Keygroup, t Trigger) error
+	HandleRemoveTrigger(keygroup Keygroup, t Trigger) error
 }
 
 // New creates a new FReD instance.
@@ -64,10 +67,12 @@ func New(config *Config) (f Fred) {
 		panic(err)
 	}
 
-	r := newReplicationService(config.Store, config.Client, n)
+	r := newReplicationService(s, config.Client, n)
+
+	t := newTriggerService()
 
 	return Fred{
-		E: newExthandler(s, r),
-		I: newInthandler(s, r),
+		E: newExthandler(s, r, t),
+		I: newInthandler(s, r, t),
 	}
 }

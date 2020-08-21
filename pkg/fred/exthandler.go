@@ -8,13 +8,15 @@ import (
 type exthandler struct {
 	s *storeService
 	r *replicationService
+	t *triggerService
 }
 
 // newExthandler creates a new handler for external request (i.e. from clients).
-func newExthandler(s *storeService, r *replicationService) *exthandler {
+func newExthandler(s *storeService, r *replicationService, t *triggerService) *exthandler {
 	return &exthandler{
 		s: s,
 		r: r,
+		t: t,
 	}
 }
 
@@ -25,7 +27,12 @@ func (h *exthandler) HandleCreateKeygroup(k Keygroup) error {
 		return errors.Errorf("error creating keygroup")
 	}
 
-	if err := h.r.CreateKeygroup(k); err != nil {
+	if err := h.t.createKeygroup(k); err != nil {
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		return errors.Errorf("error creating keygroup")
+	}
+
+	if err := h.r.createKeygroup(k); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error creating keygroup")
 	}
@@ -40,7 +47,12 @@ func (h *exthandler) HandleDeleteKeygroup(k Keygroup) error {
 		return errors.Errorf("error deleting keygroup")
 	}
 
-	if err := h.r.RelayDeleteKeygroup(Keygroup{
+	if err := h.t.deleteKeygroup(k.Name); err != nil {
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		return errors.Errorf("error deleting keygroup")
+	}
+
+	if err := h.r.relayDeleteKeygroup(Keygroup{
 		Name: k.Name,
 	}); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
@@ -73,7 +85,12 @@ func (h *exthandler) HandleUpdate(i Item) error {
 		return errors.Errorf("error updating item")
 	}
 
-	if err := h.r.RelayUpdate(i); err != nil {
+	if err := h.r.relayUpdate(i); err != nil {
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		return errors.Errorf("error updating item")
+	}
+
+	if err := h.t.triggerUpdate(i); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error updating item")
 	}
@@ -88,7 +105,12 @@ func (h *exthandler) HandleDelete(i Item) error {
 		return errors.Errorf("error deleting item")
 	}
 
-	if err := h.r.RelayDelete(i); err != nil {
+	if err := h.r.relayDelete(i); err != nil {
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		return errors.Errorf("error deleting item")
+	}
+
+	if err := h.t.triggerDelete(i); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error deleting item")
 	}
@@ -98,14 +120,7 @@ func (h *exthandler) HandleDelete(i Item) error {
 
 // HandleAddReplica handles requests to the AddKeygroupReplica endpoint of the client interface.
 func (h *exthandler) HandleAddReplica(k Keygroup, n Node) error {
-	i, err := h.s.readAll(k.Name)
-
-	if err != nil {
-		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
-		return errors.Errorf("error adding replica")
-	}
-
-	if err := h.r.AddReplica(k, n, i, true); err != nil {
+	if err := h.r.addReplica(k, n, true); err != nil {
 		log.Error().Msgf("Error in AddReplica is: %#v", err)
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error adding replica")
@@ -116,14 +131,39 @@ func (h *exthandler) HandleAddReplica(k Keygroup, n Node) error {
 
 // HandleGetKeygroupReplica handles requests to the GetKeygroupReplica endpoint of the client interface.
 func (h *exthandler) HandleGetKeygroupReplica(k Keygroup) ([]Node, error) {
-	return h.r.GetReplica(k)
+	return h.r.getReplica(k)
 }
 
 // HandleRemoveReplica handles requests to the RemoveKeygroupReplica endpoint of the client interface.
 func (h *exthandler) HandleRemoveReplica(k Keygroup, n Node) error {
-	if err := h.r.RemoveReplica(k, n, true); err != nil {
+	if err := h.r.removeReplica(k, n, true); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error removing replica")
+	}
+
+	return nil
+}
+
+// HandleAddReplica handles requests to the AddKeygroupTrigger endpoint of the client interface.
+func (h *exthandler) HandleAddTriggers(k Keygroup, t Trigger) error {
+	if err := h.t.addTrigger(k, t); err != nil {
+		log.Error().Msgf("Error in AddTrigger is: %#v", err)
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		return errors.Errorf("error adding replica")
+	}
+	return nil
+}
+
+// HandleGetKeygroupTriggers handles requests to the GetKeygroupTrigger endpoint of the client interface.
+func (h *exthandler) HandleGetKeygroupTriggers(k Keygroup) ([]Trigger, error) {
+	return h.t.getTrigger(k)
+}
+
+// HandleRemoveTrigger handles requests to the RemoveKeygroupTrigger endpoint of the client interface.
+func (h *exthandler) HandleRemoveTrigger(k Keygroup, t Trigger) error {
+	if err := h.t.removeTrigger(k, t); err != nil {
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		return errors.Errorf("error removing trigger")
 	}
 
 	return nil
@@ -153,12 +193,12 @@ func (h *exthandler) HandleAddNode(n []Node) error {
 
 // HandleGetReplica handles requests to the GetAllReplica endpoint of the client interface.
 func (h *exthandler) HandleGetReplica(n Node) (Node, error) {
-	return h.r.GetNode(n)
+	return h.r.getNode(n)
 }
 
 // HandleGetAllReplica handles requests to the GetAllReplica endpoint of the client interface.
 func (h *exthandler) HandleGetAllReplica() ([]Node, error) {
-	return h.r.GetNodes()
+	return h.r.getNodes()
 }
 
 // HandleRemoveNode handles requests to the RemoveReplica endpoint of the client interface.

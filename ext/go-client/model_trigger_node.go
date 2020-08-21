@@ -10,8 +10,6 @@
 
 package swagger
 
-type Node struct {
-	Id string `json:"id"`
-	Addr string `json:"addr"`
-	ZmqPort int32 `json:"zmqPort"`
+type TriggerNode struct {
+	Host string `json:"host"`
 }

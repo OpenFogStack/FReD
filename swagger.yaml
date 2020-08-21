@@ -1,7 +1,7 @@
 swagger: "2.0"
 info:
   description: "FReD - Fog Replicated Data Storage."
-  version: "0.0.3"
+  version: "0.0.4"
   title: "FReD"
   contact:
     email: "tp@mcc.tu-berlin.de"
@@ -19,6 +19,8 @@ tags:
     description: "set up a new P2P network of FReD nodes"
   - name: "replication"
     description: "manage replication between nodes"
+  - name: "triggers"
+    description: "manage trigger nodes"
 schemes:
   - "https"
   - "http"
@@ -76,7 +78,7 @@ paths:
         - "keygroup"
         - "replication"
       summary: "Gets all Replica Nodes for a Keygroup"
-      description: "Returns replica nodes for a Keygroup with the name `group_id` if it does not exist already."
+      description: "Returns replica nodes for a Keygroup with the name `group_id`."
       produces:
         - "text/plain"
         - "application/json"
@@ -324,6 +326,98 @@ paths:
           type: "string"
           format: "string"
 
+  /keygroup/{group_id}/triggers:
+    get:
+      tags:
+        - "triggers"
+      summary: "Gets all Trigger Nodes for a Keygroup"
+      description: "Returns trigger nodes for a Keygroup with the name `group_id`."
+      produces:
+        - "text/plain"
+        - "application/json"
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/TriggerList"
+        404:
+          description: Keygroup not Found
+          schema:
+            $ref: "#/definitions/Error"
+      parameters:
+        - in: "path"
+          name: "group_id"
+          description: "Name of Keygroup"
+          required: true
+          type: "string"
+          format: "string"
+
+  /keygroup/{group_id}/triggers/{trigger_node_id}:
+    post:
+      tags:
+        - "triggers"
+      summary: "Create a new Trigger node for a Keygroup"
+      description: "Registers the trigger node with the name `trigger_node_id` and host `host` as a trigger node for a Keygroup with the name `group_id` if it does not exist already."
+      produces:
+        - "text/plain"
+        - "application/json"
+      responses:
+        200:
+          description: OK
+        409:
+          description: Conflict, Trigger Node or Keygroup exists already
+          schema:
+            $ref: "#/definitions/Error"
+      parameters:
+        - in: "path"
+          name: "group_id"
+          description: "Name of Keygroup"
+          required: true
+          type: "string"
+          format: "string"
+        - in: "path"
+          name: "trigger_node_id"
+          description: "Name of Trigger Node"
+          required: true
+          type: "string"
+          format: "string"
+        - in: "body"
+          name: "host"
+          description: "Host of the trigger node"
+          required: true
+          schema:
+            $ref: "#/definitions/TriggerNode"
+
+
+    delete:
+      tags:
+        - "triggers"
+      summary: "Remove an existing trigger node for a Keygroup"
+      description: "De-registers the node with the name {trigger_node_id} as a trigger node for the Keygroup with the name `group_id` if it exists."
+      produces:
+        - "text/plain"
+        - "application/json"
+      responses:
+        200:
+          description: OK
+        404:
+          description: Trigger Node or Keygroup not found
+          schema:
+            $ref: "#/definitions/Error"
+      parameters:
+        - in: "path"
+          name: "group_id"
+          description: "Name of Keygroup"
+          required: true
+          type: "string"
+          format: "string"
+        - in: "path"
+          name: "trigger_node_id"
+          description: "Name of Trigger Node"
+          required: true
+          type: "string"
+          format: "string"
+
 definitions:
   Item:
     type: "object"
@@ -348,26 +442,15 @@ definitions:
       id: hello
       value: Hello World!
       keygroup: Test-Keygroup
-  Replica:
+  TriggerNode:
     type: "object"
     required:
-      - "nodes"
+      - "host"
     properties:
-      nodes:
-        type: "array"
-        items:
-          $ref: "#/definitions/Node"
-    example:
-      nodes:
-        - id: nodeB
-          addr: 172.12.0.3
-          zmqPort: 5555
-        - id: nodeC
-          addr: nodeC.nodes.mcc-f.red
-          zmqPort: 5554
-        - id: nodeD
-          addr: localhost
-          zmqPort: 5553
+      host:
+        type: "string"
+        format: "utf-8"
+        example: 172.26.0.2:3333
   Node:
     type: "object"
     required:
@@ -411,3 +494,24 @@ definitions:
         - nodeB
         - nodeC
         - nodeD
+  TriggerList:
+    type: "object"
+    required:
+      - "nodes"
+    properties:
+      nodes:
+        type: "array"
+        items:
+          type: "object"
+          required:
+            - "id"
+            - "host"
+          properties:
+            id:
+              type: "string"
+              format: "utf-8"
+              example: triggernodeA
+            host:
+              type: "string"
+              format: "utf-8"
+              example: 172.12.0.3:3333

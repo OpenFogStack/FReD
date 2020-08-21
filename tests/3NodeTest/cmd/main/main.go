@@ -2,8 +2,10 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"flag"
 	"fmt"
+	"net/http"
 	"os"
 	"time"
 
@@ -15,7 +17,7 @@ import (
 
 var (
 	// Wait for the user to press enter to continue
-	waitUser = true
+	waitUser bool
 	reader   = bufio.NewReader(os.Stdin)
 )
 
@@ -29,10 +31,9 @@ func main() {
 		},
 	)
 
-	time.Sleep(15 * time.Second)
-
 	// Parse Flags
 	useTLS := *flag.Bool("useTLS", false, "Use TLS (HTTPS instead of HTTP)")
+	waitUser = *flag.Bool("wait-user", false, "wait for user input after each test")
 
 	apiVersion := *flag.String("apiVersion", "v0", "API Version (e.g. v0)")
 
@@ -53,6 +54,10 @@ func main() {
 	//nodeCzmqhost := *flag.String("nodeCzmqhost", "172.26.0.12", "host of nodeC (e.g. localhost) that can be reached by the other nodes")
 	nodeCzmqPort := *flag.Int("nodeCzmqPort", 5555, "ZMQ Port of nodeC")
 	nodeCzmqID := *flag.String("nodeCzmqID", "nodeC", "ZMQ Id of nodeC")
+
+	triggerNodeHost := *flag.String("triggerNodeHost", "172.26.0.30:3333", "host of trigger node (e.g. localhost:3333)")
+	triggerNodeWSHost := *flag.String("triggerNodeWSHost", "172.26.0.30:80", "host of trigger node web server (e.g. localhost:80)")
+	triggerNodeID := *flag.String("triggerNodeID", "triggernode", "Id of trigger node")
 
 	flag.Parse()
 
@@ -76,6 +81,8 @@ func main() {
 	nodeA := node.NewNode(nodeAurl)
 	nodeB := node.NewNode(nodeBurl)
 	nodeC := node.NewNode(nodeCurl)
+
+	time.Sleep(15 * time.Second)
 
 	// Test Keygroups
 	logNodeAction(nodeA, "Creating keygroup testing")
@@ -228,10 +235,64 @@ func main() {
 		logNodeFailure(nodeB, "resp is \"value\"", resp)
 	}
 
-	if nodeA.Errors != 0 || nodeB.Errors != 0 || nodeC.Errors != 0 {
-		log.Error().Msgf("Total Errors: %d", nodeA.Errors+nodeB.Errors+nodeC.Errors)
-		os.Exit(1)
+	// let's test trigger nodes
+	// create a new keygroup on nodeA
+	logNodeAction(nodeA, "Creating keygroup triggertesting")
+	nodeA.CreateKeygroup("triggertesting", 200, true)
+
+	logNodeAction(nodeA, "Creating keygroup nottriggertesting")
+	nodeA.CreateKeygroup("nottriggertesting", 200, true)
+
+	//post an item1 to new keygroup
+	logNodeAction(nodeA, "post an item1 to new keygroup triggertesting")
+	nodeA.PutItem("triggertesting", "item1", "value1", 200, true)
+	//add trigger node to nodeA
+	logNodeAction(nodeA, "add trigger node to nodeA for keygroup triggertesting")
+	nodeA.AddKeygroupTrigger("triggertesting", triggerNodeID, triggerNodeHost, 200, true)
+	//post another item2 to new keygroup
+	logNodeAction(nodeA, "post another item2 to new keygroup triggertesting")
+	nodeA.PutItem("triggertesting", "item2", "value2", 200, true)
+	//delete item1 from keygroup
+	logNodeAction(nodeA, "delete item1 from keygroup triggertesting")
+	nodeA.DeleteItem("triggertesting", "item1", 200, true)
+	// post an item3 to keygroup nottriggertesting that should not be sent to trigger node
+	logNodeAction(nodeA, "post an item3 to keygroup nottriggertesting that should not be sent to trigger node")
+	nodeA.PutItem("nottriggertesting", "item3", "value3", 200, true)
+	//add keygroup to nodeB as well
+	logNodeAction(nodeA, "add keygroup triggertesting to nodeB as well")
+	nodeA.AddKeygroupReplica("triggertesting", nodeBzmqID, 200, true)
+	//post item4 to nodeB
+	logNodeAction(nodeB, "post item4 to nodeB in keygroup triggertesting")
+	nodeB.PutItem("triggertesting", "item4", "value4", 200, true)
+	//remove trigger node from nodeA
+	logNodeAction(nodeA, "remove trigger node from nodeA in keygroup triggertesting")
+	nodeA.DeleteKeygroupTrigger("triggertesting", triggerNodeID, 200, true)
+	//post item5 to nodeA
+	logNodeAction(nodeA, "post item5 to nodeA in keygroup triggertesting")
+	nodeA.PutItem("triggertesting", "item5", "value5", 200, true)
+	// check logs from trigger node
+	// we should have the following logs (and nothing else):
+	// put triggertesting item2 value2
+	// del triggertesting item1
+	// put triggertesting item4 value4
+	logNodeAction(nodeA, "Checking if triggers have been executed correctly")
+	checkTriggerNode(triggerNodeID, triggerNodeWSHost)
+	//finally delete the keygroups again
+	logNodeAction(nodeA, "deleting keygroup triggertesting")
+	nodeA.DeleteKeygroup("triggertesting", 200, true)
+	logNodeAction(nodeA, "deleting keygroup nottriggertesting")
+	nodeA.DeleteKeygroup("nottriggertesting", 200, true)
+	// try to get the trigger nodes now
+	logNodeAction(nodeA, "try to get the trigger nodes for keygroup triggertesting after deletion")
+	nodeA.GetKeygroupTriggers("triggertesting", 404, false)
+
+	totalerrors := nodeA.Errors + nodeB.Errors + nodeC.Errors
+
+	if totalerrors > 0 {
+		log.Error().Msgf("Total Errors: %d", totalerrors)
 	}
+
+	os.Exit(totalerrors)
 }
 
 func logNodeAction(node *node.Node, action string) {
@@ -249,11 +310,81 @@ func logDebugInfo(node *node.Node, info string) {
 	log.Debug().Str("node", node.URL).Msg(info)
 }
 
+func checkTriggerNode(triggerNodeID, triggerNodeWSHost string) {
+	log.Info().Str("trigger node", triggerNodeWSHost).Msg("Checking Trigger Node logs")
+
+	type LogEntry struct {
+		Op  string `json:"op"`
+		Kg  string `json:"kg"`
+		ID  string `json:"id"`
+		Val string `json:"val"`
+	}
+
+	// put triggertesting item2 value2
+	// del triggertesting item1
+	// put triggertesting item4 value4
+
+	expected := make([]LogEntry, 3)
+	expected[0] = LogEntry{
+		Op:  "put",
+		Kg:  "triggertesting",
+		ID:  "item2",
+		Val: "value2",
+	}
+
+	expected[1] = LogEntry{
+		Op: "del",
+		Kg: "triggertesting",
+		ID: "item1",
+	}
+
+	expected[2] = LogEntry{
+		Op:  "put",
+		Kg:  "triggertesting",
+		ID:  "item4",
+		Val: "value4",
+	}
+
+	resp, err := http.Get(fmt.Sprintf("http://%s/", triggerNodeWSHost))
+
+	if err != nil {
+		log.Warn().Str("trigger node", triggerNodeWSHost).Msgf("%#v", err)
+		return
+	}
+
+	var result []LogEntry
+	err = json.NewDecoder(resp.Body).Decode(&result)
+
+	if err != nil {
+		log.Warn().Str("trigger node", triggerNodeWSHost).Msgf("%#v", err)
+		return
+	}
+
+	err = resp.Body.Close()
+
+	if err != nil {
+		log.Warn().Str("trigger node", triggerNodeWSHost).Msgf("%#v", err)
+		return
+	}
+
+	if len(result) != len(expected) {
+		log.Warn().Str("trigger node", triggerNodeID).Msgf("expected: %s, but got: %#v", expected, result)
+		return
+	}
+
+	for i := range expected {
+		if expected[i] != result[i] {
+			log.Warn().Str("trigger node", triggerNodeID).Msgf("expected: %s, but got: %#v", expected[i], result[i])
+			return
+		}
+	}
+}
+
 func wait() {
 	if waitUser {
 		log.Info().Msg("Please press enter to continue:")
 		_, _, _ = reader.ReadLine()
 	} else {
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(1 * time.Second)
 	}
 }

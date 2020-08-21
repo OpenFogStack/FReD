@@ -35,6 +35,10 @@ func Setup(host string, h fred.ExtHandler, apiversion string, useTLS bool, logle
 	r.POST(apiversion+"/keygroup/:kgname/replica/:nodeid", postKeygroupReplica(h))
 	r.DELETE(apiversion+"/keygroup/:kgname/replica/:nodeid", deleteKeygroupReplica(h))
 
+	r.GET(apiversion+"/keygroup/:kgname/triggers", getKeygroupTrigger(h))
+	r.POST(apiversion+"/keygroup/:kgname/triggers/:triggernodeid", postKeygroupTrigger(h))
+	r.DELETE(apiversion+"/keygroup/:kgname/triggers/:triggernodeid", deleteKeygroupTrigger(h))
+
 	r.GET(apiversion+"/keygroup/:kgname/data/:id", getItem(h))
 	r.PUT(apiversion+"/keygroup/:kgname/data/:id", putItem(h))
 	r.DELETE(apiversion+"/keygroup/:kgname/data/:id", deleteItem(h))

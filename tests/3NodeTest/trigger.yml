@@ -1,0 +1,17 @@
+version: "3.7"
+
+services:
+  triggerA:
+    build:
+      context: ../../../fred
+      dockerfile: trigger.Dockerfile
+    image: fred/trigger:local
+    container_name: triggerA
+    networks:
+      fredwork:
+        ipv4_address: 172.26.0.30
+
+networks:
+  fredwork:
+    external: true
+# docker network create fredwork --gateway 172.26.0.1 --subnet 172.26.0.0/16
