@@ -6,7 +6,6 @@ import (
 	"crypto/x509"
 	"io/ioutil"
 	"net"
-	"strings"
 	"time"
 
 	"github.com/go-errors/errors"
@@ -20,11 +19,14 @@ import (
 
 // Server handles GRPC Requests and calls the according functions of the exthandler
 type Server struct {
-	e     fred.ExtHandler
-	roots *x509.CertPool
+	e         fred.ExtHandler
+	roots     *x509.CertPool
+	isProxied bool
+	proxyHost string
 	*grpc.Server
 }
 
+// the roles map the internal grpc representation of rbac roles to the representation within fred
 var (
 	roles = map[client.UserRole]fred.Role{
 		client.UserRole_ReadKeygroup:       fred.ReadKeygroup,
@@ -56,22 +58,44 @@ func (s *Server) checkCert(ctx context.Context) (name string, err error) {
 		return name, errors.Errorf("could not verify peer certificate: %v", tlsAuth.State)
 	}
 
+	host, _, err := net.SplitHostPort(p.Addr.String())
+
+	if err != nil {
+		return name, errors.New(err)
+	}
+
 	// verify the certificate:
+	// IF we are not proxied and communicate with the client directly:
 	// 1) it should be issued by a CA in our root CA pool
 	// 2) any intermediates are valid for us
 	// 3) the certificate should be valid for client authentication
 	// 4) the certificate should have the clients address as a SAN
-	_, err = tlsAuth.State.VerifiedChains[0][0].Verify(x509.VerifyOptions{
-		Roots:         s.roots,
-		CurrentTime:   time.Now(),
-		Intermediates: x509.NewCertPool(),
-		KeyUsages:     []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
-		// p.Addr is of form "IP:PORT" so split it by ":" char and use the first entry
-		DNSName: strings.Split(p.Addr.String(), ":")[0],
-	})
+	if !s.isProxied {
+		_, err = tlsAuth.State.VerifiedChains[0][0].Verify(x509.VerifyOptions{
+			Roots:         s.roots,
+			CurrentTime:   time.Now(),
+			Intermediates: x509.NewCertPool(),
+			KeyUsages:     []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
+			DNSName:       host,
+		})
 
-	if err != nil {
-		return name, errors.New(err)
+		if err != nil {
+			return name, errors.New(err)
+		}
+	} else {
+		// ELSE we sit behind a proxy and the proxy should be the one tunneling the gRPC connection to us
+		// hence if we can ensure that it is indeed the proxy that is talking to us and not someone who has found
+		// their way into the network, we can be sure that the proxy/LB has checked the certificate
+		_, err = tlsAuth.State.VerifiedChains[0][0].Verify(x509.VerifyOptions{
+			Roots:         s.roots,
+			CurrentTime:   time.Now(),
+			Intermediates: x509.NewCertPool(),
+			KeyUsages:     []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
+		})
+
+		if err != nil {
+			return name, errors.New(err)
+		}
 	}
 
 	// Check subject common name exists and return it as the user name for that client
@@ -85,7 +109,7 @@ func (s *Server) checkCert(ctx context.Context) (name string, err error) {
 }
 
 // NewServer creates a new Server for requests from Fred Clients
-func NewServer(host string, handler fred.ExtHandler, cert string, key string, caCert string) *Server {
+func NewServer(host string, handler fred.ExtHandler, cert string, key string, caCert string, isProxied bool, proxyHost string) *Server {
 	// Load server's certificate and private key
 	serverCert, err := tls.LoadX509KeyPair(cert, key)
 
@@ -115,6 +139,8 @@ func NewServer(host string, handler fred.ExtHandler, cert string, key string, ca
 	s := &Server{
 		handler,
 		rootCAs,
+		isProxied,
+		proxyHost,
 		grpc.NewServer(
 			grpc.Creds(credentials.NewTLS(config)),
 		),
@@ -212,7 +238,7 @@ func (s *Server) Read(ctx context.Context, request *client.ReadRequest) (*client
 // Update calls this method on the exthandler
 func (s *Server) Update(ctx context.Context, request *client.UpdateRequest) (*client.StatusResponse, error) {
 
-	log.Debug().Msgf("ExtServer has rcvd DeleteKeygroup. In: %#v", request)
+	log.Debug().Msgf("ExtServer has rcvd Update. In: %#v", request)
 
 	user, err := s.checkCert(ctx)
 

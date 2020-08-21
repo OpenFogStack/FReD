@@ -15,7 +15,7 @@ ssl = true
 # adaptor can be either "leveldb" or "memory"
 adaptor = "leveldb"
 
-[zmq]
+[peering]
 port = 5555
 
 [leveldb]

@@ -12,6 +12,10 @@ service Database {
     rpc Exists (Key) returns (Response) {}
     rpc CreateKeygroup (Keygroup) returns (Response) {}
     rpc DeleteKeygroup (Keygroup) returns (Response) {}
+    rpc ExistsKeygroup (Keygroup) returns (Response) {}
+    rpc AddKeygroupTrigger (KeygroupTrigger) returns (Response) {}
+    rpc DeleteKeygroupTrigger (KeygroupTrigger) returns (Response) {}
+    rpc GetKeygroupTrigger (Keygroup) returns (stream Trigger) {}
 }
 
 message Item {
@@ -27,6 +31,11 @@ message UpdateItem {
     int64 expiry = 4;
 }
 
+message Trigger {
+    string id = 1;
+    string host = 2;
+}
+
 // A Key uniquely identifies data. In our case it contains a keygroup and the id
 message Key {
     string keygroup = 1;
@@ -39,6 +48,11 @@ message Val {
 
 message Keygroup {
     string keygroup = 1;
+}
+
+message KeygroupTrigger {
+    string keygroup = 1;
+    Trigger trigger = 2;
 }
 
 message Response {

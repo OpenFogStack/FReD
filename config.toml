@@ -14,7 +14,7 @@ ssl = false
 # adaptor can be either "memory" or "badgerdb" or "remote"
 adaptor = "badgerdb"
 
-[zmq]
+[peering]
 host = ":5555"
 
 [dynamodb]

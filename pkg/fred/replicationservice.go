@@ -382,10 +382,6 @@ func (s *replicationService) removeReplica(k Keygroup, n Node, relay bool) error
 		if err != nil {
 			return err
 		}
-		log.Debug().Msgf("RemoveReplica from replservice: sendingDeleteKeygroup %#v to %#v", k, removedNode)
-		if err := s.c.SendDeleteKeygroup(removedNodeAddr, removedNodePort, k.Name); err != nil {
-			return err
-		}
 
 		for idToInform := range kgMembers {
 			nodeToInformAddr, nodeToInformPort, err := s.n.getNodeAddress(idToInform)

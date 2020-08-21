@@ -57,11 +57,6 @@ func (h *inthandler) HandleCreateKeygroup(k Keygroup) error {
 		return errors.Errorf("error creating keygroup")
 	}
 
-	if err := h.t.createKeygroup(k); err != nil {
-		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
-		return errors.Errorf("error creating keygroup")
-	}
-
 	return nil
 }
 
@@ -75,11 +70,6 @@ func (h *inthandler) HandleDeleteKeygroup(k Keygroup) error {
 	if err := h.r.deleteKeygroup(Keygroup{
 		Name: k.Name,
 	}); err != nil {
-		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
-		return errors.Errorf("error deleting keygroup")
-	}
-
-	if err := h.t.deleteKeygroup(k.Name); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error deleting keygroup")
 	}

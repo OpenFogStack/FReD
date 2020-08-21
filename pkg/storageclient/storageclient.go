@@ -158,7 +158,7 @@ func (c *Client) IDs(kg string) ([]string, error) {
 	return responses, nil
 }
 
-// Exists calls the same method on the remote server
+// Exists calls the same method on the remote server.
 func (c *Client) Exists(kg string, id string) bool {
 	response, err := c.dbClient.Exists(context.Background(), &storage.Key{Keygroup: kg, Id: id})
 	log.Debug().Err(err).Msgf("StorageClient: Exists in: %#v %#v out: %#v", kg, id, response)
@@ -170,7 +170,87 @@ func (c *Client) Exists(kg string, id string) bool {
 	return response.Success
 }
 
+// ExistsKeygroup calls the same method on the remote server.
+func (c *Client) ExistsKeygroup(kg string) bool {
+	response, err := c.dbClient.ExistsKeygroup(context.Background(), &storage.Keygroup{Keygroup: kg})
+	log.Debug().Err(err).Msgf("StorageClient: ExistsKeygroup in: %#v out: %#v", kg, response)
+
+	if err != nil {
+		return false
+	}
+
+	return response.Success
+}
+
 // Destroy destroys the connection
 func (c *Client) Destroy() {
 	_ = c.con.Close()
+}
+
+// AddKeygroupTrigger calls the same method on the remote server.
+func (c *Client) AddKeygroupTrigger(kg string, id string, host string) error {
+	keygroupTrigger := &storage.KeygroupTrigger{
+		Keygroup: kg,
+		Trigger: &storage.Trigger{
+			Id:   id,
+			Host: host,
+		},
+	}
+	response, err := c.dbClient.AddKeygroupTrigger(context.Background(), keygroupTrigger)
+	log.Debug().Err(err).Msgf("StorageClient: AddKeygroupTrigger in: %#v out: %#v", kg, response)
+
+	if err != nil {
+		return errors.New(err)
+	}
+
+	return nil
+}
+
+// DeleteKeygroupTrigger calls the same method on the remote server.
+func (c *Client) DeleteKeygroupTrigger(kg string, id string) error {
+	keygroupTrigger := &storage.KeygroupTrigger{
+		Keygroup: kg,
+		Trigger: &storage.Trigger{
+			Id: id,
+		},
+	}
+	response, err := c.dbClient.DeleteKeygroupTrigger(context.Background(), keygroupTrigger)
+	log.Debug().Err(err).Msgf("StorageClient: DeleteKeygroupTrigger in: %#v out: %#v", kg, response)
+
+	if err != nil {
+		return errors.New(err)
+	}
+
+	return nil
+}
+
+// GetKeygroupTrigger calls the same method on the remote server.
+func (c *Client) GetKeygroupTrigger(kg string) (map[string]string, error) {
+	keygroup := &storage.Keygroup{
+		Keygroup: kg,
+	}
+	stream, err := c.dbClient.GetKeygroupTrigger(context.Background(), keygroup)
+	log.Debug().Err(err).Msgf("StorageClient: DeleteKeygroupTrigger in: %#v", kg)
+
+	if err != nil {
+		return nil, errors.New(err)
+	}
+
+	responses := make(map[string]string)
+
+	for {
+		in, err := stream.Recv()
+		if err == io.EOF {
+			// read done.
+			break
+		}
+		if err != nil {
+			log.Err(err).Msg("StorageClient: Error in GetKeygroupTrigger while receiving a Trigger")
+			return nil, errors.New(err)
+		}
+
+		responses[in.Id] = in.Host
+	}
+
+	return responses, nil
 }

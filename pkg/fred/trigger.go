@@ -3,7 +3,6 @@ package fred
 import (
 	"context"
 	"crypto/tls"
-	"sync"
 
 	"github.com/go-errors/errors"
 	"github.com/rs/zerolog/log"
@@ -18,14 +17,9 @@ type Trigger struct {
 	Host string
 }
 
-type triggerMap struct {
-	nodes map[string]*Trigger
-	*sync.RWMutex
-}
-
 type triggerService struct {
-	triggers map[KeygroupName]triggerMap
-	tc       *credentials.TransportCredentials
+	tc *credentials.TransportCredentials
+	s  *storeService
 }
 
 func (t *triggerService) getConnAndClient(host string) (client trigger.TriggerNodeClient, conn *grpc.ClientConn) {
@@ -59,7 +53,7 @@ func dealWithStatusResponse(res *trigger.TriggerResponse, err error, from string
 
 }
 
-func newTriggerService(certFile, keyFile string) *triggerService {
+func newTriggerService(s *storeService, certFile, keyFile string) *triggerService {
 	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 
 	if err != nil {
@@ -74,17 +68,21 @@ func newTriggerService(certFile, keyFile string) *triggerService {
 	tc := credentials.NewTLS(tlsConfig)
 
 	return &triggerService{
-		triggers: make(map[KeygroupName]triggerMap),
-		tc:       &tc,
+		tc: &tc,
+		s:  s,
 	}
 }
 
 func (t *triggerService) triggerDelete(i Item) (e error) {
 	log.Debug().Msgf("triggerDelete from triggerservice: in %#v", i)
 
-	t.triggers[i.Keygroup].RLock()
-	defer t.triggers[i.Keygroup].RUnlock()
-	for _, node := range t.triggers[i.Keygroup].nodes {
+	nodes, err := t.s.getKeygroupTrigger(i.Keygroup)
+
+	if err != nil {
+		return err
+	}
+
+	for _, node := range nodes {
 		client, conn := t.getConnAndClient(node.Host)
 		res, err := client.DeleteItemTrigger(context.Background(), &trigger.DeleteItemTriggerRequest{
 			Keygroup: string(i.Keygroup),
@@ -108,11 +106,15 @@ func (t *triggerService) triggerDelete(i Item) (e error) {
 }
 
 func (t *triggerService) triggerUpdate(i Item) (e error) {
-	log.Debug().Msgf("triggerUpdate from triggerservice: in %#v, have %#v", i, t.triggers[i.Keygroup])
+	log.Debug().Msgf("triggerUpdate from triggerservice: in %#v", i)
 
-	t.triggers[i.Keygroup].RLock()
-	defer t.triggers[i.Keygroup].RUnlock()
-	for _, node := range t.triggers[i.Keygroup].nodes {
+	nodes, err := t.s.getKeygroupTrigger(i.Keygroup)
+
+	if err != nil {
+		return err
+	}
+
+	for _, node := range nodes {
 		client, conn := t.getConnAndClient(node.Host)
 		res, err := client.PutItemTrigger(context.Background(), &trigger.PutItemTriggerRequest{
 			Keygroup: string(i.Keygroup),
@@ -139,68 +141,17 @@ func (t *triggerService) triggerUpdate(i Item) (e error) {
 func (t *triggerService) addTrigger(k Keygroup, tn Trigger) error {
 	log.Debug().Msgf("addTrigger from triggerservice: in %#v %#v", k, tn)
 
-	if _, ok := t.triggers[k.Name]; !ok {
-		return errors.Errorf("keygroup %s not in trigger store", k.Name)
-	}
-
-	t.triggers[k.Name].Lock()
-	defer t.triggers[k.Name].Unlock()
-
-	t.triggers[k.Name].nodes[tn.ID] = &tn
-
-	return nil
+	return t.s.addKeygroupTrigger(k.Name, tn)
 }
 
 func (t *triggerService) getTrigger(k Keygroup) ([]Trigger, error) {
 	log.Debug().Msgf("getTrigger from triggerservice: in %#v", k)
 
-	if _, ok := t.triggers[k.Name]; !ok {
-		return nil, errors.Errorf("keygroup %s not in trigger store", k.Name)
-	}
-
-	t.triggers[k.Name].RLock()
-	defer t.triggers[k.Name].RUnlock()
-
-	var n []Trigger
-
-	for _, node := range t.triggers[k.Name].nodes {
-		n = append(n, *node)
-	}
-
-	return n, nil
+	return t.s.getKeygroupTrigger(k.Name)
 }
 
 func (t *triggerService) removeTrigger(k Keygroup, tn Trigger) error {
 	log.Debug().Msgf("removeTrigger from triggerservice: in %#v %#v", k, tn)
 
-	if _, ok := t.triggers[k.Name]; !ok {
-		return errors.Errorf("keygroup %s not in trigger store", k.Name)
-	}
-
-	t.triggers[k.Name].Lock()
-	defer t.triggers[k.Name].Unlock()
-
-	delete(t.triggers[k.Name].nodes, tn.ID)
-
-	return nil
-}
-
-func (t *triggerService) createKeygroup(k Keygroup) error {
-	log.Debug().Msgf("createKeygroup from triggerservice: in %#v", k)
-
-	t.triggers[k.Name] = triggerMap{
-		nodes:   make(map[string]*Trigger),
-		RWMutex: &sync.RWMutex{},
-	}
-
-	log.Debug().Msgf("createKeygroup from triggerservice: out %#v, have %#v", k, t.triggers[k.Name])
-
-	return nil
-}
-
-func (t *triggerService) deleteKeygroup(name KeygroupName) error {
-	log.Debug().Msgf("deleteKeygroup from triggerservice: in %#v", name)
-
-	delete(t.triggers, name)
-	return nil
+	return t.s.deleteKeygroupTrigger(k.Name, tn)
 }

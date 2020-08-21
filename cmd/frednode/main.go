@@ -6,7 +6,6 @@ import (
 	"syscall"
 
 	"github.com/BurntSushi/toml"
-	"github.com/alecthomas/kingpin"
 	"github.com/go-errors/errors"
 	"github.com/mmcloughlin/geohash"
 	"github.com/rs/zerolog"
@@ -15,6 +14,7 @@ import (
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/dynamo"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/peering"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/storageclient"
+	"gopkg.in/alecthomas/kingpin.v2"
 
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/badgerdb"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/fred"
@@ -29,17 +29,19 @@ type fredConfig struct {
 		Lng float64 `toml:"lng"`
 	} `toml:"location"`
 	Server struct {
-		Host string `toml:"host"`
-		Cert string `toml:"cert"`
-		Key  string `toml:"key"`
-		CA   string `toml:"ca"`
+		Host  string `toml:"host"`
+		Proxy string `toml:"proxy"`
+		Cert  string `toml:"cert"`
+		Key   string `toml:"key"`
+		CA    string `toml:"ca"`
 	} `toml:"server"`
 	Storage struct {
 		Adaptor string `toml:"adaptor"`
 	} `toml:"storage"`
 	Peering struct {
-		Host string `toml:"host"`
-	} `toml:"zmq"`
+		Host      string `toml:"host"`
+		HostProxy string `toml:"hostproxy"`
+	} `toml:"peering"`
 	Log struct {
 		Level   string `toml:"level"`
 		Handler string `toml:"handler"`
@@ -78,13 +80,21 @@ var (
 	lng        = kingpin.Flag("lng", "Longitude of the node.").PlaceHolder("LONGITUDE").Default("-200").Float64() // Domain: ]-180,180]
 
 	// API server configuration
-	grpcHost = kingpin.Flag("host", "Host address of server for external connections.").String()
-	grpcCert = kingpin.Flag("cert", "Certificate for external connections.").String()
-	grpcKey  = kingpin.Flag("key", "Key file for external connections.").String()
-	grpcCA   = kingpin.Flag("ca-file", "Certificate authority root certificate file for external connections.").String()
+	grpcHost      = kingpin.Flag("host", "Host address of server for external connections.").String()
+	grpcHostProxy = kingpin.Flag("host-proxy", "Publicly reachable host address of server for external connections (if behind a proxy).").String()
+	grpcCert      = kingpin.Flag("cert", "Certificate for external connections.").String()
+	grpcKey       = kingpin.Flag("key", "Key file for external connections.").String()
+	grpcCA        = kingpin.Flag("ca-file", "Certificate authority root certificate file for external connections.").String()
 
 	// peering configuration
-	internalHost      = kingpin.Flag("zmq-host", "(Publicly reachable) address of this server for internal connections.").String()
+	// this is the address that grpc will bind to (locally)
+	peerHost = kingpin.Flag("peer-host", "local address of this peering server.").String()
+	// this is the address that the node will advertise to nase
+	peerHostProxy = kingpin.Flag("peer-host-proxy", "Publicly reachable address of this peering server (if behind a proxy)").String()
+
+	// storage configuration
+	adaptor = kingpin.Flag("adaptor", "Storage adaptor, can be \"remote\", \"badgerdb\", \"memory\", \"dynamo\".").Enum("remote", "badgerdb", "memory", "dynamo")
+
 	remoteStorageHost = kingpin.Flag("remote-storage-host", "Host address of GRPC Server for storage connection.").String()
 	remoteStorageCert = kingpin.Flag("remote-storage-cert", "Certificate for storage connection.").String()
 	remoteStorageKey  = kingpin.Flag("remote-storage-key", "Key file for storage connection.").String()
@@ -93,9 +103,6 @@ var (
 	dynamoRegion = kingpin.Flag("dynamo-region", "AWS region for DynamoDB storage backend.").String()
 
 	bdbPath = kingpin.Flag("badgerdb-path", "Path to the badgerdb database").String()
-
-	// storage configuration
-	adaptor = kingpin.Flag("adaptor", "Storage adaptor, can be \"remote\", \"badgerdb\", \"memory\", \"dynamo\".").Enum("remote", "badgerdb", "memory", "dynamo")
 
 	// logging configuration
 	logLevel = kingpin.Flag("log-level", "Log level, can be \"debug\", \"info\" ,\"warn\", \"error\", \"fatal\", \"panic\".").Enum("debug", "info", "warn", "errors", "fatal", "panic")
@@ -148,6 +155,9 @@ func main() {
 	if *grpcHost != "" {
 		fc.Server.Host = *grpcHost
 	}
+	if *grpcHostProxy != "" {
+		fc.Server.Proxy = *grpcHostProxy
+	}
 	if *grpcCert != "" {
 		fc.Server.Cert = *grpcCert
 	}
@@ -157,8 +167,11 @@ func main() {
 	if *grpcCA != "" {
 		fc.Server.CA = *grpcCA
 	}
-	if *internalHost != "" {
-		fc.Peering.Host = *internalHost
+	if *peerHost != "" {
+		fc.Peering.Host = *peerHost
+	}
+	if *peerHostProxy != "" {
+		fc.Peering.HostProxy = *peerHostProxy
 	}
 	if *adaptor != "" {
 		fc.Storage.Adaptor = *adaptor
@@ -269,23 +282,25 @@ func main() {
 	c := peering.NewClient()
 
 	f := fred.New(&fred.Config{
-		Store:       store,
-		Client:      c,
-		PeeringHost: fc.Peering.Host,
-		NodeID:      fc.General.nodeID,
-		NaSeHosts:   []string{fc.NaSe.Host},
-		NaSeCert:    fc.NaSe.Cert,
-		NaSeKey:     fc.NaSe.Key,
-		NaSeCA:      fc.NaSe.CA,
-		TriggerCert: fc.Trigger.Cert,
-		TriggerKey:  fc.Trigger.Key,
+		Store:            store,
+		Client:           c,
+		PeeringHost:      fc.Peering.Host,
+		PeeringHostProxy: fc.Peering.HostProxy,
+		NodeID:           fc.General.nodeID,
+		NaSeHosts:        []string{fc.NaSe.Host},
+		NaSeCert:         fc.NaSe.Cert,
+		NaSeKey:          fc.NaSe.Key,
+		NaSeCA:           fc.NaSe.CA,
+		TriggerCert:      fc.Trigger.Cert,
+		TriggerKey:       fc.Trigger.Key,
 	})
 
 	log.Debug().Msg("Starting Interconnection Server...")
 	is := peering.NewServer(fc.Peering.Host, f.I)
 
 	log.Debug().Msg("Starting GRPC Server for Client (==Externalconnection)...")
-	es := api.NewServer(fc.Server.Host, f.E, fc.Server.Cert, fc.Server.Key, fc.Server.CA)
+	isProxied := fc.Server.Proxy != "" && fc.Server.Host != fc.Server.Proxy
+	es := api.NewServer(fc.Server.Host, f.E, fc.Server.Cert, fc.Server.Key, fc.Server.CA, isProxied, fc.Server.Proxy)
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit,

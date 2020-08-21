@@ -1,5 +1,7 @@
 package fred
 
+import "github.com/go-errors/errors"
+
 // Store is an interface for the storage medium that the key-value val items are persisted on.
 type Store interface {
 	// Needs: keygroup, id, val
@@ -20,6 +22,14 @@ type Store interface {
 	CreateKeygroup(kg string) error
 	// Same as with CreateKeygroup
 	DeleteKeygroup(kg string) error
+	// Needs: keygroup
+	ExistsKeygroup(kg string) bool
+	// Needs: keygroup, trigger node id, trigger node host
+	AddKeygroupTrigger(kg string, id string, host string) error
+	// Needs: keygroup, trigger node id
+	DeleteKeygroupTrigger(kg string, id string) error
+	// Needs: keygroup; Returns map: trigger node id -> trigger node host
+	GetKeygroupTrigger(kg string) (map[string]string, error)
 	// Close indicates that the underlying store should be closed as it is no longer needed.
 	Close() error
 }
@@ -43,6 +53,10 @@ func (s *storeService) read(kg KeygroupName, id string) (string, error) {
 		return "", err
 	}
 
+	if !s.iS.ExistsKeygroup(string(kg)) {
+		return "", errors.Errorf("no such keygroup in store: %#v", kg)
+	}
+
 	data, err := s.iS.Read(string(kg), id)
 
 	if err != nil {
@@ -58,6 +72,10 @@ func (s *storeService) readAll(kg KeygroupName) ([]Item, error) {
 
 	if err != nil {
 		return nil, err
+	}
+
+	if !s.iS.ExistsKeygroup(string(kg)) {
+		return nil, errors.Errorf("no such keygroup in store: %#v", kg)
 	}
 
 	data, err := s.iS.ReadAll(string(kg))
@@ -101,6 +119,10 @@ func (s *storeService) update(i Item, expiry int) error {
 		return err
 	}
 
+	if !s.iS.ExistsKeygroup(string(i.Keygroup)) {
+		return errors.Errorf("no such keygroup in store: %#v", i.Keygroup)
+	}
+
 	err = s.iS.Update(string(i.Keygroup), i.ID, i.Val, expiry)
 
 	if err != nil {
@@ -116,6 +138,10 @@ func (s *storeService) delete(kg KeygroupName, id string) error {
 
 	if err != nil {
 		return err
+	}
+
+	if !s.iS.ExistsKeygroup(string(kg)) {
+		return errors.Errorf("no such keygroup in store: %#v", kg)
 	}
 
 	err = s.iS.Delete(string(kg), id)
@@ -137,6 +163,16 @@ func (s *storeService) createKeygroup(kg KeygroupName) error {
 		return err
 	}
 
+	if s.iS.ExistsKeygroup(string(kg)) {
+		return errors.Errorf("keygroup already in store: %#v", kg)
+	}
+
+	err = s.iS.CreateKeygroup(string(kg))
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -148,6 +184,10 @@ func (s *storeService) deleteKeygroup(kg KeygroupName) error {
 		return err
 	}
 
+	if !s.iS.ExistsKeygroup(string(kg)) {
+		return errors.Errorf("no such keygroup in store: %#v", kg)
+	}
+
 	err = s.iS.DeleteKeygroup(string(kg))
 
 	if err != nil {
@@ -155,4 +195,73 @@ func (s *storeService) deleteKeygroup(kg KeygroupName) error {
 	}
 
 	return nil
+}
+
+func (s *storeService) addKeygroupTrigger(kg KeygroupName, t Trigger) error {
+	err := checkKeygroup(kg)
+
+	if err != nil {
+		return err
+	}
+
+	if !s.iS.ExistsKeygroup(string(kg)) {
+		return errors.Errorf("no such keygroup in store: %#v", kg)
+	}
+
+	err = s.iS.AddKeygroupTrigger(string(kg), t.ID, t.Host)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *storeService) deleteKeygroupTrigger(kg KeygroupName, t Trigger) error {
+	err := checkKeygroup(kg)
+
+	if err != nil {
+		return err
+	}
+
+	if !s.iS.ExistsKeygroup(string(kg)) {
+		return errors.Errorf("no such keygroup in store: %#v", kg)
+	}
+
+	err = s.iS.DeleteKeygroupTrigger(string(kg), t.ID)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *storeService) getKeygroupTrigger(kg KeygroupName) ([]Trigger, error) {
+	err := checkKeygroup(kg)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !s.iS.ExistsKeygroup(string(kg)) {
+		return nil, errors.Errorf("no such keygroup in store: %#v", kg)
+	}
+
+	t, err := s.iS.GetKeygroupTrigger(string(kg))
+
+	if err != nil {
+		return nil, err
+	}
+
+	var tn []Trigger
+
+	for id, host := range t {
+		tn = append(tn, Trigger{
+			ID:   id,
+			Host: host,
+		})
+	}
+
+	return tn, nil
 }

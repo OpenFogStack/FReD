@@ -6,11 +6,11 @@ services:
     container_name: etcd-1
     entrypoint: "etcd --name s-1 \
       --data-dir /tmp/etcd/s-1 \
-      --listen-client-urls https://172.26.1.1:2379 \
-      --advertise-client-urls https://172.26.1.1:2379 \
-      --listen-peer-urls http://172.26.1.1:2380 \
-      --initial-advertise-peer-urls http://172.26.1.1:2380 \
-      --initial-cluster s-1=http://172.26.1.1:2380 \
+      --listen-client-urls https://172.26.6.1:2379 \
+      --advertise-client-urls https://172.26.6.1:2379 \
+      --listen-peer-urls http://172.26.6.1:2380 \
+      --initial-advertise-peer-urls http://172.26.6.1:2380 \
+      --initial-cluster s-1=http://172.26.6.1:2380 \
       --initial-cluster-token tkn \
       --initial-cluster-state new \
       --cert-file=/cert/server.crt \
@@ -18,17 +18,16 @@ services:
       --client-cert-auth \
       --trusted-ca-file=/cert/ca.crt"
     volumes:
-      - ../../nase/tls/server.crt:/cert/server.crt
-      - ../../nase/tls/server.key:/cert/server.key
+      - ../../nase/tls/etcd.crt:/cert/server.crt
+      - ../../nase/tls/etcd.key:/cert/server.key
       - ../../nase/tls/ca.crt:/cert/ca.crt
     ports:
       - 2379:2379
       - 2380:2380
     networks:
       fredwork:
-        ipv4_address: 172.26.1.1
+        ipv4_address: 172.26.6.1
 
 networks:
   fredwork:
     external: true
-# docker network create fredwork --gateway 172.26.0.1 --subnet 172.26.0.0/16

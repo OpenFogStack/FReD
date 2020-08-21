@@ -7,16 +7,17 @@ import (
 
 // Config holds configuration parameters for an instance of FReD.
 type Config struct {
-	Store       Store
-	Client      Client
-	PeeringHost string
-	NodeID      string
-	NaSeHosts   []string
-	NaSeCert    string
-	NaSeKey     string
-	NaSeCA      string
-	TriggerCert string
-	TriggerKey  string
+	Store            Store
+	Client           Client
+	PeeringHost      string
+	PeeringHostProxy string
+	NodeID           string
+	NaSeHosts        []string
+	NaSeCert         string
+	NaSeKey          string
+	NaSeCA           string
+	TriggerCert      string
+	TriggerKey       string
 }
 
 // Fred is an instance of FReD.
@@ -67,16 +68,27 @@ func New(config *Config) (f Fred) {
 		panic(err)
 	}
 
-	err = n.registerSelf(Address{Addr: config.PeeringHost})
+	if config.PeeringHostProxy != "" && config.PeeringHost != config.PeeringHostProxy {
+		// we are behind a proxy: register with the proxy address for everyone else to find us
+		err = n.registerSelf(Address{Addr: config.PeeringHostProxy})
 
-	if err != nil {
-		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
-		panic(err)
+		if err != nil {
+			log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+			panic(err)
+		}
+	} else {
+		// not behind a proxy: register with the local bind address
+		err = n.registerSelf(Address{Addr: config.PeeringHost})
+
+		if err != nil {
+			log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+			panic(err)
+		}
 	}
 
 	r := newReplicationService(s, config.Client, n)
 
-	t := newTriggerService(config.TriggerCert, config.TriggerKey)
+	t := newTriggerService(s, config.TriggerCert, config.TriggerKey)
 
 	a := newAuthService(n)
 
