@@ -24,9 +24,7 @@ func Setup(host string, h fred.ExtHandler, apiversion string, useTLS bool, logle
 	}))
 
 	r.GET(apiversion+"/replica", getAllReplica(h))
-	r.POST(apiversion+"/replica", postReplica(h))
 	r.GET(apiversion+"/replica/:nodeid", getReplica(h))
-	r.DELETE(apiversion+"/replica/:nodeid", deleteReplica(h))
 
 	r.POST(apiversion+"/keygroup/:kgname", postKeygroup(h))
 	r.DELETE(apiversion+"/keygroup/:kgname", deleteKeygroup(h))

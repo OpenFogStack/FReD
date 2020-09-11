@@ -145,7 +145,7 @@ func (h *exthandler) HandleRemoveReplica(k Keygroup, n Node) error {
 }
 
 // HandleAddReplica handles requests to the AddKeygroupTrigger endpoint of the client interface.
-func (h *exthandler) HandleAddTriggers(k Keygroup, t Trigger) error {
+func (h *exthandler) HandleAddTrigger(k Keygroup, t Trigger) error {
 	if err := h.t.addTrigger(k, t); err != nil {
 		log.Error().Msgf("Error in AddTrigger is: %#v", err)
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
@@ -169,28 +169,6 @@ func (h *exthandler) HandleRemoveTrigger(k Keygroup, t Trigger) error {
 	return nil
 }
 
-// HandleAddNode handles requests to the AddReplica endpoint of the client interface.
-func (h *exthandler) HandleAddNode(n []Node) error {
-	// TODO remove? IDK
-	panic("Is it still necessary to add a node? The node can do this on startup by itself")
-	// e := make([]string, len(n))
-	// ec := 0
-	//
-	// for _, node := range n {
-	// 	if err := h.replService.AddNode(node, true); err != nil {
-	// 		log.Err(err).Msgf("Exthandler can not add a new replica node. (node=%#v)", node)
-	// 		e[ec] = fmt.Sprintf("%v", err)
-	// 		ec++
-	// 	}
-	// }
-	//
-	// if ec > 0 {
-	// 	return errors.New(errors.StatusInternalError, fmt.Sprintf("exthandler: %v", e))
-	// }
-
-	return nil
-}
-
 // HandleGetReplica handles requests to the GetAllReplica endpoint of the client interface.
 func (h *exthandler) HandleGetReplica(n Node) (Node, error) {
 	return h.r.getNode(n)
@@ -199,11 +177,4 @@ func (h *exthandler) HandleGetReplica(n Node) (Node, error) {
 // HandleGetAllReplica handles requests to the GetAllReplica endpoint of the client interface.
 func (h *exthandler) HandleGetAllReplica() ([]Node, error) {
 	return h.r.getNodes()
-}
-
-// HandleRemoveNode handles requests to the RemoveReplica endpoint of the client interface.
-func (h *exthandler) HandleRemoveNode(n Node) error {
-	// TODO why would this be called and what to do now.
-	//return h.replService.RemoveNode(n, true)
-	return nil
 }

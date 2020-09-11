@@ -40,12 +40,10 @@ type ExtHandler interface {
 	HandleAddReplica(k Keygroup, n Node) error
 	HandleGetKeygroupReplica(k Keygroup) ([]Node, error)
 	HandleRemoveReplica(k Keygroup, n Node) error
-	HandleAddNode(n []Node) error
 	HandleGetReplica(n Node) (Node, error)
 	HandleGetAllReplica() ([]Node, error)
-	HandleRemoveNode(n Node) error
 	HandleGetKeygroupTriggers(keygroup Keygroup) ([]Trigger, error)
-	HandleAddTriggers(keygroup Keygroup, t Trigger) error
+	HandleAddTrigger(keygroup Keygroup, t Trigger) error
 	HandleRemoveTrigger(keygroup Keygroup, t Trigger) error
 }
 

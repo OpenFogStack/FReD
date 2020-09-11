@@ -117,17 +117,6 @@
     </key>
   </component>
   <component name="RunManager" selected="Go Build.Build fred-node">
-    <configuration default="true" type="ArquillianJUnit" factoryName="" nameIsGenerated="true">
-      <option name="arquillianRunConfiguration">
-        <value>
-          <option name="containerStateName" value="" />
-        </value>
-      </option>
-      <option name="TEST_OBJECT" value="class" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
     <configuration default="true" type="GoTestRunConfiguration" factoryName="Go Test">
       <module name="fred" />
       <working_directory value="$PROJECT_DIR$/" />
@@ -196,7 +185,6 @@
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Docker.3NodeTest: Compose Deployment" />
       <item itemvalue="Docker.ci/Dockerfile" />
       <item itemvalue="Docker.fred/Dockerfile" />
       <item itemvalue="Docker.3NodeTest.nodeA: Compose Deployment" />
@@ -338,12 +326,12 @@
     </state>
     <state x="541" y="251" width="598" height="548" key="find.popup/0.0.1680.1050@0.0.1680.1050" timestamp="1597675238033" />
     <state x="489" y="259" width="700" height="530" key="recent.locations.popup" timestamp="1597674931022">
-    <state x="618" y="258" width="684" height="564" key="find.popup" timestamp="1597748544054">
-      <screen x="0" y="0" width="1920" height="1080" />
-    </state>
-    <state x="541" y="251" width="598" height="548" key="find.popup/0.0.1680.1050@0.0.1680.1050" timestamp="1597412249222" />
-    <state x="618" y="258" width="684" height="564" key="find.popup/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1597750022436" />
-    <state x="489" y="259" width="700" height="530" key="recent.locations.popup" timestamp="1597410510259">
+      <state x="618" y="258" width="684" height="564" key="find.popup" timestamp="1597748544054">
+        <screen x="0" y="0" width="1920" height="1080" />
+      </state>
+      <state x="541" y="251" width="598" height="548" key="find.popup/0.0.1680.1050@0.0.1680.1050" timestamp="1597412249222" />
+      <state x="618" y="258" width="684" height="564" key="find.popup/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1597750022436" />
+      <state x="489" y="259" width="700" height="530" key="recent.locations.popup" timestamp="1597410510259" />
       <screen x="0" y="0" width="1680" height="1050" />
     </state>
     <state x="489" y="259" width="700" height="530" key="recent.locations.popup/0.0.1680.1050@0.0.1680.1050" timestamp="1597674931022" />

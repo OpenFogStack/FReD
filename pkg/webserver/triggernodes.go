@@ -88,7 +88,7 @@ func postKeygroupTrigger(h fred.ExtHandler) func(context *gin.Context) {
 			return
 		}
 
-		err := h.HandleAddTriggers(fred.Keygroup{
+		err := h.HandleAddTrigger(fred.Keygroup{
 			Name: fred.KeygroupName(kgname),
 		}, fred.Trigger{
 			ID:   nodeid,
