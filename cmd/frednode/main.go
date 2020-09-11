@@ -3,9 +3,11 @@ package main
 import (
 	"github.com/BurntSushi/toml"
 	"github.com/alecthomas/kingpin"
+	"github.com/go-errors/errors"
 	"github.com/mmcloughlin/geohash"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/dynamoconnect"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/interconnection"
 	"os"
 	"os/signal"
@@ -45,6 +47,12 @@ type fredConfig struct {
 	RemoteStore struct {
 		Host string `toml:"host"`
 	} `toml:"remotestore"`
+	DynamoDB struct {
+		Table      string `toml:"table"`
+		Region     string `toml:"region"`
+		PublicKey  string `toml:"publickey"`
+		PrivateKey string `toml:"privatekey"`
+	} `toml:"dynamodb"`
 	Bdb struct {
 		Path string `toml:"path"`
 	} `toml:"badgerdb"`
@@ -60,16 +68,20 @@ var (
 	wsHost            = kingpin.Flag("ws-host", "Host address of webserver.").String()
 	wsSSL             = kingpin.Flag("use-tls", "Use TLS/SSL to serve over HTTPS. Works only if host argument is a FQDN.").PlaceHolder("USE-SSL").Bool()
 	zmqHost           = kingpin.Flag("zmq-host", "(Publicly reachable) address of this zmq server.").String()
-	adaptor           = kingpin.Flag("adaptor", "Storage adaptor, can be \"remote\", \"badgerdb\", \"memory\".").Enum("leveldb", "remote", "badgerdb", "memory")
+	adaptor           = kingpin.Flag("adaptor", "Storage adaptor, can be \"remote\", \"badgerdb\", \"memory\", \"dynamo\".").Enum("remote", "badgerdb", "memory", "dynamo")
 	logLevel          = kingpin.Flag("log-level", "Log level, can be \"debug\", \"info\" ,\"warn\", \"error\", \"fatal\", \"panic\".").Enum("debug", "info", "warn", "errors", "fatal", "panic")
 	handler           = kingpin.Flag("handler", "Mode of log handler, can be \"dev\", \"prod\".").Enum("dev", "prod")
 	remoteStorageHost = kingpin.Flag("remote-storage-host", "Host address of GRPC Server.").String()
+	dynamoTable       = kingpin.Flag("dynamo-table", "AWS table for DynamoDB storage backend.").String()
+	dynamoRegion      = kingpin.Flag("dynamo-region", "AWS region for DynamoDB storage backend.").String()
+
 	// TODO this should be a list of nodes. One node is enough, but if we want reliability we should accept multiple etcd nodes
 	naseHost = kingpin.Flag("nase-host", "Host where the etcd-server runs").String()
 	bdbPath  = kingpin.Flag("badgerdb-path", "Path to the badgerdb database").String()
 )
 
 func main() {
+	var err error
 
 	kingpin.Version(apiversion)
 	kingpin.HelpFlag.Short('h')
@@ -120,6 +132,12 @@ func main() {
 	}
 	if *remoteStorageHost != "" {
 		fc.RemoteStore.Host = *remoteStorageHost
+	}
+	if *dynamoTable != "" {
+		fc.DynamoDB.Table = *dynamoTable
+	}
+	if *dynamoRegion != "" {
+		fc.DynamoDB.Region = *dynamoRegion
 	}
 	if *naseHost != "" {
 		fc.NaSe.Host = *naseHost
@@ -181,6 +199,11 @@ func main() {
 		store = badgerdb.NewMemory()
 	case "remote":
 		store = storage.NewClient(fc.RemoteStore.Host)
+	case "dynamo":
+		store, err = dynamoconnect.New(fc.DynamoDB.Table, fc.DynamoDB.Region)
+		if err != nil {
+			log.Fatal().Msgf("could not open a dynamo connection: %s", err.(*errors.Error).ErrorStack())
+		}
 	default:
 		log.Fatal().Msg("unknown storage backend")
 	}

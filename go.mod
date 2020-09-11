@@ -8,6 +8,7 @@ require (
 	github.com/alecthomas/kingpin v2.2.6+incompatible
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
+	github.com/aws/aws-sdk-go v1.34.13
 	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/dgraph-io/badger/v2 v2.0.3
 	github.com/gin-contrib/logger v0.0.2
@@ -17,9 +18,10 @@ require (
 	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/golang/protobuf v1.4.1
 	github.com/google/uuid v1.1.1 // indirect
+	github.com/gusaul/go-dynamock v0.0.0-20200325102056-aaeeb0c0e9c1
 	github.com/mmcloughlin/geohash v0.9.0
 	github.com/rs/zerolog v1.17.2
-	github.com/stretchr/testify v1.4.0
+	github.com/stretchr/testify v1.5.1
 	github.com/syndtr/goleveldb v1.0.0
 	github.com/zeromq/goczmq v4.1.0+incompatible
 	go.etcd.io/etcd v0.5.0-alpha.5.0.20200306183522-221f0cc107cb
