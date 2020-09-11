@@ -45,7 +45,7 @@ func getKey(key string) (kg, id string) {
 
 // New creates a new Session for DynamoDB.
 func New(table, region string) (s *Storage, err error) {
-	log.Debug().Msgf("creating a new dynamodb connection to table %s in region %", table, region)
+	log.Debug().Msgf("creating a new dynamodb connection to table %s in region %s", table, region)
 
 	log.Debug().Msg("Checked creds - OK!")
 
