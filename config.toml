@@ -17,6 +17,10 @@ adaptor = "badgerdb"
 [zmq]
 host = ":5555"
 
+[dynamodb]
+table = "fredtable"
+region = "eu-central-1"
+
 [remotestore]
 host = "localhost:1337"
 
