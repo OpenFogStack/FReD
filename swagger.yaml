@@ -48,6 +48,18 @@ paths:
           required: true
           type: "string"
           format: "string"
+        - in: "body"
+          name: "body"
+          description: "Type of keygroup to create (true for mutable table or false for append-only log)"
+          required: true
+          schema:
+            type: "object"
+            required:
+              - "mutable"
+            properties:
+              mutable:
+                type: "boolean"
+                example: false
 
     delete:
       tags:
