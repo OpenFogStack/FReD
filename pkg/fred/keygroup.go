@@ -2,7 +2,8 @@ package fred
 
 // Keygroup has a name and a list of replica nodes and trigger nodes.
 type Keygroup struct {
-	Name KeygroupName
+	Name    KeygroupName
+	Mutable bool
 }
 
 // KeygroupName is a name of a keygroup.

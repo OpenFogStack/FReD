@@ -8,10 +8,10 @@ import (
 )
 
 // CreateKeygroup creates a new keygroup with the node. The Response should be empty if everything is correct.
-func (n *Node) CreateKeygroup(kgname string, expectedStatusCode int, expectEmptyResponse bool) {
+func (n *Node) CreateKeygroup(kgname string, mutable bool, expectedStatusCode int, expectEmptyResponse bool) {
 	log.Debug().Str("node", n.URL).Msgf("Sending a Create Keygroup for group %s; expecting %d", kgname, expectedStatusCode)
 
-	resp, recvErr := n.Client.KeygroupApi.KeygroupGroupIdPost(context.Background(), kgname)
+	resp, recvErr := n.Client.KeygroupApi.KeygroupGroupIdPost(context.Background(), kgname, client.Body{Mutable: mutable})
 
 	if err := checkResponse(resp, recvErr, nil, expectedStatusCode, expectEmptyResponse); err != nil {
 		log.Warn().Str("node", n.URL).Msgf("CreateKeygroup: %s", err.Error())

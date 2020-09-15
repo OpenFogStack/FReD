@@ -44,6 +44,14 @@ paths:
         type: "string"
         format: "string"
         x-exportParamName: "GroupId"
+      - in: "body"
+        name: "body"
+        description: "Type of keygroup to create (true for mutable table or false\
+          \ for append-only log)"
+        required: true
+        schema:
+          $ref: "#/definitions/body"
+        x-exportParamName: "Body"
       responses:
         "200":
           description: "OK"
@@ -528,6 +536,14 @@ definitions:
         id: "triggernodeA"
       - host: "172.12.0.3:3333"
         id: "triggernodeA"
+  body:
+    type: "object"
+    required:
+    - "mutable"
+    properties:
+      mutable:
+        type: "boolean"
+        example: false
   TriggerList_nodes:
     type: "object"
     required:
