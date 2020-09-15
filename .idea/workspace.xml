@@ -3,17 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="b8b6ef1f-1fb0-45b7-ad29-aed6293e4aa1" name="Default Changelist" comment="Add Git Workflow">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/frednode/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/frednode/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/zmq/datarequest.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/zmq/handler.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/zmq/keygrouprequest.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/zmq/messagetypes.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/zmq/receiver.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/zmq/replicationrequest.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/zmq/sender.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/zmq/zmqToInthandler.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/zmq/zmqclient.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/zmq/zmqserver.go" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
