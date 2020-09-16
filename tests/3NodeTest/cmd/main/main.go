@@ -316,18 +316,19 @@ func main() {
 	// create item to keygroup -> should work
 	nodeB.PutItem("log", "test-item", "value-1", 200, true)
 	// update item in keygroup -> should not work
-	nodeB.PutItem("log", "test-item", "value-2", 400, false)
+	nodeB.PutItem("log", "test-item", "value-2", 404, false)
 	// get item from keygroup -> should return appended item
 	respB = nodeB.GetItem("log", "test-item", 200, false)
+
 	if respB != "value-1" {
-		logNodeFailure(nodeB, "resp is not value-1 but %s", respB)
+		logNodeFailure(nodeB, "resp is not value-1", respB)
 	}
 	// delete item from keygroup -> should not work
-	nodeB.DeleteItem("log", "test-item", 400, false)
+	nodeB.DeleteItem("log", "test-item", 404, false)
 	// add nodeC as replica node
-	nodeB.AddKeygroupReplica("log", nodeCzmqID, 200, false)
+	nodeB.AddKeygroupReplica("log", nodeCzmqID, 200, true)
 	// update item on nodeC -> should not work
-	nodeB.PutItem("log", "test-item", "value-3", 400, false)
+	nodeB.PutItem("log", "test-item", "value-3", 404, false)
 
 	totalerrors := nodeA.Errors + nodeB.Errors + nodeC.Errors
 
