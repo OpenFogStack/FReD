@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = ".;client";
+option go_package = ".;externalconnection";
 
 // This is a Client that calls the exthandler of FReD
 service Client {
@@ -32,6 +32,7 @@ message StatusResponse {
 
 message CreateKeygroupRequest {
     string keygroup = 1;
+    bool mutable = 2;
 }
 
 message DeleteKeygroupRequest {

@@ -40,8 +40,8 @@ func (n Node) Close() {
 }
 
 // CreateKeygroup calls the CreateKeygroup endpoint of the GRPC interface.
-func (n Node) CreateKeygroup(kgname string, expectError bool) {
-	status, err := n.Client.CreateKeygroup(context.Background(), &externalconnection.CreateKeygroupRequest{Keygroup: kgname})
+func (n Node) CreateKeygroup(kgname string, mutable bool, expectError bool) {
+	status, err := n.Client.CreateKeygroup(context.Background(), &externalconnection.CreateKeygroupRequest{Keygroup: kgname, Mutable: mutable})
 
 	if (err != nil && !expectError) || (err == nil && !expectError && status.Status == externalconnection.EnumStatus_ERROR) {
 		log.Warn().Msgf("CreateKeygroup: error %s with status %s", err, status.Status)

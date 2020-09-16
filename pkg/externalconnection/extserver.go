@@ -54,7 +54,7 @@ func statusResponseFromError(err error) (*StatusResponse, error) {
 // CreateKeygroup calls this method on the exthandler
 func (s *Server) CreateKeygroup(ctx context.Context, request *CreateKeygroupRequest) (*StatusResponse, error) {
 	log.Debug().Msgf("ExtServer has rcvd CreateKeygroup. In: %#v", request)
-	err := s.e.HandleCreateKeygroup(fred.Keygroup{Name: fred.KeygroupName(request.Keygroup)})
+	err := s.e.HandleCreateKeygroup(fred.Keygroup{Name: fred.KeygroupName(request.Keygroup), Mutable: request.Mutable})
 	return statusResponseFromError(err)
 }
 

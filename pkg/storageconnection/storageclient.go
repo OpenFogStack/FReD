@@ -144,7 +144,7 @@ func (c *Client) IDs(kg string) ([]string, error) {
 
 // Exists calls the same method on the remote server
 func (c *Client) Exists(kg string, id string) bool {
-	response, err := c.dbClient.Delete(context.Background(), &Key{Keygroup: kg, Id: id})
+	response, err := c.dbClient.Exists(context.Background(), &Key{Keygroup: kg, Id: id})
 	log.Debug().Err(err).Msgf("StorageClient: Exists in: %#v %#v out: %#v", kg, id, response)
 
 	if err != nil {
