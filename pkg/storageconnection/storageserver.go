@@ -20,10 +20,10 @@ func NewStorageServer(store *fred.Store) *Server {
 }
 
 // Update calls specific method of the storage interface
-func (s *Server) Update(ctx context.Context, item *Item) (*Response, error) {
+func (s *Server) Update(ctx context.Context, item *UpdateItem) (*Response, error) {
 	log.Debug().Msgf("GRPCServer: Update in=%#v", item)
 
-	err := s.store.Update(item.Keygroup, item.Id, item.Val)
+	err := s.store.Update(item.Keygroup, item.Id, item.Val, int(item.Expiry))
 	if err != nil {
 		log.Err(err).Msgf("GRPCServer has encountered an error while updating item %#v", item)
 		return &Response{Success: false}, err

@@ -90,7 +90,7 @@ func main() {
 
 	// Test Keygroups
 	logNodeAction(nodeA, "Creating keygroup testing")
-	nodeA.CreateKeygroup("testing", true, false)
+	nodeA.CreateKeygroup("testing", true, 0, false)
 
 	logNodeAction(nodeA, "Deleting keygroup testing")
 	nodeA.DeleteKeygroup("testing", false)
@@ -99,7 +99,7 @@ func main() {
 	nodeA.DeleteKeygroup("trololololo", true)
 
 	logNodeAction(nodeA, "Creating Keygroup KG1")
-	nodeA.CreateKeygroup("KG1", true, false)
+	nodeA.CreateKeygroup("KG1", true, 0, false)
 
 	// Test Get/Put of a single node
 	logNodeAction(nodeA, "Putting KG1-Item/KG1-Value into KG1")
@@ -141,16 +141,16 @@ func main() {
 
 	// sorry but i still love go
 	check := (len(parsed) != 3) && func() bool {
-		for _, elem := range parsed {
-			if elem == nodeBzmqID {
+		for _, id := range parsed {
+			if id == nodeBzmqID {
 				return true
 			}
 		}
 
 		return false
 	}() && func() bool {
-		for _, elem := range parsed {
-			if elem == nodeCzmqID {
+		for _, id := range parsed {
+			if id == nodeCzmqID {
 				return true
 			}
 		}
@@ -164,7 +164,7 @@ func main() {
 
 	// Fun with replicas
 	logNodeAction(nodeA, "Adding nodeB as Replica node for KG1")
-	nodeA.AddKeygroupReplica("KG1", nodeBzmqID, false)
+	nodeA.AddKeygroupReplica("KG1", nodeBzmqID, 0, false)
 
 	logNodeAction(nodeB, "Deleting the value from KG1")
 	nodeB.DeleteItem("KG1", "KG1-Item", false)
@@ -174,8 +174,8 @@ func main() {
 
 	// Test sending data between nodes
 	logNodeAction(nodeB, "Creating a new Keygroup (KGN) in nodeB, setting nodeA as Replica node")
-	nodeB.CreateKeygroup("KGN", true, false)
-	nodeB.AddKeygroupReplica("KGN", nodeAzmqID, false)
+	nodeB.CreateKeygroup("KGN", true, 0, false)
+	nodeB.AddKeygroupReplica("KGN", nodeAzmqID, 0, false)
 
 	logNodeAction(nodeB, "Putting something in KGN on nodeB, testing whether nodeA gets Replica (sleep 1.5s in between)")
 	nodeB.PutItem("KGN", "Item", "Value", false)
@@ -194,18 +194,18 @@ func main() {
 	}
 
 	logNodeAction(nodeA, "Adding a replica for a nonexisting Keygroup")
-	nodeA.AddKeygroupReplica("trololololo", nodeBzmqID, true)
+	nodeA.AddKeygroupReplica("trololololo", nodeBzmqID, 0, true)
 
 	logNodeAction(nodeC, "Creating an already existing keygroup with another node")
-	nodeC.CreateKeygroup("KGN", true, true)
+	nodeC.CreateKeygroup("KGN", true, 0, true)
 
 	logNodeAction(nodeC, "Telling a node that is not part of the keygroup that it is now part of that keygroup")
-	nodeC.AddKeygroupReplica("KGN", nodeCzmqID, false)
+	nodeC.AddKeygroupReplica("KGN", nodeCzmqID, 0, false)
 
 	logNodeAction(nodeA, "Creating a new Keygroup (kgall) with all three nodes as replica")
-	nodeA.CreateKeygroup("kgall", true, false)
-	nodeA.AddKeygroupReplica("kgall", nodeBzmqID, false)
-	nodeB.AddKeygroupReplica("kgall", nodeCzmqID, false)
+	nodeA.CreateKeygroup("kgall", true, 0, false)
+	nodeA.AddKeygroupReplica("kgall", nodeBzmqID, 0, false)
+	nodeB.AddKeygroupReplica("kgall", nodeCzmqID, 0, false)
 
 	logNodeAction(nodeC, "... sending data to one node, checking whether all nodes get the replica (sleep 1.5s)")
 	nodeC.PutItem("kgall", "item", "value", false)
@@ -225,7 +225,7 @@ func main() {
 	logNodeAction(nodeB, fmt.Sprintf("Got Response %s", respB))
 
 	logNodeAction(nodeB, "...re-adding the node to the keygroup all and checking whether it now gets the data (sleep 1.5s)")
-	nodeA.AddKeygroupReplica("kgall", nodeBzmqID, false)
+	nodeA.AddKeygroupReplica("kgall", nodeBzmqID, 0, false)
 	time.Sleep(1500 * time.Millisecond)
 	respA = nodeA.GetItem("kgall", "item", false)
 
@@ -242,10 +242,10 @@ func main() {
 	// let's test trigger nodes
 	// create a new keygroup on nodeA
 	logNodeAction(nodeA, "Creating keygroup triggertesting")
-	nodeA.CreateKeygroup("triggertesting", true, false)
+	nodeA.CreateKeygroup("triggertesting", true, 0, false)
 
 	logNodeAction(nodeA, "Creating keygroup nottriggertesting")
-	nodeA.CreateKeygroup("nottriggertesting", true, false)
+	nodeA.CreateKeygroup("nottriggertesting", true, 0, false)
 
 	//post an item1 to new keygroup
 	logNodeAction(nodeA, "post an item1 to new keygroup triggertesting")
@@ -264,7 +264,7 @@ func main() {
 	nodeA.PutItem("nottriggertesting", "item3", "value3", false)
 	//add keygroup to nodeB as well
 	logNodeAction(nodeA, "add keygroup triggertesting to nodeB as well")
-	nodeA.AddKeygroupReplica("triggertesting", nodeBzmqID, false)
+	nodeA.AddKeygroupReplica("triggertesting", nodeBzmqID, 0, false)
 	//post item4 to nodeB
 	logNodeAction(nodeB, "post item4 to nodeB in keygroup triggertesting")
 	nodeB.PutItem("triggertesting", "item4", "value4", false)
@@ -292,7 +292,7 @@ func main() {
 
 	// testing immutable keygroups
 	// create immutable keygroup on nodeB
-	nodeB.CreateKeygroup("log", false, false)
+	nodeB.CreateKeygroup("log", false, 0, false)
 	// create item to keygroup -> should work
 	nodeB.PutItem("log", "test-item", "value-1", false)
 	// update item in keygroup -> should not work
@@ -306,29 +306,45 @@ func main() {
 	// delete item from keygroup -> should not work
 	nodeB.DeleteItem("log", "test-item", true)
 	// add nodeC as replica node
-	nodeB.AddKeygroupReplica("log", nodeCzmqID, false)
+	nodeB.AddKeygroupReplica("log", nodeCzmqID, 0, false)
 	// update item on nodeC -> should not work
 	nodeB.PutItem("log", "test-item", "value-3", true)
 
 	// testing immutable keygroups
 	// create immutable keygroup on nodeB
-	nodeB.CreateKeygroup("log", false, 200, true)
+	nodeB.CreateKeygroup("log", false, 0, false)
 	// create item to keygroup -> should work
-	nodeB.PutItem("log", "test-item", "value-1", 200, true)
+	nodeB.PutItem("log", "test-item", "value-1", false)
 	// update item in keygroup -> should not work
-	nodeB.PutItem("log", "test-item", "value-2", 404, false)
+	nodeB.PutItem("log", "test-item", "value-2", true)
 	// get item from keygroup -> should return appended item
-	respB = nodeB.GetItem("log", "test-item", 200, false)
+	respB = nodeB.GetItem("log", "test-item", false)
 
 	if respB != "value-1" {
 		logNodeFailure(nodeB, "resp is not value-1", respB)
 	}
 	// delete item from keygroup -> should not work
-	nodeB.DeleteItem("log", "test-item", 404, false)
+	nodeB.DeleteItem("log", "test-item", true)
 	// add nodeC as replica node
-	nodeB.AddKeygroupReplica("log", nodeCzmqID, 200, true)
+	nodeB.AddKeygroupReplica("log", nodeCzmqID, 0, false)
 	// update item on nodeC -> should not work
-	nodeB.PutItem("log", "test-item", "value-3", 404, false)
+	nodeB.PutItem("log", "test-item", "value-3", true)
+
+	// test expiring data items
+	// create a new keygroup without expiry on nodeC
+	nodeC.CreateKeygroup("expiry-test", true, 0, false)
+	// add nodeA as replica with expiry 5s
+	nodeC.AddKeygroupReplica("expiry-test", nodeAzmqID, 5, false)
+	// insert item on nodeC
+	nodeC.PutItem("expiry-test", "test", "test", false)
+	// check if nodeA gets item -> should work
+	nodeA.GetItem("expiry-test", "test", false)
+	// wait 5s
+	time.Sleep(5 * time.Second)
+	// check if item exists on nodeA -> should error
+	nodeA.GetItem("expiry-test", "test", true)
+	// check if item exists on nodeC -> should work
+	nodeC.GetItem("expiry-test", "test", false)
 
 	totalerrors := nodeA.Errors + nodeB.Errors + nodeC.Errors
 

@@ -40,10 +40,16 @@ func (n Node) Close() {
 }
 
 // CreateKeygroup calls the CreateKeygroup endpoint of the GRPC interface.
-func (n Node) CreateKeygroup(kgname string, mutable bool, expectError bool) {
+func (n Node) CreateKeygroup(kgname string, mutable bool, expiry int, expectError bool) {
 	status, err := n.Client.CreateKeygroup(context.Background(), &externalconnection.CreateKeygroupRequest{Keygroup: kgname, Mutable: mutable})
 
-	if (err != nil && !expectError) || (err == nil && !expectError && status.Status == externalconnection.EnumStatus_ERROR) {
+	if err != nil && !expectError {
+		log.Warn().Msgf("CreateKeygroup: error %s", err)
+		n.Errors++
+		return
+	}
+
+	if err == nil && !expectError && status.Status == externalconnection.EnumStatus_ERROR {
 		log.Warn().Msgf("CreateKeygroup: error %s with status %s", err, status.Status)
 		n.Errors++
 	}
@@ -60,7 +66,7 @@ func (n Node) DeleteKeygroup(kgname string, expectError bool) {
 }
 
 // GetKeygroupReplica calls the GetKeygroupReplica endpoint of the GRPC interface.
-func (n Node) GetKeygroupReplica(kgname string, expectError bool) []string {
+func (n Node) GetKeygroupReplica(kgname string, expectError bool) map[string]int {
 	res, err := n.Client.GetKeygroupReplica(context.Background(), &externalconnection.GetKeygroupReplicaRequest{Keygroup: kgname})
 
 	if err != nil && !expectError {
@@ -72,11 +78,17 @@ func (n Node) GetKeygroupReplica(kgname string, expectError bool) []string {
 		return nil
 	}
 
-	return res.NodeId
+	nodes := make(map[string]int)
+
+	for i, node := range res.NodeId {
+		nodes[node] = int(res.Expiry[i])
+	}
+
+	return nodes
 }
 
 // AddKeygroupReplica calls the AddKeygroupReplica endpoint of the GRPC interface.
-func (n Node) AddKeygroupReplica(kgname, replicaNodeID string, expectError bool) {
+func (n Node) AddKeygroupReplica(kgname, replicaNodeID string, expiry int, expectError bool) {
 	status, err := n.Client.AddReplica(context.Background(), &externalconnection.AddReplicaRequest{
 		Keygroup: kgname,
 		NodeId:   replicaNodeID,
@@ -176,7 +188,14 @@ func (n Node) PutItem(kgname, item string, data string, expectError bool) {
 		Id:       item,
 		Data:     data,
 	})
-	if (err != nil && !expectError) || (err == nil && !expectError && status.Status == externalconnection.EnumStatus_ERROR) {
+
+	if err != nil && !expectError {
+		log.Warn().Msgf("Update: error %s", err)
+		n.Errors++
+		return
+	}
+
+	if err == nil && status.Status == externalconnection.EnumStatus_ERROR && !expectError {
 		log.Warn().Msgf("Update: error %s with status %s", err, status.Status)
 		n.Errors++
 	}
@@ -209,7 +228,13 @@ func (n Node) DeleteItem(kgname, item string, expectError bool) {
 		Id:       item,
 	})
 
-	if (err != nil && !expectError) || (err == nil && !expectError && status.Status == externalconnection.EnumStatus_ERROR) {
+	if err != nil && !expectError {
+		log.Warn().Msgf("Update: error %s", err)
+		n.Errors++
+		return
+	}
+
+	if err == nil && !expectError && status.Status == externalconnection.EnumStatus_ERROR {
 		log.Warn().Msgf("Update: error %s with status %s", err, status.Status)
 		n.Errors++
 	}

@@ -198,11 +198,24 @@ func (s *Storage) IDs(kg string) ([]string, error) {
 }
 
 // Update updates the item with the specified id in the specified keygroup.
-func (s *Storage) Update(kg, id, val string) error {
+func (s *Storage) Update(kg, id, val string, expiry int) error {
 	err := s.db.Update(func(txn *badger.Txn) error {
 		key := makeKeyName(kg, id)
 
+		if expiry > 0 {
+			err := txn.SetEntry(&badger.Entry{
+				Key:       key,
+				Value:     []byte(val),
+				ExpiresAt: uint64(time.Now().Unix()) + uint64(expiry),
+			})
+			if err != nil {
+				return err
+			}
+			return nil
+		}
+
 		err := txn.Set(key, []byte(val))
+
 		if err != nil {
 			return err
 		}

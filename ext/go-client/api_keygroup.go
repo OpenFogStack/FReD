@@ -114,7 +114,7 @@ KeygroupApiService Create a new Keygroup
 Creates a new Keygroup with the name &#x60;group_id&#x60; if it does not exist already.
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @param groupId Name of Keygroup
- * @param body Type of keygroup to create (true for mutable table or false for append-only log)
+ * @param body Type of keygroup to create (true for mutable table or false for append-only log) and expiration of items on this replica in seconds (if &lt;&#x3D;0, data will not expire)
 
 
 */
@@ -384,10 +384,11 @@ Registers the node with the name &#x60;node_id&#x60; as a replica node for a Key
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @param groupId Name of Keygroup
  * @param nodeId Name of Replica Node
+ * @param body Parameters for keygroup replication on this node, namely expiration of items on this replica in seconds (if &lt;&#x3D;0, data will not expire)
 
 
 */
-func (a *KeygroupApiService) KeygroupGroupIdReplicaNodeIdPost(ctx context.Context, groupId string, nodeId string) (*http.Response, error) {
+func (a *KeygroupApiService) KeygroupGroupIdReplicaNodeIdPost(ctx context.Context, groupId string, nodeId string, body Body1) (*http.Response, error) {
 	var (
 		localVarHttpMethod = strings.ToUpper("Post")
 		localVarPostBody   interface{}
@@ -422,6 +423,8 @@ func (a *KeygroupApiService) KeygroupGroupIdReplicaNodeIdPost(ctx context.Contex
 	if localVarHttpHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHttpHeaderAccept
 	}
+	// body params
+	localVarPostBody = &body
 	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
 	if err != nil {
 		return nil, err

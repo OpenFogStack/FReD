@@ -53,9 +53,9 @@ func (c *Client) Destroy() {
 }
 
 // SendCreateKeygroup sends this command to the server at this address
-func (c *Client) SendCreateKeygroup(addr fred.Address, port int, kgname fred.KeygroupName) error {
+func (c *Client) SendCreateKeygroup(addr fred.Address, port int, kgname fred.KeygroupName, expiry int) error {
 	client, conn := c.getConnAndClient(addr, port)
-	res, err := client.CreateKeygroup(context.Background(), &CreateKeygroupRequest{Keygroup: string(kgname)})
+	res, err := client.CreateKeygroup(context.Background(), &CreateKeygroupRequest{Keygroup: string(kgname), Expiry: int64(expiry)})
 	conn.Close()
 	return c.dealWithStatusResponse(res, err, "CreateKeygroup")
 }
@@ -91,11 +91,12 @@ func (c *Client) SendDelete(addr fred.Address, port int, kgname fred.KeygroupNam
 }
 
 // SendAddReplica sends this command to the server at this address
-func (c *Client) SendAddReplica(addr fred.Address, port int, kgname fred.KeygroupName, node fred.Node) error {
+func (c *Client) SendAddReplica(addr fred.Address, port int, kgname fred.KeygroupName, node fred.Node, expiry int) error {
 	client, _ := c.getConnAndClient(addr, port)
 	res, err := client.AddReplica(context.Background(), &AddReplicaRequest{
 		NodeId:   string(node.ID),
 		Keygroup: string(kgname),
+		Expiry:   int64(expiry),
 	})
 	return c.dealWithStatusResponse(res, err, "AddReplica")
 }

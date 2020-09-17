@@ -43,10 +43,12 @@ Class | Method | HTTP request | Description
 ## Documentation For Models
 
  - [Body](docs/Body.md)
+ - [Body1](docs/Body1.md)
  - [Item](docs/Item.md)
  - [ModelError](docs/ModelError.md)
  - [Node](docs/Node.md)
  - [ReplicationList](docs/ReplicationList.md)
+ - [ReplicationListNodes](docs/ReplicationListNodes.md)
  - [TriggerList](docs/TriggerList.md)
  - [TriggerListNodes](docs/TriggerListNodes.md)
  - [TriggerNode](docs/TriggerNode.md)

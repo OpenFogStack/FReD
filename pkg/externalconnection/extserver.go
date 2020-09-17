@@ -54,7 +54,7 @@ func statusResponseFromError(err error) (*StatusResponse, error) {
 // CreateKeygroup calls this method on the exthandler
 func (s *Server) CreateKeygroup(ctx context.Context, request *CreateKeygroupRequest) (*StatusResponse, error) {
 	log.Debug().Msgf("ExtServer has rcvd CreateKeygroup. In: %#v", request)
-	err := s.e.HandleCreateKeygroup(fred.Keygroup{Name: fred.KeygroupName(request.Keygroup), Mutable: request.Mutable})
+	err := s.e.HandleCreateKeygroup(fred.Keygroup{Name: fred.KeygroupName(request.Keygroup), Mutable: request.Mutable, Expiry: int(request.Expiry)})
 	return statusResponseFromError(err)
 }
 
@@ -94,24 +94,26 @@ func (s *Server) Delete(ctx context.Context, request *DeleteRequest) (*StatusRes
 // AddReplica calls this method on the exthandler
 func (s *Server) AddReplica(ctx context.Context, request *AddReplicaRequest) (*StatusResponse, error) {
 	log.Debug().Msgf("ExtServer has rcvd AddReplica. In: %#v", request)
-	err := s.e.HandleAddReplica(fred.Keygroup{Name: fred.KeygroupName(request.Keygroup)}, fred.Node{ID: fred.NodeID(request.NodeId)})
+	err := s.e.HandleAddReplica(fred.Keygroup{Name: fred.KeygroupName(request.Keygroup), Expiry: int(request.Expiry)}, fred.Node{ID: fred.NodeID(request.NodeId)})
 	return statusResponseFromError(err)
 }
 
 // GetKeygroupReplica calls this method on the exthandler
 func (s *Server) GetKeygroupReplica(ctx context.Context, request *GetKeygroupReplicaRequest) (*GetKeygroupReplicaResponse, error) {
 	log.Debug().Msgf("ExtServer has rcvd GetKeygroupReplica. In: %#v", request)
-	res, err := s.e.HandleGetKeygroupReplica(fred.Keygroup{Name: fred.KeygroupName(request.Keygroup)})
+	n, e, err := s.e.HandleGetKeygroupReplica(fred.Keygroup{Name: fred.KeygroupName(request.Keygroup)})
 	// Copy only the interesting values into a new array
-	nodes := make([]string, len(res))
-	for i := 0; i < len(res); i++ {
-		nodes[i] = string(res[i].ID)
+	nodes := make([]string, len(n))
+	expiries := make([]int64, len(n))
+	for i := 0; i < len(n); i++ {
+		nodes[i] = string(n[i].ID)
+		expiries[i] = int64(e[n[i].ID])
 	}
 	if err != nil {
 		log.Debug().Msgf("ExtServer is returning error: %#v", err)
 		return &GetKeygroupReplicaResponse{}, err
 	}
-	return &GetKeygroupReplicaResponse{NodeId: nodes}, nil
+	return &GetKeygroupReplicaResponse{NodeId: nodes, Expiry: expiries}, nil
 
 }
 

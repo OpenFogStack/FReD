@@ -3,7 +3,7 @@ package fred
 // Store is an interface for the storage medium that the key-value val items are persisted on.
 type Store interface {
 	// Needs: keygroup, id, val
-	Update(kg, id, val string) error
+	Update(kg, id, val string, expiry int) error
 	// Needs: keygroup, id
 	Delete(kg, id string) error
 	// Needs: keygroup, id; Returns: val
@@ -94,14 +94,14 @@ func (s *storeService) exists(i Item) bool {
 }
 
 // Update updates an item in the key-value store.
-func (s *storeService) update(i Item) error {
+func (s *storeService) update(i Item, expiry int) error {
 	err := checkItem(i)
 
 	if err != nil {
 		return err
 	}
 
-	err = s.iS.Update(string(i.Keygroup), i.ID, i.Val)
+	err = s.iS.Update(string(i.Keygroup), i.ID, i.Val, expiry)
 
 	if err != nil {
 		return err

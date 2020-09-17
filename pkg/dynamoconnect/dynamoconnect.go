@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
 	"github.com/rs/zerolog/log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -239,16 +240,18 @@ func (s *Storage) IDs(kg string) ([]string, error) {
 }
 
 // Update updates the item with the specified id in the specified keygroup.
-func (s *Storage) Update(kg, id, val string) error {
+func (s *Storage) Update(kg, id, val string, expiry int) error {
 
 	key := makeKeyName(kg, id)
 
 	Item := struct {
-		Key   string
-		Value string
+		Key    string
+		Value  string
+		Expiry int64
 	}{
-		Key:   key,
-		Value: val,
+		Key:    key,
+		Value:  val,
+		Expiry: time.Now().Unix() + int64(expiry),
 	}
 
 	av, err := dynamodbattribute.MarshalMap(Item)

@@ -217,10 +217,11 @@ Registers the node with the name &#x60;node_id&#x60; as a replica node for a Key
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @param groupId Name of Keygroup
  * @param nodeId Name of Replica Node
+ * @param body Parameters for keygroup replication on this node, namely expiration of items on this replica in seconds (if &lt;&#x3D;0, data will not expire)
 
 
 */
-func (a *ReplicationApiService) KeygroupGroupIdReplicaNodeIdPost(ctx context.Context, groupId string, nodeId string) (*http.Response, error) {
+func (a *ReplicationApiService) KeygroupGroupIdReplicaNodeIdPost(ctx context.Context, groupId string, nodeId string, body Body1) (*http.Response, error) {
 	var (
 		localVarHttpMethod = strings.ToUpper("Post")
 		localVarPostBody   interface{}
@@ -255,6 +256,8 @@ func (a *ReplicationApiService) KeygroupGroupIdReplicaNodeIdPost(ctx context.Con
 	if localVarHttpHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHttpHeaderAccept
 	}
+	// body params
+	localVarPostBody = &body
 	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
 	if err != nil {
 		return nil, err

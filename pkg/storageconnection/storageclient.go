@@ -71,8 +71,8 @@ func (c *Client) ReadAll(kg string) (map[string]string, error) {
 }
 
 // Update calls the same method on the remote server
-func (c *Client) Update(kg string, id string, val string) error {
-	response, err := c.dbClient.Update(context.Background(), &Item{Keygroup: kg, Val: val, Id: id})
+func (c *Client) Update(kg string, id string, val string, expiry int) error {
+	response, err := c.dbClient.Update(context.Background(), &UpdateItem{Keygroup: kg, Val: val, Id: id, Expiry: int64(expiry)})
 	log.Debug().Err(err).Msgf("StorageClient: Update in: %#v,%#v,%#v out: %#v", kg, id, val, response)
 
 	if err != nil {

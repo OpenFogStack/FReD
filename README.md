@@ -30,3 +30,21 @@ How do I push changes to the `master` branch?
 8.  Get pull request reviewed and merge it into master
 
 Some last words, keep pull requests small (not 100 files changed etc :D), so they are easier to review and rather create a lot of pull requests than one big
+
+## Using the DynamoDB Backend
+
+To use the DynamoDB storage backend, a table must already exist in DynamoDB.
+It should have the String Hash Key "Key" and a [Number field "Expiry" that is enabled as the TTL attribute](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/time-to-live-ttl-how-to.html).
+Furthermore, the `fred` process that talks to DynamoDB should have IAM keys configured as environment variables and the corresponding IAM user must have permission to access the table.
+To create a table named `fred` (this must be passed in as command-line parameter `--dynamo-table=fred`) using the AWS CLI:
+
+```bash
+AWS_PAGER="" aws dynamodb create-table --table-name fred --attribute-definitions "AttributeName=Key,AttributeType=S AttributeName=Value,AttributeType=S AttributeName=Expiry,AttributeType=N" --key-schema "AttributeName=Key,KeyType=HASH" --provisioned-throughput "ReadCapacityUnits=1,WriteCapacityUnits=1"
+AWS_PAGER="" aws dynamodb update-time-to-live --table-name fred --time-to-live-specification "Enabled=true, AttributeName=Expiry"
+```
+
+To delete the table:
+
+```bash
+AWS_PAGER="" aws dynamodb delete-table --table-name fred
+```

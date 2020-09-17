@@ -102,7 +102,7 @@ func (s *Server) DeleteItem(ctx context.Context, request *DeleteItemRequest) (*S
 // AddReplica calls this Method on the Inthandler
 func (s *Server) AddReplica(ctx context.Context, request *AddReplicaRequest) (*StatusResponse, error) {
 	log.Debug().Msgf("InterServer has rcvd AddReplica. In: %#v", request)
-	err := s.i.HandleAddReplica(fred.Keygroup{Name: fred.KeygroupName(request.Keygroup)}, fred.Node{ID: fred.NodeID(request.NodeId)})
+	err := s.i.HandleAddReplica(fred.Keygroup{Name: fred.KeygroupName(request.Keygroup), Expiry: int(request.Expiry)}, fred.Node{ID: fred.NodeID(request.NodeId)})
 	return createResponse(err)
 }
 

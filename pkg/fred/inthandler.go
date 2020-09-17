@@ -9,14 +9,16 @@ type inthandler struct {
 	s *storeService
 	r *replicationService
 	t *triggerService
+	n *nameService
 }
 
 // newInthandler creates a new handler for internal request (i.e. from peer nodes or the naming service).
-func newInthandler(s *storeService, r *replicationService, t *triggerService) *inthandler {
+func newInthandler(s *storeService, r *replicationService, t *triggerService, n *nameService) *inthandler {
 	return &inthandler{
 		s: s,
 		r: r,
 		t: t,
+		n: n,
 	}
 }
 
@@ -59,7 +61,14 @@ func (h *inthandler) HandleDeleteKeygroup(k Keygroup) error {
 
 // HandleUpdate handles requests to the Update endpoint of the internal interface.
 func (h *inthandler) HandleUpdate(i Item) error {
-	if err := h.s.update(i); err != nil {
+
+	expiry, err := h.n.getExpiry(i.Keygroup)
+
+	if err != nil {
+		return err
+	}
+
+	if err := h.s.update(i, expiry); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error updating item")
 	}

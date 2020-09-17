@@ -47,7 +47,8 @@ paths:
       - in: "body"
         name: "body"
         description: "Type of keygroup to create (true for mutable table or false\
-          \ for append-only log)"
+          \ for append-only log) and expiration of items on this replica in seconds\
+          \ (if <=0, data will not expire)"
         required: true
         schema:
           $ref: "#/definitions/body"
@@ -135,6 +136,14 @@ paths:
         type: "string"
         format: "string"
         x-exportParamName: "NodeId"
+      - in: "body"
+        name: "body"
+        description: "Parameters for keygroup replication on this node, namely expiration\
+          \ of items on this replica in seconds (if <=0, data will not expire)"
+        required: true
+        schema:
+          $ref: "#/definitions/body_1"
+        x-exportParamName: "Body"
       responses:
         "200":
           description: "OK"
@@ -513,14 +522,18 @@ definitions:
       nodes:
         type: "array"
         items:
-          type: "string"
-          format: "utf-8"
-          example: "nodeA"
+          $ref: "#/definitions/ReplicationList_nodes"
     example:
       nodes:
-      - "nodeB"
-      - "nodeC"
-      - "nodeD"
+        nodeB:
+          id: "nodeB"
+          expiry: 0
+        nodeC:
+          id: "nodeC"
+          expiry: 300
+        nodeD:
+          id: "nodeD"
+          expiry: 3600
   TriggerList:
     type: "object"
     required:
@@ -539,11 +552,36 @@ definitions:
   body:
     type: "object"
     required:
+    - "expiry"
     - "mutable"
     properties:
       mutable:
         type: "boolean"
         example: false
+      expiry:
+        type: "number"
+        example: 0
+  body_1:
+    type: "object"
+    required:
+    - "expiry"
+    properties:
+      expiry:
+        type: "number"
+        example: 0
+  ReplicationList_nodes:
+    type: "object"
+    required:
+    - "expiry"
+    - "id"
+    properties:
+      id:
+        type: "string"
+        format: "utf-8"
+        example: "nodeA"
+      expiry:
+        type: "number"
+        example: 0
   TriggerList_nodes:
     type: "object"
     required:

@@ -7,7 +7,7 @@ import (
 )
 
 // GetAllReplica returns a list of all replica that this node has stored.
-func (n *Node) GetAllReplica(expectedStatusCode int, expectEmptyResponse bool) []string {
+func (n *Node) GetAllReplica(expectedStatusCode int, expectEmptyResponse bool) map[string]int {
 	log.Debug().Str("node", n.URL).Msgf("Sending a Get for all Replicas; expecting %d", expectedStatusCode)
 
 	data, resp, recvErr := n.Client.ReplicationApi.ReplicaGet(context.Background())
@@ -18,7 +18,13 @@ func (n *Node) GetAllReplica(expectedStatusCode int, expectEmptyResponse bool) [
 		return nil
 	}
 
-	return data.Nodes
+	nodes := make(map[string]int)
+
+	for _, n := range data.Nodes {
+		nodes[n.Id] = int(n.Expiry)
+	}
+
+	return nodes
 }
 
 // GetReplica returns a replica.
