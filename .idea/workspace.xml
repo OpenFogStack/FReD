@@ -3,6 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="b8b6ef1f-1fb0-45b7-ad29-aed6293e4aa1" name="Default Changelist" comment="Add Git Workflow">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmd/frednode/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/frednode/main.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -31,7 +32,7 @@
       </list>
     </option>
   </component>
-  <component name="GOROOT" path="/usr/lib/go" />
+  <component name="GOROOT" path="/usr/local/Cellar/go/1.15.2/libexec" />
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
@@ -75,7 +76,7 @@
     <property name="js.buildTools.grunt.grunt-cli.package" value="" />
     <property name="js.buildTools.gulp.gulp_package_dir" value="" />
     <property name="last.edited.regexp" value="google.com" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/tests/3NodeTest/pkg/grpcclient" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.detected.package.tslint" value="true" />
     <property name="node.js.path.for.package.eslint" value="project" />
@@ -90,6 +91,9 @@
     <property name="settings.editor.selected.configurable" value="Errors" />
   </component>
   <component name="RecentsManager">
+    <key name="GoExtractInterfaceDialog.RECENT_KEY">
+      <recent name="$PROJECT_DIR$/tests/3NodeTest/pkg/grpcclient" />
+    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/pkg/zmq" />
       <recent name="$PROJECT_DIR$/cmd/leveldbServer" />
@@ -105,7 +109,7 @@
       <recent name="$PROJECT_DIR$/terraform/small-test/fred-node" />
     </key>
   </component>
-  <component name="RunManager" selected="Go Build.Build fred-node">
+  <component name="RunManager" selected="Makefile.make static check">
     <configuration default="true" type="GoTestRunConfiguration" factoryName="Go Test">
       <module name="fred" />
       <working_directory value="$PROJECT_DIR$/" />
@@ -218,6 +222,8 @@
       <workItem from="1596525770865" duration="13185000" />
       <workItem from="1596786649292" duration="2441000" />
       <workItem from="1597742226448" duration="6988000" />
+      <workItem from="1600412842668" duration="6744000" />
+      <workItem from="1600420440132" duration="7616000" />
     </task>
     <servers />
   </component>
@@ -253,42 +259,46 @@
     <integration-enabled>true</integration-enabled>
   </component>
   <component name="WindowStateProjectService">
-    <state x="718" y="439" key="#GOROOT" timestamp="1597740145346">
-      <screen x="0" y="0" width="1920" height="1080" />
+    <state x="632" y="462" key="#GOROOT" timestamp="1600674783186">
+      <screen x="0" y="0" width="1680" height="1050" />
     </state>
-    <state x="632" y="462" key="#GOROOT/0.0.1680.1050@0.0.1680.1050" timestamp="1595337031374" />
+    <state x="632" y="462" key="#GOROOT/0.0.1680.1050@0.0.1680.1050" timestamp="1600674783186" />
     <state x="718" y="439" key="#GOROOT/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1597740145346" />
     <state x="416" y="170" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1596185154613">
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
     <state x="416" y="170" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1596185154612" />
-    <state x="718" y="183" width="465" height="577" key="#com.intellij.ide.util.MemberChooser" timestamp="1595932381779">
+    <state x="716" y="165" width="465" height="577" key="#com.intellij.ide.util.MemberChooser" timestamp="1600419035265">
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
-    <state x="718" y="183" width="465" height="577" key="#com.intellij.ide.util.MemberChooser/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1595932381779" />
+    <state x="716" y="165" width="465" height="577" key="#com.intellij.ide.util.MemberChooser/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1600419035265" />
     <state x="0" y="0" width="1920" height="1061" key="DiffContextDialog" timestamp="1597747407028">
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
     <state x="0" y="0" width="1920" height="1061" key="DiffContextDialog/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1597747407028" />
-    <state width="1870" height="343" key="GridCell.Tab.0.bottom" timestamp="1597749789878">
+    <state x="733" y="229" width="428" height="474" key="FileChooserDialogImpl" timestamp="1600422099001">
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
-    <state width="1638" height="316" key="GridCell.Tab.0.bottom/0.0.1680.1050@0.0.1680.1050" timestamp="1595412105182" />
+    <state x="733" y="229" width="428" height="474" key="FileChooserDialogImpl/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1600422099001" />
+    <state width="1638" height="365" key="GridCell.Tab.0.bottom" timestamp="1600676205010">
+      <screen x="0" y="0" width="1680" height="1050" />
+    </state>
+    <state width="1638" height="365" key="GridCell.Tab.0.bottom/0.0.1680.1050@0.0.1680.1050" timestamp="1600676205010" />
     <state width="1870" height="343" key="GridCell.Tab.0.bottom/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1597749789878" />
-    <state width="1870" height="343" key="GridCell.Tab.0.center" timestamp="1597749789878">
-      <screen x="0" y="0" width="1920" height="1080" />
+    <state width="1638" height="365" key="GridCell.Tab.0.center" timestamp="1600676205007">
+      <screen x="0" y="0" width="1680" height="1050" />
     </state>
-    <state width="1638" height="316" key="GridCell.Tab.0.center/0.0.1680.1050@0.0.1680.1050" timestamp="1595412105180" />
+    <state width="1638" height="365" key="GridCell.Tab.0.center/0.0.1680.1050@0.0.1680.1050" timestamp="1600676205007" />
     <state width="1870" height="343" key="GridCell.Tab.0.center/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1597749789878" />
-    <state width="1870" height="343" key="GridCell.Tab.0.left" timestamp="1597749789878">
-      <screen x="0" y="0" width="1920" height="1080" />
+    <state width="1638" height="365" key="GridCell.Tab.0.left" timestamp="1600676205006">
+      <screen x="0" y="0" width="1680" height="1050" />
     </state>
-    <state width="1638" height="316" key="GridCell.Tab.0.left/0.0.1680.1050@0.0.1680.1050" timestamp="1595412105179" />
+    <state width="1638" height="365" key="GridCell.Tab.0.left/0.0.1680.1050@0.0.1680.1050" timestamp="1600676205006" />
     <state width="1870" height="343" key="GridCell.Tab.0.left/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1597749789878" />
-    <state width="1870" height="343" key="GridCell.Tab.0.right" timestamp="1597749789878">
-      <screen x="0" y="0" width="1920" height="1080" />
+    <state width="1638" height="365" key="GridCell.Tab.0.right" timestamp="1600676205008">
+      <screen x="0" y="0" width="1680" height="1050" />
     </state>
-    <state width="1638" height="316" key="GridCell.Tab.0.right/0.0.1680.1050@0.0.1680.1050" timestamp="1595412105181" />
+    <state width="1638" height="365" key="GridCell.Tab.0.right/0.0.1680.1050@0.0.1680.1050" timestamp="1600676205008" />
     <state width="1870" height="343" key="GridCell.Tab.0.right/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1597749789878" />
     <state x="580" y="211" width="828" height="498" key="IDE.errors.dialog" timestamp="1596526554125">
       <screen x="0" y="0" width="1920" height="1080" />
@@ -302,6 +312,10 @@
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
     <state x="0" y="0" width="1920" height="1061" key="ShowDiffWithBranchDialog/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1596789090495" />
+    <state x="719" y="164" width="467" height="651" key="com.goide.refactor.extractInterface.GoExtractInterfaceDialog" timestamp="1600422170683">
+      <screen x="0" y="0" width="1920" height="1080" />
+    </state>
+    <state x="719" y="164" width="467" height="651" key="com.goide.refactor.extractInterface.GoExtractInterfaceDialog/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1600422170683" />
     <state x="680" y="182" width="550" height="651" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser" timestamp="1597741895149">
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
@@ -315,12 +329,6 @@
     </state>
     <state x="541" y="251" width="598" height="548" key="find.popup/0.0.1680.1050@0.0.1680.1050" timestamp="1597675238033" />
     <state x="489" y="259" width="700" height="530" key="recent.locations.popup" timestamp="1597674931022">
-      <state x="618" y="258" width="684" height="564" key="find.popup" timestamp="1597748544054">
-        <screen x="0" y="0" width="1920" height="1080" />
-      </state>
-      <state x="541" y="251" width="598" height="548" key="find.popup/0.0.1680.1050@0.0.1680.1050" timestamp="1597412249222" />
-      <state x="618" y="258" width="684" height="564" key="find.popup/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1597750022436" />
-      <state x="489" y="259" width="700" height="530" key="recent.locations.popup" timestamp="1597410510259" />
       <screen x="0" y="0" width="1680" height="1050" />
     </state>
     <state x="489" y="259" width="700" height="530" key="recent.locations.popup/0.0.1680.1050@0.0.1680.1050" timestamp="1597674931022" />

@@ -4,7 +4,7 @@
 // 	protoc        v3.13.0
 // source: client.proto
 
-package client
+package externalconnection
 
 import (
 	context "context"

@@ -14,6 +14,7 @@ RUN go mod download
 
 COPY tests tests
 COPY ext ext
+COPY pkg pkg
 
 RUN go install ./tests/3NodeTest/cmd/main/
 

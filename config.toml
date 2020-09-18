@@ -6,7 +6,7 @@ lat = 52.514927933123914
 # longitude of the server
 lng = 13.32676300345363
 
-[webserver]
+[server]
 host = ":9001"
 ssl = false
 
