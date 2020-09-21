@@ -70,7 +70,7 @@ func New(config *Config) (f Fred) {
 	t := newTriggerService()
 
 	return Fred{
-		E: newExthandler(s, r, t),
+		E: newExthandler(s, r, t, n),
 		I: newInthandler(s, r, t),
 	}
 }

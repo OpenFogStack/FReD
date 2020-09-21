@@ -50,7 +50,7 @@ func (s *replicationService) createKeygroup(k Keygroup) error {
 	}
 
 	// Create Keygroup with nase, it returns an error
-	err = s.n.createKeygroup(k.Name)
+	err = s.n.createKeygroup(k.Name, k.Mutable)
 	if err != nil {
 		log.Err(err).Msg("Error creating Keygroup in NaSe")
 		return err

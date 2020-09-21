@@ -42,6 +42,7 @@ Class | Method | HTTP request | Description
 
 ## Documentation For Models
 
+ - [Body](docs/Body.md)
  - [Item](docs/Item.md)
  - [ModelError](docs/ModelError.md)
  - [Node](docs/Node.md)

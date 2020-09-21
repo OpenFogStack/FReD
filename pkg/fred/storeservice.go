@@ -82,6 +82,17 @@ func (s *storeService) readAll(kg KeygroupName) ([]Item, error) {
 	return i, err
 }
 
+// exists checks if an item exists in the key-value store.
+func (s *storeService) exists(i Item) bool {
+	err := checkItem(i)
+
+	if err != nil {
+		return false
+	}
+
+	return s.iS.Exists(string(i.Keygroup), i.ID)
+}
+
 // Update updates an item in the key-value store.
 func (s *storeService) update(i Item) error {
 	err := checkItem(i)

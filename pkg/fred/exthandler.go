@@ -9,14 +9,16 @@ type exthandler struct {
 	s *storeService
 	r *replicationService
 	t *triggerService
+	n *nameService
 }
 
 // newExthandler creates a new handler for external request (i.e. from clients).
-func newExthandler(s *storeService, r *replicationService, t *triggerService) *exthandler {
+func newExthandler(s *storeService, r *replicationService, t *triggerService, n *nameService) *exthandler {
 	return &exthandler{
 		s: s,
 		r: r,
 		t: t,
+		n: n,
 	}
 }
 
@@ -79,6 +81,18 @@ func (h *exthandler) HandleRead(i Item) (Item, error) {
 
 // HandleUpdate handles requests to the Update endpoint of the client interface.
 func (h *exthandler) HandleUpdate(i Item) error {
+	m, err := h.n.isMutable(i.Keygroup)
+
+	if err != nil {
+		return err
+	}
+
+	if !m {
+		if h.s.exists(i) {
+			return errors.Errorf("cannot update item %s because keygroup is immutable", i.ID)
+		}
+	}
+
 	if err := h.s.update(i); err != nil {
 		log.Printf("%#v", err)
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
@@ -100,6 +114,18 @@ func (h *exthandler) HandleUpdate(i Item) error {
 
 // HandleDelete handles requests to the Delete endpoint of the client interface.
 func (h *exthandler) HandleDelete(i Item) error {
+	m, err := h.n.isMutable(i.Keygroup)
+
+	if err != nil {
+		return err
+	}
+
+	if !m {
+		if h.s.exists(i) {
+			return errors.Errorf("cannot update item %s because keygroup is immutable", i.ID)
+		}
+	}
+
 	if err := h.s.delete(i.Keygroup, i.ID); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error deleting item")

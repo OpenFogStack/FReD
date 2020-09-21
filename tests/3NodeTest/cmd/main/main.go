@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"gitlab.tu-berlin.de/mcc-fred/fred/tests/3NodeTest/pkg/grpcclient"
 	"net/http"
 	"os"
 	"strconv"
 	"time"
+
+	"gitlab.tu-berlin.de/mcc-fred/fred/tests/3NodeTest/pkg/grpcclient"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -89,7 +90,7 @@ func main() {
 
 	// Test Keygroups
 	logNodeAction(nodeA, "Creating keygroup testing")
-	nodeA.CreateKeygroup("testing", false)
+	nodeA.CreateKeygroup("testing", true, false)
 
 	logNodeAction(nodeA, "Deleting keygroup testing")
 	nodeA.DeleteKeygroup("testing", false)
@@ -98,7 +99,7 @@ func main() {
 	nodeA.DeleteKeygroup("trololololo", true)
 
 	logNodeAction(nodeA, "Creating Keygroup KG1")
-	nodeA.CreateKeygroup("KG1", false)
+	nodeA.CreateKeygroup("KG1", true, false)
 
 	// Test Get/Put of a single node
 	logNodeAction(nodeA, "Putting KG1-Item/KG1-Value into KG1")
@@ -173,7 +174,7 @@ func main() {
 
 	// Test sending data between nodes
 	logNodeAction(nodeB, "Creating a new Keygroup (KGN) in nodeB, setting nodeA as Replica node")
-	nodeB.CreateKeygroup("KGN", false)
+	nodeB.CreateKeygroup("KGN", true, false)
 	nodeB.AddKeygroupReplica("KGN", nodeAzmqID, false)
 
 	logNodeAction(nodeB, "Putting something in KGN on nodeB, testing whether nodeA gets Replica (sleep 1.5s in between)")
@@ -196,13 +197,13 @@ func main() {
 	nodeA.AddKeygroupReplica("trololololo", nodeBzmqID, true)
 
 	logNodeAction(nodeC, "Creating an already existing keygroup with another node")
-	nodeC.CreateKeygroup("KGN", true)
+	nodeC.CreateKeygroup("KGN", true, true)
 
 	logNodeAction(nodeC, "Telling a node that is not part of the keygroup that it is now part of that keygroup")
 	nodeC.AddKeygroupReplica("KGN", nodeCzmqID, false)
 
 	logNodeAction(nodeA, "Creating a new Keygroup (kgall) with all three nodes as replica")
-	nodeA.CreateKeygroup("kgall", false)
+	nodeA.CreateKeygroup("kgall", true, false)
 	nodeA.AddKeygroupReplica("kgall", nodeBzmqID, false)
 	nodeB.AddKeygroupReplica("kgall", nodeCzmqID, false)
 
@@ -241,10 +242,10 @@ func main() {
 	// let's test trigger nodes
 	// create a new keygroup on nodeA
 	logNodeAction(nodeA, "Creating keygroup triggertesting")
-	nodeA.CreateKeygroup("triggertesting", false)
+	nodeA.CreateKeygroup("triggertesting", true, false)
 
 	logNodeAction(nodeA, "Creating keygroup nottriggertesting")
-	nodeA.CreateKeygroup("nottriggertesting", false)
+	nodeA.CreateKeygroup("nottriggertesting", true, false)
 
 	//post an item1 to new keygroup
 	logNodeAction(nodeA, "post an item1 to new keygroup triggertesting")
@@ -288,6 +289,26 @@ func main() {
 	// try to get the trigger nodes now
 	logNodeAction(nodeA, "try to get the trigger nodes for keygroup triggertesting after deletion")
 	nodeA.GetKeygroupTriggers("triggertesting", true)
+
+	// testing immutable keygroups
+	// create immutable keygroup on nodeB
+	nodeB.CreateKeygroup("log", false, false)
+	// create item to keygroup -> should work
+	nodeB.PutItem("log", "test-item", "value-1", false)
+	// update item in keygroup -> should not work
+	nodeB.PutItem("log", "test-item", "value-2", true)
+	// get item from keygroup -> should return appended item
+	respB = nodeB.GetItem("log", "test-item", false)
+
+	if respB != "value-1" {
+		logNodeFailure(nodeB, "resp is not value-1", respB)
+	}
+	// delete item from keygroup -> should not work
+	nodeB.DeleteItem("log", "test-item", true)
+	// add nodeC as replica node
+	nodeB.AddKeygroupReplica("log", nodeCzmqID, false)
+	// update item on nodeC -> should not work
+	nodeB.PutItem("log", "test-item", "value-3", true)
 
 	totalerrors := nodeA.Errors + nodeB.Errors + nodeC.Errors
 

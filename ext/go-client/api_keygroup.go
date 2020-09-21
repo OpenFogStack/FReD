@@ -114,10 +114,11 @@ KeygroupApiService Create a new Keygroup
 Creates a new Keygroup with the name &#x60;group_id&#x60; if it does not exist already.
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @param groupId Name of Keygroup
+ * @param body Type of keygroup to create (true for mutable table or false for append-only log)
 
 
 */
-func (a *KeygroupApiService) KeygroupGroupIdPost(ctx context.Context, groupId string) (*http.Response, error) {
+func (a *KeygroupApiService) KeygroupGroupIdPost(ctx context.Context, groupId string, body Body) (*http.Response, error) {
 	var (
 		localVarHttpMethod = strings.ToUpper("Post")
 		localVarPostBody   interface{}
@@ -151,6 +152,8 @@ func (a *KeygroupApiService) KeygroupGroupIdPost(ctx context.Context, groupId st
 	if localVarHttpHeaderAccept != "" {
 		localVarHeaderParams["Accept"] = localVarHttpHeaderAccept
 	}
+	// body params
+	localVarPostBody = &body
 	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
 	if err != nil {
 		return nil, err
