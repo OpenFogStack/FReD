@@ -5,14 +5,14 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"gitlab.tu-berlin.de/mcc-fred/fred/tests/3NodeTest/pkg/grpcclient"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-
-	"gitlab.tu-berlin.de/mcc-fred/fred/tests/3NodeTest/pkg/swag-node"
 )
 
 var (
@@ -32,27 +32,27 @@ func main() {
 	)
 
 	// Parse Flags
-	useTLS := *flag.Bool("useTLS", false, "Use TLS (HTTPS instead of HTTP)")
+	//useTLS := *flag.Bool("useTLS", false, "Use TLS (HTTPS instead of HTTP)")
 	waitUser = *flag.Bool("wait-user", false, "wait for user input after each test")
 
-	apiVersion := *flag.String("apiVersion", "v0", "API Version (e.g. v0)")
+	//apiVersion := *flag.String("apiVersion", "v0", "API Version (e.g. v0)")
 
 	nodeAhost := *flag.String("nodeAhost", "172.26.0.10", "host of nodeA (e.g. localhost)") // Docker: localhost
 	nodeAhttpPort := *flag.String("nodeAhttp", "9001", "port of nodeA (e.g. 9001)")         // Docker: 9002
 	//nodeAzmqhost := *flag.String("nodeAzmqhost", "172.26.0.10", "host of nodeA (e.g. localhost) that can be reached by the other nodes") // Docker: 172.26.0.10
-	nodeAzmqPort := *flag.Int("nodeAzmqPort", 5555, "ZMQ Port of nodeA")
+	//nodeAzmqPort := *flag.Int("nodeAzmqPort", 5555, "ZMQ Port of nodeA")
 	nodeAzmqID := *flag.String("nodeAzmqID", "nodeA", "ZMQ Id of nodeA")
 
 	nodeBhost := *flag.String("nodeBhost", "172.26.0.11", "host of nodeB (e.g. localhost)")
 	nodeBhttpPort := *flag.String("nodeBhttp", "9001", "port of nodeB (e.g. 9001)")
 	//nodeBzmqhost := *flag.String("nodeBzmqhost", "172.26.0.11", "host of nodeB (e.g. localhost) that can be reached by the other nodes")
-	nodeBzmqPort := *flag.Int("nodeBzmqPort", 5555, "ZMQ Port of nodeB")
+	//nodeBzmqPort := *flag.Int("nodeBzmqPort", 5555, "ZMQ Port of nodeB")
 	nodeBzmqID := *flag.String("nodeBzmqID", "nodeB", "ZMQ Id of nodeB")
 
 	nodeChost := *flag.String("nodeChost", "172.26.0.12", "host of nodeC (e.g. localhost)")
 	nodeChttpPort := *flag.String("nodeChttp", "9001", "port of nodeC (e.g. 9001)")
 	//nodeCzmqhost := *flag.String("nodeCzmqhost", "172.26.0.12", "host of nodeC (e.g. localhost) that can be reached by the other nodes")
-	nodeCzmqPort := *flag.Int("nodeCzmqPort", 5555, "ZMQ Port of nodeC")
+	//nodeCzmqPort := *flag.Int("nodeCzmqPort", 5555, "ZMQ Port of nodeC")
 	nodeCzmqID := *flag.String("nodeCzmqID", "nodeC", "ZMQ Id of nodeC")
 
 	triggerNodeHost := *flag.String("triggerNodeHost", "172.26.0.30:3333", "host of trigger node (e.g. localhost:3333)")
@@ -61,65 +61,68 @@ func main() {
 
 	flag.Parse()
 
-	var protocol string
+	//var protocol string
+	//
+	//if useTLS {
+	//	protocol = "https"
+	//} else {
+	//	protocol = "http"
+	//}
 
-	if useTLS {
-		protocol = "https"
-	} else {
-		protocol = "http"
-	}
+	//nodeAurl := fmt.Sprintf("%s://%s:%s/%s", protocol, nodeAhost, nodeAhttpPort, apiVersion)
+	//log.Debug().Msgf("Node A: %s with ZMQ Port %d and ID %s", nodeAurl, nodeAzmqPort, nodeAzmqID)
+	//
+	//nodeBurl := fmt.Sprintf("%s://%s:%s/%s", protocol, nodeBhost, nodeBhttpPort, apiVersion)
+	//log.Debug().Msgf("Node B: %s with ZMQ Port %d and ID %s", nodeBurl, nodeBzmqPort, nodeBzmqID)
+	//
+	//nodeCurl := fmt.Sprintf("%s://%s:%s/%s", protocol, nodeChost, nodeChttpPort, apiVersion)
+	//log.Debug().Msgf("Node C: %s with ZMQ Port %d and ID %s", nodeCurl, nodeCzmqPort, nodeCzmqID)
 
-	nodeAurl := fmt.Sprintf("%s://%s:%s/%s", protocol, nodeAhost, nodeAhttpPort, apiVersion)
-	log.Debug().Msgf("Node A: %s with ZMQ Port %d and ID %s", nodeAurl, nodeAzmqPort, nodeAzmqID)
-
-	nodeBurl := fmt.Sprintf("%s://%s:%s/%s", protocol, nodeBhost, nodeBhttpPort, apiVersion)
-	log.Debug().Msgf("Node B: %s with ZMQ Port %d and ID %s", nodeBurl, nodeBzmqPort, nodeBzmqID)
-
-	nodeCurl := fmt.Sprintf("%s://%s:%s/%s", protocol, nodeChost, nodeChttpPort, apiVersion)
-	log.Debug().Msgf("Node C: %s with ZMQ Port %d and ID %s", nodeCurl, nodeCzmqPort, nodeCzmqID)
-
-	nodeA := node.NewNode(nodeAurl)
-	nodeB := node.NewNode(nodeBurl)
-	nodeC := node.NewNode(nodeCurl)
+	port, _ := strconv.Atoi(nodeAhttpPort)
+	nodeA := grpcclient.NewNode(nodeAhost, port)
+	port, _ = strconv.Atoi(nodeBhttpPort)
+	nodeB := grpcclient.NewNode(nodeBhost, port)
+	port, _ = strconv.Atoi(nodeChttpPort)
+	nodeC := grpcclient.NewNode(nodeChost, port)
 
 	time.Sleep(15 * time.Second)
 
 	// Test Keygroups
 	logNodeAction(nodeA, "Creating keygroup testing")
-	nodeA.CreateKeygroup("testing", 200, true)
+	nodeA.CreateKeygroup("testing", false)
 
 	logNodeAction(nodeA, "Deleting keygroup testing")
-	nodeA.DeleteKeygroup("testing", 200, true)
+	nodeA.DeleteKeygroup("testing", false)
 
 	logNodeAction(nodeA, "Deleting nonexistent keygroup")
-	nodeA.DeleteKeygroup("trololololo", 404, false)
+	nodeA.DeleteKeygroup("trololololo", true)
 
 	logNodeAction(nodeA, "Creating Keygroup KG1")
-	nodeA.CreateKeygroup("KG1", 200, true)
+	nodeA.CreateKeygroup("KG1", false)
 
 	// Test Get/Put of a single node
 	logNodeAction(nodeA, "Putting KG1-Item/KG1-Value into KG1")
-	nodeA.PutItem("KG1", "KG1-Item", "KG1-Value", 200, true)
+	nodeA.PutItem("KG1", "KG1-Item", "KG1-Value", false)
 
 	logNodeAction(nodeA, "Getting the value in KG1")
 
-	resp := nodeA.GetItem("KG1", "KG1-Item", 200, false)
+	resp := nodeA.GetItem("KG1", "KG1-Item", false)
 
 	if resp != "KG1-Value" {
 		logNodeFailure(nodeA, "resp is \"KG1-Value\"", resp)
 	}
 
 	logNodeAction(nodeA, "Getting a Value from a nonexistent keygroup")
-	nodeA.GetItem("trololoool", "wut", 404, false)
+	nodeA.GetItem("trololoool", "wut", true)
 
 	logNodeAction(nodeA, "Putting a Value into a nonexistent keygroup")
-	nodeA.PutItem("nonexistentkeygroup", "item", "data", 404, false)
+	nodeA.PutItem("nonexistentkeygroup", "item", "data", true)
 
 	logNodeAction(nodeA, "Putting new value KG1-Item/KG1-Value2 into KG1")
-	nodeA.PutItem("KG1", "KG1-Item", "KG1-Value2", 200, true)
+	nodeA.PutItem("KG1", "KG1-Item", "KG1-Value2", false)
 
 	logNodeAction(nodeA, "Getting the value in KG1")
-	resp = nodeA.GetItem("KG1", "KG1-Item", 200, false)
+	resp = nodeA.GetItem("KG1", "KG1-Item", false)
 	if resp != "KG1-Value2" {
 		logNodeFailure(nodeA, "resp is \"KG1-Value2\"", resp)
 	} else {
@@ -127,7 +130,7 @@ func main() {
 	}
 
 	logNodeAction(nodeA, "Getting all Replicas that nodeA has")
-	parsed := nodeA.GetAllReplica(200, false)
+	parsed := nodeA.GetAllReplica(false)
 	// Example Response: ["nodeB", "nodeC"]
 	// Test for nodeA
 
@@ -160,76 +163,76 @@ func main() {
 
 	// Fun with replicas
 	logNodeAction(nodeA, "Adding nodeB as Replica node for KG1")
-	nodeA.AddKeygroupReplica("KG1", nodeBzmqID, 200, true)
+	nodeA.AddKeygroupReplica("KG1", nodeBzmqID, false)
 
 	logNodeAction(nodeB, "Deleting the value from KG1")
-	nodeB.DeleteItem("KG1", "KG1-Item", 200, true)
+	nodeB.DeleteItem("KG1", "KG1-Item", false)
 
 	logNodeAction(nodeB, "Getting the deleted value in KG1")
-	_ = nodeB.GetItem("KG1", "KG1-Item", 404, false)
+	_ = nodeB.GetItem("KG1", "KG1-Item", true)
 
 	// Test sending data between nodes
 	logNodeAction(nodeB, "Creating a new Keygroup (KGN) in nodeB, setting nodeA as Replica node")
-	nodeB.CreateKeygroup("KGN", 200, true)
-	nodeB.AddKeygroupReplica("KGN", nodeAzmqID, 200, true)
+	nodeB.CreateKeygroup("KGN", false)
+	nodeB.AddKeygroupReplica("KGN", nodeAzmqID, false)
 
 	logNodeAction(nodeB, "Putting something in KGN on nodeB, testing whether nodeA gets Replica (sleep 1.5s in between)")
-	nodeB.PutItem("KGN", "Item", "Value", 200, true)
+	nodeB.PutItem("KGN", "Item", "Value", false)
 	time.Sleep(1500 * time.Millisecond)
-	resp = nodeA.GetItem("KGN", "Item", 200, false)
+	resp = nodeA.GetItem("KGN", "Item", false)
 	if resp != "Value" {
 		logNodeFailure(nodeA, "resp is \"Value\"", resp)
 	}
 
 	logNodeAction(nodeA, "Putting something in KGN on nodeA, testing whether nodeB gets Replica (sleep 1.5s in between)")
-	nodeA.PutItem("KGN", "Item2", "Value2", 200, true)
+	nodeA.PutItem("KGN", "Item2", "Value2", false)
 	time.Sleep(1500 * time.Millisecond)
-	resp = nodeB.GetItem("KGN", "Item2", 200, false)
+	resp = nodeB.GetItem("KGN", "Item2", false)
 	if resp != "Value2" {
 		logNodeFailure(nodeA, "resp is \"Value2\"", resp)
 	}
 
 	logNodeAction(nodeA, "Adding a replica for a nonexisting Keygroup")
-	nodeA.AddKeygroupReplica("trololololo", nodeBzmqID, 404, false)
+	nodeA.AddKeygroupReplica("trololololo", nodeBzmqID, true)
 
 	logNodeAction(nodeC, "Creating an already existing keygroup with another node")
-	nodeC.CreateKeygroup("KGN", 404, false)
+	nodeC.CreateKeygroup("KGN", true)
 
 	logNodeAction(nodeC, "Telling a node that is not part of the keygroup that it is now part of that keygroup")
-	nodeC.AddKeygroupReplica("KGN", nodeCzmqID, 200, true)
+	nodeC.AddKeygroupReplica("KGN", nodeCzmqID, false)
 
 	logNodeAction(nodeA, "Creating a new Keygroup (kgall) with all three nodes as replica")
-	nodeA.CreateKeygroup("kgall", 200, true)
-	nodeA.AddKeygroupReplica("kgall", nodeBzmqID, 200, true)
-	nodeB.AddKeygroupReplica("kgall", nodeCzmqID, 200, true)
+	nodeA.CreateKeygroup("kgall", false)
+	nodeA.AddKeygroupReplica("kgall", nodeBzmqID, false)
+	nodeB.AddKeygroupReplica("kgall", nodeCzmqID, false)
 
 	logNodeAction(nodeC, "... sending data to one node, checking whether all nodes get the replica (sleep 1.5s)")
-	nodeC.PutItem("kgall", "item", "value", 200, true)
+	nodeC.PutItem("kgall", "item", "value", false)
 	time.Sleep(1500 * time.Millisecond)
-	respA := nodeA.GetItem("kgall", "item", 200, false)
-	respB := nodeB.GetItem("kgall", "item", 200, false)
+	respA := nodeA.GetItem("kgall", "item", false)
+	respB := nodeB.GetItem("kgall", "item", false)
 
 	if respA != "value" || respB != "value" {
 		logNodeFailure(nodeA, "both nodes respond with 'value'", fmt.Sprintf("NodeA: %s, NodeB: %s", respA, respB))
 	}
 
 	logNodeAction(nodeB, "...removing node from the keygroup all and checking whether it still has the data (sleep 1.5s)")
-	nodeB.DeleteKeygroupReplica("kgall", nodeBzmqID, 200, true)
+	nodeB.DeleteKeygroupReplica("kgall", nodeBzmqID, false)
 	time.Sleep(1500 * time.Millisecond)
-	respB = nodeB.GetItem("kgall", "item", 404, false)
+	respB = nodeB.GetItem("kgall", "item", true)
 
 	logNodeAction(nodeB, fmt.Sprintf("Got Response %s", respB))
 
 	logNodeAction(nodeB, "...re-adding the node to the keygroup all and checking whether it now gets the data (sleep 1.5s)")
-	nodeA.AddKeygroupReplica("kgall", nodeBzmqID, 200, true)
+	nodeA.AddKeygroupReplica("kgall", nodeBzmqID, false)
 	time.Sleep(1500 * time.Millisecond)
-	respA = nodeA.GetItem("kgall", "item", 200, false)
+	respA = nodeA.GetItem("kgall", "item", false)
 
 	if respA != "value" {
 		logNodeFailure(nodeA, "resp is \"value\"", resp)
 	}
 
-	respB = nodeB.GetItem("kgall", "item", 200, false)
+	respB = nodeB.GetItem("kgall", "item", false)
 
 	if respB != "value" {
 		logNodeFailure(nodeB, "resp is \"value\"", resp)
@@ -238,38 +241,38 @@ func main() {
 	// let's test trigger nodes
 	// create a new keygroup on nodeA
 	logNodeAction(nodeA, "Creating keygroup triggertesting")
-	nodeA.CreateKeygroup("triggertesting", 200, true)
+	nodeA.CreateKeygroup("triggertesting", false)
 
 	logNodeAction(nodeA, "Creating keygroup nottriggertesting")
-	nodeA.CreateKeygroup("nottriggertesting", 200, true)
+	nodeA.CreateKeygroup("nottriggertesting", false)
 
 	//post an item1 to new keygroup
 	logNodeAction(nodeA, "post an item1 to new keygroup triggertesting")
-	nodeA.PutItem("triggertesting", "item1", "value1", 200, true)
+	nodeA.PutItem("triggertesting", "item1", "value1", false)
 	//add trigger node to nodeA
 	logNodeAction(nodeA, "add trigger node to nodeA for keygroup triggertesting")
-	nodeA.AddKeygroupTrigger("triggertesting", triggerNodeID, triggerNodeHost, 200, true)
+	nodeA.AddKeygroupTrigger("triggertesting", triggerNodeID, triggerNodeHost, false)
 	//post another item2 to new keygroup
 	logNodeAction(nodeA, "post another item2 to new keygroup triggertesting")
-	nodeA.PutItem("triggertesting", "item2", "value2", 200, true)
+	nodeA.PutItem("triggertesting", "item2", "value2", false)
 	//delete item1 from keygroup
 	logNodeAction(nodeA, "delete item1 from keygroup triggertesting")
-	nodeA.DeleteItem("triggertesting", "item1", 200, true)
+	nodeA.DeleteItem("triggertesting", "item1", false)
 	// post an item3 to keygroup nottriggertesting that should not be sent to trigger node
 	logNodeAction(nodeA, "post an item3 to keygroup nottriggertesting that should not be sent to trigger node")
-	nodeA.PutItem("nottriggertesting", "item3", "value3", 200, true)
+	nodeA.PutItem("nottriggertesting", "item3", "value3", false)
 	//add keygroup to nodeB as well
 	logNodeAction(nodeA, "add keygroup triggertesting to nodeB as well")
-	nodeA.AddKeygroupReplica("triggertesting", nodeBzmqID, 200, true)
+	nodeA.AddKeygroupReplica("triggertesting", nodeBzmqID, false)
 	//post item4 to nodeB
 	logNodeAction(nodeB, "post item4 to nodeB in keygroup triggertesting")
-	nodeB.PutItem("triggertesting", "item4", "value4", 200, true)
+	nodeB.PutItem("triggertesting", "item4", "value4", false)
 	//remove trigger node from nodeA
 	logNodeAction(nodeA, "remove trigger node from nodeA in keygroup triggertesting")
-	nodeA.DeleteKeygroupTrigger("triggertesting", triggerNodeID, 200, true)
+	nodeA.DeleteKeygroupTrigger("triggertesting", triggerNodeID, false)
 	//post item5 to nodeA
 	logNodeAction(nodeA, "post item5 to nodeA in keygroup triggertesting")
-	nodeA.PutItem("triggertesting", "item5", "value5", 200, true)
+	nodeA.PutItem("triggertesting", "item5", "value5", false)
 	// check logs from trigger node
 	// we should have the following logs (and nothing else):
 	// put triggertesting item2 value2
@@ -279,12 +282,12 @@ func main() {
 	checkTriggerNode(triggerNodeID, triggerNodeWSHost)
 	//finally delete the keygroups again
 	logNodeAction(nodeA, "deleting keygroup triggertesting")
-	nodeA.DeleteKeygroup("triggertesting", 200, true)
+	nodeA.DeleteKeygroup("triggertesting", false)
 	logNodeAction(nodeA, "deleting keygroup nottriggertesting")
-	nodeA.DeleteKeygroup("nottriggertesting", 200, true)
+	nodeA.DeleteKeygroup("nottriggertesting", false)
 	// try to get the trigger nodes now
 	logNodeAction(nodeA, "try to get the trigger nodes for keygroup triggertesting after deletion")
-	nodeA.GetKeygroupTriggers("triggertesting", 404, false)
+	nodeA.GetKeygroupTriggers("triggertesting", true)
 
 	totalerrors := nodeA.Errors + nodeB.Errors + nodeC.Errors
 
@@ -295,19 +298,19 @@ func main() {
 	os.Exit(totalerrors)
 }
 
-func logNodeAction(node *node.Node, action string) {
+func logNodeAction(node *grpcclient.Node, action string) {
 	wait()
-	log.Info().Str("node", node.URL).Msg(action)
+	log.Info().Str("node", node.Addr).Msg(action)
 }
 
-func logNodeFailure(node *node.Node, expected, result string) {
+func logNodeFailure(node *grpcclient.Node, expected, result string) {
 	wait()
-	log.Warn().Str("node", node.URL).Msgf("expected: %s, but got: %#v", expected, result)
+	log.Warn().Str("node", node.Addr).Msgf("expected: %s, but got: %#v", expected, result)
 }
 
-func logDebugInfo(node *node.Node, info string) {
+func logDebugInfo(node *grpcclient.Node, info string) {
 	wait()
-	log.Debug().Str("node", node.URL).Msg(info)
+	log.Debug().Str("node", node.Addr).Msg(info)
 }
 
 func checkTriggerNode(triggerNodeID, triggerNodeWSHost string) {

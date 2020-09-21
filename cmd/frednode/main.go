@@ -8,6 +8,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/dynamoconnect"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/externalconnection"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/interconnection"
 	"os"
 	"os/signal"
@@ -16,7 +17,6 @@ import (
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/badgerdb"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/fred"
 	storage "gitlab.tu-berlin.de/mcc-fred/fred/pkg/storageconnection"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/webserver"
 )
 
 type fredConfig struct {
@@ -30,7 +30,7 @@ type fredConfig struct {
 	Server struct {
 		Host   string `toml:"host"`
 		UseTLS bool   `toml:"ssl"`
-	} `toml:"webserver"`
+	} `toml:"server"`
 	Storage struct {
 		Adaptor string `toml:"adaptor"`
 	} `toml:"storage"`
@@ -65,8 +65,8 @@ var (
 	configPath        = kingpin.Flag("config", "Path to .toml configuration file.").PlaceHolder("PATH").String()
 	lat               = kingpin.Flag("lat", "Latitude of the node.").PlaceHolder("LATITUDE").Default("-200").Float64()   // Domain: [-90,90]
 	lng               = kingpin.Flag("lng", "Longitude of the node.").PlaceHolder("LONGITUDE").Default("-200").Float64() // Domain: ]-180,180]
-	wsHost            = kingpin.Flag("ws-host", "Host address of webserver.").String()
-	wsSSL             = kingpin.Flag("use-tls", "Use TLS/SSL to serve over HTTPS. Works only if host argument is a FQDN.").PlaceHolder("USE-SSL").Bool()
+	grpcHost          = kingpin.Flag("host", "Host address of server.").String()
+	grpcSSL           = kingpin.Flag("use-tls", "Use TLS/SSL to serve over HTTPS. Works only if host argument is a FQDN.").PlaceHolder("USE-SSL").Bool()
 	zmqHost           = kingpin.Flag("zmq-host", "(Publicly reachable) address of this zmq server.").String()
 	adaptor           = kingpin.Flag("adaptor", "Storage adaptor, can be \"remote\", \"badgerdb\", \"memory\", \"dynamo\".").Enum("remote", "badgerdb", "memory", "dynamo")
 	logLevel          = kingpin.Flag("log-level", "Log level, can be \"debug\", \"info\" ,\"warn\", \"error\", \"fatal\", \"panic\".").Enum("debug", "info", "warn", "errors", "fatal", "panic")
@@ -112,11 +112,11 @@ func main() {
 	if *lng >= -180 && *lng <= 180 {
 		fc.Location.Lng = *lng
 	}
-	if *wsHost != "" {
-		fc.Server.Host = *wsHost
+	if *grpcHost != "" {
+		fc.Server.Host = *grpcHost
 	}
-	if *wsSSL {
-		fc.Server.UseTLS = *wsSSL
+	if *grpcSSL {
+		fc.Server.UseTLS = *grpcSSL
 	}
 	if *zmqHost != "" {
 		fc.Peering.Host = *zmqHost
@@ -161,19 +161,16 @@ func main() {
 	}
 
 	// Uncomment to print json config
-	// log.Debug().Msgf("Configuration: %s", (func() string {
-	// 	s, _ := json.MarshalIndent(fc, "", "    ")
-	// 	return string(s)
+	// log.Debug().Msgf("Configuration: %is", (func() string {
+	// 	is, _ := json.MarshalIndent(fc, "", "    ")
+	// 	return string(is)
 	// })())
 	log.Debug().Msg("Current configuration:")
 	log.Debug().Msgf("%#v", fc)
 
-	wsLogLevel := "release"
-
 	switch fc.Log.Level {
 	case "debug":
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
-		wsLogLevel = "debug"
 	case "info":
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	case "warn":
@@ -220,10 +217,10 @@ func main() {
 	})
 
 	log.Debug().Msg("Starting Interconnection Server...")
-	s := interconnection.NewServer(fc.Peering.Host, f.I)
+	is := interconnection.NewServer(fc.Peering.Host, f.I)
 
-	log.Debug().Msg("Starting Web Server...")
-	go log.Fatal().Err(webserver.Setup(fc.Server.Host, f.E, apiversion, fc.Server.UseTLS, wsLogLevel)).Msg("Webserver.Setup")
+	log.Debug().Msg("Starting GRPC Server for Client (==Externalconnection)...")
+	es := externalconnection.NewServer(fc.Server.Host, f.E)
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit,
@@ -233,7 +230,8 @@ func main() {
 	func() {
 		<-quit
 		c.Destroy()
-		log.Err(s.Close()).Msg("error closing interconnection server")
+		log.Err(is.Close()).Msg("error closing interconnection server")
+		log.Err(es.Close()).Msg("error closing externalconnection server")
 		log.Err(store.Close()).Msg("error closing database")
 	}()
 }
