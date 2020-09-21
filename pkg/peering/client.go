@@ -133,3 +133,66 @@ func (c *Client) SendRemoveReplica(addr fred.Address, port int, kgname fred.Keyg
 	})
 	return c.dealWithStatusResponse(res, err, "RemoveReplica")
 }
+
+// SendGetItem sends this command to the server at this address
+func (c *Client) SendGetItem(addr fred.Address, port int, kgname fred.KeygroupName, id string) (fred.Item, error) {
+	client, _ := c.getConnAndClient(addr, port)
+	res, err := client.GetItem(context.Background(), &peering.GetItemRequest{
+		Keygroup: string(kgname),
+		Id:       id,
+	})
+
+	if res != nil {
+		log.Debug().Msgf("Interclient got Response from GetItem, Status %s with Message %s and Error %s", res.Status, res.ErrorMessage, err)
+	} else {
+		log.Debug().Msg("Interclient got empty Response from GetItem")
+	}
+
+	if err != nil || res == nil {
+		return fred.Item{}, errors.New(err)
+	}
+
+	if res.Status == peering.EnumStatus_ERROR {
+		return fred.Item{}, errors.New(res.ErrorMessage)
+	}
+
+	return fred.Item{
+		Keygroup: kgname,
+		ID:       id,
+		Val:      res.Data,
+	}, nil
+}
+
+// SendGetAllItems sends this command to the server at this address
+func (c *Client) SendGetAllItems(addr fred.Address, port int, kgname fred.KeygroupName) ([]fred.Item, error) {
+	client, _ := c.getConnAndClient(addr, port)
+	res, err := client.GetAllItems(context.Background(), &peering.GetAllItemsRequest{
+		Keygroup: string(kgname),
+	})
+
+	if res != nil {
+		log.Debug().Msgf("Interclient got Response from GetAllItems, Status %s with Message %s and Error %s", res.Status, res.ErrorMessage, err)
+	} else {
+		log.Debug().Msg("Interclient got empty Response from GetAllItems")
+	}
+
+	if err != nil || res == nil {
+		return nil, errors.New(err)
+	}
+
+	if res.Status == peering.EnumStatus_ERROR {
+		return nil, errors.New(res.ErrorMessage)
+	}
+
+	d := make([]fred.Item, len(res.Data))
+
+	for i, item := range res.Data {
+		d[i] = fred.Item{
+			Keygroup: kgname,
+			ID:       item.Id,
+			Val:      item.Data,
+		}
+	}
+
+	return d, nil
+}

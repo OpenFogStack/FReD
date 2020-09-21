@@ -81,8 +81,8 @@ func (n Node) GetKeygroupReplica(kgname string, expectError bool) map[string]int
 
 	nodes := make(map[string]int)
 
-	for i, node := range res.NodeId {
-		nodes[node] = int(res.Expiry[i])
+	for _, node := range res.Replica {
+		nodes[node.NodeId] = int(node.Expiry)
 	}
 
 	return nodes

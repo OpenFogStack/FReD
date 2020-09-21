@@ -22,6 +22,34 @@ func newInthandler(s *storeService, r *replicationService, t *triggerService, n 
 	}
 }
 
+// HandleGet handles requests to the Get endpoint of the internal interface.
+func (h *inthandler) HandleGet(i Item) (Item, error) {
+	data, err := h.s.read(i.Keygroup, i.ID)
+
+	if err != nil {
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		return Item{}, errors.Errorf("error reading item")
+	}
+
+	return Item{
+		Keygroup: i.Keygroup,
+		ID:       i.ID,
+		Val:      data,
+	}, nil
+}
+
+// HandleGet handles requests to the Get endpoint of the internal interface.
+func (h *inthandler) HandleGetAllItems(k Keygroup) ([]Item, error) {
+	data, err := h.s.readAll(k.Name)
+
+	if err != nil {
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		return nil, errors.Errorf("error reading all keygroup items")
+	}
+
+	return data, nil
+}
+
 // HandleCreateKeygroup handles requests to the CreateKeygroup endpoint of the internal interface.
 func (h *inthandler) HandleCreateKeygroup(k Keygroup) error {
 	if err := h.s.createKeygroup(k.Name); err != nil {

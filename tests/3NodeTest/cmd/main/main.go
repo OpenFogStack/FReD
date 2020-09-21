@@ -292,6 +292,7 @@ func main() {
 
 	// testing immutable keygroups
 	// create immutable keygroup on nodeB
+	logNodeAction(nodeA, "Testing immutable keygroups by creating a new immutable keygroup on nodeB")
 	nodeB.CreateKeygroup("log", false, 0, false)
 	// create item to keygroup -> should work
 	nodeB.PutItem("log", "test-item", "value-1", false)
@@ -345,6 +346,32 @@ func main() {
 	nodeA.GetItem("expiry-test", "test", true)
 	// check if item exists on nodeC -> should work
 	nodeC.GetItem("expiry-test", "test", false)
+
+	// testing adding a node as a replica for a keygroup on itself
+	// create a keygroup with nodeB
+	nodeB.CreateKeygroup("pulltest", true, 0, false)
+	// add an item to that keygroup
+	nodeB.PutItem("pulltest", "item-1", "val-1", false)
+	// add another one
+	nodeB.PutItem("pulltest", "item-2", "val-2", false)
+	// add nodeA as a replica to that keygroup and see if it pulls the needed data on its own
+	nodeA.AddKeygroupReplica("pulltest", nodeAzmqID, 0, false)
+	// check if the items exist
+	if res := nodeA.GetItem("pulltest", "item-1", false); res != "val-1" {
+		logNodeFailure(nodeA, "val-1", res)
+		nodeA.Errors++
+	}
+	if res := nodeA.GetItem("pulltest", "item-2", false); res != "val-2" {
+		logNodeFailure(nodeA, "val-2", res)
+		nodeA.Errors++
+	}
+	// add an item on nodeA
+	nodeB.PutItem("pulltest", "item-3", "val-3", false)
+	// check if nodeB also gets that item
+	if res := nodeB.GetItem("pulltest", "item-3", false); res != "val-3" {
+		logNodeFailure(nodeB, "val-3", res)
+		nodeB.Errors++
+	}
 
 	totalerrors := nodeA.Errors + nodeB.Errors + nodeC.Errors
 
