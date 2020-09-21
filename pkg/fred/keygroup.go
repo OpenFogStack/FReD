@@ -4,6 +4,7 @@ package fred
 type Keygroup struct {
 	Name    KeygroupName
 	Mutable bool
+	Expiry  int
 }
 
 // KeygroupName is a name of a keygroup.

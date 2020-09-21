@@ -3,7 +3,7 @@ syntax = "proto3";
 option go_package = ".;storageconnection";
 
 service Database {
-	rpc Update (Item) returns (Response) {}
+	  rpc Update (UpdateItem) returns (Response) {}
     rpc Delete (Key) returns (Response) {}
     rpc Read (Key) returns (Val) {}
     rpc ReadAll (Keygroup) returns (stream Item) {}
@@ -17,6 +17,13 @@ message Item {
     string keygroup = 1;
     string id = 2;
     string val = 3;
+}
+
+message UpdateItem {
+    string keygroup = 1;
+    string id = 2;
+    string val = 3;
+    int64 expiry = 4;
 }
 
 // A Key uniquely identifies data. In our case it contains a keygroup and the id

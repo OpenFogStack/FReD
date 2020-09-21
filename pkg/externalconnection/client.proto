@@ -33,6 +33,7 @@ message StatusResponse {
 message CreateKeygroupRequest {
     string keygroup = 1;
     bool mutable = 2;
+    int64 expiry = 3;
 }
 
 message DeleteKeygroupRequest {
@@ -62,6 +63,7 @@ message DeleteRequest {
 message AddReplicaRequest {
     string keygroup = 1;
     string nodeId = 2;
+    int64 expiry = 3;
 }
 
 message GetKeygroupReplicaRequest {
@@ -70,6 +72,7 @@ message GetKeygroupReplicaRequest {
 
 message GetKeygroupReplicaResponse {
     repeated string nodeId = 1;
+    repeated int64 expiry = 2;
 }
 
 message RemoveReplicaRequest {

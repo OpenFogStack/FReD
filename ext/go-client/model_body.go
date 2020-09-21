@@ -12,4 +12,5 @@ package swagger
 
 type Body struct {
 	Mutable bool `json:"mutable"`
+	Expiry float32 `json:"expiry"`
 }

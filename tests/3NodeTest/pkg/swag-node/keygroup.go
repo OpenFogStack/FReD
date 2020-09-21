@@ -8,10 +8,10 @@ import (
 )
 
 // CreateKeygroup creates a new keygroup with the node. The Response should be empty if everything is correct.
-func (n *Node) CreateKeygroup(kgname string, mutable bool, expectedStatusCode int, expectEmptyResponse bool) {
+func (n *Node) CreateKeygroup(kgname string, mutable bool, expiry int, expectedStatusCode int, expectEmptyResponse bool) {
 	log.Debug().Str("node", n.URL).Msgf("Sending a Create Keygroup for group %s; expecting %d", kgname, expectedStatusCode)
 
-	resp, recvErr := n.Client.KeygroupApi.KeygroupGroupIdPost(context.Background(), kgname, client.Body{Mutable: mutable})
+	resp, recvErr := n.Client.KeygroupApi.KeygroupGroupIdPost(context.Background(), kgname, client.Body{Mutable: mutable, Expiry: float32(expiry)})
 
 	if err := checkResponse(resp, recvErr, nil, expectedStatusCode, expectEmptyResponse); err != nil {
 		log.Warn().Str("node", n.URL).Msgf("CreateKeygroup: %s", err.Error())
@@ -44,10 +44,10 @@ func (n *Node) GetKeygroupReplica(kgname string, expectedStatusCode int, expectE
 }
 
 // AddKeygroupReplica adds a new Replica node to the provided keygroup.
-func (n *Node) AddKeygroupReplica(kgname, replicaNodeID string, expectedStatusCode int, expectEmptyResponse bool) {
-	log.Debug().Str("node", n.URL).Msgf("Sending a Add Keygroup Replica for group %s; expecting %d", kgname, expectedStatusCode)
+func (n *Node) AddKeygroupReplica(kgname, replicaNodeID string, expiry int, expectedStatusCode int, expectEmptyResponse bool) {
+	log.Debug().Str("node", n.URL).Msgf("Sending a Add Keygroup Replica for group %s with expiry %d; expecting %d", kgname, expiry, expectedStatusCode)
 
-	resp, recvErr := n.Client.KeygroupApi.KeygroupGroupIdReplicaNodeIdPost(context.Background(), kgname, replicaNodeID)
+	resp, recvErr := n.Client.KeygroupApi.KeygroupGroupIdReplicaNodeIdPost(context.Background(), kgname, replicaNodeID, client.Body1{Expiry: float32(expiry)})
 
 	if err := checkResponse(resp, recvErr, nil, expectedStatusCode, expectEmptyResponse); err != nil {
 		log.Warn().Str("node", n.URL).Msgf("AddReplica: %s", err.Error())

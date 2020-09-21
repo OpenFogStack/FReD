@@ -10,6 +10,6 @@
 
 package swagger
 
-type ReplicationList struct {
-	Nodes []ReplicationListNodes `json:"nodes"`
+type Body1 struct {
+	Expiry float32 `json:"expiry"`
 }

@@ -2,6 +2,7 @@ package badgerdb
 
 import (
 	"testing"
+	"time"
 
 	"github.com/go-errors/errors"
 	"github.com/rs/zerolog"
@@ -52,19 +53,19 @@ func TestReadAll(t *testing.T) {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 	}
 
-	err = db.Update(kg, "id-1", "data-1")
+	err = db.Update(kg, "id-1", "data-1", 0)
 
 	if err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 	}
 
-	err = db.Update(kg, "id-2", "data-2")
+	err = db.Update(kg, "id-2", "data-2", 0)
 
 	if err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 	}
 
-	err = db.Update(kg, "id-3", "data-3")
+	err = db.Update(kg, "id-3", "data-3", 0)
 
 	if err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
@@ -78,19 +79,19 @@ func TestReadAll(t *testing.T) {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 	}
 
-	err = db.Update(kg2, "id-1", "data-1")
+	err = db.Update(kg2, "id-1", "data-1", 0)
 
 	if err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 	}
 
-	err = db.Update(kg2, "id-2", "data-2")
+	err = db.Update(kg2, "id-2", "data-2", 0)
 
 	if err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 	}
 
-	err = db.Update(kg2, "id-3", "data-3")
+	err = db.Update(kg2, "id-3", "data-3", 0)
 
 	if err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
@@ -119,7 +120,7 @@ func TestItemGet(t *testing.T) {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 	}
 
-	err = db.Update(kg, id, value)
+	err = db.Update(kg, id, value, 0)
 
 	if err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
@@ -145,7 +146,7 @@ func TestItemAfterDeleteKeygroup(t *testing.T) {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 	}
 
-	err = db.Update(kg, id, value)
+	err = db.Update(kg, id, value, 0)
 
 	if err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
@@ -160,5 +161,38 @@ func TestItemAfterDeleteKeygroup(t *testing.T) {
 	retr, err := db.Read(kg, id)
 	if err == nil {
 		t.Fatalf("Expected an error, but got %s", retr)
+	}
+}
+
+func TestExpiry(t *testing.T) {
+	kg := "test-kg-item"
+	id := "name"
+	value := "value"
+
+	err := db.CreateKeygroup(kg)
+
+	if err != nil {
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+	}
+
+	err = db.Update(kg, id, value, 10)
+
+	if err != nil {
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+	}
+
+	retr, err := db.Read(kg, id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if retr != value {
+		t.Fatalf("Expected to get %s but got %s", value, retr)
+	}
+
+	time.Sleep(10 * time.Second)
+
+	_, err = db.Read(kg, id)
+	if err == nil {
+		t.Fatal(err)
 	}
 }

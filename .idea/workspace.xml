@@ -1,11 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="b8b6ef1f-1fb0-45b7-ad29-aed6293e4aa1" name="Default Changelist" comment="Add Git Workflow">
+    <list default="true" id="2cf60814-4e57-4682-96ef-bf0b72e1fabd" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/externalconnection/client.pb.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/externalconnection/client.pb.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/externalconnection/client.proto" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/externalconnection/client.proto" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/externalconnection/extserver.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/externalconnection/extserver.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/3NodeTest/cmd/main/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/tests/3NodeTest/cmd/main/main.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/3NodeTest/pkg/grpcclient/node.go" beforeDir="false" afterPath="$PROJECT_DIR$/tests/3NodeTest/pkg/grpcclient/node.go" afterDir="false" />
     </list>

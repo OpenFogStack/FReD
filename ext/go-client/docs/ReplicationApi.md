@@ -70,7 +70,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **KeygroupGroupIdReplicaNodeIdPost**
-> KeygroupGroupIdReplicaNodeIdPost(ctx, groupId, nodeId)
+> KeygroupGroupIdReplicaNodeIdPost(ctx, groupId, nodeId, body)
 Create a new Replica node for a Keygroup
 
 Registers the node with the name `node_id` as a replica node for a Keygroup with the name `group_id` if it does not exist already.
@@ -82,6 +82,7 @@ Name | Type | Description  | Notes
  **ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
   **groupId** | **string**| Name of Keygroup | 
   **nodeId** | **string**| Name of Replica Node | 
+  **body** | [**Body1**](Body1.md)| Parameters for keygroup replication on this node, namely expiration of items on this replica in seconds (if &lt;&#x3D;0, data will not expire) | 
 
 ### Return type
 

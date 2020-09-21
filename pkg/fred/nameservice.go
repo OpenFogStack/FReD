@@ -18,6 +18,7 @@ const (
 	fmtKgNodeString     = "kg-%s-node-%s"
 	fmtKgStatusString   = "kg-%s-status"
 	fmtKgMutableString  = "kg-%s-mutable"
+	fmtKgExpiryString   = "kg-%s-expiry-node-%s"
 	fmtKgString         = "kg-%s-"
 	fmtNodeAdressString = "node-%s-address"
 	fmtNodeStatusString = "node-%s-status"
@@ -79,7 +80,7 @@ func (n *nameService) existsKeygroup(key KeygroupName) (bool, error) {
 	return status == "created", nil
 }
 
-// existsKeygroup checks whether a Keygroup exists by checking whether there are keys with the prefix "kg-[kgname]-
+// isMutable checks whether a Keygroup is mutable.
 func (n *nameService) isMutable(key KeygroupName) (bool, error) {
 	status, err := n.getKeygroupMutable(key)
 	if err != nil {
@@ -88,8 +89,17 @@ func (n *nameService) isMutable(key KeygroupName) (bool, error) {
 	return status == "true", nil
 }
 
+// getExpiry checks the expiration time for items of the keygroup on a replica.
+func (n *nameService) getExpiry(key KeygroupName) (int, error) {
+	expiry, err := n.getKeygroupExpiry(key, n.NodeID)
+	if err != nil {
+		return 0, err
+	}
+	return expiry, nil
+}
+
 // createKeygroup created the keygroup status and joins the keygroup
-func (n *nameService) createKeygroup(key KeygroupName, mutable bool) error {
+func (n *nameService) createKeygroup(key KeygroupName, mutable bool, expiry int) error {
 	exists, err := n.existsKeygroup(key)
 	if err != nil {
 		return err
@@ -98,8 +108,15 @@ func (n *nameService) createKeygroup(key KeygroupName, mutable bool) error {
 		return errors.Errorf("keygroup already exists in name service")
 	}
 
-	// Save the status of the keygroup
+	// Save the mutable attribute of the keygroup
 	err = n.addKgMutableEntry(key, mutable)
+
+	if err != nil {
+		return err
+	}
+
+	// Save the expiry attribute of the keygroup for this replica
+	err = n.addKgExpiryEntry(key, n.NodeID, expiry)
 
 	if err != nil {
 		return err
@@ -126,12 +143,16 @@ func (n *nameService) createKeygroup(key KeygroupName, mutable bool) error {
 }
 
 // getKeygroupMembers returns all IDs of the Members of a Keygroup by iterating over all saved keys that start with the keygroup name
-func (n *nameService) getKeygroupMembers(key KeygroupName, excludeSelf bool) (ids []NodeID, err error) {
-	resp, err := n.getPrefix(fmt.Sprintf(fmtKgNodeString, string(key), ""))
+func (n *nameService) getKeygroupMembers(key KeygroupName, excludeSelf bool) (ids map[NodeID]int, err error) {
+	nodes, err := n.getPrefix(fmt.Sprintf(fmtKgNodeString, string(key), ""))
+
 	if err != nil {
 		return nil, err
 	}
-	for i, value := range resp {
+
+	ids = make(map[NodeID]int)
+
+	for i, value := range nodes {
 		log.Debug().Msgf("NaSe: GetKeygroupMembers: Got result %d, key: %s value: %s", i, value.Key, value.Value)
 		// If status is OK then add to available replicas
 		if bytes.Equal(value.Value, []byte("ok")) {
@@ -139,7 +160,11 @@ func (n *nameService) getKeygroupMembers(key KeygroupName, excludeSelf bool) (id
 			if excludeSelf && n.NodeID == getNodeNameFromKgNodeString(string(value.Key)) {
 				log.Debug().Msg("Excluding this node from results since this is the own node")
 			} else {
-				ids = append(ids, NodeID(getNodeNameFromKgNodeString(string(value.Key))))
+				id := getNodeNameFromKgNodeString(string(value.Key))
+				ids[NodeID(id)], err = n.getKeygroupExpiry(key, id)
+				if err != nil {
+					return
+				}
 			}
 
 		} else {
@@ -179,11 +204,12 @@ func (n *nameService) joinKeygroup(key KeygroupName) error {
 */
 
 // joinOtherNodeIntoKeygroup joins the node into an already existing keygroup
-func (n *nameService) joinOtherNodeIntoKeygroup(key KeygroupName, otherNodeID NodeID) error {
+func (n *nameService) joinOtherNodeIntoKeygroup(key KeygroupName, otherNodeID NodeID, expiry int) error {
 	exists, err := n.existsKeygroup(key)
 	if err != nil {
 		return err
 	}
+
 	if !exists {
 		return errors.Errorf("keygroup does not exists so it cannot be joined by another node")
 	}
@@ -192,6 +218,13 @@ func (n *nameService) joinOtherNodeIntoKeygroup(key KeygroupName, otherNodeID No
 	_, _, err = n.getNodeAddress(otherNodeID)
 	if err != nil {
 		log.Err(err).Msgf("Cannot join other node into a keygroup because the other nodes does not exist according to NaSe. Key: %s, otherNode: %s", key, otherNodeID)
+		return err
+	}
+
+	// set expiry attribute for that particular node
+	err = n.addKgExpiryEntry(key, string(otherNodeID), expiry)
+
+	if err != nil {
 		return err
 	}
 
@@ -327,6 +360,15 @@ func (n *nameService) getKeygroupMutable(key KeygroupName) (string, error) {
 	return string(resp[0].Value), err
 }
 
+func (n *nameService) getKeygroupExpiry(key KeygroupName, id string) (int, error) {
+	resp, err := n.getExact(fmt.Sprintf(fmtKgExpiryString, key, id))
+	if resp == nil {
+		return 0, err
+	}
+
+	return strconv.Atoi(string(resp[0].Value))
+}
+
 // getCount returns the number of results getPrefix would return
 // func (n *NameService) getCount(prefix string) (count int64, err error) {
 // 	resp, err := n.cli.Get(context.Background(), prefix, clientv3.WithPrefix(), clientv3.WithCountOnly())
@@ -375,6 +417,11 @@ func (n *nameService) addKgMutableEntry(keygroup KeygroupName, mutable bool) err
 	}
 
 	return n.put(fmt.Sprintf(fmtKgMutableString, string(keygroup)), data)
+}
+
+// addKgExpiryEntry adds the expiry entry for a keygroup with a status.
+func (n *nameService) addKgExpiryEntry(keygroup KeygroupName, id string, expiry int) error {
+	return n.put(fmt.Sprintf(fmtKgExpiryString, string(keygroup), id), strconv.Itoa(expiry))
 }
 
 // fmtKgNode turns a keygroup name into the key that this node will save its state in

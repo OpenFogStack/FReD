@@ -93,7 +93,13 @@ func (h *exthandler) HandleUpdate(i Item) error {
 		}
 	}
 
-	if err := h.s.update(i); err != nil {
+	expiry, err := h.n.getExpiry(i.Keygroup)
+
+	if err != nil {
+		return err
+	}
+
+	if err := h.s.update(i, expiry); err != nil {
 		log.Printf("%#v", err)
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error updating item")
@@ -156,7 +162,7 @@ func (h *exthandler) HandleAddReplica(k Keygroup, n Node) error {
 }
 
 // HandleGetKeygroupReplica handles requests to the GetKeygroupReplica endpoint of the client interface.
-func (h *exthandler) HandleGetKeygroupReplica(k Keygroup) ([]Node, error) {
+func (h *exthandler) HandleGetKeygroupReplica(k Keygroup) ([]Node, map[NodeID]int, error) {
 	return h.r.getReplica(k)
 }
 

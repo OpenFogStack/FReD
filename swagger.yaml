@@ -50,16 +50,20 @@ paths:
           format: "string"
         - in: "body"
           name: "body"
-          description: "Type of keygroup to create (true for mutable table or false for append-only log)"
+          description: "Type of keygroup to create (true for mutable table or false for append-only log) and expiration of items on this replica in seconds (if <=0, data will not expire)"
           required: true
           schema:
             type: "object"
             required:
               - "mutable"
+              - "expiry"
             properties:
               mutable:
                 type: "boolean"
                 example: false
+              expiry:
+                type: "number"
+                example: 0
 
     delete:
       tags:
@@ -141,6 +145,18 @@ paths:
           required: true
           type: "string"
           format: "string"
+        - in: "body"
+          name: "body"
+          description: "Parameters for keygroup replication on this node, namely expiration of items on this replica in seconds (if <=0, data will not expire)"
+          required: true
+          schema:
+            type: "object"
+            required:
+              - "expiry"
+            properties:
+              expiry:
+                type: "number"
+                example: 0
 
     delete:
       tags:
@@ -498,14 +514,29 @@ definitions:
       nodes:
         type: "array"
         items:
-          type: "string"
-          format: "utf-8"
-          example: nodeA
+          type: "object"
+          required:
+            - id
+            - expiry
+          properties:
+            id:
+              type: "string"
+              format: "utf-8"
+              example: nodeA
+            expiry:
+              type: "number"
+              example: 0
     example:
       nodes:
-        - nodeB
-        - nodeC
-        - nodeD
+        nodeB:
+          id: "nodeB"
+          expiry: 0
+        nodeC:
+          id: "nodeC"
+          expiry: 300
+        nodeD:
+          id: "nodeD"
+          expiry: 3600
   TriggerList:
     type: "object"
     required:

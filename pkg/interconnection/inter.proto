@@ -27,6 +27,7 @@ message StatusResponse {
 
 message CreateKeygroupRequest {
     string keygroup = 1;
+    int64 expiry = 2;
 }
 
 message DeleteKeygroupRequest {
@@ -75,6 +76,7 @@ message DeleteItemRequest {
 message AddReplicaRequest {
     string nodeId = 1;
     string keygroup = 2;
+    int64 expiry = 3;
 }
 
 message RemoveReplicaRequest {

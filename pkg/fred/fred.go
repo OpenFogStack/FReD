@@ -38,7 +38,7 @@ type ExtHandler interface {
 	HandleUpdate(i Item) error
 	HandleDelete(i Item) error
 	HandleAddReplica(k Keygroup, n Node) error
-	HandleGetKeygroupReplica(k Keygroup) ([]Node, error)
+	HandleGetKeygroupReplica(k Keygroup) ([]Node, map[NodeID]int, error)
 	HandleRemoveReplica(k Keygroup, n Node) error
 	HandleGetReplica(n Node) (Node, error)
 	HandleGetAllReplica() ([]Node, error)
@@ -71,6 +71,6 @@ func New(config *Config) (f Fred) {
 
 	return Fred{
 		E: newExthandler(s, r, t, n),
-		I: newInthandler(s, r, t),
+		I: newInthandler(s, r, t, n),
 	}
 }

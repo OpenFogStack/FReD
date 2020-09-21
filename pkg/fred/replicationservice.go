@@ -7,11 +7,11 @@ import (
 
 // Client is an interface to send replication messages across nodes.
 type Client interface {
-	SendCreateKeygroup(addr Address, port int, kgname KeygroupName) error
+	SendCreateKeygroup(addr Address, port int, kgname KeygroupName, expiry int) error
 	SendDeleteKeygroup(addr Address, port int, kgname KeygroupName) error
 	SendUpdate(addr Address, port int, kgname KeygroupName, id string, value string) error
 	SendDelete(addr Address, port int, kgname KeygroupName, id string) error
-	SendAddReplica(addr Address, port int, kgname KeygroupName, node Node) error
+	SendAddReplica(addr Address, port int, kgname KeygroupName, node Node, expiry int) error
 	SendRemoveReplica(addr Address, port int, kgname KeygroupName, node Node) error
 }
 
@@ -50,7 +50,7 @@ func (s *replicationService) createKeygroup(k Keygroup) error {
 	}
 
 	// Create Keygroup with nase, it returns an error
-	err = s.n.createKeygroup(k.Name, k.Mutable)
+	err = s.n.createKeygroup(k.Name, k.Mutable, k.Expiry)
 	if err != nil {
 		log.Err(err).Msg("Error creating Keygroup in NaSe")
 		return err
@@ -95,7 +95,7 @@ func (s *replicationService) relayDeleteKeygroup(k Keygroup) error {
 		return err
 	}
 
-	for _, id := range ids {
+	for id := range ids {
 		addr, port, err := s.n.getNodeAddress(id)
 
 		if err != nil {
@@ -141,7 +141,7 @@ func (s *replicationService) relayUpdate(i Item) error {
 		return err
 	}
 
-	for _, id := range ids {
+	for id := range ids {
 		addr, port, err := s.n.getNodeAddress(id)
 
 		if err != nil {
@@ -173,7 +173,7 @@ func (s *replicationService) relayDelete(i Item) error {
 
 	ids, err := s.n.getKeygroupMembers(i.Keygroup, true)
 
-	for _, id := range ids {
+	for id := range ids {
 		addr, port, err := s.n.getNodeAddress(id)
 
 		if err != nil {
@@ -221,7 +221,7 @@ func (s *replicationService) addReplica(k Keygroup, n Node, relay bool) error {
 		}
 
 		// Write the news into the NaSe first
-		err = s.n.joinOtherNodeIntoKeygroup(k.Name, n.ID)
+		err = s.n.joinOtherNodeIntoKeygroup(k.Name, n.ID, k.Expiry)
 
 		if err != nil {
 			log.Err(err).Msg(err.(*errors.Error).ErrorStack())
@@ -229,7 +229,7 @@ func (s *replicationService) addReplica(k Keygroup, n Node, relay bool) error {
 		}
 
 		// let's tell this new node that it should create a local copy of this keygroup
-		err = s.c.SendCreateKeygroup(newNode.Addr, newNode.Port, k.Name)
+		err = s.c.SendCreateKeygroup(newNode.Addr, newNode.Port, k.Name, k.Expiry)
 		if err != nil {
 			log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 			return err
@@ -241,7 +241,7 @@ func (s *replicationService) addReplica(k Keygroup, n Node, relay bool) error {
 		if err != nil {
 			return err
 		}
-		for _, currID := range ids {
+		for currID := range ids {
 			// get a replica node
 			replAddr, replPort, err := s.n.getNodeAddress(currID)
 			replNode := &Node{
@@ -256,13 +256,13 @@ func (s *replicationService) addReplica(k Keygroup, n Node, relay bool) error {
 
 			// tell that replica node about the new node
 			log.Debug().Msgf("AddReplica from replservice: sending %#v to %#v", newNode, replNode)
-			if err := s.c.SendAddReplica(replAddr, replPort, k.Name, *newNode); err != nil {
+			if err := s.c.SendAddReplica(replAddr, replPort, k.Name, *newNode, k.Expiry); err != nil {
 				return err
 			}
 
 			// then tell the new node about that replica node
 			log.Debug().Msgf("AddReplica from replservice: sending %#v to %#v", replNode, newNode)
-			if err := s.c.SendAddReplica(newNode.Addr, newNode.Port, k.Name, *replNode); err != nil {
+			if err := s.c.SendAddReplica(newNode.Addr, newNode.Port, k.Name, *replNode, k.Expiry); err != nil {
 				return err
 			}
 		}
@@ -351,7 +351,7 @@ func (s *replicationService) removeReplica(k Keygroup, n Node, relay bool) error
 			return err
 		}
 
-		for _, idToInform := range kgMembers {
+		for idToInform := range kgMembers {
 			nodeToInformAddr, nodeToInformPort, err := s.n.getNodeAddress(idToInform)
 
 			if err != nil {
@@ -388,23 +388,25 @@ func (s *replicationService) getNodes() ([]Node, error) {
 }
 
 // getReplica returns a list of all replica nodes for a given keygroup.
-func (s *replicationService) getReplica(k Keygroup) (nodes []Node, err error) {
+func (s *replicationService) getReplica(k Keygroup) (nodes []Node, expiries map[NodeID]int, err error) {
 	log.Debug().Msgf("GetReplica from replservice: in %#v", k)
 
 	exists, err := s.n.existsKeygroup(k.Name)
 	if !exists {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
-		return nil, errors.Errorf("no such keygroup according to NaSe")
+		return nil, nil, errors.Errorf("no such keygroup according to NaSe")
 	}
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
+	expiries = make(map[NodeID]int)
+
 	ids, err := s.n.getKeygroupMembers(k.Name, true)
-	for _, id := range ids {
+	for id, expiry := range ids {
 		addr, port, err := s.n.getNodeAddress(id)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		newNode := &Node{
 			ID:   id,
@@ -413,6 +415,7 @@ func (s *replicationService) getReplica(k Keygroup) (nodes []Node, err error) {
 		}
 		// TODO is this the optimal solution?
 		nodes = append(nodes, *newNode)
+		expiries[id] = expiry
 	}
 	return
 }
