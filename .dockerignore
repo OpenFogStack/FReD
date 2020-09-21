@@ -5,4 +5,4 @@
 !go.sum
 !tests/3NodeTest/cmd
 !tests/3NodeTest/pkg/
-!ext
+!proto

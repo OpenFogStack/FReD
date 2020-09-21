@@ -13,8 +13,8 @@ COPY go.sum .
 RUN go mod download
 
 COPY tests tests
-COPY ext ext
 COPY pkg pkg
+COPY proto proto
 
 RUN go install ./tests/3NodeTest/cmd/main/
 

@@ -5,13 +5,14 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/trigger"
-	"google.golang.org/grpc"
 	"net"
 	"net/http"
 	"os"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+	"gitlab.tu-berlin.de/mcc-fred/fred/proto/trigger"
+	"google.golang.org/grpc"
 )
 
 // LogEntry is one entry of the trigger node log of operations that it has received.
@@ -29,7 +30,7 @@ type Server struct {
 }
 
 // PutItemTrigger calls HandleUpdate on the Inthandler
-func (s *Server) PutItemTrigger(c context.Context, request *trigger.PutItemTriggerRequest) (*trigger.TriggerResponse, error) {
+func (s *Server) PutItemTrigger(_ context.Context, request *trigger.PutItemTriggerRequest) (*trigger.TriggerResponse, error) {
 	log.Debug().Msgf("Trigger Node has rcvd PutItem. In: %#v", request)
 
 	s.log = append(s.log, LogEntry{
@@ -43,7 +44,7 @@ func (s *Server) PutItemTrigger(c context.Context, request *trigger.PutItemTrigg
 }
 
 // DeleteItemTrigger calls this Method on the Inthandler
-func (s *Server) DeleteItemTrigger(c context.Context, request *trigger.DeleteItemTriggerRequest) (*trigger.TriggerResponse, error) {
+func (s *Server) DeleteItemTrigger(_ context.Context, request *trigger.DeleteItemTriggerRequest) (*trigger.TriggerResponse, error) {
 	log.Debug().Msgf("Trigger Node has rcvd DeleteItem. In: %#v", request)
 
 	s.log = append(s.log, LogEntry{

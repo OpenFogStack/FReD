@@ -2,9 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="2cf60814-4e57-4682-96ef-bf0b72e1fabd" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/3NodeTest/cmd/main/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/tests/3NodeTest/cmd/main/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/3NodeTest/pkg/grpcclient/node.go" beforeDir="false" afterPath="$PROJECT_DIR$/tests/3NodeTest/pkg/grpcclient/node.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ci/tools/pre-commit" beforeDir="false" afterPath="$PROJECT_DIR$/ci/tools/pre-commit" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -89,18 +87,11 @@
     <property name="nodejs_package_manager_path" value="npm" />
     <property name="restartRequiresConfirmation" value="false" />
     <property name="run.code.analysis.last.selected.profile" value="pProject Default" />
-    <property name="settings.editor.selected.configurable" value="go.sdk" />
+    <property name="settings.editor.selected.configurable" value="preferences.sourceCode.Go" />
   </component>
   <component name="RecentsManager">
     <key name="GoExtractInterfaceDialog.RECENT_KEY">
       <recent name="$PROJECT_DIR$/tests/3NodeTest/pkg/grpcclient" />
-    </key>
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/pkg/zmq" />
-      <recent name="$PROJECT_DIR$/cmd/leveldbServer" />
-      <recent name="$PROJECT_DIR$/pkg/fred" />
-      <recent name="$PROJECT_DIR$/ext" />
-      <recent name="$PROJECT_DIR$" />
     </key>
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/pkg/badgerdb" />
@@ -108,6 +99,13 @@
       <recent name="$PROJECT_DIR$" />
       <recent name="$PROJECT_DIR$/pkg" />
       <recent name="$PROJECT_DIR$/terraform/small-test/fred-node" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/pkg/storageclient" />
+      <recent name="$PROJECT_DIR$/proto/peering" />
+      <recent name="$PROJECT_DIR$/proto" />
+      <recent name="$PROJECT_DIR$/proto/storage" />
+      <recent name="$PROJECT_DIR$/proto/client" />
     </key>
   </component>
   <component name="RunManager" selected="Makefile.make static check">
@@ -181,6 +179,8 @@
     <list>
       <item itemvalue="Docker.ci/Dockerfile" />
       <item itemvalue="Docker.fred/Dockerfile" />
+      <item itemvalue="Docker.3NodeTest.nodeA: Compose Deployment" />
+      <item itemvalue="Docker.3NodeTest.storeA: Compose Deployment" />
       <item itemvalue="Go Build.Build fred-node" />
       <item itemvalue="Go Build.Run fred-node" />
       <item itemvalue="Go Build.Run leveldbServer (./db, Port 1337)" />
@@ -191,11 +191,9 @@
       <item itemvalue="Go Test.go test memorysd" />
       <item itemvalue="Makefile.all" />
       <item itemvalue="Makefile.make lint" />
+      <item itemvalue="Makefile.make static check" />
       <item itemvalue="Node.js.run client.js" />
       <item itemvalue="Shell Script.run simple-test-client.sh" />
-      <item itemvalue="Makefile.make static check" />
-      <item itemvalue="Docker.3NodeTest.nodeA: Compose Deployment" />
-      <item itemvalue="Docker.3NodeTest.storeA: Compose Deployment" />
     </list>
     <recent_temporary>
       <list>
@@ -273,6 +271,10 @@
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
     <state x="716" y="165" width="465" height="577" key="#com.intellij.ide.util.MemberChooser/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1600419035265" />
+    <state x="586" y="387" key="ANALYSIS_DLG_com.intellij.analysis.BaseAnalysisAction$1" timestamp="1600689478641">
+      <screen x="0" y="0" width="1680" height="1050" />
+    </state>
+    <state x="586" y="387" key="ANALYSIS_DLG_com.intellij.analysis.BaseAnalysisAction$1/0.0.1680.1050@0.0.1680.1050" timestamp="1600689478641" />
     <state x="0" y="0" width="1920" height="1061" key="DiffContextDialog" timestamp="1597747407028">
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
@@ -281,34 +283,34 @@
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
     <state x="733" y="229" width="428" height="474" key="FileChooserDialogImpl/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1600422099001" />
-    <state width="1638" height="365" key="GridCell.Tab.0.bottom" timestamp="1600676205010">
+    <state width="1638" height="365" key="GridCell.Tab.0.bottom" timestamp="1600687500864">
       <screen x="0" y="0" width="1680" height="1050" />
     </state>
-    <state width="1638" height="365" key="GridCell.Tab.0.bottom/0.0.1680.1050@0.0.1680.1050" timestamp="1600676205010" />
+    <state width="1638" height="365" key="GridCell.Tab.0.bottom/0.0.1680.1050@0.0.1680.1050" timestamp="1600687500864" />
     <state width="1870" height="343" key="GridCell.Tab.0.bottom/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1597749789878" />
-    <state width="1638" height="365" key="GridCell.Tab.0.center" timestamp="1600676205007">
+    <state width="1638" height="365" key="GridCell.Tab.0.center" timestamp="1600687500861">
       <screen x="0" y="0" width="1680" height="1050" />
     </state>
-    <state width="1638" height="365" key="GridCell.Tab.0.center/0.0.1680.1050@0.0.1680.1050" timestamp="1600676205007" />
+    <state width="1638" height="365" key="GridCell.Tab.0.center/0.0.1680.1050@0.0.1680.1050" timestamp="1600687500861" />
     <state width="1870" height="343" key="GridCell.Tab.0.center/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1597749789878" />
-    <state width="1638" height="365" key="GridCell.Tab.0.left" timestamp="1600676205006">
+    <state width="1638" height="365" key="GridCell.Tab.0.left" timestamp="1600687500859">
       <screen x="0" y="0" width="1680" height="1050" />
     </state>
-    <state width="1638" height="365" key="GridCell.Tab.0.left/0.0.1680.1050@0.0.1680.1050" timestamp="1600676205006" />
+    <state width="1638" height="365" key="GridCell.Tab.0.left/0.0.1680.1050@0.0.1680.1050" timestamp="1600687500859" />
     <state width="1870" height="343" key="GridCell.Tab.0.left/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1597749789878" />
-    <state width="1638" height="365" key="GridCell.Tab.0.right" timestamp="1600676205008">
+    <state width="1638" height="365" key="GridCell.Tab.0.right" timestamp="1600687500861">
       <screen x="0" y="0" width="1680" height="1050" />
     </state>
-    <state width="1638" height="365" key="GridCell.Tab.0.right/0.0.1680.1050@0.0.1680.1050" timestamp="1600676205008" />
+    <state width="1638" height="365" key="GridCell.Tab.0.right/0.0.1680.1050@0.0.1680.1050" timestamp="1600687500861" />
     <state width="1870" height="343" key="GridCell.Tab.0.right/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1597749789878" />
     <state x="580" y="211" width="828" height="498" key="IDE.errors.dialog" timestamp="1596526554125">
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
     <state x="580" y="211" width="828" height="498" key="IDE.errors.dialog/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1596526554125" />
-    <state x="577" y="83" key="SettingsEditor" timestamp="1600678145299">
+    <state x="577" y="83" key="SettingsEditor" timestamp="1600689450903">
       <screen x="0" y="0" width="1680" height="1050" />
     </state>
-    <state x="577" y="83" key="SettingsEditor/0.0.1680.1050@0.0.1680.1050" timestamp="1600678145299" />
+    <state x="577" y="83" key="SettingsEditor/0.0.1680.1050@0.0.1680.1050" timestamp="1600689450903" />
     <state x="659" y="85" key="SettingsEditor/0.0.1920.1080/1920.0.1920.1080@0.0.1920.1080" timestamp="1596194367246" />
     <state x="0" y="0" width="1920" height="1061" key="ShowDiffWithBranchDialog" timestamp="1596789090495">
       <screen x="0" y="0" width="1920" height="1080" />

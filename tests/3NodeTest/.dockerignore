@@ -1,7 +1,3 @@
 **/*
 !/pkg/*
 !/cmd/*
-!go.mod
-!go.sum
-!tests
-!ext

@@ -1,22 +1,23 @@
 package main
 
 import (
+	"os"
+	"os/signal"
+	"syscall"
+
 	"github.com/BurntSushi/toml"
 	"github.com/alecthomas/kingpin"
 	"github.com/go-errors/errors"
 	"github.com/mmcloughlin/geohash"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/dynamoconnect"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/externalconnection"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/interconnection"
-	"os"
-	"os/signal"
-	"syscall"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/api"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/dynamo"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/peering"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/storageclient"
 
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/badgerdb"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/fred"
-	storage "gitlab.tu-berlin.de/mcc-fred/fred/pkg/storageconnection"
 )
 
 type fredConfig struct {
@@ -195,9 +196,9 @@ func main() {
 	case "memory":
 		store = badgerdb.NewMemory()
 	case "remote":
-		store = storage.NewClient(fc.RemoteStore.Host)
+		store = storageclient.NewClient(fc.RemoteStore.Host)
 	case "dynamo":
-		store, err = dynamoconnect.New(fc.DynamoDB.Table, fc.DynamoDB.Region)
+		store, err = dynamo.New(fc.DynamoDB.Table, fc.DynamoDB.Region)
 		if err != nil {
 			log.Fatal().Msgf("could not open a dynamo connection: %s", err.(*errors.Error).ErrorStack())
 		}
@@ -206,7 +207,7 @@ func main() {
 	}
 
 	log.Debug().Msg("Starting Interconnection Client...")
-	c := interconnection.NewClient()
+	c := peering.NewClient()
 
 	f := fred.New(&fred.Config{
 		Store:       store,
@@ -217,10 +218,10 @@ func main() {
 	})
 
 	log.Debug().Msg("Starting Interconnection Server...")
-	is := interconnection.NewServer(fc.Peering.Host, f.I)
+	is := peering.NewServer(fc.Peering.Host, f.I)
 
 	log.Debug().Msg("Starting GRPC Server for Client (==Externalconnection)...")
-	es := externalconnection.NewServer(fc.Server.Host, f.E)
+	es := api.NewServer(fc.Server.Host, f.E)
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit,
@@ -230,8 +231,8 @@ func main() {
 	func() {
 		<-quit
 		c.Destroy()
-		log.Err(is.Close()).Msg("error closing interconnection server")
-		log.Err(es.Close()).Msg("error closing externalconnection server")
+		log.Err(is.Close()).Msg("error closing peering server")
+		log.Err(es.Close()).Msg("error closing api server")
 		log.Err(store.Close()).Msg("error closing database")
 	}()
 }

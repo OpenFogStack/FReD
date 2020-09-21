@@ -12,7 +12,7 @@ type exthandler struct {
 	n *nameService
 }
 
-// newExthandler creates a new handler for external request (i.e. from clients).
+// newExthandler creates a new handler for client request (i.e. from clients).
 func newExthandler(s *storeService, r *replicationService, t *triggerService, n *nameService) *exthandler {
 	return &exthandler{
 		s: s,
