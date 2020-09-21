@@ -105,17 +105,20 @@ func (s *Server) GetKeygroupReplica(_ context.Context, request *client.GetKeygro
 	log.Debug().Msgf("ExtServer has rcvd GetKeygroupReplica. In: %#v", request)
 	n, e, err := s.e.HandleGetKeygroupReplica(fred.Keygroup{Name: fred.KeygroupName(request.Keygroup)})
 	// Copy only the interesting values into a new array
-	nodes := make([]string, len(n))
-	expiries := make([]int64, len(n))
+	replicas := make([]*client.KeygroupReplica, len(n))
 	for i := 0; i < len(n); i++ {
-		nodes[i] = string(n[i].ID)
-		expiries[i] = int64(e[n[i].ID])
+		replicas[i] = &client.KeygroupReplica{
+			NodeId: string(n[i].ID),
+			Expiry: int64(e[n[i].ID]),
+		}
 	}
 	if err != nil {
 		log.Debug().Msgf("ExtServer is returning error: %#v", err)
 		return &client.GetKeygroupReplicaResponse{}, err
 	}
-	return &client.GetKeygroupReplicaResponse{NodeId: nodes, Expiry: expiries}, nil
+	return &client.GetKeygroupReplicaResponse{
+		Replica: replicas,
+	}, nil
 
 }
 

@@ -46,7 +46,10 @@ message GetItemRequest {
 }
 
 message GetItemResponse {
-    string data = 1;
+    EnumStatus status = 1;
+    // This is an optional message, only to be sent if the status is not OK
+    string errorMessage = 2;
+    string data = 3;
 }
 
 message GetAllItemsRequest {
@@ -54,7 +57,10 @@ message GetAllItemsRequest {
 }
 
 message GetAllItemsResponse {
-    repeated Data data = 1;
+    EnumStatus status = 1;
+    // This is an optional message, only to be sent if the status is not OK
+    string errorMessage = 2;
+    repeated Data data = 3;
 }
 
 message Data {

@@ -82,13 +82,53 @@ func (s *Server) PutItem(_ context.Context, request *peering.PutItemRequest) (*p
 }
 
 // GetItem has no implementation
-func (s *Server) GetItem(_ context.Context, _ *peering.GetItemRequest) (*peering.GetItemResponse, error) {
-	panic("implement me")
+func (s *Server) GetItem(_ context.Context, request *peering.GetItemRequest) (*peering.GetItemResponse, error) {
+	log.Debug().Msgf("InterServer has rcvd GetItem. In: %#v", request)
+	data, err := s.i.HandleGet(fred.Item{
+		Keygroup: fred.KeygroupName(request.Keygroup),
+		ID:       request.Id,
+	})
+
+	if err != nil {
+		return &peering.GetItemResponse{
+			Status:       peering.EnumStatus_ERROR,
+			ErrorMessage: err.Error(),
+		}, err
+	}
+
+	return &peering.GetItemResponse{
+		Data:   data.Val,
+		Status: peering.EnumStatus_OK,
+	}, nil
 }
 
 // GetAllItems has no implementation
-func (s *Server) GetAllItems(_ context.Context, _ *peering.GetAllItemsRequest) (*peering.GetAllItemsResponse, error) {
-	panic("implement me")
+func (s *Server) GetAllItems(_ context.Context, request *peering.GetAllItemsRequest) (*peering.GetAllItemsResponse, error) {
+	log.Debug().Msgf("InterServer has rcvd GetItem. In: %#v", request)
+	data, err := s.i.HandleGetAllItems(fred.Keygroup{
+		Name: fred.KeygroupName(request.Keygroup),
+	})
+
+	if err != nil {
+		return &peering.GetAllItemsResponse{
+			Status:       peering.EnumStatus_ERROR,
+			ErrorMessage: err.Error(),
+		}, err
+	}
+
+	d := make([]*peering.Data, len(data))
+
+	for i, item := range data {
+		d[i] = &peering.Data{
+			Id:   item.ID,
+			Data: item.Val,
+		}
+	}
+
+	return &peering.GetAllItemsResponse{
+		Data:   d,
+		Status: peering.EnumStatus_OK,
+	}, nil
 }
 
 // DeleteItem calls this Method on the Inthandler

@@ -13,6 +13,8 @@ type Client interface {
 	SendDelete(addr Address, port int, kgname KeygroupName, id string) error
 	SendAddReplica(addr Address, port int, kgname KeygroupName, node Node, expiry int) error
 	SendRemoveReplica(addr Address, port int, kgname KeygroupName, node Node) error
+	SendGetItem(addr Address, port int, kgname KeygroupName, id string) (Item, error)
+	SendGetAllItems(addr Address, port int, kgname KeygroupName) ([]Item, error)
 }
 
 type replicationService struct {
@@ -197,6 +199,7 @@ func (s *replicationService) addReplica(k Keygroup, n Node, relay bool) error {
 	// if relay is set to true, we got the request from the client interface
 	// and are responsible to bring the new replica up to speed
 	// (-> send them past data, send them all other replicas, inform all other replicas)
+	// HOWEVER: if we are the new node, request that data from somewhere else
 	if relay {
 
 		exists, err := s.n.existsKeygroup(k.Name)
@@ -269,11 +272,41 @@ func (s *replicationService) addReplica(k Keygroup, n Node, relay bool) error {
 
 		// send all existing data to the new node
 		// TODO so this one array contains all data items? Maybe not a good idea if there is a lot of data to be sent
-		i, err := s.s.readAll(k.Name)
+		var i []Item
 
-		if err != nil {
-			log.Err(err).Msg(err.(*errors.Error).ErrorStack())
-			return errors.Errorf("error adding replica")
+		if string(n.ID) != s.n.NodeID {
+			// we are adding a new node and we have all the data: send our data
+			i, err = s.s.readAll(k.Name)
+
+			if err != nil {
+				log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+				return errors.Errorf("error adding replica")
+			}
+		} else {
+			// oh no! We are the new node and have no data locally, let's request it from somewhere
+			// take a random victim to request data from (but not ourselves!)
+
+			var v NodeID
+
+			for node := range ids {
+				if node != n.ID {
+					v = node
+					break
+				}
+			}
+
+			addr, port, err := s.n.getNodeAddress(v)
+
+			if err != nil {
+				return err
+			}
+
+			i, err = s.c.SendGetAllItems(addr, port, k.Name)
+
+			if err != nil {
+				log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+				return errors.Errorf("error adding replica")
+			}
 		}
 
 		log.Debug().Msgf("AddReplica from replservice: About to send %d Elements to new node", len(i))
@@ -285,6 +318,9 @@ func (s *replicationService) addReplica(k Keygroup, n Node, relay bool) error {
 				return err
 			}
 		}
+
+		return nil
+
 	}
 	// else {
 	// 	// This request is not from the client interface, but from the internal one.

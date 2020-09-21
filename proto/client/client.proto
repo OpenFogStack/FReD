@@ -71,8 +71,12 @@ message GetKeygroupReplicaRequest {
 }
 
 message GetKeygroupReplicaResponse {
-    repeated string nodeId = 1;
-    repeated int64 expiry = 2;
+    repeated KeygroupReplica replica = 1;
+}
+
+message KeygroupReplica {
+    string nodeId = 1;
+    int64 expiry = 2;
 }
 
 message RemoveReplicaRequest {

@@ -2,7 +2,19 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="2cf60814-4e57-4682-96ef-bf0b72e1fabd" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/ci/tools/pre-commit" beforeDir="false" afterPath="$PROJECT_DIR$/ci/tools/pre-commit" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/api/server.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/api/server.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/fred/fred.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/fred/fred.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/fred/inthandler.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/fred/inthandler.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/fred/replicationservice.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/fred/replicationservice.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/peering/client.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/peering/client.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/peering/server.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/peering/server.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/proto/client/client.pb.go" beforeDir="false" afterPath="$PROJECT_DIR$/proto/client/client.pb.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/proto/client/client.proto" beforeDir="false" afterPath="$PROJECT_DIR$/proto/client/client.proto" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/proto/peering/peering.pb.go" beforeDir="false" afterPath="$PROJECT_DIR$/proto/peering/peering.pb.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/proto/peering/peering.proto" beforeDir="false" afterPath="$PROJECT_DIR$/proto/peering/peering.proto" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/3NodeTest/cmd/main/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/tests/3NodeTest/cmd/main/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/3NodeTest/pkg/grpcclient/node.go" beforeDir="false" afterPath="$PROJECT_DIR$/tests/3NodeTest/pkg/grpcclient/node.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -93,19 +105,19 @@
     <key name="GoExtractInterfaceDialog.RECENT_KEY">
       <recent name="$PROJECT_DIR$/tests/3NodeTest/pkg/grpcclient" />
     </key>
-    <key name="CopyFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/pkg/badgerdb" />
-      <recent name="$PROJECT_DIR$/tests/3NodeTest" />
-      <recent name="$PROJECT_DIR$" />
-      <recent name="$PROJECT_DIR$/pkg" />
-      <recent name="$PROJECT_DIR$/terraform/small-test/fred-node" />
-    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/pkg/storageclient" />
       <recent name="$PROJECT_DIR$/proto/peering" />
       <recent name="$PROJECT_DIR$/proto" />
       <recent name="$PROJECT_DIR$/proto/storage" />
       <recent name="$PROJECT_DIR$/proto/client" />
+    </key>
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/pkg/badgerdb" />
+      <recent name="$PROJECT_DIR$/tests/3NodeTest" />
+      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/pkg" />
+      <recent name="$PROJECT_DIR$/terraform/small-test/fred-node" />
     </key>
   </component>
   <component name="RunManager" selected="Makefile.make static check">
@@ -179,8 +191,6 @@
     <list>
       <item itemvalue="Docker.ci/Dockerfile" />
       <item itemvalue="Docker.fred/Dockerfile" />
-      <item itemvalue="Docker.3NodeTest.nodeA: Compose Deployment" />
-      <item itemvalue="Docker.3NodeTest.storeA: Compose Deployment" />
       <item itemvalue="Go Build.Build fred-node" />
       <item itemvalue="Go Build.Run fred-node" />
       <item itemvalue="Go Build.Run leveldbServer (./db, Port 1337)" />
@@ -191,9 +201,11 @@
       <item itemvalue="Go Test.go test memorysd" />
       <item itemvalue="Makefile.all" />
       <item itemvalue="Makefile.make lint" />
-      <item itemvalue="Makefile.make static check" />
       <item itemvalue="Node.js.run client.js" />
       <item itemvalue="Shell Script.run simple-test-client.sh" />
+      <item itemvalue="Makefile.make static check" />
+      <item itemvalue="Docker.3NodeTest.nodeA: Compose Deployment" />
+      <item itemvalue="Docker.3NodeTest.storeA: Compose Deployment" />
     </list>
     <recent_temporary>
       <list>

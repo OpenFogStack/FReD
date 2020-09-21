@@ -28,6 +28,8 @@ type IntHandler interface {
 	HandleDelete(i Item) error
 	HandleAddReplica(k Keygroup, n Node) error
 	HandleRemoveReplica(k Keygroup, n Node) error
+	HandleGet(i Item) (Item, error)
+	HandleGetAllItems(k Keygroup) ([]Item, error)
 }
 
 // ExtHandler is an interface that abstracts the methods of the handler that handles client requests.
