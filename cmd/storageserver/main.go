@@ -5,6 +5,8 @@ import (
 	"net"
 	"os"
 
+	storage2 "gitlab.tu-berlin.de/mcc-fred/fred/proto/storage"
+
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
@@ -12,7 +14,7 @@ import (
 
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/badgerdb"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/fred"
-	storage "gitlab.tu-berlin.de/mcc-fred/fred/pkg/storageconnection"
+	storage "gitlab.tu-berlin.de/mcc-fred/fred/pkg/storageserver"
 )
 
 func main() {
@@ -41,7 +43,7 @@ func main() {
 
 	var store fred.Store = badgerdb.New(*path)
 	grpcServer := grpc.NewServer()
-	storage.RegisterDatabaseServer(grpcServer, storage.NewStorageServer(&store))
+	storage2.RegisterDatabaseServer(grpcServer, storage.NewStorageServer(&store))
 	log.Debug().Msgf("Server is listening on port %s", *host)
 	log.Fatal().Err(grpcServer.Serve(lis))
 	log.Err(store.Close()).Msg("error closing database")

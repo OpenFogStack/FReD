@@ -1,0 +1,123 @@
+syntax = "proto3";
+
+option go_package = ".;client";
+
+// This is a Client that calls the exthandler of FReD
+service Client {
+    rpc CreateKeygroup (CreateKeygroupRequest) returns (StatusResponse);
+    rpc DeleteKeygroup (DeleteKeygroupRequest) returns (StatusResponse);
+    rpc Read (ReadRequest) returns (ReadResponse);
+    rpc Update (UpdateRequest) returns (StatusResponse);
+    rpc Delete (DeleteRequest) returns (StatusResponse);
+    rpc AddReplica (AddReplicaRequest) returns (StatusResponse);
+    rpc GetKeygroupReplica (GetKeygroupReplicaRequest) returns (GetKeygroupReplicaResponse);
+    rpc RemoveReplica (RemoveReplicaRequest) returns (StatusResponse);
+    rpc GetReplica (GetReplicaRequest) returns (GetReplicaResponse);
+    rpc GetAllReplica (GetAllReplicaRequest) returns (GetAllReplicaResponse);
+    rpc GetKeygroupTriggers (GetKeygroupTriggerRequest) returns (GetKeygroupTriggerResponse);
+    rpc AddTrigger (AddTriggerRequest) returns (StatusResponse);
+    rpc RemoveTrigger (RemoveTriggerRequest) returns (StatusResponse);
+}
+
+enum EnumStatus {
+    OK = 0;
+    ERROR = 1;
+}
+
+message StatusResponse {
+    EnumStatus status = 1;
+    // This is an optional message, only to be sent if the status is not OK
+    string errorMessage = 2;
+}
+
+message CreateKeygroupRequest {
+    string keygroup = 1;
+    bool mutable = 2;
+    int64 expiry = 3;
+}
+
+message DeleteKeygroupRequest {
+    string keygroup = 1;
+}
+
+message ReadRequest {
+    string keygroup = 1;
+    string id = 2;
+}
+
+message ReadResponse {
+    string data = 1;
+}
+
+message UpdateRequest {
+    string keygroup = 1;
+    string id = 2;
+    string data = 3;
+}
+
+message DeleteRequest {
+    string keygroup = 1;
+    string id = 2;
+}
+
+message AddReplicaRequest {
+    string keygroup = 1;
+    string nodeId = 2;
+    int64 expiry = 3;
+}
+
+message GetKeygroupReplicaRequest {
+    string keygroup = 1;
+}
+
+message GetKeygroupReplicaResponse {
+    repeated string nodeId = 1;
+    repeated int64 expiry = 2;
+}
+
+message RemoveReplicaRequest {
+    string keygroup = 1;
+    string nodeId = 2;
+}
+
+message GetReplicaRequest {
+    string nodeId = 1;
+}
+
+message GetReplicaResponse {
+    string nodeId = 1;
+    string addr = 2;
+    int32 port = 3;
+}
+
+message GetAllReplicaRequest {
+
+}
+
+message GetAllReplicaResponse {
+    repeated GetReplicaResponse replicas = 1;
+}
+
+message GetKeygroupTriggerRequest {
+    string keygroup = 1;
+}
+
+message GetKeygroupTriggerResponse {
+    repeated Trigger triggers = 1;
+}
+
+message Trigger {
+    string id = 1;
+    string host = 2;
+}
+
+message AddTriggerRequest {
+    string keygroup = 1;
+    string triggerId = 2;
+    string triggerHost = 3;
+}
+
+message RemoveTriggerRequest {
+    string keygroup = 1;
+    string triggerId = 2;
+}

@@ -30,7 +30,7 @@ type IntHandler interface {
 	HandleRemoveReplica(k Keygroup, n Node) error
 }
 
-// ExtHandler is an interface that abstracts the methods of the handler that handles external requests.
+// ExtHandler is an interface that abstracts the methods of the handler that handles client requests.
 type ExtHandler interface {
 	HandleCreateKeygroup(k Keygroup) error
 	HandleDeleteKeygroup(k Keygroup) error

@@ -120,7 +120,7 @@ func (s *replicationService) relayDeleteKeygroup(k Keygroup) error {
 	return nil
 }
 
-// relayUpdate handles replication after requests to the Update endpoint of the external interface.
+// relayUpdate handles replication after requests to the Update endpoint of the client interface.
 // It sends the update to all other nodes by calling their Update method
 func (s *replicationService) relayUpdate(i Item) error {
 	log.Debug().Msgf("RelayUpdate from replservice: in %#v", i)
@@ -158,7 +158,7 @@ func (s *replicationService) relayUpdate(i Item) error {
 	return err
 }
 
-// relayDelete handles replication after requests to the Delete endpoint of the external interface.
+// relayDelete handles replication after requests to the Delete endpoint of the client interface.
 func (s *replicationService) relayDelete(i Item) error {
 	log.Debug().Msgf("RelayDelete from replservice: in %#v", i)
 
@@ -194,7 +194,7 @@ func (s *replicationService) relayDelete(i Item) error {
 func (s *replicationService) addReplica(k Keygroup, n Node, relay bool) error {
 	log.Debug().Msgf("AddReplica from replservice: in kg=%#v no=%#v", k, n)
 
-	// if relay is set to true, we got the request from the external interface
+	// if relay is set to true, we got the request from the client interface
 	// and are responsible to bring the new replica up to speed
 	// (-> send them past data, send them all other replicas, inform all other replicas)
 	if relay {
@@ -287,7 +287,7 @@ func (s *replicationService) addReplica(k Keygroup, n Node, relay bool) error {
 		}
 	}
 	// else {
-	// 	// This request is not from the external interface, but from the internal one.
+	// 	// This request is not from the client interface, but from the internal one.
 	// 	// TODO Nils the information received here should be cached locally
 	// 	if string(n.ID) == s.nase.NodeID {
 	// 		// TODO Nils this node just has been informed that it is now a loyal replicating member of a KG

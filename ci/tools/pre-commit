@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 RED='\033[1;31m'
 GREEN='\033[1;32m'
@@ -10,13 +10,13 @@ NC='\033[0m'
 if [ ./.git/hooks/pre-commit -ot ./ci/tools/pre-commit ]; then
   cp ./ci/tools/pre-commit ./.git/hooks/pre-commit
   chmod +x ./.git/hooks/pre-commit
-  echo "${RED}Pre-commit hook not up-to-date, updated now. Please try to commit again.${NC}"
+  echo -e "${RED}Pre-commit hook not up-to-date, updated now. Please try to commit again.${NC}"
   exit 1
 fi
 
 # -------------------------------------- CHECK FOR AWS ACCESS KEYS ------------------------------------------------
 
-echo "${YELLOW}Checking for AWS access keys...${NC}"
+echo -e "${YELLOW}Checking for AWS access keys...${NC}"
 
 if git rev-parse --verify HEAD >/dev/null 2>&1
 then
@@ -34,8 +34,8 @@ exec 1>&2
 FILES=$(git diff --cached --name-only "$against")
 
 if [ -n "$FILES" ]; then
-    KEY_ID=$(grep -E --line-number '[^A-Z0-9][A-Z0-9]{20}[^A-Z0-9]' $FILES)
-    KEY=$(grep -E --line-number '[^A-Za-z0-9/+=][A-Za-z0-9/+=]{40}[^A-Za-z0-9/+=]' $FILES)
+    KEY_ID=$(grep -E --line-number '[^A-Z0-9][A-Z0-9]{20}[^A-Z0-9]' "$FILES")
+    KEY=$(grep -E --line-number '[^A-Za-z0-9/+=][A-Za-z0-9/+=]{40}[^A-Za-z0-9/+=]' "$FILES")
 
     if [ -n "$KEY_ID" ] || [ -n "$KEY" ]; then
         exec < /dev/tty # Capture input
@@ -48,7 +48,7 @@ if [ -n "$FILES" ]; then
         echo ""
 
         while true; do
-            read -p "[AWS Key Check] Possible AWS keys found. Commit files anyway? (y/N) " yn
+            read -r -p "[AWS Key Check] Possible AWS keys found. Commit files anyway? (y/N) " yn
             if [ "$yn" = "" ]; then
                 yn='N'
             fi
@@ -62,37 +62,39 @@ if [ -n "$FILES" ]; then
     fi
 fi
 
-echo "${GREEN}No AWS access keys found!${NC}"
+echo -e "${GREEN}No AWS access keys found!${NC}"
 
 # -------------------------------------- PREVENT PUSH TO MASTER ----------------------------------------------------
 
-echo "${YELLOW}Checking if you're trying to commit to master...${NC}"
+echo -e "${YELLOW}Checking if you're trying to commit to master...${NC}"
+
+branch=$(git rev-parse --abbrev-ref HEAD)
 
 if [ "$branch" = "master" ]; then
-  echo "You can't commit directly to '"${branch}"' branch" # webstorm or intellij will show this as popup
+  echo -e "You can't commit directly to '${branch}' branch" # webstorm or intellij will show this as popup
   exit 1 # if you remove this line then it won't block commit but send message to group and on command line
 fi
 
-echo "${GREEN}You're not trying to commit to master!${NC}"
+echo -e "${GREEN}You're not trying to commit to master!${NC}"
 
 # ------------------------------------------- GO LINT --------------------------------------------------------------
 
-echo "${YELLOW}Linting your code...${NC}"
+echo -e "${YELLOW}Linting your code...${NC}"
 
 if ! make lint; then
-  echo "${RED}Linter found mistakes!${NC}"
+  echo -e "${RED}Linter found mistakes!${NC}"
   exit 1
 fi
 
-echo "${GREEN}Linter did not find mistakes!${NC}"
+echo -e "${GREEN}Linter did not find mistakes!${NC}"
 
 # --------------------------------------- GO STATIC CHECK ----------------------------------------------------------
 
-echo "${YELLOW}Doing static code analysis...${NC}"
+echo -e "${YELLOW}Doing static code analysis...${NC}"
 
 if ! make staticcheck; then
-  echo "${RED}Staticcheck found mistakes!${NC}"
+  echo -e "${RED}Staticcheck found mistakes!${NC}"
   exit 1
 fi
 
-echo "${GREEN}Staticcheck did not find mistakes!${NC}"
+echo -e "${GREEN}Staticcheck did not find mistakes!${NC}"

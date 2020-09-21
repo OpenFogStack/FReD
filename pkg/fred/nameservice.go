@@ -19,9 +19,7 @@ const (
 	fmtKgStatusString   = "kg-%s-status"
 	fmtKgMutableString  = "kg-%s-mutable"
 	fmtKgExpiryString   = "kg-%s-expiry-node-%s"
-	fmtKgString         = "kg-%s-"
 	fmtNodeAdressString = "node-%s-address"
-	fmtNodeStatusString = "node-%s-status"
 	nodePrefixString    = "node-"
 	timeout             = 5 * time.Second
 )

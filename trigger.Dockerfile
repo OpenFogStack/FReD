@@ -14,6 +14,7 @@ RUN go mod download
 
 COPY pkg pkg
 COPY cmd cmd
+COPY proto proto
 
 # Static build required so that we can safely copy the binary over.
 RUN CGO_ENABLED=0 go install ./cmd/simpletrigger/

@@ -2,11 +2,12 @@ package fred
 
 import (
 	"context"
+	"sync"
+
 	"github.com/go-errors/errors"
 	"github.com/rs/zerolog/log"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/trigger"
+	"gitlab.tu-berlin.de/mcc-fred/fred/proto/trigger"
 	"google.golang.org/grpc"
-	"sync"
 )
 
 // Trigger is one trigger node with an ID and a host address.
@@ -43,13 +44,16 @@ func dealWithStatusResponse(res *trigger.TriggerResponse, err error, from string
 		log.Debug().Msgf("Interclient got empty Response from %s", from)
 	}
 
-	if err != nil {
+	if err != nil || res == nil {
 		return err
-	} else if res.Status == trigger.EnumTriggerStatus_TRIGGER_ERROR {
-		return errors.New(res.ErrorMessage)
-	} else {
-		return nil
 	}
+
+	if res.Status == trigger.EnumTriggerStatus_TRIGGER_ERROR {
+		return errors.New(res.ErrorMessage)
+	}
+
+	return nil
+
 }
 
 func newTriggerService() *triggerService {
