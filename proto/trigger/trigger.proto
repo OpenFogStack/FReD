@@ -1,5 +1,6 @@
 syntax = "proto3";
 
+package mcc.fred.trigger;
 option go_package = ".;trigger";
 
 // Represents a trigger node

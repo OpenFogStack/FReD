@@ -1,5 +1,6 @@
 syntax = "proto3";
 
+package mcc.fred.storage;
 option go_package = ".;storage";
 
 service Database {
