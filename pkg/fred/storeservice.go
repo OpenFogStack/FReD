@@ -140,7 +140,6 @@ func (s *storeService) createKeygroup(kg KeygroupName) error {
 	return nil
 }
 
-// TODO implement me!
 // DeleteKeygroup deletes a keygroup from the store.
 func (s *storeService) deleteKeygroup(kg KeygroupName) error {
 	err := checkKeygroup(kg)

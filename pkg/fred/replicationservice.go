@@ -224,7 +224,7 @@ func (s *replicationService) addReplica(k Keygroup, n Node, relay bool) error {
 		}
 
 		// Write the news into the NaSe first
-		err = s.n.joinOtherNodeIntoKeygroup(k.Name, n.ID, k.Expiry)
+		err = s.n.joinNodeIntoKeygroup(k.Name, n.ID, k.Expiry)
 
 		if err != nil {
 			log.Err(err).Msg(err.(*errors.Error).ErrorStack())

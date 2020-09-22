@@ -1,10 +1,10 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Run leveldbServer (./db, Port 1337)" type="GoApplicationRunConfiguration" factoryName="Go Application">
+  <configuration default="false" name="Run storageServer (./db, Port 1337)" type="GoApplicationRunConfiguration" factoryName="Go Application">
     <module name="fred" />
     <working_directory value="$PROJECT_DIR$" />
     <kind value="PACKAGE" />
     <filePath value="$PROJECT_DIR$/cmd/leveldbServer/main.go" />
-    <package value="gitlab.tu-berlin.de/mcc-fred/fred/cmd/leveldbServer" />
+    <package value="gitlab.tu-berlin.de/mcc-fred/fred/cmd/storageserver" />
     <directory value="$PROJECT_DIR$/" />
     <method v="2" />
   </configuration>
