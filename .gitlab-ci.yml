@@ -59,12 +59,6 @@ build:
   script:
     - make
 
-3nodetest:
-  stage: 3nodetest
-  script:
-    - cd tests/3NodeTest
-    - make test
-
 container:
   stage: release
   script:
