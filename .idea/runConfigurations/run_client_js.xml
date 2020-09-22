@@ -1,5 +1,0 @@
-<component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="run client.js" type="NodeJSConfigurationType" singleton="false" path-to-js-file="client.js" working-dir="$PROJECT_DIR$/js-client">
-    <method v="2" />
-  </configuration>
-</component>
