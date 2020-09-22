@@ -1,5 +1,6 @@
 syntax = "proto3";
 
+package mcc.fred.peering;
 option go_package = ".;peering";
 
 // Represents another node
