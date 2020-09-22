@@ -201,8 +201,8 @@ func (n *nameService) joinKeygroup(key KeygroupName) error {
 }
 */
 
-// joinOtherNodeIntoKeygroup joins the node into an already existing keygroup
-func (n *nameService) joinOtherNodeIntoKeygroup(key KeygroupName, otherNodeID NodeID, expiry int) error {
+// joinNodeIntoKeygroup joins the node into an already existing keygroup
+func (n *nameService) joinNodeIntoKeygroup(key KeygroupName, nodeID NodeID, expiry int) error {
 	exists, err := n.existsKeygroup(key)
 	if err != nil {
 		return err
@@ -213,20 +213,20 @@ func (n *nameService) joinOtherNodeIntoKeygroup(key KeygroupName, otherNodeID No
 	}
 
 	// Check whether the other node exists
-	_, _, err = n.getNodeAddress(otherNodeID)
+	_, _, err = n.getNodeAddress(nodeID)
 	if err != nil {
-		log.Err(err).Msgf("Cannot join other node into a keygroup because the other nodes does not exist according to NaSe. Key: %s, otherNode: %s", key, otherNodeID)
+		log.Err(err).Msgf("Cannot join other node into a keygroup because the other nodes does not exist according to NaSe. Key: %s, otherNode: %s", key, nodeID)
 		return err
 	}
 
 	// set expiry attribute for that particular node
-	err = n.addKgExpiryEntry(key, string(otherNodeID), expiry)
+	err = n.addKgExpiryEntry(key, string(nodeID), expiry)
 
 	if err != nil {
 		return err
 	}
 
-	return n.addOtherKgNodeEntry(otherNodeID, key, "ok")
+	return n.addOtherKgNodeEntry(nodeID, key, "ok")
 }
 
 /*
@@ -244,7 +244,7 @@ func (n *nameService) exitKeygroup(key KeygroupName) error {
 */
 
 // exitOtherNodeFromKeygroup deletes the node from the NaSe
-func (n *nameService) exitOtherNodeFromKeygroup(key KeygroupName, otherNodeID NodeID) error {
+func (n *nameService) exitOtherNodeFromKeygroup(key KeygroupName, nodeID NodeID) error {
 	exists, err := n.existsKeygroup(key)
 	if err != nil {
 		return err
@@ -254,13 +254,13 @@ func (n *nameService) exitOtherNodeFromKeygroup(key KeygroupName, otherNodeID No
 	}
 
 	// Check whether the other node exists
-	_, _, err = n.getNodeAddress(otherNodeID)
+	_, _, err = n.getNodeAddress(nodeID)
 	if err != nil {
-		log.Err(err).Msgf("Cannot exit other node from a keygroup because the other nodes does not exist according to NaSe. Key: %s, otherNode: %s", key, otherNodeID)
+		log.Err(err).Msgf("Cannot exit other node from a keygroup because the other nodes does not exist according to NaSe. Key: %s, otherNode: %s", key, nodeID)
 		return err
 	}
 
-	return n.addOtherKgNodeEntry(otherNodeID, key, "removed")
+	return n.addOtherKgNodeEntry(nodeID, key, "removed")
 }
 
 // deleteKeygroup marks the keygroup as "deleted" in the NaSe

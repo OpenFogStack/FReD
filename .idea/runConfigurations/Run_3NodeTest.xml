@@ -1,0 +1,8 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Run 3NodeTest" type="MAKEFILE_TARGET_RUN_CONFIGURATION" factoryName="Makefile">
+    <makefile filename="$PROJECT_DIR$/tests/3NodeTest/Makefile" target="test clean" workingDirectory="" arguments="">
+      <envs />
+    </makefile>
+    <method v="2" />
+  </configuration>
+</component>

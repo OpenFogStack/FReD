@@ -66,19 +66,17 @@ var (
 	configPath        = kingpin.Flag("config", "Path to .toml configuration file.").PlaceHolder("PATH").String()
 	lat               = kingpin.Flag("lat", "Latitude of the node.").PlaceHolder("LATITUDE").Default("-200").Float64()   // Domain: [-90,90]
 	lng               = kingpin.Flag("lng", "Longitude of the node.").PlaceHolder("LONGITUDE").Default("-200").Float64() // Domain: ]-180,180]
-	grpcHost          = kingpin.Flag("host", "Host address of server.").String()
+	grpcHost          = kingpin.Flag("host", "Host address of server for external connections.").String()
 	grpcSSL           = kingpin.Flag("use-tls", "Use TLS/SSL to serve over HTTPS. Works only if host argument is a FQDN.").PlaceHolder("USE-SSL").Bool()
-	zmqHost           = kingpin.Flag("zmq-host", "(Publicly reachable) address of this zmq server.").String()
+	internalHost      = kingpin.Flag("zmq-host", "(Publicly reachable) address of this server for internal connections.").String()
 	adaptor           = kingpin.Flag("adaptor", "Storage adaptor, can be \"remote\", \"badgerdb\", \"memory\", \"dynamo\".").Enum("remote", "badgerdb", "memory", "dynamo")
 	logLevel          = kingpin.Flag("log-level", "Log level, can be \"debug\", \"info\" ,\"warn\", \"error\", \"fatal\", \"panic\".").Enum("debug", "info", "warn", "errors", "fatal", "panic")
 	handler           = kingpin.Flag("handler", "Mode of log handler, can be \"dev\", \"prod\".").Enum("dev", "prod")
-	remoteStorageHost = kingpin.Flag("remote-storage-host", "Host address of GRPC Server.").String()
+	remoteStorageHost = kingpin.Flag("remote-storage-host", "Host address of GRPC Server for storace connection.").String()
 	dynamoTable       = kingpin.Flag("dynamo-table", "AWS table for DynamoDB storage backend.").String()
 	dynamoRegion      = kingpin.Flag("dynamo-region", "AWS region for DynamoDB storage backend.").String()
-
-	// TODO this should be a list of nodes. One node is enough, but if we want reliability we should accept multiple etcd nodes
-	naseHost = kingpin.Flag("nase-host", "Host where the etcd-server runs").String()
-	bdbPath  = kingpin.Flag("badgerdb-path", "Path to the badgerdb database").String()
+	naseHost          = kingpin.Flag("nase-host", "Host where the etcd-server runs").String()
+	bdbPath           = kingpin.Flag("badgerdb-path", "Path to the badgerdb database").String()
 )
 
 func main() {
@@ -119,8 +117,8 @@ func main() {
 	if *grpcSSL {
 		fc.Server.UseTLS = *grpcSSL
 	}
-	if *zmqHost != "" {
-		fc.Peering.Host = *zmqHost
+	if *internalHost != "" {
+		fc.Peering.Host = *internalHost
 	}
 	if *adaptor != "" {
 		fc.Storage.Adaptor = *adaptor
