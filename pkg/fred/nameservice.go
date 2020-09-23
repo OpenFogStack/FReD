@@ -16,13 +16,16 @@ import (
 )
 
 const (
-	fmtKgNodeString     = "kg-%s-node-%s"
-	fmtKgStatusString   = "kg-%s-status"
-	fmtKgMutableString  = "kg-%s-mutable"
-	fmtKgExpiryString   = "kg-%s-expiry-node-%s"
-	fmtNodeAdressString = "node-%s-address"
-	nodePrefixString    = "node-"
-	timeout             = 5 * time.Second
+	fmtKgNodeString         = "kg|%s|node|%s"
+	fmtKgStatusString       = "kg|%s|status"
+	fmtKgMutableString      = "kg|%s|mutable"
+	fmtKgExpiryString       = "kg|%s|expiry|node|%s"
+	fmtNodeAdressString     = "node|%s|address"
+	fmtUserPermissionPrefix = "user|%s|kg"
+	fmtUserPermissionString = "user|%s|kg|%s|method|%s"
+	nodePrefixString        = "node|"
+	sep                     = "|"
+	timeout                 = 5 * time.Second
 )
 
 // nameService is the interface to the etcd server that serves as NaSe
@@ -84,7 +87,7 @@ func (n *nameService) registerOtherNode(id NodeID, adress Address, port int) err
 }
 */
 
-// existsKeygroup checks whether a Keygroup exists by checking whether there are keys with the prefix "kg-[kgname]-
+// existsKeygroup checks whether a Keygroup exists by checking whether there are keys with the prefix "kg|[kgname]|
 func (n *nameService) existsKeygroup(key KeygroupName) (bool, error) {
 	status, err := n.getKeygroupStatus(key)
 	if err != nil {
@@ -312,11 +315,11 @@ func (n *nameService) getAllNodes() (nodes []Node, err error) {
 		key := string(value.Key)
 		res := strings.Split(string(value.Value), ":")
 		// TODO status checks
-		if strings.HasSuffix(key, "-status") {
+		if strings.HasSuffix(key, "|status") {
 			continue
 		}
 		// Now add node to return []
-		nodeID := NodeID(strings.Split(key, "-")[1])
+		nodeID := NodeID(strings.Split(key, sep)[1])
 		addr, _ := ParseAddress(res[0])
 		port, _ := strconv.Atoi(res[1])
 		log.Debug().Msgf("NaSe: GetAllNodes: Got Response %s // %s", nodeID, res)
@@ -403,6 +406,18 @@ func (n *nameService) put(key, value string) (err error) {
 	return nil
 }
 
+// delete removes the value from etcd.
+func (n *nameService) delete(key string) (err error) {
+	ctx, _ := context.WithTimeout(context.TODO(), timeout)
+	_, err = n.cli.Delete(ctx, key)
+
+	if err != nil {
+		return errors.New(err)
+	}
+
+	return nil
+}
+
 // addOwnKgNodeEntry adds the entry for this node with a status.
 func (n *nameService) addOwnKgNodeEntry(keygroup KeygroupName, status string) error {
 	return n.put(n.fmtKgNode(keygroup), status)
@@ -438,12 +453,62 @@ func (n *nameService) addKgExpiryEntry(keygroup KeygroupName, id string, expiry 
 }
 
 // fmtKgNode turns a keygroup name into the key that this node will save its state in
-// Currently: kg-[keygroup]-node-[NodeID]
+// Currently: kg|[keygroup]|node|[NodeID]
 func (n *nameService) fmtKgNode(keygroup KeygroupName) string {
 	return fmt.Sprintf(fmtKgNodeString, string(keygroup), n.NodeID)
 }
 
 func getNodeNameFromKgNodeString(kgNode string) string {
-	split := strings.Split(kgNode, "-")
+	split := strings.Split(kgNode, sep)
 	return split[len(split)-1]
 }
+
+func (n *nameService) revokeUserPermissions(user string, method Method, keygroup KeygroupName) error {
+	return n.delete(fmt.Sprintf(fmtUserPermissionString, user, string(keygroup), string(method)))
+}
+
+func (n *nameService) addUserPermissions(user string, method Method, keygroup KeygroupName) error {
+	return n.put(fmt.Sprintf(fmtUserPermissionString, user, string(keygroup), string(method)), "ok")
+}
+
+func (n *nameService) getUserPermissions(user string, keygroup KeygroupName) (map[Method]struct{}, error) {
+	res, err := n.getPrefix(fmt.Sprintf(fmtUserPermissionString, user, string(keygroup), ""))
+
+	if err != nil {
+		return nil, err
+	}
+
+	permissions := make(map[Method]struct{})
+
+	for _, kv := range res {
+		permissions[Method(strings.Split(string(kv.Key), sep)[5])] = struct{}{}
+	}
+
+	return permissions, nil
+}
+
+/*
+func (n *nameService) getAllUserPermissions(user string) (map[KeygroupName]map[Method]struct{}, error) {
+	res, err := n.getPrefix(fmt.Sprintf(fmtUserPermissionPrefix, user))
+
+	if err != nil {
+		return nil, err
+	}
+
+	allPermissions := make(map[KeygroupName]map[Method]struct{})
+
+	for _, kg := range res {
+		k := KeygroupName(strings.Split(string(kg.Key), sep)[3])
+
+		if allPermissions[k] == nil {
+			allPermissions[k] = make(map[Method]struct{})
+		}
+
+		p := Method(strings.Split(string(kg.Key), sep)[5])
+
+		allPermissions[k][p] = struct{}{}
+	}
+
+	return allPermissions, nil
+
+}*/

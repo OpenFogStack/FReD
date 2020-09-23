@@ -29,8 +29,9 @@ type fredConfig struct {
 		Lng float64 `toml:"lng"`
 	} `toml:"location"`
 	Server struct {
-		Host   string `toml:"host"`
-		UseTLS bool   `toml:"ssl"`
+		Host string `toml:"host"`
+		Cert string `toml:"cert"`
+		Key  string `toml:"key"`
 	} `toml:"server"`
 	Storage struct {
 		Adaptor string `toml:"adaptor"`
@@ -70,7 +71,8 @@ var (
 	lat               = kingpin.Flag("lat", "Latitude of the node.").PlaceHolder("LATITUDE").Default("-200").Float64()   // Domain: [-90,90]
 	lng               = kingpin.Flag("lng", "Longitude of the node.").PlaceHolder("LONGITUDE").Default("-200").Float64() // Domain: ]-180,180]
 	grpcHost          = kingpin.Flag("host", "Host address of server for external connections.").String()
-	grpcSSL           = kingpin.Flag("use-tls", "Use TLS/SSL to serve over HTTPS. Works only if host argument is a FQDN.").PlaceHolder("USE-SSL").Bool()
+	grpcCert          = kingpin.Flag("cert", "Certificate for external connections.").String()
+	grpcKey           = kingpin.Flag("key", "Key file for external connections.").String()
 	internalHost      = kingpin.Flag("zmq-host", "(Publicly reachable) address of this server for internal connections.").String()
 	adaptor           = kingpin.Flag("adaptor", "Storage adaptor, can be \"remote\", \"badgerdb\", \"memory\", \"dynamo\".").Enum("remote", "badgerdb", "memory", "dynamo")
 	logLevel          = kingpin.Flag("log-level", "Log level, can be \"debug\", \"info\" ,\"warn\", \"error\", \"fatal\", \"panic\".").Enum("debug", "info", "warn", "errors", "fatal", "panic")
@@ -123,8 +125,11 @@ func main() {
 	if *grpcHost != "" {
 		fc.Server.Host = *grpcHost
 	}
-	if *grpcSSL {
-		fc.Server.UseTLS = *grpcSSL
+	if *grpcCert != "" {
+		fc.Server.Cert = *grpcCert
+	}
+	if *grpcKey != "" {
+		fc.Server.Key = *grpcKey
 	}
 	if *internalHost != "" {
 		fc.Peering.Host = *internalHost
@@ -240,7 +245,7 @@ func main() {
 	is := peering.NewServer(fc.Peering.Host, f.I)
 
 	log.Debug().Msg("Starting GRPC Server for Client (==Externalconnection)...")
-	es := api.NewServer(fc.Server.Host, f.E)
+	es := api.NewServer(fc.Server.Host, f.E, fc.Server.Cert, fc.Server.Key)
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit,

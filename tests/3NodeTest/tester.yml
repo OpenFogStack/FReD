@@ -7,7 +7,12 @@ services:
       dockerfile: tester.Dockerfile
     image: fred/tester:local
     container_name: tester
-    command: --nodeAhost=172.26.0.10 --nodeAhttp=9001 --nodeBhost=172.26.0.11 --nodeBhttp=9001 --nodeChost=172.26.0.12 --nodeChttp=9001 --wait-user=false
+    command: --nodeAhost=172.26.0.10 --nodeAhttp=9001 --nodeBhost=172.26.0.11 --nodeBhttp=9001 --nodeChost=172.26.0.12 --nodeChttp=9001 --cert-file "/cert/client.crt" --key-file "/cert/client.key" --little-cert-file "/cert/littleclient.crt" --little-key-file "/cert/littleclient.key"  --wait-user=false
+    volumes:
+      - ../../nase/tls/client.crt:/cert/client.crt
+      - ../../nase/tls/client.key:/cert/client.key
+      - ../../nase/tls/littleclient.crt:/cert/littleclient.crt
+      - ../../nase/tls/littleclient.key:/cert/littleclient.key
     networks:
       fredwork:
         ipv4_address: 172.26.2.1

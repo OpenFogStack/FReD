@@ -37,19 +37,21 @@ type IntHandler interface {
 
 // ExtHandler is an interface that abstracts the methods of the handler that handles client requests.
 type ExtHandler interface {
-	HandleCreateKeygroup(k Keygroup) error
-	HandleDeleteKeygroup(k Keygroup) error
-	HandleRead(i Item) (Item, error)
-	HandleUpdate(i Item) error
-	HandleDelete(i Item) error
-	HandleAddReplica(k Keygroup, n Node) error
-	HandleGetKeygroupReplica(k Keygroup) ([]Node, map[NodeID]int, error)
-	HandleRemoveReplica(k Keygroup, n Node) error
-	HandleGetReplica(n Node) (Node, error)
-	HandleGetAllReplica() ([]Node, error)
-	HandleGetKeygroupTriggers(keygroup Keygroup) ([]Trigger, error)
-	HandleAddTrigger(keygroup Keygroup, t Trigger) error
-	HandleRemoveTrigger(keygroup Keygroup, t Trigger) error
+	HandleCreateKeygroup(user string, k Keygroup) error
+	HandleDeleteKeygroup(user string, k Keygroup) error
+	HandleRead(user string, i Item) (Item, error)
+	HandleUpdate(user string, i Item) error
+	HandleDelete(user string, i Item) error
+	HandleAddReplica(user string, k Keygroup, n Node) error
+	HandleGetKeygroupReplica(user string, k Keygroup) ([]Node, map[NodeID]int, error)
+	HandleRemoveReplica(user string, k Keygroup, n Node) error
+	HandleGetReplica(user string, n Node) (Node, error)
+	HandleGetAllReplica(user string) ([]Node, error)
+	HandleGetKeygroupTriggers(user string, keygroup Keygroup) ([]Trigger, error)
+	HandleAddTrigger(user string, keygroup Keygroup, t Trigger) error
+	HandleRemoveTrigger(user string, keygroup Keygroup, t Trigger) error
+	HandleAddUser(user string, newuser string, keygroup Keygroup, role Role) error
+	HandleRemoveUser(user string, newuser string, keygroup Keygroup, role Role) error
 }
 
 // New creates a new FReD instance.
@@ -74,8 +76,10 @@ func New(config *Config) (f Fred) {
 
 	t := newTriggerService()
 
+	a := newAuthService(n)
+
 	return Fred{
-		E: newExthandler(s, r, t, n),
+		E: newExthandler(s, r, t, n, a),
 		I: newInthandler(s, r, t, n),
 	}
 }

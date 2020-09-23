@@ -1,17 +1,22 @@
 package fred
 
 import (
+	"regexp"
+
 	"github.com/go-errors/errors"
 )
 
+var expr = "^[a-zA-Z0-9]+$"
+var reg = regexp.MustCompile(expr)
+
 func checkItem(params ...Item) error {
 	for _, p := range params {
-		if p.Keygroup == "" {
-			return errors.Errorf("checkItem failed for item %#v because the keygroup is empty", p)
+		if !reg.MatchString(string(p.Keygroup)) {
+			return errors.Errorf("checkItem failed for item %#v because the keygroup name does not match %s", p, expr)
 		}
 
-		if p.ID == "" {
-			return errors.Errorf("checkItem failed for item %#v because the ID is empty", p)
+		if !reg.MatchString(p.ID) {
+			return errors.Errorf("checkItem failed for item %#v because the ID does not match %s", p, expr)
 		}
 	}
 
@@ -20,8 +25,8 @@ func checkItem(params ...Item) error {
 
 func checkKeygroup(params ...KeygroupName) error {
 	for _, p := range params {
-		if string(p) == "" {
-			return errors.Errorf("checkKeygroup failed for item %#v because the keygroup is empty", p)
+		if !reg.MatchString(string(p)) {
+			return errors.Errorf("checkKeygroup failed for keygroup %s because the keygroup name does not match %s", p, expr)
 		}
 	}
 
@@ -30,8 +35,8 @@ func checkKeygroup(params ...KeygroupName) error {
 
 func checkID(params ...string) error {
 	for _, p := range params {
-		if p == "" {
-			return errors.Errorf("checkID failed for item %#v because the id is an empty string", p)
+		if !reg.MatchString(p) {
+			return errors.Errorf("checkID failed for item %s because the id does not match %s", p, expr)
 		}
 	}
 

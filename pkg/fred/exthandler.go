@@ -10,20 +10,22 @@ type exthandler struct {
 	r *replicationService
 	t *triggerService
 	n *nameService
+	a *authService
 }
 
 // newExthandler creates a new handler for client request (i.e. from clients).
-func newExthandler(s *storeService, r *replicationService, t *triggerService, n *nameService) *exthandler {
+func newExthandler(s *storeService, r *replicationService, t *triggerService, n *nameService, a *authService) *exthandler {
 	return &exthandler{
 		s: s,
 		r: r,
 		t: t,
 		n: n,
+		a: a,
 	}
 }
 
 // HandleCreateKeygroup handles requests to the CreateKeygroup endpoint of the client interface.
-func (h *exthandler) HandleCreateKeygroup(k Keygroup) error {
+func (h *exthandler) HandleCreateKeygroup(user string, k Keygroup) error {
 	if err := h.s.createKeygroup(k.Name); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error creating keygroup")
@@ -39,11 +41,24 @@ func (h *exthandler) HandleCreateKeygroup(k Keygroup) error {
 		return errors.Errorf("error creating keygroup")
 	}
 
+	// when a user creates a keygroup, they should have all rights for that keygroup
+	err := h.a.addRoles(user, []Role{ReadKeygroup, WriteKeygroup, ConfigureReplica, ConfigureTrigger, ConfigureKeygroups}, k.Name)
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
 // HandleDeleteKeygroup handles requests to the DeleteKeygroup endpoint of the client interface.
-func (h *exthandler) HandleDeleteKeygroup(k Keygroup) error {
+func (h *exthandler) HandleDeleteKeygroup(user string, k Keygroup) error {
+	allowed, err := h.a.isAllowed(user, DeleteKeygroup, k.Name)
+
+	if err != nil || !allowed {
+		return errors.Errorf("user %s cannot delete keygroup %s", user, k.Name)
+	}
+
 	if err := h.s.deleteKeygroup(k.Name); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error deleting keygroup")
@@ -65,7 +80,13 @@ func (h *exthandler) HandleDeleteKeygroup(k Keygroup) error {
 }
 
 // HandleRead handles requests to the Read endpoint of the client interface.
-func (h *exthandler) HandleRead(i Item) (Item, error) {
+func (h *exthandler) HandleRead(user string, i Item) (Item, error) {
+	allowed, err := h.a.isAllowed(user, Read, i.Keygroup)
+
+	if err != nil || !allowed {
+		return Item{}, errors.Errorf("user %s cannot read from keygroup %s", user, i.Keygroup)
+	}
+
 	result, err := h.s.read(i.Keygroup, i.ID)
 
 	if err != nil {
@@ -80,7 +101,13 @@ func (h *exthandler) HandleRead(i Item) (Item, error) {
 }
 
 // HandleUpdate handles requests to the Update endpoint of the client interface.
-func (h *exthandler) HandleUpdate(i Item) error {
+func (h *exthandler) HandleUpdate(user string, i Item) error {
+	allowed, err := h.a.isAllowed(user, Update, i.Keygroup)
+
+	if err != nil || !allowed {
+		return errors.Errorf("user %s cannot update in keygroup %s", user, i.Keygroup)
+	}
+
 	m, err := h.n.isMutable(i.Keygroup)
 
 	if err != nil {
@@ -119,7 +146,13 @@ func (h *exthandler) HandleUpdate(i Item) error {
 }
 
 // HandleDelete handles requests to the Delete endpoint of the client interface.
-func (h *exthandler) HandleDelete(i Item) error {
+func (h *exthandler) HandleDelete(user string, i Item) error {
+	allowed, err := h.a.isAllowed(user, Delete, i.Keygroup)
+
+	if err != nil || !allowed {
+		return errors.Errorf("user %s cannot delete keygroup %s", user, i.Keygroup)
+	}
+
 	m, err := h.n.isMutable(i.Keygroup)
 
 	if err != nil {
@@ -151,7 +184,13 @@ func (h *exthandler) HandleDelete(i Item) error {
 }
 
 // HandleAddReplica handles requests to the AddKeygroupReplica endpoint of the client interface.
-func (h *exthandler) HandleAddReplica(k Keygroup, n Node) error {
+func (h *exthandler) HandleAddReplica(user string, k Keygroup, n Node) error {
+	allowed, err := h.a.isAllowed(user, AddReplica, k.Name)
+
+	if err != nil || !allowed {
+		return errors.Errorf("user %s cannot add replica to keygroup %s", user, k.Name)
+	}
+
 	if err := h.r.addReplica(k, n, true); err != nil {
 		log.Error().Msgf("Error in AddReplica is: %#v", err)
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
@@ -162,12 +201,24 @@ func (h *exthandler) HandleAddReplica(k Keygroup, n Node) error {
 }
 
 // HandleGetKeygroupReplica handles requests to the GetKeygroupReplica endpoint of the client interface.
-func (h *exthandler) HandleGetKeygroupReplica(k Keygroup) ([]Node, map[NodeID]int, error) {
+func (h *exthandler) HandleGetKeygroupReplica(user string, k Keygroup) ([]Node, map[NodeID]int, error) {
+	allowed, err := h.a.isAllowed(user, GetReplica, k.Name)
+
+	if err != nil || !allowed {
+		return nil, nil, errors.Errorf("user %s cannot get replica for keygroup %s", user, k.Name)
+	}
+
 	return h.r.getReplica(k)
 }
 
 // HandleRemoveReplica handles requests to the RemoveKeygroupReplica endpoint of the client interface.
-func (h *exthandler) HandleRemoveReplica(k Keygroup, n Node) error {
+func (h *exthandler) HandleRemoveReplica(user string, k Keygroup, n Node) error {
+	allowed, err := h.a.isAllowed(user, RemoveReplica, k.Name)
+
+	if err != nil || !allowed {
+		return errors.Errorf("user %s cannot remove replica of keygroup %s", user, k.Name)
+	}
+
 	if err := h.r.removeReplica(k, n, true); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error removing replica")
@@ -177,7 +228,13 @@ func (h *exthandler) HandleRemoveReplica(k Keygroup, n Node) error {
 }
 
 // HandleAddReplica handles requests to the AddKeygroupTrigger endpoint of the client interface.
-func (h *exthandler) HandleAddTrigger(k Keygroup, t Trigger) error {
+func (h *exthandler) HandleAddTrigger(user string, k Keygroup, t Trigger) error {
+	allowed, err := h.a.isAllowed(user, AddTrigger, k.Name)
+
+	if err != nil || !allowed {
+		return errors.Errorf("user %s cannot add trigger to keygroup %s", user, k.Name)
+	}
+
 	if err := h.t.addTrigger(k, t); err != nil {
 		log.Error().Msgf("Error in AddTrigger is: %#v", err)
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
@@ -187,12 +244,24 @@ func (h *exthandler) HandleAddTrigger(k Keygroup, t Trigger) error {
 }
 
 // HandleGetKeygroupTriggers handles requests to the GetKeygroupTrigger endpoint of the client interface.
-func (h *exthandler) HandleGetKeygroupTriggers(k Keygroup) ([]Trigger, error) {
+func (h *exthandler) HandleGetKeygroupTriggers(user string, k Keygroup) ([]Trigger, error) {
+	allowed, err := h.a.isAllowed(user, GetTrigger, k.Name)
+
+	if err != nil || !allowed {
+		return nil, errors.Errorf("user %s cannot get triggers for keygroup %s", user, k.Name)
+	}
+
 	return h.t.getTrigger(k)
 }
 
 // HandleRemoveTrigger handles requests to the RemoveKeygroupTrigger endpoint of the client interface.
-func (h *exthandler) HandleRemoveTrigger(k Keygroup, t Trigger) error {
+func (h *exthandler) HandleRemoveTrigger(user string, k Keygroup, t Trigger) error {
+	allowed, err := h.a.isAllowed(user, RemoveTrigger, k.Name)
+
+	if err != nil || !allowed {
+		return errors.Errorf("user %s cannot remove triggers from keygroup %s", user, k.Name)
+	}
+
 	if err := h.t.removeTrigger(k, t); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error removing trigger")
@@ -201,12 +270,36 @@ func (h *exthandler) HandleRemoveTrigger(k Keygroup, t Trigger) error {
 	return nil
 }
 
-// HandleGetReplica handles requests to the GetAllReplica endpoint of the client interface.
-func (h *exthandler) HandleGetReplica(n Node) (Node, error) {
+// HandleGetReplica handles requests to the GetReplica endpoint of the client interface.
+func (h *exthandler) HandleGetReplica(user string, n Node) (Node, error) {
+
 	return h.r.getNode(n)
 }
 
 // HandleGetAllReplica handles requests to the GetAllReplica endpoint of the client interface.
-func (h *exthandler) HandleGetAllReplica() ([]Node, error) {
+func (h *exthandler) HandleGetAllReplica(user string) ([]Node, error) {
+
 	return h.r.getNodes()
+}
+
+// AddUser adds permissions to a keygroup to a new user.
+func (h *exthandler) HandleAddUser(user string, newuser string, k Keygroup, r Role) error {
+	allowed, err := h.a.isAllowed(user, AddUser, k.Name)
+
+	if err != nil || !allowed {
+		return errors.Errorf("user %s cannot add user permissions to keygroup %s", user, k.Name)
+	}
+
+	return h.a.addRoles(newuser, []Role{r}, k.Name)
+}
+
+// RemoveUser removes permissions to a keygroup to a user.
+func (h *exthandler) HandleRemoveUser(user string, newuser string, k Keygroup, r Role) error {
+	allowed, err := h.a.isAllowed(user, RemoveUser, k.Name)
+
+	if err != nil || !allowed {
+		return errors.Errorf("user %s cannot remove user permissions to keygroup %s", user, k.Name)
+	}
+
+	return h.a.revokeRoles(newuser, []Role{r}, k.Name)
 }
