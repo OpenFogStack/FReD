@@ -12,6 +12,9 @@ type Config struct {
 	PeeringHost string
 	NodeID      string
 	NaSeHosts   []string
+	NaSeCert    string
+	NaSeKey     string
+	NaSeCA      string
 }
 
 // Fred is an instance of FReD.
@@ -53,7 +56,7 @@ type ExtHandler interface {
 func New(config *Config) (f Fred) {
 	s := newStoreService(config.Store)
 
-	n, err := newNameService(config.NodeID, config.NaSeHosts)
+	n, err := newNameService(config.NodeID, config.NaSeHosts, config.NaSeCert, config.NaSeKey, config.NaSeCA)
 
 	if err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())

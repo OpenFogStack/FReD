@@ -44,6 +44,9 @@ type fredConfig struct {
 	} `toml:"log"`
 	NaSe struct {
 		Host string `toml:"host"`
+		Cert string `toml:"cert"`
+		Key  string `toml:"key"`
+		CA   string `toml:"ca"`
 	} `toml:"nase"`
 	RemoteStore struct {
 		Host string `toml:"host"`
@@ -75,8 +78,14 @@ var (
 	remoteStorageHost = kingpin.Flag("remote-storage-host", "Host address of GRPC Server for storace connection.").String()
 	dynamoTable       = kingpin.Flag("dynamo-table", "AWS table for DynamoDB storage backend.").String()
 	dynamoRegion      = kingpin.Flag("dynamo-region", "AWS region for DynamoDB storage backend.").String()
-	naseHost          = kingpin.Flag("nase-host", "Host where the etcd-server runs").String()
-	bdbPath           = kingpin.Flag("badgerdb-path", "Path to the badgerdb database").String()
+
+	// TODO this should be a list of nodes. One node is enough, but if we want reliability we should accept multiple etcd nodes
+	naseHost = kingpin.Flag("nase-host", "Host where the etcd-server runs").String()
+	naseCert = kingpin.Flag("nase-cert", "Certificate file to authenticate against etcd").String()
+	naseKey  = kingpin.Flag("nase-key", "Key file to authenticate against etcd").String()
+	naseCA   = kingpin.Flag("nase-ca", "CA certificate file to authenticate against etcd").String()
+
+	bdbPath = kingpin.Flag("badgerdb-path", "Path to the badgerdb database").String()
 )
 
 func main() {
@@ -140,6 +149,15 @@ func main() {
 	}
 	if *naseHost != "" {
 		fc.NaSe.Host = *naseHost
+	}
+	if *naseCert != "" {
+		fc.NaSe.Cert = *naseCert
+	}
+	if *naseKey != "" {
+		fc.NaSe.Key = *naseKey
+	}
+	if *naseCA != "" {
+		fc.NaSe.CA = *naseCA
 	}
 	if *bdbPath != "" {
 		fc.Bdb.Path = *bdbPath
@@ -213,6 +231,9 @@ func main() {
 		PeeringHost: fc.Peering.Host,
 		NodeID:      fc.General.nodeID,
 		NaSeHosts:   []string{fc.NaSe.Host},
+		NaSeCert:    fc.NaSe.Cert,
+		NaSeKey:     fc.NaSe.Key,
+		NaSeCA:      fc.NaSe.CA,
 	})
 
 	log.Debug().Msg("Starting Interconnection Server...")

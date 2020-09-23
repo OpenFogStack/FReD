@@ -3,9 +3,11 @@ FROM golang:1.15-alpine as golang
 
 MAINTAINER Tobias Pfandzelter <tp@mcc.tu-berlin.de>
 
-# stolen from https://github.com/drone/ca-certs/blob/master/Dockerfile
-RUN apk add -U --no-cache ca-certificates
 WORKDIR /go/src/gitlab.tu-berlin.de/mcc-fred/fred/
+
+RUN apk update && apk add ca-certificates && rm -rf /var/cache/apk/*
+COPY nase/tls/ca.crt /usr/local/share/ca-certificates/ca.crt
+RUN update-ca-certificates
 
 # Make an extra layer for the installed packages so that they dont have to be downloaded everytime
 COPY go.mod .

@@ -6,13 +6,21 @@ services:
     container_name: etcd-1
     entrypoint: "etcd --name s-1 \
       --data-dir /tmp/etcd/s-1 \
-      --listen-client-urls http://172.26.1.1:2379 \
-      --advertise-client-urls http://172.26.1.1:2379 \
+      --listen-client-urls https://172.26.1.1:2379 \
+      --advertise-client-urls https://172.26.1.1:2379 \
       --listen-peer-urls http://172.26.1.1:2380 \
       --initial-advertise-peer-urls http://172.26.1.1:2380 \
       --initial-cluster s-1=http://172.26.1.1:2380 \
       --initial-cluster-token tkn \
-      --initial-cluster-state new"
+      --initial-cluster-state new \
+      --cert-file=/cert/server.crt \
+      --key-file=/cert/server.key \
+      --client-cert-auth \
+      --trusted-ca-file=/cert/ca.crt"
+    volumes:
+      - ../../nase/tls/server.crt:/cert/server.crt
+      - ../../nase/tls/server.key:/cert/server.key
+      - ../../nase/tls/ca.crt:/cert/ca.crt
     ports:
       - 2379:2379
       - 2380:2380

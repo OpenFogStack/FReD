@@ -12,6 +12,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.etcd.io/etcd/clientv3"
 	"go.etcd.io/etcd/mvcc/mvccpb"
+	"go.etcd.io/etcd/pkg/transport"
 )
 
 const (
@@ -32,15 +33,28 @@ type nameService struct {
 }
 
 // newNameService creates a new NameService
-func newNameService(nodeID string, endpoints []string) (*nameService, error) {
+func newNameService(nodeID string, endpoints []string, certfFile string, keyFile string, caFile string) (*nameService, error) {
+	tlsInfo := transport.TLSInfo{
+		CertFile:      certfFile,
+		KeyFile:       keyFile,
+		TrustedCAFile: caFile,
+	}
+
+	tlsConfig, err := tlsInfo.ClientConfig()
+
+	if err != nil {
+		return nil, errors.Errorf("Error configuring certificates for the etcd client: %v", err)
+	}
+
 	cli, err := clientv3.New(clientv3.Config{
 		Endpoints:   endpoints,
 		DialTimeout: 5 * time.Second,
+		TLS:         tlsConfig,
 	})
 
 	if err != nil {
 		// Deadline Exceeded
-		return nil, errors.Errorf("Error starting the etcd client")
+		return nil, errors.Errorf("Error starting the etcd client: %v", err)
 	}
 
 	return &nameService{
@@ -53,6 +67,7 @@ func (n *nameService) registerSelf(host Address) error {
 	key := fmt.Sprintf(fmtNodeAdressString, n.NodeID)
 	log.Debug().Msgf("NaSe: registering self as %s // %s", key, host.Addr)
 	err := n.put(key, host.Addr)
+
 	if err != nil {
 		return err
 	}
