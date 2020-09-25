@@ -2,12 +2,14 @@ package storageclient
 
 import (
 	"context"
+	"crypto/tls"
 	"io"
 
 	"github.com/go-errors/errors"
 	"github.com/rs/zerolog/log"
 	"gitlab.tu-berlin.de/mcc-fred/fred/proto/storage"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 // Client to a grpc server
@@ -17,8 +19,21 @@ type Client struct {
 }
 
 // NewClient Client creates a new Client to communicate with a GRpc server
-func NewClient(host string) *Client {
-	conn, err := grpc.Dial(host, grpc.WithInsecure())
+func NewClient(host, certFile, keyFile string) *Client {
+	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+
+	if err != nil {
+		log.Fatal().Err(err).Msg("Cannot load certificates")
+		return nil
+	}
+
+	tlsConfig := &tls.Config{
+		Certificates: []tls.Certificate{cert},
+	}
+
+	tc := credentials.NewTLS(tlsConfig)
+
+	conn, err := grpc.Dial(host, grpc.WithTransportCredentials(tc))
 
 	if err != nil {
 		log.Fatal().Err(err).Msg("Cannot create Grpc connection")

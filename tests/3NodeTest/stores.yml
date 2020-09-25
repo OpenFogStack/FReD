@@ -7,6 +7,11 @@ services:
       dockerfile: storage.Dockerfile
     image: fred/store:local
     container_name: storeA
+    command: --cert "/cert/cert.crt" --key "/cert/key.key" --ca-file "/cert/ca.crt"
+    volumes:
+      - ../../nase/tls/storeA.crt:/cert/cert.crt
+      - ../../nase/tls/storeA.key:/cert/key.key
+      - ../../nase/tls/ca.crt:/cert/ca.crt
     networks:
       fredwork:
         ipv4_address: 172.26.0.20
@@ -17,6 +22,11 @@ services:
       dockerfile: storage.Dockerfile
     image: fred/store:local
     container_name: storeB
+    command: --cert "/cert/cert.crt" --key "/cert/key.key" --ca-file "/cert/ca.crt"
+    volumes:
+      - ../../nase/tls/storeB.crt:/cert/cert.crt
+      - ../../nase/tls/storeB.key:/cert/key.key
+      - ../../nase/tls/ca.crt:/cert/ca.crt
     networks:
       fredwork:
         ipv4_address: 172.26.0.21
@@ -27,6 +37,11 @@ services:
       dockerfile: storage.Dockerfile
     image: fred/store:local
     container_name: storeC
+    command: --cert "/cert/cert.crt" --key "/cert/key.key" --ca-file "/cert/ca.crt"
+    volumes:
+      - ../../nase/tls/storeC.crt:/cert/cert.crt
+      - ../../nase/tls/storeC.key:/cert/key.key
+      - ../../nase/tls/ca.crt:/cert/ca.crt
     networks:
       fredwork:
         ipv4_address: 172.26.0.22
