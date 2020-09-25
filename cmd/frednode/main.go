@@ -32,6 +32,7 @@ type fredConfig struct {
 		Host string `toml:"host"`
 		Cert string `toml:"cert"`
 		Key  string `toml:"key"`
+		CA   string `toml:"ca"`
 	} `toml:"server"`
 	Storage struct {
 		Adaptor string `toml:"adaptor"`
@@ -73,6 +74,7 @@ var (
 	grpcHost          = kingpin.Flag("host", "Host address of server for external connections.").String()
 	grpcCert          = kingpin.Flag("cert", "Certificate for external connections.").String()
 	grpcKey           = kingpin.Flag("key", "Key file for external connections.").String()
+	grpcCA            = kingpin.Flag("ca-file", "Certificate authority root certificate file for external connections.").String()
 	internalHost      = kingpin.Flag("zmq-host", "(Publicly reachable) address of this server for internal connections.").String()
 	adaptor           = kingpin.Flag("adaptor", "Storage adaptor, can be \"remote\", \"badgerdb\", \"memory\", \"dynamo\".").Enum("remote", "badgerdb", "memory", "dynamo")
 	logLevel          = kingpin.Flag("log-level", "Log level, can be \"debug\", \"info\" ,\"warn\", \"error\", \"fatal\", \"panic\".").Enum("debug", "info", "warn", "errors", "fatal", "panic")
@@ -130,6 +132,9 @@ func main() {
 	}
 	if *grpcKey != "" {
 		fc.Server.Key = *grpcKey
+	}
+	if *grpcCA != "" {
+		fc.Server.CA = *grpcCA
 	}
 	if *internalHost != "" {
 		fc.Peering.Host = *internalHost
@@ -245,7 +250,7 @@ func main() {
 	is := peering.NewServer(fc.Peering.Host, f.I)
 
 	log.Debug().Msg("Starting GRPC Server for Client (==Externalconnection)...")
-	es := api.NewServer(fc.Server.Host, f.E, fc.Server.Cert, fc.Server.Key)
+	es := api.NewServer(fc.Server.Host, f.E, fc.Server.Cert, fc.Server.Key, fc.Server.CA)
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit,

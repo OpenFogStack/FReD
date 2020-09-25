@@ -3,7 +3,11 @@ package api
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
+	"io/ioutil"
 	"net"
+	"strings"
+	"time"
 
 	"github.com/go-errors/errors"
 	"github.com/rs/zerolog/log"
@@ -16,7 +20,8 @@ import (
 
 // Server handles GRPC Requests and calls the according functions of the exthandler
 type Server struct {
-	e fred.ExtHandler
+	e     fred.ExtHandler
+	roots *x509.CertPool
 	*grpc.Server
 }
 
@@ -30,24 +35,46 @@ var (
 	}
 )
 
-func checkCert(ctx context.Context) (name string, err error) {
+// checkCert checks the certificate from the given gRPC context for validity and returns the Common Name
+func (s *Server) checkCert(ctx context.Context) (name string, err error) {
+	// get peer information
 	p, ok := peer.FromContext(ctx)
 
 	if !ok {
 		return name, errors.Errorf("no peer found")
 	}
 
+	// get TLS credential information for this connection
 	tlsAuth, ok := p.AuthInfo.(credentials.TLSInfo)
 
 	if !ok {
 		return name, errors.Errorf("unexpected peer transport credentials")
 	}
 
+	// check that the certificate exists
 	if len(tlsAuth.State.VerifiedChains) == 0 || len(tlsAuth.State.VerifiedChains[0]) == 0 {
 		return name, errors.Errorf("could not verify peer certificate: %v", tlsAuth.State)
 	}
 
-	// Check subject common name exists
+	// verify the certificate:
+	// 1) it should be issued by a CA in our root CA pool
+	// 2) any intermediates are valid for us
+	// 3) the certificate should be valid for client authentication
+	// 4) the certificate should have the clients address as a SAN
+	_, err = tlsAuth.State.VerifiedChains[0][0].Verify(x509.VerifyOptions{
+		Roots:         s.roots,
+		CurrentTime:   time.Now(),
+		Intermediates: x509.NewCertPool(),
+		KeyUsages:     []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
+		// p.Addr is of form "IP:PORT" so split it by ":" char and use the first entry
+		DNSName: strings.Split(p.Addr.String(), ":")[0],
+	})
+
+	if err != nil {
+		return name, errors.New(err)
+	}
+
+	// Check subject common name exists and return it as the user name for that client
 	if name = tlsAuth.State.VerifiedChains[0][0].Subject.CommonName; name == "" {
 		return name, errors.Errorf("invalid subject common name")
 	}
@@ -58,7 +85,7 @@ func checkCert(ctx context.Context) (name string, err error) {
 }
 
 // NewServer creates a new Server for requests from Fred Clients
-func NewServer(host string, handler fred.ExtHandler, cert string, key string) *Server {
+func NewServer(host string, handler fred.ExtHandler, cert string, key string, caCert string) *Server {
 	// Load server's certificate and private key
 	serverCert, err := tls.LoadX509KeyPair(cert, key)
 
@@ -67,13 +94,27 @@ func NewServer(host string, handler fred.ExtHandler, cert string, key string) *S
 		return nil
 	}
 
+	// Create a new cert pool and add our own CA certificate
+	rootCAs := x509.NewCertPool()
+
+	loaded, err := ioutil.ReadFile(caCert)
+
+	if err != nil {
+		log.Fatal().Msgf("unexpected missing certfile: %v", err)
+	}
+
+	rootCAs.AppendCertsFromPEM(loaded)
 	// Create the credentials and return it
 	config := &tls.Config{
 		Certificates: []tls.Certificate{serverCert},
 		ClientAuth:   tls.RequireAndVerifyClientCert,
+		ClientCAs:    rootCAs,
+		MinVersion:   tls.VersionTLS12,
 	}
 
-	s := &Server{handler,
+	s := &Server{
+		handler,
+		rootCAs,
 		grpc.NewServer(
 			grpc.Creds(credentials.NewTLS(config)),
 		),
@@ -119,7 +160,7 @@ func (s *Server) CreateKeygroup(ctx context.Context, request *client.CreateKeygr
 
 	log.Debug().Msgf("ExtServer has rcvd CreateKeygroup. In: %#v", request)
 
-	user, err := checkCert(ctx)
+	user, err := s.checkCert(ctx)
 
 	if err != nil {
 		return statusResponseFromError(err)
@@ -135,7 +176,7 @@ func (s *Server) DeleteKeygroup(ctx context.Context, request *client.DeleteKeygr
 
 	log.Debug().Msgf("ExtServer has rcvd DeleteKeygroup. In: %#v", request)
 
-	user, err := checkCert(ctx)
+	user, err := s.checkCert(ctx)
 
 	if err != nil {
 		return statusResponseFromError(err)
@@ -150,7 +191,7 @@ func (s *Server) DeleteKeygroup(ctx context.Context, request *client.DeleteKeygr
 func (s *Server) Read(ctx context.Context, request *client.ReadRequest) (*client.ReadResponse, error) {
 	log.Debug().Msgf("ExtServer has rcvd Read. In: %#v", request)
 
-	user, err := checkCert(ctx)
+	user, err := s.checkCert(ctx)
 
 	if err != nil {
 		_, err = statusResponseFromError(err)
@@ -173,7 +214,7 @@ func (s *Server) Update(ctx context.Context, request *client.UpdateRequest) (*cl
 
 	log.Debug().Msgf("ExtServer has rcvd DeleteKeygroup. In: %#v", request)
 
-	user, err := checkCert(ctx)
+	user, err := s.checkCert(ctx)
 
 	if err != nil {
 		_, err = statusResponseFromError(err)
@@ -189,7 +230,7 @@ func (s *Server) Update(ctx context.Context, request *client.UpdateRequest) (*cl
 func (s *Server) Delete(ctx context.Context, request *client.DeleteRequest) (*client.StatusResponse, error) {
 	log.Debug().Msgf("ExtServer has rcvd Delete. In: %#v", request)
 
-	user, err := checkCert(ctx)
+	user, err := s.checkCert(ctx)
 
 	if err != nil {
 		_, err = statusResponseFromError(err)
@@ -205,7 +246,7 @@ func (s *Server) Delete(ctx context.Context, request *client.DeleteRequest) (*cl
 func (s *Server) AddReplica(ctx context.Context, request *client.AddReplicaRequest) (*client.StatusResponse, error) {
 	log.Debug().Msgf("ExtServer has rcvd AddReplica. In: %#v", request)
 
-	user, err := checkCert(ctx)
+	user, err := s.checkCert(ctx)
 
 	if err != nil {
 		_, err = statusResponseFromError(err)
@@ -221,7 +262,7 @@ func (s *Server) AddReplica(ctx context.Context, request *client.AddReplicaReque
 func (s *Server) GetKeygroupReplica(ctx context.Context, request *client.GetKeygroupReplicaRequest) (*client.GetKeygroupReplicaResponse, error) {
 	log.Debug().Msgf("ExtServer has rcvd GetKeygroupReplica. In: %#v", request)
 
-	user, err := checkCert(ctx)
+	user, err := s.checkCert(ctx)
 
 	if err != nil {
 		_, err = statusResponseFromError(err)
@@ -255,7 +296,7 @@ func (s *Server) GetKeygroupReplica(ctx context.Context, request *client.GetKeyg
 func (s *Server) RemoveReplica(ctx context.Context, request *client.RemoveReplicaRequest) (*client.StatusResponse, error) {
 	log.Debug().Msgf("ExtServer has rcvd RemoveReplica. In: %#v", request)
 
-	user, err := checkCert(ctx)
+	user, err := s.checkCert(ctx)
 
 	if err != nil {
 		_, err = statusResponseFromError(err)
@@ -275,7 +316,7 @@ func replicaResponseFromNode(n fred.Node) *client.GetReplicaResponse {
 func (s *Server) GetReplica(ctx context.Context, request *client.GetReplicaRequest) (*client.GetReplicaResponse, error) {
 	log.Debug().Msgf("ExtServer has rcvd GetReplica. In: %#v", request)
 
-	user, err := checkCert(ctx)
+	user, err := s.checkCert(ctx)
 
 	if err != nil {
 		_, err = statusResponseFromError(err)
@@ -291,7 +332,7 @@ func (s *Server) GetReplica(ctx context.Context, request *client.GetReplicaReque
 func (s *Server) GetAllReplica(ctx context.Context, request *client.GetAllReplicaRequest) (*client.GetAllReplicaResponse, error) {
 	log.Debug().Msgf("ExtServer has rcvd GetAllReplica. In: %#v", request)
 
-	user, err := checkCert(ctx)
+	user, err := s.checkCert(ctx)
 
 	if err != nil {
 		_, err = statusResponseFromError(err)
@@ -318,7 +359,7 @@ func (s *Server) GetAllReplica(ctx context.Context, request *client.GetAllReplic
 func (s *Server) GetKeygroupTriggers(ctx context.Context, request *client.GetKeygroupTriggerRequest) (*client.GetKeygroupTriggerResponse, error) {
 	log.Debug().Msgf("ExtServer has rcvd GetKeygroupTriggers. In: %#v", request)
 
-	user, err := checkCert(ctx)
+	user, err := s.checkCert(ctx)
 
 	if err != nil {
 		_, err = statusResponseFromError(err)
@@ -344,7 +385,7 @@ func (s *Server) GetKeygroupTriggers(ctx context.Context, request *client.GetKey
 func (s *Server) AddTrigger(ctx context.Context, request *client.AddTriggerRequest) (*client.StatusResponse, error) {
 	log.Debug().Msgf("ExtServer has rcvd AddTrigger. In: %#v", request)
 
-	user, err := checkCert(ctx)
+	user, err := s.checkCert(ctx)
 
 	if err != nil {
 		_, err = statusResponseFromError(err)
@@ -360,7 +401,7 @@ func (s *Server) AddTrigger(ctx context.Context, request *client.AddTriggerReque
 func (s *Server) RemoveTrigger(ctx context.Context, request *client.RemoveTriggerRequest) (*client.StatusResponse, error) {
 	log.Debug().Msgf("ExtServer has rcvd RemoveTrigger. In: %#v", request)
 
-	user, err := checkCert(ctx)
+	user, err := s.checkCert(ctx)
 
 	if err != nil {
 		_, err = statusResponseFromError(err)
@@ -376,7 +417,7 @@ func (s *Server) RemoveTrigger(ctx context.Context, request *client.RemoveTrigge
 func (s *Server) AddUser(ctx context.Context, request *client.UserRequest) (*client.StatusResponse, error) {
 	log.Debug().Msgf("ExtServer has rcvd AddUser. In: %#v", request)
 
-	user, err := checkCert(ctx)
+	user, err := s.checkCert(ctx)
 
 	if err != nil {
 		_, err = statusResponseFromError(err)
@@ -392,7 +433,7 @@ func (s *Server) AddUser(ctx context.Context, request *client.UserRequest) (*cli
 func (s *Server) RemoveUser(ctx context.Context, request *client.UserRequest) (*client.StatusResponse, error) {
 	log.Debug().Msgf("ExtServer has rcvd RemoveUser. In: %#v", request)
 
-	user, err := checkCert(ctx)
+	user, err := s.checkCert(ctx)
 
 	if err != nil {
 		_, err = statusResponseFromError(err)

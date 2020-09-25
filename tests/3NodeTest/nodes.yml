@@ -7,7 +7,7 @@ services:
     build: ../../../fred
     image: fred/fred:local
     container_name: nodeA
-    command: --remote-storage-host "172.26.0.20:1337" --zmq-host "172.26.0.10:5555" --nodeID "nodeA" --host ":9001"  --cert "/cert/nodeA.crt" --key "/cert/nodeA.key" --adaptor "remote" --nase-host "https://172.26.1.1:2379" --nase-cert "/cert/nodeA.crt" --nase-key "/cert/nodeA.key" --nase-ca "/cert/ca.crt" --log-level "debug" --handler "dev" --badgerdb-path "./db"
+    command: --remote-storage-host "172.26.0.20:1337" --zmq-host "172.26.0.10:5555" --nodeID "nodeA" --host ":9001"  --cert "/cert/nodeA.crt" --key "/cert/nodeA.key" --ca-file "/cert/ca.crt" --adaptor "remote" --nase-host "https://172.26.1.1:2379" --nase-cert "/cert/nodeA.crt" --nase-key "/cert/nodeA.key" --nase-ca "/cert/ca.crt" --log-level "debug" --handler "dev" --badgerdb-path "./db"
     volumes:
       - ../../nase/tls/nodeA.crt:/cert/nodeA.crt
       - ../../nase/tls/nodeA.key:/cert/nodeA.key
@@ -24,7 +24,7 @@ services:
       - storeB
     image: fred/fred:local
     container_name: nodeB
-    command: --remote-storage-host "172.26.0.21:1337" --zmq-host "172.26.0.11:5555" --nodeID "nodeB" --host ":9001" --cert "/cert/nodeB.crt" --key "/cert/nodeB.key" --adaptor "remote" --nase-host "https://172.26.1.1:2379" --nase-cert "/cert/nodeB.crt" --nase-key "/cert/nodeB.key" --nase-ca "/cert/ca.crt" --log-level "debug" --handler "dev" --badgerdb-path "./db"
+    command: --remote-storage-host "172.26.0.21:1337" --zmq-host "172.26.0.11:5555" --nodeID "nodeB" --host ":9001" --cert "/cert/nodeB.crt" --key "/cert/nodeB.key" --ca-file "/cert/ca.crt" --adaptor "remote" --nase-host "https://172.26.1.1:2379" --nase-cert "/cert/nodeB.crt" --nase-key "/cert/nodeB.key" --nase-ca "/cert/ca.crt" --log-level "debug" --handler "dev" --badgerdb-path "./db"
     volumes:
       - ../../nase/tls/nodeB.crt:/cert/nodeB.crt
       - ../../nase/tls/nodeB.key:/cert/nodeB.key
@@ -41,7 +41,7 @@ services:
       - storeC
     image: fred/fred:local
     container_name: nodeC
-    command: --remote-storage-host "172.26.0.22:1337" --zmq-host "172.26.0.12:5555" --nodeID "nodeC" --host ":9001" --cert "/cert/nodeC.crt" --key "/cert/nodeC.key" --adaptor "remote" --nase-host "https://172.26.1.1:2379" --nase-cert "/cert/nodeC.crt" --nase-key "/cert/nodeC.key" --nase-ca "/cert/ca.crt" --log-level "debug" --handler "dev" --badgerdb-path "./db"
+    command: --remote-storage-host "172.26.0.22:1337" --zmq-host "172.26.0.12:5555" --nodeID "nodeC" --host ":9001" --cert "/cert/nodeC.crt" --key "/cert/nodeC.key" --ca-file "/cert/ca.crt" --adaptor "remote" --nase-host "https://172.26.1.1:2379" --nase-cert "/cert/nodeC.crt" --nase-key "/cert/nodeC.key" --nase-ca "/cert/ca.crt" --log-level "debug" --handler "dev" --badgerdb-path "./db"
     volumes:
       - ../../nase/tls/nodeC.crt:/cert/nodeC.crt
       - ../../nase/tls/nodeC.key:/cert/nodeC.key
