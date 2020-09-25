@@ -2,12 +2,14 @@ package fred
 
 import (
 	"context"
+	"crypto/tls"
 	"sync"
 
 	"github.com/go-errors/errors"
 	"github.com/rs/zerolog/log"
 	"gitlab.tu-berlin.de/mcc-fred/fred/proto/trigger"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 // Trigger is one trigger node with an ID and a host address.
@@ -23,10 +25,11 @@ type triggerMap struct {
 
 type triggerService struct {
 	triggers map[KeygroupName]triggerMap
+	tc       *credentials.TransportCredentials
 }
 
-func getConnAndClient(host string) (client trigger.TriggerNodeClient, conn *grpc.ClientConn) {
-	conn, err := grpc.Dial(host, grpc.WithInsecure())
+func (t *triggerService) getConnAndClient(host string) (client trigger.TriggerNodeClient, conn *grpc.ClientConn) {
+	conn, err := grpc.Dial(host, grpc.WithTransportCredentials(*t.tc))
 	if err != nil {
 		log.Fatal().Err(err).Msg("Cannot create Grpc connection")
 		return nil, nil
@@ -56,8 +59,24 @@ func dealWithStatusResponse(res *trigger.TriggerResponse, err error, from string
 
 }
 
-func newTriggerService() *triggerService {
-	return &triggerService{triggers: make(map[KeygroupName]triggerMap)}
+func newTriggerService(certFile, keyFile string) *triggerService {
+	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+
+	if err != nil {
+		log.Fatal().Err(err).Msg("Cannot load certificates")
+		return nil
+	}
+
+	tlsConfig := &tls.Config{
+		Certificates: []tls.Certificate{cert},
+	}
+
+	tc := credentials.NewTLS(tlsConfig)
+
+	return &triggerService{
+		triggers: make(map[KeygroupName]triggerMap),
+		tc:       &tc,
+	}
 }
 
 func (t *triggerService) triggerDelete(i Item) (e error) {
@@ -66,7 +85,7 @@ func (t *triggerService) triggerDelete(i Item) (e error) {
 	t.triggers[i.Keygroup].RLock()
 	defer t.triggers[i.Keygroup].RUnlock()
 	for _, node := range t.triggers[i.Keygroup].nodes {
-		client, conn := getConnAndClient(node.Host)
+		client, conn := t.getConnAndClient(node.Host)
 		res, err := client.DeleteItemTrigger(context.Background(), &trigger.DeleteItemTriggerRequest{
 			Keygroup: string(i.Keygroup),
 			Id:       i.ID,
@@ -94,7 +113,7 @@ func (t *triggerService) triggerUpdate(i Item) (e error) {
 	t.triggers[i.Keygroup].RLock()
 	defer t.triggers[i.Keygroup].RUnlock()
 	for _, node := range t.triggers[i.Keygroup].nodes {
-		client, conn := getConnAndClient(node.Host)
+		client, conn := t.getConnAndClient(node.Host)
 		res, err := client.PutItemTrigger(context.Background(), &trigger.PutItemTriggerRequest{
 			Keygroup: string(i.Keygroup),
 			Id:       i.ID,
