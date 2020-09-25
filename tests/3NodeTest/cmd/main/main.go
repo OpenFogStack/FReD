@@ -60,6 +60,12 @@ func main() {
 	triggerNodeWSHost := *flag.String("triggerNodeWSHost", "172.26.0.30:80", "host of trigger node web server (e.g. localhost:80)")
 	triggerNodeID := *flag.String("triggerNodeID", "triggernode", "Id of trigger node")
 
+	certFile := *flag.String("cert-file", "/cert/client.crt", "Certificate to talk to FReD")
+	keyFile := *flag.String("key-file", "/cert/client.key", "Keyfile to talk to FReD")
+
+	littleCertFile := *flag.String("little-cert-file", "/cert/littleclient.crt", "Certificate to talk to FReD as \"littleclient\"")
+	littleKeyFile := *flag.String("little-key-file", "/cert/littleclient.key", "Keyfile to talk to FReD as \"littleclient\"")
+
 	flag.Parse()
 
 	//var protocol string
@@ -80,11 +86,11 @@ func main() {
 	//log.Debug().Msgf("Node C: %s with ZMQ Port %d and ID %s", nodeCurl, nodeCzmqPort, nodeCzmqID)
 
 	port, _ := strconv.Atoi(nodeAhttpPort)
-	nodeA := grpcclient.NewNode(nodeAhost, port)
+	nodeA := grpcclient.NewNode(nodeAhost, port, certFile, keyFile)
 	port, _ = strconv.Atoi(nodeBhttpPort)
-	nodeB := grpcclient.NewNode(nodeBhost, port)
+	nodeB := grpcclient.NewNode(nodeBhost, port, certFile, keyFile)
 	port, _ = strconv.Atoi(nodeChttpPort)
-	nodeC := grpcclient.NewNode(nodeChost, port)
+	nodeC := grpcclient.NewNode(nodeChost, port, certFile, keyFile)
 
 	time.Sleep(15 * time.Second)
 
@@ -102,15 +108,15 @@ func main() {
 	nodeA.CreateKeygroup("KG1", true, 0, false)
 
 	// Test Get/Put of a single node
-	logNodeAction(nodeA, "Putting KG1-Item/KG1-Value into KG1")
-	nodeA.PutItem("KG1", "KG1-Item", "KG1-Value", false)
+	logNodeAction(nodeA, "Putting KG1Item/KG1Value into KG1")
+	nodeA.PutItem("KG1", "KG1Item", "KG1Value", false)
 
 	logNodeAction(nodeA, "Getting the value in KG1")
 
-	resp := nodeA.GetItem("KG1", "KG1-Item", false)
+	resp := nodeA.GetItem("KG1", "KG1Item", false)
 
-	if resp != "KG1-Value" {
-		logNodeFailure(nodeA, "resp is \"KG1-Value\"", resp)
+	if resp != "KG1Value" {
+		logNodeFailure(nodeA, "resp is \"KG1Value\"", resp)
 	}
 
 	logNodeAction(nodeA, "Getting a Value from a nonexistent keygroup")
@@ -119,13 +125,13 @@ func main() {
 	logNodeAction(nodeA, "Putting a Value into a nonexistent keygroup")
 	nodeA.PutItem("nonexistentkeygroup", "item", "data", true)
 
-	logNodeAction(nodeA, "Putting new value KG1-Item/KG1-Value2 into KG1")
-	nodeA.PutItem("KG1", "KG1-Item", "KG1-Value2", false)
+	logNodeAction(nodeA, "Putting new value KG1Item/KG1Value2 into KG1")
+	nodeA.PutItem("KG1", "KG1Item", "KG1Value2", false)
 
 	logNodeAction(nodeA, "Getting the value in KG1")
-	resp = nodeA.GetItem("KG1", "KG1-Item", false)
-	if resp != "KG1-Value2" {
-		logNodeFailure(nodeA, "resp is \"KG1-Value2\"", resp)
+	resp = nodeA.GetItem("KG1", "KG1Item", false)
+	if resp != "KG1Value2" {
+		logNodeFailure(nodeA, "resp is \"KG1Value2\"", resp)
 	} else {
 		logDebugInfo(nodeA, "Got "+resp)
 	}
@@ -167,10 +173,10 @@ func main() {
 	nodeA.AddKeygroupReplica("KG1", nodeBzmqID, 0, false)
 
 	logNodeAction(nodeB, "Deleting the value from KG1")
-	nodeB.DeleteItem("KG1", "KG1-Item", false)
+	nodeB.DeleteItem("KG1", "KG1Item", false)
 
 	logNodeAction(nodeB, "Getting the deleted value in KG1")
-	_ = nodeB.GetItem("KG1", "KG1-Item", true)
+	_ = nodeB.GetItem("KG1", "KG1Item", true)
 
 	// Test sending data between nodes
 	logNodeAction(nodeB, "Creating a new Keygroup (KGN) in nodeB, setting nodeA as Replica node")
@@ -292,88 +298,103 @@ func main() {
 
 	// testing immutable keygroups
 	// create immutable keygroup on nodeB
-	logNodeAction(nodeA, "Testing immutable keygroups by creating a new immutable keygroup on nodeB")
+	logNodeAction(nodeB, "Testing immutable keygroups by creating a new immutable keygroup on nodeB")
 	nodeB.CreateKeygroup("log", false, 0, false)
 	// create item to keygroup -> should work
-	nodeB.PutItem("log", "test-item", "value-1", false)
+	nodeB.PutItem("log", "testitem", "value1", false)
 	// update item in keygroup -> should not work
-	nodeB.PutItem("log", "test-item", "value-2", true)
+	nodeB.PutItem("log", "testitem", "value2", true)
 	// get item from keygroup -> should return appended item
-	respB = nodeB.GetItem("log", "test-item", false)
+	respB = nodeB.GetItem("log", "testitem", false)
 
-	if respB != "value-1" {
-		logNodeFailure(nodeB, "resp is not value-1", respB)
+	if respB != "value1" {
+		logNodeFailure(nodeB, "resp is not value1", respB)
 	}
 	// delete item from keygroup -> should not work
-	nodeB.DeleteItem("log", "test-item", true)
+	nodeB.DeleteItem("log", "testitem", true)
 	// add nodeC as replica node
 	nodeB.AddKeygroupReplica("log", nodeCzmqID, 0, false)
 	// update item on nodeC -> should not work
-	nodeB.PutItem("log", "test-item", "value-3", true)
-
-	// testing immutable keygroups
-	// create immutable keygroup on nodeB
-	nodeB.CreateKeygroup("log", false, 0, false)
-	// create item to keygroup -> should work
-	nodeB.PutItem("log", "test-item", "value-1", false)
-	// update item in keygroup -> should not work
-	nodeB.PutItem("log", "test-item", "value-2", true)
-	// get item from keygroup -> should return appended item
-	respB = nodeB.GetItem("log", "test-item", false)
-
-	if respB != "value-1" {
-		logNodeFailure(nodeB, "resp is not value-1", respB)
-	}
-	// delete item from keygroup -> should not work
-	nodeB.DeleteItem("log", "test-item", true)
-	// add nodeC as replica node
-	nodeB.AddKeygroupReplica("log", nodeCzmqID, 0, false)
-	// update item on nodeC -> should not work
-	nodeB.PutItem("log", "test-item", "value-3", true)
+	nodeC.PutItem("log", "testitem", "value3", true)
 
 	// test expiring data items
 	// create a new keygroup without expiry on nodeC
-	nodeC.CreateKeygroup("expiry-test", true, 0, false)
+	nodeC.CreateKeygroup("expirytest", true, 0, false)
 	// add nodeA as replica with expiry 5s
-	nodeC.AddKeygroupReplica("expiry-test", nodeAzmqID, 5, false)
+	nodeC.AddKeygroupReplica("expirytest", nodeAzmqID, 5, false)
 	// insert item on nodeC
-	nodeC.PutItem("expiry-test", "test", "test", false)
+	nodeC.PutItem("expirytest", "test", "test", false)
 	// check if nodeA gets item -> should work
-	nodeA.GetItem("expiry-test", "test", false)
+	nodeA.GetItem("expirytest", "test", false)
 	// wait 5s
 	time.Sleep(5 * time.Second)
 	// check if item exists on nodeA -> should error
-	nodeA.GetItem("expiry-test", "test", true)
+	nodeA.GetItem("expirytest", "test", true)
 	// check if item exists on nodeC -> should work
-	nodeC.GetItem("expiry-test", "test", false)
+	nodeC.GetItem("expirytest", "test", false)
 
 	// testing adding a node as a replica for a keygroup on itself
 	// create a keygroup with nodeB
 	nodeB.CreateKeygroup("pulltest", true, 0, false)
 	// add an item to that keygroup
-	nodeB.PutItem("pulltest", "item-1", "val-1", false)
+	nodeB.PutItem("pulltest", "item1", "val1", false)
 	// add another one
-	nodeB.PutItem("pulltest", "item-2", "val-2", false)
+	nodeB.PutItem("pulltest", "item2", "val2", false)
 	// add nodeA as a replica to that keygroup and see if it pulls the needed data on its own
 	nodeA.AddKeygroupReplica("pulltest", nodeAzmqID, 0, false)
 	// check if the items exist
-	if res := nodeA.GetItem("pulltest", "item-1", false); res != "val-1" {
-		logNodeFailure(nodeA, "val-1", res)
+	if res := nodeA.GetItem("pulltest", "item1", false); res != "val1" {
+		logNodeFailure(nodeA, "val1", res)
 		nodeA.Errors++
 	}
-	if res := nodeA.GetItem("pulltest", "item-2", false); res != "val-2" {
-		logNodeFailure(nodeA, "val-2", res)
+	if res := nodeA.GetItem("pulltest", "item2", false); res != "val2" {
+		logNodeFailure(nodeA, "val2", res)
 		nodeA.Errors++
 	}
 	// add an item on nodeA
-	nodeB.PutItem("pulltest", "item-3", "val-3", false)
+	nodeB.PutItem("pulltest", "item3", "val3", false)
 	// check if nodeB also gets that item
-	if res := nodeB.GetItem("pulltest", "item-3", false); res != "val-3" {
-		logNodeFailure(nodeB, "val-3", res)
+	if res := nodeB.GetItem("pulltest", "item3", false); res != "val3" {
+		logNodeFailure(nodeB, "val3", res)
 		nodeB.Errors++
 	}
 
-	totalerrors := nodeA.Errors + nodeB.Errors + nodeC.Errors
+	// test RBAC and authentication
+	logNodeAction(nodeA, "create keygroup \"rbactest\"")
+	nodeA.CreateKeygroup("rbactest", true, 0, false)
+
+	logNodeAction(nodeA, "put item into keygroup \"rbactest\"")
+	nodeA.PutItem("rbactest", "item1", "value1", false)
+
+	logNodeAction(nodeA, "add little client as read only to rbac test")
+	nodeA.AddUser("littleclient", "rbactest", "ReadKeygroup", false)
+
+	logNodeAction(nodeA, "try to read with little client -> should work")
+	littleClient := grpcclient.NewNode(nodeAhost, port, littleCertFile, littleKeyFile)
+	if val := littleClient.GetItem("rbactest", "item1", false); val != "value1" {
+		logNodeFailure(nodeA, "value1", val)
+		nodeA.Errors++
+	}
+
+	logNodeAction(nodeA, "try to write with little client -> should not work")
+	littleClient.PutItem("rbactest", "item1", "value2", true)
+
+	logNodeAction(nodeA, "add role configure replica to little client -> should work")
+	nodeA.AddUser("littleclient", "rbactest", "ConfigureReplica", false)
+
+	logNodeAction(nodeA, "add replica nodeB to keygroup with little client -> should work")
+	littleClient.AddKeygroupReplica("rbactest", nodeBzmqID, 0, false)
+
+	logNodeAction(nodeB, "remove permission to read from keygroup -> should work")
+	nodeB.RemoveUser("littleclient", "rbactest", "ReadKeygroup", false)
+
+	logNodeAction(nodeA, "try to read from keygroup with little client -> should not work")
+	if val := littleClient.GetItem("rbactest", "item1", true); val != "" {
+		logNodeFailure(nodeA, "", val)
+		nodeA.Errors++
+	}
+
+	totalerrors := nodeA.Errors + nodeB.Errors + nodeC.Errors + littleClient.Errors
 
 	if totalerrors > 0 {
 		log.Error().Msgf("Total Errors: %d", totalerrors)

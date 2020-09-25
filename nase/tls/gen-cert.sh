@@ -28,8 +28,12 @@ ST = Berlin
 L = Berlin
 O = MCC
 OU = FRED
-CN = client
+EOF
 
+# write the CN into the config file
+echo "CN = ${NAME}" >> "${NAME}".conf
+
+cat >> ${NAME}.conf <<EOF
 [v3_req]
 keyUsage = keyEncipherment, dataEncipherment
 extendedKeyUsage = serverAuth, clientAuth

@@ -29,10 +29,6 @@ WORKDIR /
 COPY --from=golang /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=golang /go/bin/frednode frednode
 
-# webserver ports
-# if use-tls=false, only port 80 will be used
-# if use-tls=true, port 80 will be used for ACME and HTTP, port 443 will be used for HTTPS
-EXPOSE 80
 EXPOSE 443
 
 EXPOSE 5555
