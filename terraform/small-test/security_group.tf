@@ -34,9 +34,9 @@ resource "aws_security_group" "allow_fred_sec_web" {
   }
 }
 
-resource "aws_security_group" "allow_fred_zmq" {
-  name        = "allow_fred_zmq"
-  description = "Allow FReD inbound ZMQ traffic"
+resource "aws_security_group" "allow_fred_peering" {
+  name        = "allow_fred_peering"
+  description = "Allow FReD inbound Peering traffic"
 
   ingress {
     from_port   = 5555

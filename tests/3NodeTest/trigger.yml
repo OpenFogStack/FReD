@@ -14,9 +14,8 @@ services:
       - ../../nase/tls/ca.crt:/cert/ca.crt
     networks:
       fredwork:
-        ipv4_address: 172.26.0.30
+        ipv4_address: 172.26.5.1
 
 networks:
   fredwork:
     external: true
-# docker network create fredwork --gateway 172.26.0.1 --subnet 172.26.0.0/16

@@ -31,11 +31,6 @@ func (h *exthandler) HandleCreateKeygroup(user string, k Keygroup) error {
 		return errors.Errorf("error creating keygroup")
 	}
 
-	if err := h.t.createKeygroup(k); err != nil {
-		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
-		return errors.Errorf("error creating keygroup")
-	}
-
 	if err := h.r.createKeygroup(k); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error creating keygroup")
@@ -60,11 +55,6 @@ func (h *exthandler) HandleDeleteKeygroup(user string, k Keygroup) error {
 	}
 
 	if err := h.s.deleteKeygroup(k.Name); err != nil {
-		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
-		return errors.Errorf("error deleting keygroup")
-	}
-
-	if err := h.t.deleteKeygroup(k.Name); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error deleting keygroup")
 	}

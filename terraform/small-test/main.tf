@@ -11,7 +11,7 @@ module "fred-node" {
     aws_security_group.allow_outbound.name,
     aws_security_group.allow_fred_web.name,
     aws_security_group.allow_fred_sec_web.name,
-    aws_security_group.allow_fred_zmq.name
+    aws_security_group.allow_fred_peering.name
   ]
   gitlab_repo_password = var.gitlab_repo_password
   gitlab_repo_username = var.gitlab_repo_username

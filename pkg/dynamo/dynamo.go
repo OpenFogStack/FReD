@@ -17,6 +17,7 @@ import (
 
 const (
 	keyName = "Key"
+	sep     = "|"
 )
 
 // Storage is a struct that saves all necessary information to access the database, in this case the session for DynamoDB and the table name.
@@ -27,17 +28,33 @@ type Storage struct {
 
 // makeKeyName creates the internal DynamoDB key given a keygroup name and an id.
 func makeKeyName(kgname string, id string) string {
-	return kgname + "/" + id
+	return kgname + sep + id
 }
 
 // makeKeygroupKeyName creates the internal DynamoDB key given a keygroup name.
 func makeKeygroupKeyName(kgname string) string {
-	return kgname + "/"
+	return kgname + sep
+}
+
+func makeTriggerConfigKeyName(kgname string, tid string) string {
+	return sep + "fred" + sep + "triggers" + sep + kgname + sep + tid
+}
+
+// getTriggerConfigKey returns the keygroup and id of a key.
+func getTriggerConfigKey(key string) (kg, tid string) {
+	s := strings.Split(key, sep)
+
+	if len(s) == 5 {
+		kg = s[3]
+		tid = s[4]
+	}
+
+	return
 }
 
 // getKey returns the keygroup and id of a key.
 func getKey(key string) (kg, id string) {
-	s := strings.Split(key, "/")
+	s := strings.Split(key, sep)
 	kg = s[0]
 	if len(s) > 1 {
 		id = s[1]
@@ -377,6 +394,7 @@ func (s *Storage) CreateKeygroup(kg string) error {
 // DeleteKeygroup deletes the given keygroup from the DynamoDB database.
 func (s *Storage) DeleteKeygroup(kg string) error {
 
+	// delete all entries for that keygroup
 	key := makeKeygroupKeyName(kg)
 
 	filt := expression.Name(keyName).BeginsWith(key)
@@ -428,5 +446,164 @@ func (s *Storage) DeleteKeygroup(kg string) error {
 		}
 	}
 
+	// delete the keygroup triggers
+
+	key = makeTriggerConfigKeyName(kg, "")
+
+	filt = expression.Name(keyName).BeginsWith(key)
+
+	expr, err = expression.NewBuilder().WithFilter(filt).Build()
+
+	if err != nil {
+		return errors.New(err)
+	}
+
+	params = &dynamodb.ScanInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		FilterExpression:          expr.Filter(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 aws.String(s.dynamotable),
+	}
+
+	// Make the DynamoDB Query API call
+	result, err = s.svc.Scan(params)
+	if err != nil {
+		return errors.New(err)
+	}
+
+	for _, i := range result.Items {
+
+		item := struct {
+			Key string
+		}{}
+
+		err = dynamodbattribute.UnmarshalMap(i, &item)
+
+		if err != nil {
+			return errors.New(err)
+		}
+
+		input := &dynamodb.DeleteItemInput{
+
+			Key: map[string]*dynamodb.AttributeValue{
+				keyName: {
+					S: aws.String(item.Key),
+				},
+			},
+			TableName: aws.String(s.dynamotable),
+		}
+
+		_, err := s.svc.DeleteItem(input)
+		if err != nil {
+			return errors.New(err)
+		}
+	}
+
 	return nil
+}
+
+// AddKeygroupTrigger stores a trigger node in the dynamodb database.
+func (s *Storage) AddKeygroupTrigger(kg string, id string, host string) error {
+	key := makeTriggerConfigKeyName(kg, id)
+
+	Item := struct {
+		Key   string
+		Value string
+	}{
+		Key:   key,
+		Value: host,
+	}
+
+	av, err := dynamodbattribute.MarshalMap(Item)
+
+	if err != nil {
+		return errors.New(err)
+	}
+
+	input := &dynamodb.PutItemInput{
+		Item:      av,
+		TableName: aws.String(s.dynamotable),
+	}
+
+	_, err = s.svc.PutItem(input)
+	if err != nil {
+		return errors.New(err)
+	}
+
+	return nil
+}
+
+// DeleteKeygroupTrigger removes a trigger node from the dynamodb database.
+func (s *Storage) DeleteKeygroupTrigger(kg string, id string) error {
+	key := makeTriggerConfigKeyName(kg, id)
+
+	input := &dynamodb.DeleteItemInput{
+		TableName: aws.String(s.dynamotable),
+		Key: map[string]*dynamodb.AttributeValue{
+			keyName: {
+				S: aws.String(key),
+			},
+		},
+	}
+
+	_, err := s.svc.DeleteItem(input)
+	if err != nil {
+		return errors.New(err)
+	}
+
+	return nil
+}
+
+// GetKeygroupTrigger returns a map of all trigger nodes from the dynamodb database.
+func (s *Storage) GetKeygroupTrigger(kg string) (map[string]string, error) {
+	triggers := make(map[string]string)
+
+	key := makeTriggerConfigKeyName(kg, "")
+
+	filt := expression.Name(keyName).BeginsWith(key)
+
+	expr, err := expression.NewBuilder().WithFilter(filt).Build()
+	if err != nil {
+		return triggers, errors.New(err)
+	}
+
+	params := &dynamodb.ScanInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		FilterExpression:          expr.Filter(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 aws.String(s.dynamotable),
+	}
+
+	// Make the DynamoDB Query API call
+	result, err := s.svc.Scan(params)
+	if err != nil {
+		return triggers, errors.New(err)
+	}
+
+	for _, i := range result.Items {
+
+		item := struct {
+			Key   string
+			Value string
+		}{}
+
+		err = dynamodbattribute.UnmarshalMap(i, &item)
+
+		if err != nil {
+			return triggers, errors.New(err)
+		}
+
+		if item.Key == key {
+			continue
+		}
+
+		_, id := getTriggerConfigKey(item.Key)
+
+		triggers[id] = item.Value
+
+	}
+
+	return triggers, nil
 }

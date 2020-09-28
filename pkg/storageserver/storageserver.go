@@ -121,3 +121,54 @@ func (s Server) DeleteKeygroup(_ context.Context, kg *storage.Keygroup) (*storag
 	}
 	return &storage.Response{Success: true}, nil
 }
+
+// ExistsKeygroup calls specific method of the storage interface
+func (s Server) ExistsKeygroup(ctx context.Context, kg *storage.Keygroup) (*storage.Response, error) {
+	log.Debug().Msgf("GRPCServer: ExistsKeygroup in=%#v", kg)
+	exists := s.store.ExistsKeygroup(kg.Keygroup)
+	return &storage.Response{Success: exists}, nil
+}
+
+// AddKeygroupTrigger calls specific method of the storage interface.
+func (s *Server) AddKeygroupTrigger(ctx context.Context, t *storage.KeygroupTrigger) (*storage.Response, error) {
+	log.Debug().Msgf("GRPCServer: AddKeygroupTrigger in=%#v", t)
+	err := s.store.AddKeygroupTrigger(t.Keygroup, t.Trigger.Id, t.Trigger.Host)
+	if err != nil {
+		log.Err(err).Msgf("GRPCServer has encountered an error while adding trigger %#v", t)
+		return &storage.Response{Success: false}, err
+	}
+	return &storage.Response{Success: true}, nil
+}
+
+// DeleteKeygroupTrigger calls specific method of the storage interface.
+func (s *Server) DeleteKeygroupTrigger(ctx context.Context, t *storage.KeygroupTrigger) (*storage.Response, error) {
+	log.Debug().Msgf("GRPCServer: DeleteKeygroupTrigger in=%#v", t)
+	err := s.store.DeleteKeygroupTrigger(t.Keygroup, t.Trigger.Id)
+	if err != nil {
+		log.Err(err).Msgf("GRPCServer has encountered an error while deleting trigger %#v", t)
+		return &storage.Response{Success: false}, err
+	}
+	return &storage.Response{Success: true}, nil
+}
+
+// GetKeygroupTrigger calls specific method of the storage interface.
+func (s *Server) GetKeygroupTrigger(kg *storage.Keygroup, server storage.Database_GetKeygroupTriggerServer) error {
+	// Steam: call server.send for every trigger, return if none left.
+	log.Debug().Msgf("GRPCServer: GetKeygroupTrigger in=%#v", kg)
+	res, err := s.store.GetKeygroupTrigger(kg.Keygroup)
+	if err != nil {
+		log.Err(err).Msgf("GRPCServer has encountered an error while reading all triggers for keygroup %#v", kg)
+		return err
+	}
+	for id, host := range res {
+		err := server.Send(&storage.Trigger{
+			Id:   id,
+			Host: host,
+		})
+		if err != nil {
+			return err
+		}
+	}
+	// Return nil == successful transfer
+	return nil
+}

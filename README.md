@@ -6,9 +6,6 @@
 
 ## Setup
 
-In order to run zmq please install [zmq](https://zeromq.org/download/) and [czmq](http://czmq.zeromq.org/page:get-the-software).
-On Arch, this is done by running `yay -S czmq-git`. Or use the Docker image.
-
 To use Terraform, install [Terraform](https://www.terraform.io/downloads.html).
 
 ## Git Workflow

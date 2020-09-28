@@ -38,26 +38,26 @@ func main() {
 
 	//apiVersion := *flag.String("apiVersion", "v0", "API Version (e.g. v0)")
 
-	nodeAhost := *flag.String("nodeAhost", "172.26.0.10", "host of nodeA (e.g. localhost)") // Docker: localhost
-	nodeAhttpPort := *flag.String("nodeAhttp", "9001", "port of nodeA (e.g. 9001)")         // Docker: 9002
+	nodeAhost := *flag.String("nodeAhost", "172.26.1.1", "host of nodeA (e.g. localhost)") // Docker: localhost
+	nodeAhttpPort := *flag.String("nodeAhttp", "9001", "port of nodeA (e.g. 9001)")        // Docker: 9002
 	//nodeAzmqhost := *flag.String("nodeAzmqhost", "172.26.0.10", "host of nodeA (e.g. localhost) that can be reached by the other nodes") // Docker: 172.26.0.10
-	//nodeAzmqPort := *flag.Int("nodeAzmqPort", 5555, "ZMQ Port of nodeA")
-	nodeAzmqID := *flag.String("nodeAzmqID", "nodeA", "ZMQ Id of nodeA")
+	//nodeApeeringPort := *flag.Int("nodeAzmqPort", 5555, "ZMQ Port of nodeA")
+	nodeApeeringID := *flag.String("nodeAzmqID", "nodeA", "ZMQ Id of nodeA")
 
-	nodeBhost := *flag.String("nodeBhost", "172.26.0.11", "host of nodeB (e.g. localhost)")
+	nodeBhost := *flag.String("nodeBhost", "172.26.2.1", "host of nodeB (e.g. localhost)")
 	nodeBhttpPort := *flag.String("nodeBhttp", "9001", "port of nodeB (e.g. 9001)")
 	//nodeBzmqhost := *flag.String("nodeBzmqhost", "172.26.0.11", "host of nodeB (e.g. localhost) that can be reached by the other nodes")
-	//nodeBzmqPort := *flag.Int("nodeBzmqPort", 5555, "ZMQ Port of nodeB")
-	nodeBzmqID := *flag.String("nodeBzmqID", "nodeB", "ZMQ Id of nodeB")
+	//nodeBpeeringPort := *flag.Int("nodeBzmqPort", 5555, "ZMQ Port of nodeB")
+	nodeBpeeringID := *flag.String("nodeBzmqID", "nodeB", "ZMQ Id of nodeB")
 
-	nodeChost := *flag.String("nodeChost", "172.26.0.12", "host of nodeC (e.g. localhost)")
+	nodeChost := *flag.String("nodeChost", "172.26.3.1", "host of nodeC (e.g. localhost)")
 	nodeChttpPort := *flag.String("nodeChttp", "9001", "port of nodeC (e.g. 9001)")
 	//nodeCzmqhost := *flag.String("nodeCzmqhost", "172.26.0.12", "host of nodeC (e.g. localhost) that can be reached by the other nodes")
-	//nodeCzmqPort := *flag.Int("nodeCzmqPort", 5555, "ZMQ Port of nodeC")
-	nodeCzmqID := *flag.String("nodeCzmqID", "nodeC", "ZMQ Id of nodeC")
+	//nodeCpeeringPort := *flag.Int("nodeCzmqPort", 5555, "ZMQ Port of nodeC")
+	nodeCpeeringID := *flag.String("nodeCzmqID", "nodeC", "ZMQ Id of nodeC")
 
-	triggerNodeHost := *flag.String("triggerNodeHost", "172.26.0.30:3333", "host of trigger node (e.g. localhost:3333)")
-	triggerNodeWSHost := *flag.String("triggerNodeWSHost", "172.26.0.30:80", "host of trigger node web server (e.g. localhost:80)")
+	triggerNodeHost := *flag.String("triggerNodeHost", "172.26.5.1:3333", "host of trigger node (e.g. localhost:3333)")
+	triggerNodeWSHost := *flag.String("triggerNodeWSHost", "172.26.5.1:80", "host of trigger node web server (e.g. localhost:80)")
 	triggerNodeID := *flag.String("triggerNodeID", "triggernode", "Id of trigger node")
 
 	certFile := *flag.String("cert-file", "/cert/client.crt", "Certificate to talk to FReD")
@@ -67,23 +67,6 @@ func main() {
 	littleKeyFile := *flag.String("little-key-file", "/cert/littleclient.key", "Keyfile to talk to FReD as \"littleclient\"")
 
 	flag.Parse()
-
-	//var protocol string
-	//
-	//if useTLS {
-	//	protocol = "https"
-	//} else {
-	//	protocol = "http"
-	//}
-
-	//nodeAurl := fmt.Sprintf("%s://%s:%s/%s", protocol, nodeAhost, nodeAhttpPort, apiVersion)
-	//log.Debug().Msgf("Node A: %s with ZMQ Port %d and ID %s", nodeAurl, nodeAzmqPort, nodeAzmqID)
-	//
-	//nodeBurl := fmt.Sprintf("%s://%s:%s/%s", protocol, nodeBhost, nodeBhttpPort, apiVersion)
-	//log.Debug().Msgf("Node B: %s with ZMQ Port %d and ID %s", nodeBurl, nodeBzmqPort, nodeBzmqID)
-	//
-	//nodeCurl := fmt.Sprintf("%s://%s:%s/%s", protocol, nodeChost, nodeChttpPort, apiVersion)
-	//log.Debug().Msgf("Node C: %s with ZMQ Port %d and ID %s", nodeCurl, nodeCzmqPort, nodeCzmqID)
 
 	port, _ := strconv.Atoi(nodeAhttpPort)
 	nodeA := grpcclient.NewNode(nodeAhost, port, certFile, keyFile)
@@ -148,7 +131,7 @@ func main() {
 	// sorry but i still love go
 	check := (len(parsed) != 3) && func() bool {
 		for _, id := range parsed {
-			if id == nodeBzmqID {
+			if id == nodeBpeeringID {
 				return true
 			}
 		}
@@ -156,7 +139,7 @@ func main() {
 		return false
 	}() && func() bool {
 		for _, id := range parsed {
-			if id == nodeCzmqID {
+			if id == nodeCpeeringID {
 				return true
 			}
 		}
@@ -165,12 +148,12 @@ func main() {
 	}()
 
 	if check {
-		logNodeFailure(nodeA, "parsed == ["+nodeBzmqID+", "+nodeCzmqID+","+nodeAzmqID+"]", fmt.Sprintf("%#v", parsed))
+		logNodeFailure(nodeA, "parsed == ["+nodeBpeeringID+", "+nodeCpeeringID+","+nodeApeeringID+"]", fmt.Sprintf("%#v", parsed))
 	}
 
 	// Fun with replicas
 	logNodeAction(nodeA, "Adding nodeB as Replica node for KG1")
-	nodeA.AddKeygroupReplica("KG1", nodeBzmqID, 0, false)
+	nodeA.AddKeygroupReplica("KG1", nodeBpeeringID, 0, false)
 
 	logNodeAction(nodeB, "Deleting the value from KG1")
 	nodeB.DeleteItem("KG1", "KG1Item", false)
@@ -181,7 +164,7 @@ func main() {
 	// Test sending data between nodes
 	logNodeAction(nodeB, "Creating a new Keygroup (KGN) in nodeB, setting nodeA as Replica node")
 	nodeB.CreateKeygroup("KGN", true, 0, false)
-	nodeB.AddKeygroupReplica("KGN", nodeAzmqID, 0, false)
+	nodeB.AddKeygroupReplica("KGN", nodeApeeringID, 0, false)
 
 	logNodeAction(nodeB, "Putting something in KGN on nodeB, testing whether nodeA gets Replica (sleep 1.5s in between)")
 	nodeB.PutItem("KGN", "Item", "Value", false)
@@ -200,18 +183,18 @@ func main() {
 	}
 
 	logNodeAction(nodeA, "Adding a replica for a nonexisting Keygroup")
-	nodeA.AddKeygroupReplica("trololololo", nodeBzmqID, 0, true)
+	nodeA.AddKeygroupReplica("trololololo", nodeBpeeringID, 0, true)
 
 	logNodeAction(nodeC, "Creating an already existing keygroup with another node")
 	nodeC.CreateKeygroup("KGN", true, 0, true)
 
 	logNodeAction(nodeC, "Telling a node that is not part of the keygroup that it is now part of that keygroup")
-	nodeC.AddKeygroupReplica("KGN", nodeCzmqID, 0, false)
+	nodeC.AddKeygroupReplica("KGN", nodeCpeeringID, 0, false)
 
 	logNodeAction(nodeA, "Creating a new Keygroup (kgall) with all three nodes as replica")
 	nodeA.CreateKeygroup("kgall", true, 0, false)
-	nodeA.AddKeygroupReplica("kgall", nodeBzmqID, 0, false)
-	nodeB.AddKeygroupReplica("kgall", nodeCzmqID, 0, false)
+	nodeA.AddKeygroupReplica("kgall", nodeBpeeringID, 0, false)
+	nodeB.AddKeygroupReplica("kgall", nodeCpeeringID, 0, false)
 
 	logNodeAction(nodeC, "... sending data to one node, checking whether all nodes get the replica (sleep 1.5s)")
 	nodeC.PutItem("kgall", "item", "value", false)
@@ -224,14 +207,14 @@ func main() {
 	}
 
 	logNodeAction(nodeB, "...removing node from the keygroup all and checking whether it still has the data (sleep 1.5s)")
-	nodeB.DeleteKeygroupReplica("kgall", nodeBzmqID, false)
+	nodeB.DeleteKeygroupReplica("kgall", nodeBpeeringID, false)
 	time.Sleep(1500 * time.Millisecond)
 	respB = nodeB.GetItem("kgall", "item", true)
 
 	logNodeAction(nodeB, fmt.Sprintf("Got Response %s", respB))
 
 	logNodeAction(nodeB, "...re-adding the node to the keygroup all and checking whether it now gets the data (sleep 1.5s)")
-	nodeA.AddKeygroupReplica("kgall", nodeBzmqID, 0, false)
+	nodeA.AddKeygroupReplica("kgall", nodeBpeeringID, 0, false)
 	time.Sleep(1500 * time.Millisecond)
 	respA = nodeA.GetItem("kgall", "item", false)
 
@@ -270,7 +253,7 @@ func main() {
 	nodeA.PutItem("nottriggertesting", "item3", "value3", false)
 	//add keygroup to nodeB as well
 	logNodeAction(nodeA, "add keygroup triggertesting to nodeB as well")
-	nodeA.AddKeygroupReplica("triggertesting", nodeBzmqID, 0, false)
+	nodeA.AddKeygroupReplica("triggertesting", nodeBpeeringID, 0, false)
 	//post item4 to nodeB
 	logNodeAction(nodeB, "post item4 to nodeB in keygroup triggertesting")
 	nodeB.PutItem("triggertesting", "item4", "value4", false)
@@ -313,7 +296,7 @@ func main() {
 	// delete item from keygroup -> should not work
 	nodeB.DeleteItem("log", "testitem", true)
 	// add nodeC as replica node
-	nodeB.AddKeygroupReplica("log", nodeCzmqID, 0, false)
+	nodeB.AddKeygroupReplica("log", nodeCpeeringID, 0, false)
 	// update item on nodeC -> should not work
 	nodeC.PutItem("log", "testitem", "value3", true)
 
@@ -321,7 +304,7 @@ func main() {
 	// create a new keygroup without expiry on nodeC
 	nodeC.CreateKeygroup("expirytest", true, 0, false)
 	// add nodeA as replica with expiry 5s
-	nodeC.AddKeygroupReplica("expirytest", nodeAzmqID, 5, false)
+	nodeC.AddKeygroupReplica("expirytest", nodeApeeringID, 5, false)
 	// insert item on nodeC
 	nodeC.PutItem("expirytest", "test", "test", false)
 	// check if nodeA gets item -> should work
@@ -341,7 +324,7 @@ func main() {
 	// add another one
 	nodeB.PutItem("pulltest", "item2", "val2", false)
 	// add nodeA as a replica to that keygroup and see if it pulls the needed data on its own
-	nodeA.AddKeygroupReplica("pulltest", nodeAzmqID, 0, false)
+	nodeA.AddKeygroupReplica("pulltest", nodeApeeringID, 0, false)
 	// check if the items exist
 	if res := nodeA.GetItem("pulltest", "item1", false); res != "val1" {
 		logNodeFailure(nodeA, "val1", res)
@@ -383,7 +366,7 @@ func main() {
 	nodeA.AddUser("littleclient", "rbactest", "ConfigureReplica", false)
 
 	logNodeAction(nodeA, "add replica nodeB to keygroup with little client -> should work")
-	littleClient.AddKeygroupReplica("rbactest", nodeBzmqID, 0, false)
+	littleClient.AddKeygroupReplica("rbactest", nodeBpeeringID, 0, false)
 
 	logNodeAction(nodeB, "remove permission to read from keygroup -> should work")
 	nodeB.RemoveUser("littleclient", "rbactest", "ReadKeygroup", false)

@@ -69,11 +69,6 @@ func newNameService(nodeID string, endpoints []string, certfFile string, keyFile
 func (n *nameService) registerSelf(host Address) error {
 	key := fmt.Sprintf(fmtNodeAdressString, n.NodeID)
 	log.Debug().Msgf("NaSe: registering self as %s // %s", key, host.Addr)
-	err := n.put(key, host.Addr)
-
-	if err != nil {
-		return err
-	}
 	return n.put(key, host.Addr)
 }
 
