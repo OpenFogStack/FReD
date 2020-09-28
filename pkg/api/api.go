@@ -335,7 +335,7 @@ func (s *Server) RemoveReplica(ctx context.Context, request *client.RemoveReplic
 }
 
 func replicaResponseFromNode(n fred.Node) *client.GetReplicaResponse {
-	return &client.GetReplicaResponse{NodeId: string(n.ID), Addr: n.Addr.Addr, Port: int32(n.Port)}
+	return &client.GetReplicaResponse{NodeId: string(n.ID), Host: n.Host}
 }
 
 // GetReplica calls this method on the exthandler

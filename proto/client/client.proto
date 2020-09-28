@@ -101,8 +101,7 @@ message GetReplicaRequest {
 
 message GetReplicaResponse {
   string nodeId = 1;
-  string addr = 2;
-  int32 port = 3;
+  string host = 2;
 }
 
 message GetAllReplicaRequest {

@@ -115,8 +115,6 @@ func main() {
 	resp = nodeA.GetItem("KG1", "KG1Item", false)
 	if resp != "KG1Value2" {
 		logNodeFailure(nodeA, "resp is \"KG1Value2\"", resp)
-	} else {
-		logDebugInfo(nodeA, "Got "+resp)
 	}
 
 	logNodeAction(nodeA, "Getting all Replicas that nodeA has")
@@ -394,11 +392,6 @@ func logNodeAction(node *grpcclient.Node, action string) {
 func logNodeFailure(node *grpcclient.Node, expected, result string) {
 	wait()
 	log.Warn().Str("node", node.Addr).Msgf("expected: %s, but got: %#v", expected, result)
-}
-
-func logDebugInfo(node *grpcclient.Node, info string) {
-	wait()
-	log.Debug().Str("node", node.Addr).Msg(info)
 }
 
 func checkTriggerNode(triggerNodeID, triggerNodeWSHost string) {

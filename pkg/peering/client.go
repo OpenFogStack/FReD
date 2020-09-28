@@ -2,7 +2,6 @@ package peering
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/go-errors/errors"
 	"github.com/rs/zerolog/log"
@@ -22,13 +21,13 @@ func NewClient() *Client {
 // createConnAndClient creates a new connection to a server.
 // Maybe it could be useful to reuse these?
 // IDK whether this would be faster to store them in a map
-func (c *Client) getConnAndClient(host fred.Address, port int) (client peering.NodeClient, conn *grpc.ClientConn) {
-	conn, err := grpc.Dial(fmt.Sprintf("%s:%d", host.Addr, port), grpc.WithInsecure())
+func (c *Client) getConnAndClient(host string) (client peering.NodeClient, conn *grpc.ClientConn) {
+	conn, err := grpc.Dial(host, grpc.WithInsecure())
 	if err != nil {
 		log.Fatal().Err(err).Msg("Cannot create Grpc connection")
 		return nil, nil
 	}
-	log.Info().Msgf("Interclient: Created Connection to %s:%d", host.Addr, port)
+	log.Info().Msgf("Interclient: Created Connection to %s", host)
 	client = peering.NewNodeClient(conn)
 	return
 }
@@ -58,8 +57,8 @@ func (c *Client) Destroy() {
 }
 
 // SendCreateKeygroup sends this command to the server at this address
-func (c *Client) SendCreateKeygroup(addr fred.Address, port int, kgname fred.KeygroupName, expiry int) error {
-	client, conn := c.getConnAndClient(addr, port)
+func (c *Client) SendCreateKeygroup(host string, kgname fred.KeygroupName, expiry int) error {
+	client, conn := c.getConnAndClient(host)
 	res, err := client.CreateKeygroup(context.Background(), &peering.CreateKeygroupRequest{Keygroup: string(kgname), Expiry: int64(expiry)})
 
 	err = c.dealWithStatusResponse(res, err, "CreateKeygroup")
@@ -72,8 +71,8 @@ func (c *Client) SendCreateKeygroup(addr fred.Address, port int, kgname fred.Key
 }
 
 // SendDeleteKeygroup sends this command to the server at this address
-func (c *Client) SendDeleteKeygroup(addr fred.Address, port int, kgname fred.KeygroupName) error {
-	client, conn := c.getConnAndClient(addr, port)
+func (c *Client) SendDeleteKeygroup(host string, kgname fred.KeygroupName) error {
+	client, conn := c.getConnAndClient(host)
 	res, err := client.DeleteKeygroup(context.Background(), &peering.DeleteKeygroupRequest{Keygroup: string(kgname)})
 
 	err = c.dealWithStatusResponse(res, err, "DeleteKeygroup")
@@ -86,8 +85,8 @@ func (c *Client) SendDeleteKeygroup(addr fred.Address, port int, kgname fred.Key
 }
 
 // SendUpdate sends this command to the server at this address
-func (c *Client) SendUpdate(addr fred.Address, port int, kgname fred.KeygroupName, id string, value string) error {
-	client, conn := c.getConnAndClient(addr, port)
+func (c *Client) SendUpdate(host string, kgname fred.KeygroupName, id string, value string) error {
+	client, conn := c.getConnAndClient(host)
 	res, err := client.PutItem(context.Background(), &peering.PutItemRequest{
 		Keygroup: string(kgname),
 		Id:       id,
@@ -104,8 +103,8 @@ func (c *Client) SendUpdate(addr fred.Address, port int, kgname fred.KeygroupNam
 }
 
 // SendDelete sends this command to the server at this address
-func (c *Client) SendDelete(addr fred.Address, port int, kgname fred.KeygroupName, id string) error {
-	client, _ := c.getConnAndClient(addr, port)
+func (c *Client) SendDelete(host string, kgname fred.KeygroupName, id string) error {
+	client, _ := c.getConnAndClient(host)
 	res, err := client.DeleteItem(context.Background(), &peering.DeleteItemRequest{
 		Keygroup: string(kgname),
 		Id:       id,
@@ -114,8 +113,8 @@ func (c *Client) SendDelete(addr fred.Address, port int, kgname fred.KeygroupNam
 }
 
 // SendAddReplica sends this command to the server at this address
-func (c *Client) SendAddReplica(addr fred.Address, port int, kgname fred.KeygroupName, node fred.Node, expiry int) error {
-	client, _ := c.getConnAndClient(addr, port)
+func (c *Client) SendAddReplica(host string, kgname fred.KeygroupName, node fred.Node, expiry int) error {
+	client, _ := c.getConnAndClient(host)
 	res, err := client.AddReplica(context.Background(), &peering.AddReplicaRequest{
 		NodeId:   string(node.ID),
 		Keygroup: string(kgname),
@@ -125,8 +124,8 @@ func (c *Client) SendAddReplica(addr fred.Address, port int, kgname fred.Keygrou
 }
 
 // SendRemoveReplica sends this command to the server at this address
-func (c *Client) SendRemoveReplica(addr fred.Address, port int, kgname fred.KeygroupName, node fred.Node) error {
-	client, _ := c.getConnAndClient(addr, port)
+func (c *Client) SendRemoveReplica(host string, kgname fred.KeygroupName, node fred.Node) error {
+	client, _ := c.getConnAndClient(host)
 	res, err := client.RemoveReplica(context.Background(), &peering.RemoveReplicaRequest{
 		NodeId:   string(node.ID),
 		Keygroup: string(kgname),
@@ -135,8 +134,8 @@ func (c *Client) SendRemoveReplica(addr fred.Address, port int, kgname fred.Keyg
 }
 
 // SendGetItem sends this command to the server at this address
-func (c *Client) SendGetItem(addr fred.Address, port int, kgname fred.KeygroupName, id string) (fred.Item, error) {
-	client, _ := c.getConnAndClient(addr, port)
+func (c *Client) SendGetItem(host string, kgname fred.KeygroupName, id string) (fred.Item, error) {
+	client, _ := c.getConnAndClient(host)
 	res, err := client.GetItem(context.Background(), &peering.GetItemRequest{
 		Keygroup: string(kgname),
 		Id:       id,
@@ -164,8 +163,8 @@ func (c *Client) SendGetItem(addr fred.Address, port int, kgname fred.KeygroupNa
 }
 
 // SendGetAllItems sends this command to the server at this address
-func (c *Client) SendGetAllItems(addr fred.Address, port int, kgname fred.KeygroupName) ([]fred.Item, error) {
-	client, _ := c.getConnAndClient(addr, port)
+func (c *Client) SendGetAllItems(host string, kgname fred.KeygroupName) ([]fred.Item, error) {
+	client, _ := c.getConnAndClient(host)
 	res, err := client.GetAllItems(context.Background(), &peering.GetAllItemsRequest{
 		Keygroup: string(kgname),
 	})
