@@ -9,6 +9,7 @@ import (
 type Config struct {
 	Store            Store
 	Client           Client
+	NaSe             NameService
 	PeeringHost      string
 	PeeringHostProxy string
 	NodeID           string
@@ -59,18 +60,10 @@ type ExtHandler interface {
 
 // New creates a new FReD instance.
 func New(config *Config) (f Fred) {
-	s := newStoreService(config.Store)
-
-	n, err := newNameService(config.NodeID, config.NaSeHosts, config.NaSeCert, config.NaSeKey, config.NaSeCA)
-
-	if err != nil {
-		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
-		panic(err)
-	}
 
 	if config.PeeringHostProxy != "" && config.PeeringHost != config.PeeringHostProxy {
 		// we are behind a proxy: register with the proxy address for everyone else to find us
-		err = n.registerSelf(Address{Addr: config.PeeringHostProxy})
+		err := config.NaSe.RegisterSelf(config.PeeringHostProxy)
 
 		if err != nil {
 			log.Err(err).Msg(err.(*errors.Error).ErrorStack())
@@ -78,7 +71,7 @@ func New(config *Config) (f Fred) {
 		}
 	} else {
 		// not behind a proxy: register with the local bind address
-		err = n.registerSelf(Address{Addr: config.PeeringHost})
+		err := config.NaSe.RegisterSelf(config.PeeringHost)
 
 		if err != nil {
 			log.Err(err).Msg(err.(*errors.Error).ErrorStack())
@@ -86,14 +79,16 @@ func New(config *Config) (f Fred) {
 		}
 	}
 
-	r := newReplicationService(s, config.Client, n)
+	s := newStoreService(config.Store)
+
+	r := newReplicationService(s, config.Client, config.NaSe)
 
 	t := newTriggerService(s, config.TriggerCert, config.TriggerKey)
 
-	a := newAuthService(n)
+	a := newAuthService(config.NaSe)
 
 	return Fred{
-		E: newExthandler(s, r, t, n, a),
-		I: newInthandler(s, r, t, n),
+		E: newExthandler(s, r, t, a, config.NaSe),
+		I: newInthandler(s, r, t, config.NaSe),
 	}
 }

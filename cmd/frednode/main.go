@@ -12,6 +12,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/api"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/dynamo"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/etcdnase"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/peering"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/storageclient"
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -281,16 +282,20 @@ func main() {
 	log.Debug().Msg("Starting Interconnection Client...")
 	c := peering.NewClient()
 
+	log.Debug().Msg("Starting NaSe Client...")
+	n, err := etcdnase.NewNameService(fc.General.nodeID, []string{fc.NaSe.Host}, fc.NaSe.Cert, fc.NaSe.Key, fc.NaSe.CA)
+
+	if err != nil {
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		panic(err)
+	}
+
 	f := fred.New(&fred.Config{
 		Store:            store,
 		Client:           c,
+		NaSe:             n,
 		PeeringHost:      fc.Peering.Host,
 		PeeringHostProxy: fc.Peering.HostProxy,
-		NodeID:           fc.General.nodeID,
-		NaSeHosts:        []string{fc.NaSe.Host},
-		NaSeCert:         fc.NaSe.Cert,
-		NaSeKey:          fc.NaSe.Key,
-		NaSeCA:           fc.NaSe.CA,
 		TriggerCert:      fc.Trigger.Cert,
 		TriggerKey:       fc.Trigger.Key,
 	})

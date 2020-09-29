@@ -12,6 +12,5 @@ type NodeID string
 // Node is a replica node.
 type Node struct {
 	ID   NodeID
-	Addr Address
-	Port int
+	Host string
 }

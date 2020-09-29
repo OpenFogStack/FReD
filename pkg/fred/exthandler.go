@@ -9,29 +9,29 @@ type exthandler struct {
 	s *storeService
 	r *replicationService
 	t *triggerService
-	n *nameService
 	a *authService
+	n NameService
 }
 
 // newExthandler creates a new handler for client request (i.e. from clients).
-func newExthandler(s *storeService, r *replicationService, t *triggerService, n *nameService, a *authService) *exthandler {
+func newExthandler(s *storeService, r *replicationService, t *triggerService, a *authService, n NameService) *exthandler {
 	return &exthandler{
 		s: s,
 		r: r,
 		t: t,
-		n: n,
 		a: a,
+		n: n,
 	}
 }
 
 // HandleCreateKeygroup handles requests to the CreateKeygroup endpoint of the client interface.
 func (h *exthandler) HandleCreateKeygroup(user string, k Keygroup) error {
-	if err := h.s.createKeygroup(k.Name); err != nil {
+	if err := h.r.createKeygroup(k); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error creating keygroup")
 	}
 
-	if err := h.r.createKeygroup(k); err != nil {
+	if err := h.s.createKeygroup(k.Name); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error creating keygroup")
 	}
@@ -98,7 +98,7 @@ func (h *exthandler) HandleUpdate(user string, i Item) error {
 		return errors.Errorf("user %s cannot update in keygroup %s", user, i.Keygroup)
 	}
 
-	m, err := h.n.isMutable(i.Keygroup)
+	m, err := h.n.IsMutable(i.Keygroup)
 
 	if err != nil {
 		return err
@@ -110,7 +110,7 @@ func (h *exthandler) HandleUpdate(user string, i Item) error {
 		}
 	}
 
-	expiry, err := h.n.getExpiry(i.Keygroup)
+	expiry, err := h.n.GetExpiry(i.Keygroup)
 
 	if err != nil {
 		return err
@@ -143,7 +143,7 @@ func (h *exthandler) HandleDelete(user string, i Item) error {
 		return errors.Errorf("user %s cannot delete keygroup %s", user, i.Keygroup)
 	}
 
-	m, err := h.n.isMutable(i.Keygroup)
+	m, err := h.n.IsMutable(i.Keygroup)
 
 	if err != nil {
 		return err

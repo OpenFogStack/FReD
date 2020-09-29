@@ -6,11 +6,11 @@ import (
 )
 
 type authService struct {
-	n *nameService
+	n NameService
 }
 
 // newAuthService creates a new authorization service.
-func newAuthService(n *nameService) *authService {
+func newAuthService(n NameService) *authService {
 	return &authService{
 		n: n,
 	}
@@ -21,7 +21,7 @@ func (a *authService) addRoles(u string, r []Role, k KeygroupName) error {
 		for m := range permissions[role] {
 			log.Debug().Msgf("adding permission %s from user %s for keygroup %s", m, u, k)
 
-			err := a.n.addUserPermissions(u, m, k)
+			err := a.n.AddUserPermissions(u, m, k)
 
 			if err != nil {
 				return errors.New(err)
@@ -37,7 +37,7 @@ func (a *authService) revokeRoles(u string, r []Role, k KeygroupName) error {
 		for m := range permissions[role] {
 			log.Debug().Msgf("removing permission %s from user %s for keygroup %s", m, u, k)
 
-			err := a.n.revokeUserPermissions(u, m, k)
+			err := a.n.RevokeUserPermissions(u, m, k)
 
 			if err != nil {
 				return errors.New(err)
@@ -50,7 +50,7 @@ func (a *authService) revokeRoles(u string, r []Role, k KeygroupName) error {
 
 func (a *authService) isAllowed(u string, m Method, k KeygroupName) (bool, error) {
 	log.Debug().Msgf("checking if user %s is allowed to perform %s on keygroup %s", u, m, k)
-	p, err := a.n.getUserPermissions(u, k)
+	p, err := a.n.GetUserPermissions(u, k)
 
 	log.Debug().Msgf("result of check if user %s is allowed to perform %s on keygroup %s: %v", u, m, k, p)
 
