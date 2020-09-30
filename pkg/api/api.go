@@ -235,6 +235,28 @@ func (s *Server) Read(ctx context.Context, request *client.ReadRequest) (*client
 
 }
 
+// Append calls this method on the exthandler
+func (s *Server) Append(ctx context.Context, request *client.AppendRequest) (*client.AppendResponse, error) {
+	log.Debug().Msgf("ExtServer has rcvd Append. In: %#v", request)
+
+	user, err := s.checkCert(ctx)
+
+	if err != nil {
+		_, err = statusResponseFromError(err)
+		return nil, err
+	}
+
+	res, err := s.e.HandleAppend(user, fred.Item{Keygroup: fred.KeygroupName(request.Keygroup), Val: request.Data})
+
+	if err != nil {
+		return &client.AppendResponse{}, err
+	}
+
+	return &client.AppendResponse{
+		Id: res.ID,
+	}, nil
+}
+
 // Update calls this method on the exthandler
 func (s *Server) Update(ctx context.Context, request *client.UpdateRequest) (*client.StatusResponse, error) {
 

@@ -98,6 +98,18 @@ func (c *Client) Update(kg string, id string, val string, expiry int) error {
 	return nil
 }
 
+// Append calls the same method on the remote server
+func (c *Client) Append(kg string, val string, expiry int) (string, error) {
+	response, err := c.dbClient.Append(context.Background(), &storage.AppendItem{Keygroup: kg, Val: val, Expiry: int64(expiry)})
+	log.Debug().Err(err).Msgf("StorageClient: Append in: %#v,%#v out: %#v", kg, val, response)
+
+	if err != nil {
+		return "", errors.New(err)
+	}
+
+	return response.Id, nil
+}
+
 // Delete calls the same method on the remote server
 func (c *Client) Delete(kg string, id string) error {
 	response, err := c.dbClient.Delete(context.Background(), &storage.Key{Keygroup: kg, Id: id})

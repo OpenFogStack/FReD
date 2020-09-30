@@ -1,6 +1,7 @@
 package badgerdb
 
 import (
+	"strconv"
 	"testing"
 	"time"
 
@@ -194,5 +195,48 @@ func TestExpiry(t *testing.T) {
 	_, err = db.Read(kg, id)
 	if err == nil {
 		t.Fatal(err)
+	}
+}
+
+func TestAppend(t *testing.T) {
+	kg := "log"
+	v1 := "value-1"
+	v2 := "value-2"
+
+	err := db.CreateKeygroup(kg)
+
+	if err != nil {
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+	}
+
+	key1, err := db.Append(kg, v1, 0)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	if key1 != "0" {
+		t.Fatalf("Expected to get %s but got %s", "0", key1)
+	}
+
+	key2, err := db.Append(kg, v2, 0)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	if key2 != "1" {
+		t.Fatalf("Expected to get %s but got %s", "0", key2)
+	}
+
+	for i := 2; i < 100; i++ {
+		v := "value-" + strconv.Itoa(i)
+		key, err := db.Append(kg, v, 0)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if key != strconv.Itoa(i) {
+			t.Fatalf("Expected to get %s but got %s", strconv.Itoa(i), key)
+		}
 	}
 }

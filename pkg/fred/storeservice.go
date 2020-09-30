@@ -8,6 +8,8 @@ type Store interface {
 	Update(kg, id, val string, expiry int) error
 	// Needs: keygroup, id
 	Delete(kg, id string) error
+	// Needs: keygroup, val, Returns: key
+	Append(kg, val string, expiry int) (string, error)
 	// Needs: keygroup, id; Returns: val
 	Read(kg, id string) (string, error)
 	// Needs: keygroup; Returns: keygroup, id, val
@@ -102,12 +104,6 @@ func (s *storeService) readAll(kg KeygroupName) ([]Item, error) {
 
 // exists checks if an item exists in the key-value store.
 func (s *storeService) exists(i Item) bool {
-	err := checkItem(i)
-
-	if err != nil {
-		return false
-	}
-
 	return s.iS.Exists(string(i.Keygroup), i.ID)
 }
 
@@ -151,6 +147,23 @@ func (s *storeService) delete(kg KeygroupName, id string) error {
 	}
 
 	return nil
+}
+
+// append appends an item in the key-value store.
+func (s *storeService) append(i Item, expiry int) (Item, error) {
+	if !s.iS.ExistsKeygroup(string(i.Keygroup)) {
+		return i, errors.Errorf("no such keygroup in store: %#v", i.Keygroup)
+	}
+
+	k, err := s.iS.Append(string(i.Keygroup), i.Val, expiry)
+
+	if err != nil {
+		return i, err
+	}
+
+	i.ID = k
+
+	return i, nil
 }
 
 // TODO Tobias check whether the CreateKeygroup function was populated the right way

@@ -31,6 +31,23 @@ func (s *Server) Update(_ context.Context, item *storage.UpdateItem) (*storage.R
 	return &storage.Response{Success: true}, nil
 }
 
+// Append calls specific method of the storage interface
+func (s *Server) Append(_ context.Context, item *storage.AppendItem) (*storage.Key, error) {
+	log.Debug().Msgf("GRPCServer: Append in=%#v", item)
+
+	res, err := s.store.Append(item.Keygroup, item.Val, int(item.Expiry))
+
+	if err != nil {
+		log.Err(err).Msgf("GRPCServer has encountered an error while appending item %#v", item)
+		return &storage.Key{}, err
+	}
+
+	return &storage.Key{
+		Keygroup: item.Keygroup,
+		Id:       res,
+	}, nil
+}
+
 // Delete calls specific method of the storage interface
 func (s Server) Delete(_ context.Context, key *storage.Key) (*storage.Response, error) {
 	log.Debug().Msgf("GRPCServer: Delete in=%#v", key)

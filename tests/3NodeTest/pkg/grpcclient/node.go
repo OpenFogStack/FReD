@@ -258,6 +258,25 @@ func (n Node) PutItem(kgname, item string, data string, expectError bool) {
 	}
 }
 
+// AppendItem calls the AppendItem endpoint of the GRPC interface.
+func (n Node) AppendItem(kgname string, data string, expectError bool) string {
+	status, err := n.Client.Append(context.Background(), &client.AppendRequest{
+		Keygroup: kgname,
+		Data:     data,
+	})
+
+	if err != nil != expectError {
+		log.Warn().Msgf("Append: error %s", err)
+		n.Errors++
+	}
+
+	if err != nil {
+		return ""
+	}
+
+	return status.Id
+}
+
 // GetItem calls the GetItem endpoint of the GRPC interface.
 func (n Node) GetItem(kgname, item string, expectError bool) string {
 	res, err := n.Client.Read(context.Background(), &client.ReadRequest{

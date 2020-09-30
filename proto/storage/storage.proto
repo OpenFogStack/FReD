@@ -6,6 +6,7 @@ option go_package = ".;storage";
 service Database {
 	  rpc Update (UpdateItem) returns (Response) {}
     rpc Delete (Key) returns (Response) {}
+    rpc Append (AppendItem) returns (Key) {}
     rpc Read (Key) returns (Val) {}
     rpc ReadAll (Keygroup) returns (stream Item) {}
     rpc IDs (Keygroup) returns (stream Key) {}
@@ -29,6 +30,12 @@ message UpdateItem {
     string id = 2;
     string val = 3;
     int64 expiry = 4;
+}
+
+message AppendItem {
+    string keygroup = 1;
+    string val = 2;
+    int64 expiry = 3;
 }
 
 message Trigger {
