@@ -281,22 +281,40 @@ func main() {
 	// create immutable keygroup on nodeB
 	logNodeAction(nodeB, "Testing immutable keygroups by creating a new immutable keygroup on nodeB")
 	nodeB.CreateKeygroup("log", false, 0, false)
-	// create item to keygroup -> should work
-	nodeB.PutItem("log", "testitem", "value1", false)
+	// create item to keygroup -> should work and return 0 as a key
+	res := nodeB.AppendItem("log", "value1", false)
+
+	if res != "0" {
+		logNodeFailure(nodeB, "0", res)
+	}
+
 	// update item in keygroup -> should not work
-	nodeB.PutItem("log", "testitem", "value2", true)
+	nodeB.PutItem("log", res, "value2", true)
+	// perform a random putitem on this keygroup
+	nodeB.PutItem("log", "item1", "value2", true)
 	// get item from keygroup -> should return appended item
-	respB = nodeB.GetItem("log", "testitem", false)
+	respB = nodeB.GetItem("log", res, false)
 
 	if respB != "value1" {
 		logNodeFailure(nodeB, "resp is not value1", respB)
 	}
+
 	// delete item from keygroup -> should not work
-	nodeB.DeleteItem("log", "testitem", true)
+	nodeB.DeleteItem("log", res, true)
 	// add nodeC as replica node
 	nodeB.AddKeygroupReplica("log", nodeCpeeringID, 0, false)
 	// update item on nodeC -> should not work
-	nodeC.PutItem("log", "testitem", "value3", true)
+	nodeC.PutItem("log", res, "value3", true)
+	// append another item to keygroup -> should return 1 as a key
+	res = nodeC.AppendItem("log", "value2", false)
+
+	if res != "1" {
+		logNodeFailure(nodeB, "1", res)
+	}
+
+	// now append an item to a keygroup that is mutable
+	nodeC.CreateKeygroup("notalog", true, 0, false)
+	nodeC.AppendItem("notalog", "value1", true)
 
 	// test expiring data items
 	// create a new keygroup without expiry on nodeC

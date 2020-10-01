@@ -1,6 +1,7 @@
 package dynamo
 
 import (
+	"strconv"
 	"strings"
 	"time"
 
@@ -203,6 +204,104 @@ func (s *Storage) ReadAll(kg string) (map[string]string, error) {
 	}
 
 	return items, nil
+}
+
+// Append appends the item to the specified keygroup by incrementing the latest key by one.
+func (s *Storage) Append(kg, val string, expiry int) (string, error) {
+	// first, get the latest key
+	// maximum of 18446744073709551615, though!
+	// if you reach this maximum, please send me a letter
+	var newest uint64
+
+	key := makeKeygroupKeyName(kg)
+
+	filt := expression.Name(keyName).BeginsWith(key)
+
+	expr, err := expression.NewBuilder().WithFilter(filt).Build()
+	if err != nil {
+		return "", errors.New(err)
+	}
+
+	params := &dynamodb.ScanInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		FilterExpression:          expr.Filter(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 aws.String(s.dynamotable),
+	}
+
+	// Make the DynamoDB Query API call
+	result, err := s.svc.Scan(params)
+	if err != nil {
+		return "", errors.New(err)
+	}
+
+	if len(result.Items) == 0 {
+		// nothing in existence yet, return MaxUInt (so we can increment it to 0)
+		newest = ^uint64(0)
+	} else {
+		for _, i := range result.Items {
+
+			item := struct {
+				Key string
+			}{}
+
+			err = dynamodbattribute.UnmarshalMap(i, &item)
+
+			if err != nil {
+				return "", errors.New(err)
+			}
+
+			if item.Key == key {
+				continue
+			}
+
+			_, id := getKey(item.Key)
+
+			parsed, err := strconv.ParseUint(id, 10, 64)
+
+			if err != nil {
+				return "", errors.New(err)
+			}
+
+			if parsed > newest {
+				newest = parsed
+			}
+
+		}
+	}
+
+	// increment by one
+	// conveniently, if we reach MaxUint64, we can still increment by 1 to get back to 0
+	id := strconv.FormatUint(newest+1, 10)
+
+	Item := struct {
+		Key    string
+		Value  string
+		Expiry int64
+	}{
+		Key:    id,
+		Value:  val,
+		Expiry: time.Now().Unix() + int64(expiry),
+	}
+
+	av, err := dynamodbattribute.MarshalMap(Item)
+
+	if err != nil {
+		return "", errors.New(err)
+	}
+
+	input := &dynamodb.PutItemInput{
+		Item:      av,
+		TableName: aws.String(s.dynamotable),
+	}
+
+	_, err = s.svc.PutItem(input)
+	if err != nil {
+		return "", errors.New(err)
+	}
+
+	return id, nil
 }
 
 // IDs returns the keys of all items in the specified keygroup.

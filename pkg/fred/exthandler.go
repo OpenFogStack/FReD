@@ -90,6 +90,54 @@ func (h *exthandler) HandleRead(user string, i Item) (Item, error) {
 	return i, nil
 }
 
+// HandleAppend handles requests to the Append endpoint of the client interface.
+func (h *exthandler) HandleAppend(user string, i Item) (Item, error) {
+	allowed, err := h.a.isAllowed(user, Update, i.Keygroup)
+
+	if err != nil || !allowed {
+		return i, errors.Errorf("user %s cannot update in keygroup %s", user, i.Keygroup)
+	}
+
+	log.Debug().Msgf("checking if keygroup %s is mutable...", i.Keygroup)
+	m, err := h.n.IsMutable(i.Keygroup)
+
+	if err != nil {
+		return i, err
+	}
+
+	if m {
+		return i, errors.Errorf("cannot append %s to mutable keygroup", i.ID)
+	}
+
+	log.Debug().Msgf("keygroup %s is immutable, proceeding...", i.Keygroup)
+
+	expiry, err := h.n.GetExpiry(i.Keygroup)
+
+	if err != nil {
+		return i, err
+	}
+
+	result, err := h.s.append(i, expiry)
+
+	if err != nil {
+		log.Printf("%#v", err)
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		return i, errors.Errorf("error updating item")
+	}
+
+	if err := h.r.relayUpdate(result); err != nil {
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		return result, errors.Errorf("error updating item")
+	}
+
+	if err := h.t.triggerUpdate(result); err != nil {
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		return result, errors.Errorf("error updating item")
+	}
+
+	return result, nil
+}
+
 // HandleUpdate handles requests to the Update endpoint of the client interface.
 func (h *exthandler) HandleUpdate(user string, i Item) error {
 	allowed, err := h.a.isAllowed(user, Update, i.Keygroup)
@@ -98,6 +146,7 @@ func (h *exthandler) HandleUpdate(user string, i Item) error {
 		return errors.Errorf("user %s cannot update in keygroup %s", user, i.Keygroup)
 	}
 
+	log.Debug().Msgf("checking if keygroup %s is mutable...", i.Keygroup)
 	m, err := h.n.IsMutable(i.Keygroup)
 
 	if err != nil {
@@ -105,10 +154,10 @@ func (h *exthandler) HandleUpdate(user string, i Item) error {
 	}
 
 	if !m {
-		if h.s.exists(i) {
-			return errors.Errorf("cannot update item %s because keygroup is immutable", i.ID)
-		}
+		return errors.Errorf("cannot update item %s because keygroup is immutable", i.ID)
 	}
+
+	log.Debug().Msgf("keygroup %s is mutable, proceeding...", i.Keygroup)
 
 	expiry, err := h.n.GetExpiry(i.Keygroup)
 

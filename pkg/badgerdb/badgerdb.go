@@ -1,6 +1,7 @@
 package badgerdb
 
 import (
+	"strconv"
 	"strings"
 	"time"
 
@@ -263,6 +264,80 @@ func (s *Storage) Delete(kg string, id string) error {
 	}
 
 	return nil
+}
+
+// Append appends the item to the specified keygroup by incrementing the latest key by one.
+func (s *Storage) Append(kg, val string, expiry int) (string, error) {
+	// first, get the latest key
+	// maximum of 18446744073709551615, though!
+	// if you reach this maximum, please send me a letter
+	newest := ^uint64(0)
+
+	err := s.db.View(func(txn *badger.Txn) error {
+
+		prefix := makeKeygroupKeyName(kg)
+
+		opts := badger.DefaultIteratorOptions
+		opts.Prefix = prefix
+		opts.PrefetchValues = false
+		// I know this would be better to get directly to the key we need, but it didn't work
+		// opts.Reverse = true
+		it := txn.NewIterator(opts)
+		defer it.Close()
+
+		for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
+			item := it.Item()
+			_, key := getKey(string(item.Key()))
+
+			n, err := strconv.ParseUint(key, 10, 64)
+			if err != nil {
+				return err
+			}
+
+			if n == 0 || n > newest {
+				newest = n
+			}
+		}
+		return nil
+	})
+
+	if err != nil {
+		return "", errors.New(err)
+	}
+
+	// increment by one
+	// conveniently, if we reach MaxUint64, we can still increment by 1 to get back to 0
+	id := strconv.FormatUint(newest+1, 10)
+	log.Debug().Msgf("next key is %s, which is 1 bigger than %d", id, newest)
+
+	err = s.db.Update(func(txn *badger.Txn) error {
+		key := makeKeyName(kg, id)
+
+		if expiry > 0 {
+			err := txn.SetEntry(&badger.Entry{
+				Key:       key,
+				Value:     []byte(val),
+				ExpiresAt: uint64(time.Now().Unix()) + uint64(expiry),
+			})
+			if err != nil {
+				return err
+			}
+			return nil
+		}
+
+		err := txn.Set(key, []byte(val))
+
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+
+	if err != nil {
+		return "", errors.New(err)
+	}
+
+	return id, nil
 }
 
 // Exists checks if the given data item exists in the badgerdb database.

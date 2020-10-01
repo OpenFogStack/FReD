@@ -10,6 +10,7 @@ service Client {
   rpc Read (ReadRequest) returns (ReadResponse);
   rpc Update (UpdateRequest) returns (StatusResponse);
   rpc Delete (DeleteRequest) returns (StatusResponse);
+  rpc Append (AppendRequest) returns (AppendResponse);
   rpc AddReplica (AddReplicaRequest) returns (StatusResponse);
   rpc GetKeygroupReplica (GetKeygroupReplicaRequest) returns (GetKeygroupReplicaResponse);
   rpc RemoveReplica (RemoveReplicaRequest) returns (StatusResponse);
@@ -64,6 +65,15 @@ message UpdateRequest {
   string keygroup = 1;
   string id = 2;
   string data = 3;
+}
+
+message AppendRequest {
+  string keygroup = 1;
+  string data = 2;
+}
+
+message AppendResponse {
+  string id = 1;
 }
 
 message DeleteRequest {

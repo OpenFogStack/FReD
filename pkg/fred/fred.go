@@ -46,6 +46,7 @@ type ExtHandler interface {
 	HandleRead(user string, i Item) (Item, error)
 	HandleUpdate(user string, i Item) error
 	HandleDelete(user string, i Item) error
+	HandleAppend(user string, i Item) (Item, error)
 	HandleAddReplica(user string, k Keygroup, n Node) error
 	HandleGetKeygroupReplica(user string, k Keygroup) ([]Node, map[NodeID]int, error)
 	HandleRemoveReplica(user string, k Keygroup, n Node) error
