@@ -268,79 +268,80 @@ func main() {
 	// put triggertesting item4 value4
 	logNodeAction(nodeA, "Checking if triggers have been executed correctly")
 	checkTriggerNode(triggerNodeID, triggerNodeWSHost)
-	//finally delete the keygroups again
 	logNodeAction(nodeA, "deleting keygroup triggertesting")
 	nodeA.DeleteKeygroup("triggertesting", false)
+
 	logNodeAction(nodeA, "deleting keygroup nottriggertesting")
 	nodeA.DeleteKeygroup("nottriggertesting", false)
-	// try to get the trigger nodes now
+
 	logNodeAction(nodeA, "try to get the trigger nodes for keygroup triggertesting after deletion")
 	nodeA.GetKeygroupTriggers("triggertesting", true)
 
 	// testing immutable keygroups
-	// create immutable keygroup on nodeB
 	logNodeAction(nodeB, "Testing immutable keygroups by creating a new immutable keygroup on nodeB")
 	nodeB.CreateKeygroup("log", false, 0, false)
-	// create item to keygroup -> should work and return 0 as a key
+
+	logNodeAction(nodeB, "Creating an item in this keygroup")
 	res := nodeB.AppendItem("log", "value1", false)
 
 	if res != "0" {
 		logNodeFailure(nodeB, "0", res)
 	}
 
-	// update item in keygroup -> should not work
-	nodeB.PutItem("log", res, "value2", true)
-	// perform a random putitem on this keygroup
-	nodeB.PutItem("log", "item1", "value2", true)
-	// get item from keygroup -> should return appended item
-	respB = nodeB.GetItem("log", res, false)
+	logNodeAction(nodeB, "Updating an item in this keygroup")
+	nodeB.PutItem("log", "testitem", "value-2", true)
+
+	logNodeAction(nodeB, "Getting updated item from immutable keygroup")
+	respB = nodeB.GetItem("log", "testitem", false)
 
 	if respB != "value1" {
 		logNodeFailure(nodeB, "resp is not value1", respB)
 	}
 
-	// delete item from keygroup -> should not work
-	nodeB.DeleteItem("log", res, true)
-	// add nodeC as replica node
+	logNodeAction(nodeB, "Deleting an item in immutable keygroup")
+	nodeB.DeleteItem("log", "testitem", true)
+
+	logNodeAction(nodeB, "Adding nodeC as replica to immutable keygroup")
 	nodeB.AddKeygroupReplica("log", nodeCpeeringID, 0, false)
-	// update item on nodeC -> should not work
-	nodeC.PutItem("log", res, "value3", true)
-	// append another item to keygroup -> should return 1 as a key
-	res = nodeC.AppendItem("log", "value2", false)
+
+	logNodeAction(nodeC, "Updating immutable item on other nodeC")
+	nodeC.PutItem("log", "testitem", "value-3", true)
+
+	// TODO is this the right place???
+	logNodeAction(nodeC, "Appending another item to readonly log.")
+	res = nodeC.AppendItem("log", "value-2", false)
 
 	if res != "1" {
 		logNodeFailure(nodeB, "1", res)
 	}
 
-	// now append an item to a keygroup that is mutable
-	nodeC.CreateKeygroup("notalog", true, 0, false)
-	nodeC.AppendItem("notalog", "value1", true)
-
 	// test expiring data items
-	// create a new keygroup without expiry on nodeC
+	logNodeAction(nodeC, "Create normal keygroup on nodeC without expiry")
 	nodeC.CreateKeygroup("expirytest", true, 0, false)
-	// add nodeA as replica with expiry 5s
+
+	logNodeAction(nodeC, "Add nodeA as replica with expiry of 5s")
 	nodeC.AddKeygroupReplica("expirytest", nodeApeeringID, 5, false)
-	// insert item on nodeC
+
+	logNodeAction(nodeC, "Update something on nodeC")
 	nodeC.PutItem("expirytest", "test", "test", false)
-	// check if nodeA gets item -> should work
+
+	logNodeAction(nodeA, "Test whether nodeA has received the update. Wait 5s and check that it is not there anymore")
 	nodeA.GetItem("expirytest", "test", false)
-	// wait 5s
 	time.Sleep(5 * time.Second)
-	// check if item exists on nodeA -> should error
 	nodeA.GetItem("expirytest", "test", true)
-	// check if item exists on nodeC -> should work
+
+	logNodeAction(nodeC, "....the item should still exist with nodeC")
 	nodeC.GetItem("expirytest", "test", false)
 
 	// testing adding a node as a replica for a keygroup on itself
-	// create a keygroup with nodeB
+	logNodeAction(nodeB, "Create and populate a new keygroup to test pulling")
 	nodeB.CreateKeygroup("pulltest", true, 0, false)
-	// add an item to that keygroup
 	nodeB.PutItem("pulltest", "item1", "val1", false)
-	// add another one
 	nodeB.PutItem("pulltest", "item2", "val2", false)
-	// add nodeA as a replica to that keygroup and see if it pulls the needed data on its own
+
+	logNodeAction(nodeA, "add nodeA as a replica to that keygroup and see if it pulls the needed data on its own (sleep 3s)")
 	nodeA.AddKeygroupReplica("pulltest", nodeApeeringID, 0, false)
+	time.Sleep(3 * time.Second)
 	// check if the items exist
 	if res := nodeA.GetItem("pulltest", "item1", false); res != "val1" {
 		logNodeFailure(nodeA, "val1", res)
@@ -350,8 +351,9 @@ func main() {
 		logNodeFailure(nodeA, "val2", res)
 		nodeA.Errors++
 	}
-	// add an item on nodeA
-	nodeB.PutItem("pulltest", "item3", "val3", false)
+
+	logNodeAction(nodeA, "Add an item on nodeA, check wheter it populates to nodeB")
+	nodeA.PutItem("pulltest", "item3", "val3", false)
 	// check if nodeB also gets that item
 	if res := nodeB.GetItem("pulltest", "item3", false); res != "val3" {
 		logNodeFailure(nodeB, "val3", res)
