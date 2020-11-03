@@ -28,6 +28,14 @@ How do I push changes to the `master` branch?
 
 Some last words, keep pull requests small (not 100 files changed etc :D), so they are easier to review and rather create a lot of pull requests than one big
 
+## Debugging
+
+It is possible to debug nodeB of the 3NodeTest:
+
+- Create some breakpoints
+- Run the configuration "3NodeTest: Run Tests & Debug nodeB (start "Debug nodeB" immediately after!)" (equals to `make debug-nodeB` in 3NodeTest)
+- Run the configuration "Debug nodeB"
+
 ## Using the DynamoDB Backend
 
 To use the DynamoDB storage backend, a table must already exist in DynamoDB.
