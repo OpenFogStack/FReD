@@ -184,7 +184,7 @@ func statusResponseFromError(err error) (*client.StatusResponse, error) {
 // CreateKeygroup calls this method on the exthandler
 func (s *Server) CreateKeygroup(ctx context.Context, request *client.CreateKeygroupRequest) (*client.StatusResponse, error) {
 
-	log.Debug().Msgf("ExtServer has rcvd CreateKeygroup. In: %#v", request)
+	log.Info().Msgf("ExtServer has rcvd CreateKeygroup. In: %#v", request)
 
 	user, err := s.checkCert(ctx)
 
@@ -200,7 +200,7 @@ func (s *Server) CreateKeygroup(ctx context.Context, request *client.CreateKeygr
 // DeleteKeygroup calls this method on the exthandler
 func (s *Server) DeleteKeygroup(ctx context.Context, request *client.DeleteKeygroupRequest) (*client.StatusResponse, error) {
 
-	log.Debug().Msgf("ExtServer has rcvd DeleteKeygroup. In: %#v", request)
+	log.Info().Msgf("ExtServer has rcvd DeleteKeygroup. In: %#v", request)
 
 	user, err := s.checkCert(ctx)
 
@@ -215,7 +215,7 @@ func (s *Server) DeleteKeygroup(ctx context.Context, request *client.DeleteKeygr
 
 // Read calls this method on the exthandler
 func (s *Server) Read(ctx context.Context, request *client.ReadRequest) (*client.ReadResponse, error) {
-	log.Debug().Msgf("ExtServer has rcvd Read. In: %#v", request)
+	log.Info().Msgf("ExtServer has rcvd Read. In: %#v", request)
 
 	user, err := s.checkCert(ctx)
 
@@ -237,7 +237,7 @@ func (s *Server) Read(ctx context.Context, request *client.ReadRequest) (*client
 
 // Append calls this method on the exthandler
 func (s *Server) Append(ctx context.Context, request *client.AppendRequest) (*client.AppendResponse, error) {
-	log.Debug().Msgf("ExtServer has rcvd Append. In: %#v", request)
+	log.Info().Msgf("ExtServer has rcvd Append. In: %#v", request)
 
 	user, err := s.checkCert(ctx)
 
@@ -260,7 +260,7 @@ func (s *Server) Append(ctx context.Context, request *client.AppendRequest) (*cl
 // Update calls this method on the exthandler
 func (s *Server) Update(ctx context.Context, request *client.UpdateRequest) (*client.StatusResponse, error) {
 
-	log.Debug().Msgf("ExtServer has rcvd Update. In: %#v", request)
+	log.Info().Msgf("ExtServer has rcvd Update. In: %#v", request)
 
 	user, err := s.checkCert(ctx)
 
@@ -276,7 +276,7 @@ func (s *Server) Update(ctx context.Context, request *client.UpdateRequest) (*cl
 
 // Delete calls this method on the exthandler
 func (s *Server) Delete(ctx context.Context, request *client.DeleteRequest) (*client.StatusResponse, error) {
-	log.Debug().Msgf("ExtServer has rcvd Delete. In: %#v", request)
+	log.Info().Msgf("ExtServer has rcvd Delete. In: %#v", request)
 
 	user, err := s.checkCert(ctx)
 
@@ -292,7 +292,7 @@ func (s *Server) Delete(ctx context.Context, request *client.DeleteRequest) (*cl
 
 // AddReplica calls this method on the exthandler
 func (s *Server) AddReplica(ctx context.Context, request *client.AddReplicaRequest) (*client.StatusResponse, error) {
-	log.Debug().Msgf("ExtServer has rcvd AddReplica. In: %#v", request)
+	log.Info().Msgf("ExtServer has rcvd AddReplica. In: %#v", request)
 
 	user, err := s.checkCert(ctx)
 
@@ -308,7 +308,7 @@ func (s *Server) AddReplica(ctx context.Context, request *client.AddReplicaReque
 
 // GetKeygroupReplica calls this method on the exthandler
 func (s *Server) GetKeygroupReplica(ctx context.Context, request *client.GetKeygroupReplicaRequest) (*client.GetKeygroupReplicaResponse, error) {
-	log.Debug().Msgf("ExtServer has rcvd GetKeygroupReplica. In: %#v", request)
+	log.Info().Msgf("ExtServer has rcvd GetKeygroupReplica. In: %#v", request)
 
 	user, err := s.checkCert(ctx)
 
@@ -342,7 +342,7 @@ func (s *Server) GetKeygroupReplica(ctx context.Context, request *client.GetKeyg
 
 // RemoveReplica calls this method on the exthandler
 func (s *Server) RemoveReplica(ctx context.Context, request *client.RemoveReplicaRequest) (*client.StatusResponse, error) {
-	log.Debug().Msgf("ExtServer has rcvd RemoveReplica. In: %#v", request)
+	log.Info().Msgf("ExtServer has rcvd RemoveReplica. In: %#v", request)
 
 	user, err := s.checkCert(ctx)
 
@@ -362,7 +362,7 @@ func replicaResponseFromNode(n fred.Node) *client.GetReplicaResponse {
 
 // GetReplica calls this method on the exthandler
 func (s *Server) GetReplica(ctx context.Context, request *client.GetReplicaRequest) (*client.GetReplicaResponse, error) {
-	log.Debug().Msgf("ExtServer has rcvd GetReplica. In: %#v", request)
+	log.Info().Msgf("ExtServer has rcvd GetReplica. In: %#v", request)
 
 	user, err := s.checkCert(ctx)
 
@@ -378,7 +378,7 @@ func (s *Server) GetReplica(ctx context.Context, request *client.GetReplicaReque
 
 // GetAllReplica calls this method on the exthandler
 func (s *Server) GetAllReplica(ctx context.Context, request *client.GetAllReplicaRequest) (*client.GetAllReplicaResponse, error) {
-	log.Debug().Msgf("ExtServer has rcvd GetAllReplica. In: %#v", request)
+	log.Info().Msgf("ExtServer has rcvd GetAllReplica. In: %#v", request)
 
 	user, err := s.checkCert(ctx)
 
@@ -405,7 +405,7 @@ func (s *Server) GetAllReplica(ctx context.Context, request *client.GetAllReplic
 
 // GetKeygroupTriggers calls this method on the exthandler
 func (s *Server) GetKeygroupTriggers(ctx context.Context, request *client.GetKeygroupTriggerRequest) (*client.GetKeygroupTriggerResponse, error) {
-	log.Debug().Msgf("ExtServer has rcvd GetKeygroupTriggers. In: %#v", request)
+	log.Info().Msgf("ExtServer has rcvd GetKeygroupTriggers. In: %#v", request)
 
 	user, err := s.checkCert(ctx)
 
@@ -431,7 +431,7 @@ func (s *Server) GetKeygroupTriggers(ctx context.Context, request *client.GetKey
 
 // AddTrigger calls this method on the exthandler
 func (s *Server) AddTrigger(ctx context.Context, request *client.AddTriggerRequest) (*client.StatusResponse, error) {
-	log.Debug().Msgf("ExtServer has rcvd AddTrigger. In: %#v", request)
+	log.Info().Msgf("ExtServer has rcvd AddTrigger. In: %#v", request)
 
 	user, err := s.checkCert(ctx)
 
@@ -447,7 +447,7 @@ func (s *Server) AddTrigger(ctx context.Context, request *client.AddTriggerReque
 
 // RemoveTrigger calls this method on the exthandler
 func (s *Server) RemoveTrigger(ctx context.Context, request *client.RemoveTriggerRequest) (*client.StatusResponse, error) {
-	log.Debug().Msgf("ExtServer has rcvd RemoveTrigger. In: %#v", request)
+	log.Info().Msgf("ExtServer has rcvd RemoveTrigger. In: %#v", request)
 
 	user, err := s.checkCert(ctx)
 
@@ -463,7 +463,7 @@ func (s *Server) RemoveTrigger(ctx context.Context, request *client.RemoveTrigge
 
 // AddUser calls this method on the exthandler
 func (s *Server) AddUser(ctx context.Context, request *client.UserRequest) (*client.StatusResponse, error) {
-	log.Debug().Msgf("ExtServer has rcvd AddUser. In: %#v", request)
+	log.Info().Msgf("ExtServer has rcvd AddUser. In: %#v", request)
 
 	user, err := s.checkCert(ctx)
 
@@ -479,7 +479,7 @@ func (s *Server) AddUser(ctx context.Context, request *client.UserRequest) (*cli
 
 // RemoveUser calls this method on the exthandler
 func (s *Server) RemoveUser(ctx context.Context, request *client.UserRequest) (*client.StatusResponse, error) {
-	log.Debug().Msgf("ExtServer has rcvd RemoveUser. In: %#v", request)
+	log.Info().Msgf("ExtServer has rcvd RemoveUser. In: %#v", request)
 
 	user, err := s.checkCert(ctx)
 
