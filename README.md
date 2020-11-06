@@ -6,6 +6,10 @@
 
 ## Setup
 
+For development, it is recommended to install [Goland](https://www.jetbrains.com/go/).
+
+It is probably easiest to use the dockerfiles to run Fred. An example setup can be found in `tests/3NodeTest`
+
 To use Terraform, install [Terraform](https://www.terraform.io/downloads.html).
 
 ## Git Workflow
@@ -45,3 +49,9 @@ To delete the table:
 ```bash
 AWS_PAGER="" aws dynamodb delete-table --table-name fred
 ```
+
+# Tips and Tricks
+
+- To write a new client a language binding from the proto file (`proto/client/client.proto`) needs to be created. The two tests (in `tests/`) use Go and Python and can be used as inspiration.
+- FReD requires the use of certificates to check whether a node has access to a specific keygroup or not.
+If access control is not necessary every node can just use the same certificate => they all have access to all the data. (The nodes in the 3NodeTest all use the same certificates, for example)
