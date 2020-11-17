@@ -43,3 +43,18 @@ func (n *NameServiceCache) GetNodeID() fred.NodeID {
 func (n *NameServiceCache) RegisterSelf(host string) error {
 	return n.regularNase.RegisterSelf(host)
 }
+
+// ReportFailedNode report nonreachable node
+func (n *NameServiceCache) ReportFailedNode(nodeID fred.NodeID, kg fred.KeygroupName, id string) error {
+	return n.regularNase.ReportFailedNode(nodeID, kg, id)
+}
+
+// RequestNodeStatus Request whether this node has missed items
+func (n *NameServiceCache) RequestNodeStatus(nodeID fred.NodeID) []fred.Item {
+	return n.regularNase.RequestNodeStatus(nodeID)
+}
+
+// GetNodeWithBiggerExpiry get a node that has a bigger expiry of this keygroup than local
+func (n *NameServiceCache) GetNodeWithBiggerExpiry(kg fred.KeygroupName) (nodeID fred.NodeID, addr string) {
+	return n.regularNase.GetNodeWithBiggerExpiry(kg)
+}
