@@ -26,11 +26,29 @@ type replicationService struct {
 // newReplicationService creates a new handler for internal request (i.e. from peer nodes or the naming service).
 // The nameservice makes sure that the information is synced with the other nodes
 func newReplicationService(s *storeService, c Client, n NameService) *replicationService {
-	return &replicationService{
+	service := &replicationService{
 		s: s,
 		c: c,
 		n: n,
 	}
+
+	return service
+}
+
+// reportNodeFail report that this node was not able to receive the following kg/id
+// If this returns an error the NaSe is also not reachable => this node is likely down
+func (s *replicationService) reportNodeFail(nodeID NodeID, kg KeygroupName, id string) error {
+	// This node is not able to reach node id
+	// If it can reach the NaSe then maybe node id ist not available at the moment
+	// So write that into the NaSe!
+	log.Warn().Msg("reportNodeFail from replservice: could not reach node, reporting it as offline in the name service")
+	repErr := s.n.ReportFailedNode(nodeID, kg, id)
+	if repErr != nil {
+		log.Error().Msg("reportNodeFail from replservice: this node is probably offline since it cant reach the NameService or the node...")
+		return repErr
+	}
+	// Don't return an error here since the failed node is not stopping us from working...
+	return nil
 }
 
 // createKeygroup creates the keygroup with the NaSe and saves its existence locally
@@ -106,9 +124,10 @@ func (s *replicationService) relayDeleteKeygroup(k Keygroup) error {
 		}
 
 		log.Debug().Msgf("RelayDeleteKeygroup from replservice: sending %#v to %#v", k, addr)
-		if err := s.c.SendDeleteKeygroup(addr, k.Name); err != nil {
-			return err
-		}
+		s.c.SendDeleteKeygroup(addr, k.Name)
+		// No error handling because:
+		// There is no need to report a node fail here since the node always gets this information from NaSe
+		// It is also not necessary to fail here because of this
 	}
 
 	// Only now delete the keygroup with the nase
@@ -153,11 +172,11 @@ func (s *replicationService) relayUpdate(i Item) error {
 
 		log.Debug().Msgf("RelayUpdate from replservice: sending %#v to %#v", i, addr)
 		if err := s.c.SendUpdate(addr, i.Keygroup, i.ID, i.Val); err != nil {
-			return err
+			s.reportNodeFail(id, i.Keygroup, i.ID)
 		}
 	}
 
-	return err
+	return nil
 }
 
 // relayDelete handles replication after requests to the Delete endpoint of the client interface.
@@ -185,7 +204,7 @@ func (s *replicationService) relayDelete(i Item) error {
 
 		log.Debug().Msgf("RelayDelete from replservice: sending %#v to %#v", i, addr)
 		if err := s.c.SendDelete(addr, i.Keygroup, i.ID); err != nil {
-			return err
+			s.reportNodeFail(id, i.Keygroup, i.ID)
 		}
 	}
 
@@ -240,7 +259,7 @@ func (s *replicationService) addReplica(k Keygroup, n Node, relay bool) error {
 		}
 
 		// now let's iterate over all other currently known replicas for this node (except ourselves)
-		// this also includes the newly added node, so it will receive a AddReplica that with itself as the new node.
+		// this also includes the newly added node, so it will receive a AddReplica with itself as the new node.
 		ids, err := s.n.GetKeygroupMembers(k.Name, true)
 		if err != nil {
 			return err
@@ -285,18 +304,8 @@ func (s *replicationService) addReplica(k Keygroup, n Node, relay bool) error {
 			}
 		} else {
 			// oh no! We are the new node and have no data locally, let's request it from somewhere
-			// take a random victim to request data from (but not ourselves!)
-
-			var v NodeID
-
-			for node := range ids {
-				if NodeID(node) != n.ID {
-					v = NodeID(node)
-					break
-				}
-			}
-
-			addr, err := s.n.GetNodeAddress(v)
+			// take a victim with a higher expiry to request data from (but not ourselves!)
+			_, addr := s.n.GetNodeWithBiggerExpiry(k.Name)
 
 			if err != nil {
 				return err
@@ -316,7 +325,7 @@ func (s *replicationService) addReplica(k Keygroup, n Node, relay bool) error {
 			// a batch might be better here
 			log.Debug().Msgf("AddReplica from replservice: sending %#v to %#v", item, n)
 			if err := s.c.SendUpdate(newNodeAddr, k.Name, item.ID, item.Val); err != nil {
-				return err
+				s.reportNodeFail(n.ID, k.Name, item.ID)
 			}
 		}
 
@@ -392,8 +401,7 @@ func (s *replicationService) removeReplica(k Keygroup, n Node, relay bool) error
 
 			log.Debug().Msgf("RemoveReplica from replservice: sending RemoveReplica %#v to %#v", k, nodeToInformAddr)
 			if err := s.c.SendRemoveReplica(nodeToInformAddr, k.Name, Node{ID: n.ID}); err != nil {
-				log.Err(err).Msg("")
-				return err
+				log.Err(err).Msg("Sending Remove Replica has failed, continuing anyways")
 			}
 		}
 	}

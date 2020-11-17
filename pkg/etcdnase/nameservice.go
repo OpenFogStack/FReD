@@ -19,6 +19,8 @@ const (
 	fmtNodeAdressString     = "node|%s|address"
 	fmtUserPermissionPrefix = "user|%s|kg"
 	fmtUserPermissionString = "user|%s|kg|%s|method|%s"
+	fmtFailedNodeKgString   = "failnode|%s|kg|%s|%s" // Node, Keygroup, ID
+	fmtFailedNodePrefix     = "failnode|%s|"
 	nodePrefixString        = "node|"
 	sep                     = "|"
 	timeout                 = 5 * time.Second

@@ -54,14 +54,14 @@ func (h *exthandler) HandleDeleteKeygroup(user string, k Keygroup) error {
 		return errors.Errorf("user %s cannot delete keygroup %s", user, k.Name)
 	}
 
-	if err := h.s.deleteKeygroup(k.Name); err != nil {
+	if err := h.r.relayDeleteKeygroup(Keygroup{
+		Name: k.Name,
+	}); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error deleting keygroup")
 	}
 
-	if err := h.r.relayDeleteKeygroup(Keygroup{
-		Name: k.Name,
-	}); err != nil {
+	if err := h.s.deleteKeygroup(k.Name); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error deleting keygroup")
 	}
@@ -165,13 +165,13 @@ func (h *exthandler) HandleUpdate(user string, i Item) error {
 		return err
 	}
 
-	if err := h.s.update(i, expiry); err != nil {
-		log.Printf("%#v", err)
+	if err := h.r.relayUpdate(i); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error updating item")
 	}
 
-	if err := h.r.relayUpdate(i); err != nil {
+	if err := h.s.update(i, expiry); err != nil {
+		log.Printf("%#v", err)
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error updating item")
 	}
@@ -204,12 +204,12 @@ func (h *exthandler) HandleDelete(user string, i Item) error {
 		}
 	}
 
-	if err := h.s.delete(i.Keygroup, i.ID); err != nil {
+	if err := h.r.relayDelete(i); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error deleting item")
 	}
 
-	if err := h.r.relayDelete(i); err != nil {
+	if err := h.s.delete(i.Keygroup, i.ID); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error deleting item")
 	}
