@@ -7,7 +7,7 @@ services:
       - storeC
     image: fred/fred:local
     container_name: nodeC
-    command: --log-level "${LOG_LEVEL}" --remote-storage-host "172.26.3.2:1337" --peer-host "172.26.3.1:5555" --nodeID "nodeC" --host ":9001" --cert "/cert/nodeC.crt" --key "/cert/nodeC.key" --ca-file "/cert/ca.crt" --adaptor "remote" --nase-host "https://172.26.6.1:2379" --nase-cert "/cert/nodeC.crt" --nase-key "/cert/nodeC.key" --nase-ca "/cert/ca.crt" --handler "dev" --badgerdb-path "./db"  --remote-storage-cert "/cert/nodeC.crt" --remote-storage-key "/cert/nodeC.key"  --trigger-cert "/cert/nodeC.crt" --trigger-key "/cert/nodeC.key"
+    command: --log-level "${LOG_LEVEL}" --remote-storage-host "172.26.3.2:1337" --peer-host "172.26.3.1:5555" --nodeID "nodeC" --host ":9001" --cert "/cert/nodeC.crt" --key "/cert/nodeC.key" --ca-file "/cert/ca.crt" --adaptor "remote" --nase-host "https://172.26.6.1:2379" --nase-cert "/cert/nodeC.crt" --nase-key "/cert/nodeC.key" --nase-ca "/cert/ca.crt" --handler "dev" --badgerdb-path "./db"  --remote-storage-cert "/cert/nodeC.crt" --remote-storage-key "/cert/nodeC.key"  --trigger-cert "/cert/nodeC.crt" --trigger-key "/cert/nodeC.key" --nase-cached
     volumes:
       - ../../nase/tls/nodeC.crt:/cert/nodeC.crt
       - ../../nase/tls/nodeC.key:/cert/nodeC.key
