@@ -26,6 +26,7 @@ func newExthandler(s *storeService, r *replicationService, t *triggerService, a 
 
 // HandleCreateKeygroup handles requests to the CreateKeygroup endpoint of the client interface.
 func (h *exthandler) HandleCreateKeygroup(user string, k Keygroup) error {
+
 	if err := h.r.createKeygroup(k); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error creating keygroup")
@@ -54,14 +55,14 @@ func (h *exthandler) HandleDeleteKeygroup(user string, k Keygroup) error {
 		return errors.Errorf("user %s cannot delete keygroup %s", user, k.Name)
 	}
 
-	if err := h.r.relayDeleteKeygroup(Keygroup{
-		Name: k.Name,
-	}); err != nil {
+	if err := h.s.deleteKeygroup(k.Name); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error deleting keygroup")
 	}
 
-	if err := h.s.deleteKeygroup(k.Name); err != nil {
+	if err := h.r.relayDeleteKeygroup(Keygroup{
+		Name: k.Name,
+	}); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error deleting keygroup")
 	}
@@ -204,12 +205,12 @@ func (h *exthandler) HandleDelete(user string, i Item) error {
 		}
 	}
 
-	if err := h.r.relayDelete(i); err != nil {
+	if err := h.s.delete(i.Keygroup, i.ID); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error deleting item")
 	}
 
-	if err := h.s.delete(i.Keygroup, i.ID); err != nil {
+	if err := h.r.relayDelete(i); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error deleting item")
 	}
