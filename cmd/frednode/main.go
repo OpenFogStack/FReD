@@ -13,6 +13,7 @@ import (
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/api"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/dynamo"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/etcdnase"
+	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/nasecache"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/peering"
 	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/storageclient"
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -48,10 +49,11 @@ type fredConfig struct {
 		Handler string `toml:"handler"`
 	} `toml:"log"`
 	NaSe struct {
-		Host string `toml:"host"`
-		Cert string `toml:"cert"`
-		Key  string `toml:"key"`
-		CA   string `toml:"ca"`
+		Host   string `toml:"host"`
+		Cert   string `toml:"cert"`
+		Key    string `toml:"key"`
+		CA     string `toml:"ca"`
+		Cached bool   `toml:"cached"`
 	} `toml:"nase"`
 	RemoteStore struct {
 		Host string `toml:"host"`
@@ -111,10 +113,11 @@ var (
 
 	// Nameservice configuration
 	// TODO this should be a list of nodes. One node is enough, but if we want reliability we should accept multiple etcd nodes
-	naseHost = kingpin.Flag("nase-host", "Host where the etcd-server runs").String()
-	naseCert = kingpin.Flag("nase-cert", "Certificate file to authenticate against etcd").String()
-	naseKey  = kingpin.Flag("nase-key", "Key file to authenticate against etcd").String()
-	naseCA   = kingpin.Flag("nase-ca", "CA certificate file to authenticate against etcd").String()
+	naseHost   = kingpin.Flag("nase-host", "Host where the etcd-server runs").String()
+	naseCert   = kingpin.Flag("nase-cert", "Certificate file to authenticate against etcd").String()
+	naseKey    = kingpin.Flag("nase-key", "Key file to authenticate against etcd").String()
+	naseCA     = kingpin.Flag("nase-ca", "CA certificate file to authenticate against etcd").String()
+	naseCached = kingpin.Flag("nase-cached", "Flag to indicate, whether to use a cache for nase").Bool()
 
 	// trigger node tls configuration
 	triggerCert = kingpin.Flag("trigger-cert", "Certificate for trigger node connection.").String()
@@ -210,6 +213,9 @@ func main() {
 	if *naseCA != "" {
 		fc.NaSe.CA = *naseCA
 	}
+	if *naseCached {
+		fc.NaSe.Cached = true
+	}
 	if *bdbPath != "" {
 		fc.Bdb.Path = *bdbPath
 	}
@@ -283,11 +289,22 @@ func main() {
 	c := peering.NewClient()
 
 	log.Debug().Msg("Starting NaSe Client...")
-	n, err := etcdnase.NewNameService(fc.General.nodeID, []string{fc.NaSe.Host}, fc.NaSe.Cert, fc.NaSe.Key, fc.NaSe.CA)
+
+	var n fred.NameService
+	n, err = etcdnase.NewNameService(fc.General.nodeID, []string{fc.NaSe.Host}, fc.NaSe.Cert, fc.NaSe.Key, fc.NaSe.CA)
 
 	if err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		panic(err)
+	}
+
+	if fc.NaSe.Cached {
+		n, err = nasecache.NewNameServiceCache(n)
+
+		if err != nil {
+			log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+			panic(err)
+		}
 	}
 
 	f := fred.New(&fred.Config{
