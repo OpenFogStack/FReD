@@ -295,7 +295,7 @@ func main() {
 	respB = nodeB.GetItem("log", "testitem", false)
 
 	if respB != "value1" {
-		logNodeFailure(nodeB, "resp is not value1", respB)
+		logNodeFailure(nodeB, "resp is value1", respB)
 	}
 
 	logNodeAction(nodeB, "Deleting an item in immutable keygroup")
