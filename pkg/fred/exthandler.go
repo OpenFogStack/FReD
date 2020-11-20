@@ -199,9 +199,11 @@ func (h *exthandler) HandleDelete(user string, i Item) error {
 	}
 
 	if !m {
-		if h.s.exists(i) {
-			return errors.Errorf("cannot update item %s because keygroup is immutable", i.ID)
-		}
+		return errors.Errorf("cannot update item %s because keygroup is immutable", i.ID)
+	}
+
+	if !h.s.exists(i) {
+		return errors.Errorf("item does not exist so it cannot be deleted.")
 	}
 
 	if err := h.s.delete(i.Keygroup, i.ID); err != nil {
