@@ -324,6 +324,25 @@ func main() {
 	isProxied := fc.Server.Proxy != "" && fc.Server.Host != fc.Server.Proxy
 	es := api.NewServer(fc.Server.Host, f.E, fc.Server.Cert, fc.Server.Key, fc.Server.CA, isProxied, fc.Server.Proxy)
 
+	// TODO this code should live somewhere where it is called every n seconds, but for testing purposes the easiest way
+	// TODO to simulate an internet shutdown is via killing a node, so testing once at startup should be enough
+	missedItems := n.RequestNodeStatus(n.GetNodeID())
+	if missedItems != nil {
+		log.Warn().Msg("NodeStatus: This node was offline has missed some updates, getting them from other nodes")
+		for _, item := range missedItems {
+			nodeID, addr := n.GetNodeWithBiggerExpiry(item.Keygroup)
+			log.Info().Msgf("Getting item of KG %s ID %s from Node %s @ %s", string(item.Keygroup), string(item.ID), string(nodeID), addr)
+			item, err := c.SendGetItem(addr, item.Keygroup, item.ID)
+			if err != nil {
+				log.Err(err).Msg("Was not able to get Items from node")
+			}
+			expiry, _ := n.GetExpiry(item.Keygroup)
+			store.Update(string(item.Keygroup), item.ID, item.Val, expiry)
+		}
+	} else {
+		log.Debug().Msg("NodeStatus: No updates were missed by this node.")
+	}
+
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit,
 		syscall.SIGINT,

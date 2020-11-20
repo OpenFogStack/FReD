@@ -26,4 +26,9 @@ type NameService interface {
 	CreateKeygroup(kg KeygroupName, mutable bool, expiry int) error
 	DeleteKeygroup(kg KeygroupName) error
 	GetKeygroupMembers(kg KeygroupName, excludeSelf bool) (ids map[NodeID]int, err error)
+
+	// handle node failures
+	ReportFailedNode(nodeID NodeID, kg KeygroupName, id string) error
+	RequestNodeStatus(nodeID NodeID) []Item
+	GetNodeWithBiggerExpiry(kg KeygroupName) (nodeID NodeID, addr string)
 }

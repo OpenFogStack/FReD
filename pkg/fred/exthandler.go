@@ -26,6 +26,7 @@ func newExthandler(s *storeService, r *replicationService, t *triggerService, a 
 
 // HandleCreateKeygroup handles requests to the CreateKeygroup endpoint of the client interface.
 func (h *exthandler) HandleCreateKeygroup(user string, k Keygroup) error {
+
 	if err := h.r.createKeygroup(k); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error creating keygroup")
@@ -165,13 +166,13 @@ func (h *exthandler) HandleUpdate(user string, i Item) error {
 		return err
 	}
 
-	if err := h.s.update(i, expiry); err != nil {
-		log.Printf("%#v", err)
+	if err := h.r.relayUpdate(i); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error updating item")
 	}
 
-	if err := h.r.relayUpdate(i); err != nil {
+	if err := h.s.update(i, expiry); err != nil {
+		log.Printf("%#v", err)
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error updating item")
 	}

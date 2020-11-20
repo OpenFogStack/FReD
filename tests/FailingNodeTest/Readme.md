@@ -1,5 +1,3 @@
-Currently this test is expected to fail, because nodes cannot recover from missing updates
-
 To run this test, go to the 3NodeTest and run `make failtest`
 
 Command used to generate the pb files:
