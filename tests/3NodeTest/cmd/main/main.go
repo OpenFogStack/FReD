@@ -289,10 +289,10 @@ func main() {
 	}
 
 	logNodeAction(nodeB, "Updating an item in this keygroup")
-	nodeB.PutItem("log", "testitem", "value-2", true)
+	nodeB.PutItem("log", res, "value-2", true)
 
 	logNodeAction(nodeB, "Getting updated item from immutable keygroup")
-	respB = nodeB.GetItem("log", "testitem", false)
+	respB = nodeB.GetItem("log", res, false)
 
 	if respB != "value1" {
 		logNodeFailure(nodeB, "resp is value1", respB)
