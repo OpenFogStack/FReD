@@ -53,14 +53,14 @@ func NewNode(addr string, port int, certFile, keyFile string) *Node {
 }
 
 // Close closes the connection
-func (n Node) Close() {
+func (n *Node) Close() {
 	err := n.conn.Close()
 
 	log.Err(err).Msg("error closing node")
 }
 
 // CreateKeygroup calls the CreateKeygroup endpoint of the GRPC interface.
-func (n Node) CreateKeygroup(kgname string, mutable bool, expiry int, expectError bool) {
+func (n *Node) CreateKeygroup(kgname string, mutable bool, expiry int, expectError bool) {
 	status, err := n.Client.CreateKeygroup(context.Background(), &client.CreateKeygroupRequest{Keygroup: kgname, Mutable: mutable, Expiry: int64(expiry)})
 
 	if err != nil && !expectError {
@@ -69,14 +69,21 @@ func (n Node) CreateKeygroup(kgname string, mutable bool, expiry int, expectErro
 		return
 	}
 
+	if err == nil && expectError {
+		log.Warn().Msg("CreateKeygroup: Expected Error bot got no error :(")
+		n.Errors++
+		return
+	}
+
 	if err == nil && !expectError && status.Status == client.EnumStatus_ERROR {
 		log.Warn().Msgf("CreateKeygroup: error %s with status %s", err, status.Status)
 		n.Errors++
+		return
 	}
 }
 
 // DeleteKeygroup calls the DeleteKeygroup endpoint of the GRPC interface.
-func (n Node) DeleteKeygroup(kgname string, expectError bool) {
+func (n *Node) DeleteKeygroup(kgname string, expectError bool) {
 	status, err := n.Client.DeleteKeygroup(context.Background(), &client.DeleteKeygroupRequest{Keygroup: kgname})
 
 	if err != nil && !expectError {
@@ -85,18 +92,30 @@ func (n Node) DeleteKeygroup(kgname string, expectError bool) {
 		return
 	}
 
+	if err == nil && expectError {
+		log.Warn().Msg("DeleteKeygroup: Expected Error bot got no error")
+		n.Errors++
+		return
+	}
+
 	if err == nil && status.Status == client.EnumStatus_ERROR && !expectError {
 		log.Warn().Msgf("DeleteKeygroup: error %s with status %s", err, status.Status)
 		n.Errors++
+		return
 	}
 }
 
 // GetKeygroupReplica calls the GetKeygroupReplica endpoint of the GRPC interface.
-func (n Node) GetKeygroupReplica(kgname string, expectError bool) map[string]int {
+func (n *Node) GetKeygroupReplica(kgname string, expectError bool) map[string]int {
 	res, err := n.Client.GetKeygroupReplica(context.Background(), &client.GetKeygroupReplicaRequest{Keygroup: kgname})
 
 	if err != nil && !expectError {
 		log.Warn().Msgf("GetKeygroupReplica: error %s", err)
+		n.Errors++
+	}
+
+	if err == nil && expectError {
+		log.Warn().Msg("GetKeygroupReplica: Expected Error bot got no error")
 		n.Errors++
 	}
 
@@ -114,7 +133,7 @@ func (n Node) GetKeygroupReplica(kgname string, expectError bool) map[string]int
 }
 
 // AddKeygroupReplica calls the AddKeygroupReplica endpoint of the GRPC interface.
-func (n Node) AddKeygroupReplica(kgname, replicaNodeID string, expiry int, expectError bool) {
+func (n *Node) AddKeygroupReplica(kgname, replicaNodeID string, expiry int, expectError bool) {
 	status, err := n.Client.AddReplica(context.Background(), &client.AddReplicaRequest{
 		Keygroup: kgname,
 		NodeId:   replicaNodeID,
@@ -127,6 +146,12 @@ func (n Node) AddKeygroupReplica(kgname, replicaNodeID string, expiry int, expec
 		return
 	}
 
+	if err == nil && expectError {
+		log.Warn().Msg("AddKeygroupReplica: Expected Error bot got no error")
+		n.Errors++
+		return
+	}
+
 	if err == nil && status.Status == client.EnumStatus_ERROR && !expectError {
 		log.Warn().Msgf("AddKeygroupReplica: error %s with status %s", err, status.Status)
 		n.Errors++
@@ -134,7 +159,7 @@ func (n Node) AddKeygroupReplica(kgname, replicaNodeID string, expiry int, expec
 }
 
 // DeleteKeygroupReplica calls the DeleteKeygroupReplica endpoint of the GRPC interface.
-func (n Node) DeleteKeygroupReplica(kgname, replicaNodeID string, expectError bool) {
+func (n *Node) DeleteKeygroupReplica(kgname, replicaNodeID string, expectError bool) {
 	status, err := n.Client.RemoveReplica(context.Background(), &client.RemoveReplicaRequest{
 		Keygroup: kgname,
 		NodeId:   replicaNodeID,
@@ -145,6 +170,12 @@ func (n Node) DeleteKeygroupReplica(kgname, replicaNodeID string, expectError bo
 		n.Errors++
 		return
 	}
+	if err == nil && expectError {
+		log.Warn().Msg("DeleteKeygroupReplica: Expected Error bot got no error")
+		n.Errors++
+		return
+	}
+
 
 	if err == nil && status.Status == client.EnumStatus_ERROR && !expectError {
 		log.Warn().Msgf("DeleteKeygroupReplica: error %s with status %s", err, status.Status)
@@ -153,11 +184,16 @@ func (n Node) DeleteKeygroupReplica(kgname, replicaNodeID string, expectError bo
 }
 
 // GetKeygroupTriggers calls the GetKeygroupTriggers endpoint of the GRPC interface.
-func (n Node) GetKeygroupTriggers(kgname string, expectError bool) []*client.Trigger {
+func (n *Node) GetKeygroupTriggers(kgname string, expectError bool) []*client.Trigger {
 	res, err := n.Client.GetKeygroupTriggers(context.Background(), &client.GetKeygroupTriggerRequest{Keygroup: kgname})
 
 	if err != nil && !expectError {
 		log.Warn().Msgf("GetKeygroupTriggers: error %s", err)
+		n.Errors++
+	}
+
+	if err == nil && expectError {
+		log.Warn().Msg("GetKeygroupTriggers: Expected Error bot got no error")
 		n.Errors++
 	}
 
@@ -169,11 +205,17 @@ func (n Node) GetKeygroupTriggers(kgname string, expectError bool) []*client.Tri
 }
 
 // AddKeygroupTrigger calls the AddKeygroupTrigger endpoint of the GRPC interface.
-func (n Node) AddKeygroupTrigger(kgname, triggerNodeID, triggerNodeHost string, expectError bool) {
+func (n *Node) AddKeygroupTrigger(kgname, triggerNodeID, triggerNodeHost string, expectError bool) {
 	status, err := n.Client.AddTrigger(context.Background(), &client.AddTriggerRequest{Keygroup: kgname, TriggerId: triggerNodeID, TriggerHost: triggerNodeHost})
 
 	if err != nil && !expectError {
 		log.Warn().Msgf("AddKeygroupTrigger: error %s", err)
+		n.Errors++
+		return
+	}
+
+	if err == nil && expectError {
+		log.Warn().Msg("AddKeygroupTrigger: Expected Error bot got no error")
 		n.Errors++
 		return
 	}
@@ -186,11 +228,17 @@ func (n Node) AddKeygroupTrigger(kgname, triggerNodeID, triggerNodeHost string, 
 }
 
 // DeleteKeygroupTrigger calls the DeleteKeygroupTrigger endpoint of the GRPC interface.
-func (n Node) DeleteKeygroupTrigger(kgname, triggerNodeID string, expectError bool) {
+func (n *Node) DeleteKeygroupTrigger(kgname, triggerNodeID string, expectError bool) {
 	status, err := n.Client.RemoveTrigger(context.Background(), &client.RemoveTriggerRequest{Keygroup: kgname, TriggerId: triggerNodeID})
 
 	if err != nil && !expectError {
 		log.Warn().Msgf("DeleteKeygroupTrigger: error %s", err)
+		n.Errors++
+		return
+	}
+
+	if err == nil && expectError {
+		log.Warn().Msg("DeleteKeygroupTrigger: Expected Error bot got no error")
 		n.Errors++
 		return
 	}
@@ -202,12 +250,18 @@ func (n Node) DeleteKeygroupTrigger(kgname, triggerNodeID string, expectError bo
 }
 
 // GetAllReplica calls the GetAllReplica endpoint of the GRPC interface.
-func (n Node) GetAllReplica(expectError bool) []string {
+func (n *Node) GetAllReplica(expectError bool) []string {
 	res, err := n.Client.GetAllReplica(context.Background(), &client.GetAllReplicaRequest{})
 	if err != nil && !expectError {
 		log.Warn().Msgf("GetAllReplicas: error %s", err)
 		n.Errors++
 	}
+
+	if err == nil && expectError {
+		log.Warn().Msg("GetAllReplicas: Expected Error bot got no error")
+		n.Errors++
+	}
+
 
 	if res == nil {
 		return nil
@@ -223,13 +277,19 @@ func (n Node) GetAllReplica(expectError bool) []string {
 }
 
 // GetReplica calls the GetReplica endpoint of the GRPC interface.
-func (n Node) GetReplica(nodeID string, expectError bool) string {
+func (n *Node) GetReplica(nodeID string, expectError bool) string {
 	res, err := n.Client.GetReplica(context.Background(), &client.GetReplicaRequest{NodeId: nodeID})
 
 	if err != nil && !expectError {
 		log.Warn().Msgf("GetReplica: error %s", err)
 		n.Errors++
 	}
+
+	if err == nil && expectError {
+		log.Warn().Msg("GetReplica: Expected Error bot got no error")
+		n.Errors++
+	}
+
 
 	if res == nil {
 		return ""
@@ -239,7 +299,7 @@ func (n Node) GetReplica(nodeID string, expectError bool) string {
 }
 
 // PutItem calls the PutItem endpoint of the GRPC interface.
-func (n Node) PutItem(kgname, item string, data string, expectError bool) {
+func (n *Node) PutItem(kgname, item string, data string, expectError bool) {
 	status, err := n.Client.Update(context.Background(), &client.UpdateRequest{
 		Keygroup: kgname,
 		Id:       item,
@@ -252,6 +312,12 @@ func (n Node) PutItem(kgname, item string, data string, expectError bool) {
 		return
 	}
 
+	if err == nil && expectError {
+		log.Warn().Msg("Update: Expected Error bot got no error")
+		n.Errors++
+		return
+	}
+
 	if err == nil && status.Status == client.EnumStatus_ERROR && !expectError {
 		log.Warn().Msgf("Update: error %s with status %s", err, status.Status)
 		n.Errors++
@@ -259,7 +325,7 @@ func (n Node) PutItem(kgname, item string, data string, expectError bool) {
 }
 
 // AppendItem calls the AppendItem endpoint of the GRPC interface.
-func (n Node) AppendItem(kgname string, data string, expectError bool) string {
+func (n *Node) AppendItem(kgname string, data string, expectError bool) string {
 	status, err := n.Client.Append(context.Background(), &client.AppendRequest{
 		Keygroup: kgname,
 		Data:     data,
@@ -267,6 +333,11 @@ func (n Node) AppendItem(kgname string, data string, expectError bool) string {
 
 	if err != nil != expectError {
 		log.Warn().Msgf("Append: error %s", err)
+		n.Errors++
+	}
+
+	if err == nil && expectError {
+		log.Warn().Msg("Append: Expected Error bot got no error")
 		n.Errors++
 	}
 
@@ -278,7 +349,7 @@ func (n Node) AppendItem(kgname string, data string, expectError bool) string {
 }
 
 // GetItem calls the GetItem endpoint of the GRPC interface.
-func (n Node) GetItem(kgname, item string, expectError bool) string {
+func (n *Node) GetItem(kgname, item string, expectError bool) string {
 	res, err := n.Client.Read(context.Background(), &client.ReadRequest{
 		Keygroup: kgname,
 		Id:       item,
@@ -286,6 +357,11 @@ func (n Node) GetItem(kgname, item string, expectError bool) string {
 
 	if err != nil && !expectError {
 		log.Warn().Msgf("GetItem: error %s", err)
+		n.Errors++
+	}
+
+	if err == nil && expectError {
+		log.Warn().Msg("GetItem: Expected Error bot got no error")
 		n.Errors++
 	}
 
@@ -297,7 +373,7 @@ func (n Node) GetItem(kgname, item string, expectError bool) string {
 }
 
 // DeleteItem calls the DeleteItem endpoint of the GRPC interface.
-func (n Node) DeleteItem(kgname, item string, expectError bool) {
+func (n *Node) DeleteItem(kgname, item string, expectError bool) {
 
 	status, err := n.Client.Delete(context.Background(), &client.DeleteRequest{
 		Keygroup: kgname,
@@ -310,6 +386,12 @@ func (n Node) DeleteItem(kgname, item string, expectError bool) {
 		return
 	}
 
+	if err == nil && expectError {
+		log.Warn().Msg("Delete: Expected Error bot got no error")
+		n.Errors++
+		return
+	}
+
 	if err == nil && !expectError && status.Status == client.EnumStatus_ERROR {
 		log.Warn().Msgf("Delete: error %s with status %s", err, status.Status)
 		n.Errors++
@@ -317,7 +399,7 @@ func (n Node) DeleteItem(kgname, item string, expectError bool) {
 }
 
 // AddUser calls the AddUser endpoint of the GRPC interface.
-func (n Node) AddUser(user string, kgname string, role string, expectError bool) {
+func (n *Node) AddUser(user string, kgname string, role string, expectError bool) {
 	var r client.UserRole
 
 	switch role {
@@ -345,6 +427,12 @@ func (n Node) AddUser(user string, kgname string, role string, expectError bool)
 		return
 	}
 
+	if err == nil && expectError {
+		log.Warn().Msg("AddUser: Expected Error bot got no error")
+		n.Errors++
+		return
+	}
+
 	if err == nil && !expectError && status.Status == client.EnumStatus_ERROR {
 		log.Warn().Msgf("AddUser: error %s with status %s", err, status.Status)
 		n.Errors++
@@ -352,7 +440,7 @@ func (n Node) AddUser(user string, kgname string, role string, expectError bool)
 }
 
 // RemoveUser calls the RemoveUser endpoint of the GRPC interface.
-func (n Node) RemoveUser(user string, kgname string, role string, expectError bool) {
+func (n *Node) RemoveUser(user string, kgname string, role string, expectError bool) {
 	var r client.UserRole
 
 	switch role {
@@ -376,6 +464,12 @@ func (n Node) RemoveUser(user string, kgname string, role string, expectError bo
 
 	if err != nil && !expectError {
 		log.Warn().Msgf("RemoveUser: error %s", err)
+		n.Errors++
+		return
+	}
+
+	if err == nil && expectError {
+		log.Warn().Msg("RemoveUser: Expected Error bot got no error")
 		n.Errors++
 		return
 	}
