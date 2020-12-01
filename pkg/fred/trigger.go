@@ -28,7 +28,7 @@ func (t *triggerService) getConnAndClient(host string) (client trigger.TriggerNo
 		log.Fatal().Err(err).Msg("Cannot create Grpc connection")
 		return nil, nil
 	}
-	log.Info().Msgf("Interclient: Created Connection to %s", host)
+	log.Debug().Msgf("Interclient: Created Connection to %s", host)
 	client = trigger.NewTriggerNodeClient(conn)
 	return
 }

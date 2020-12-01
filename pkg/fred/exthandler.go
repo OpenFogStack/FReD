@@ -28,7 +28,7 @@ func newExthandler(s *storeService, r *replicationService, t *triggerService, a 
 func (h *exthandler) HandleCreateKeygroup(user string, k Keygroup) error {
 
 	if err := h.r.createKeygroup(k); err != nil {
-		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		log.Debug().Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error creating keygroup")
 	}
 
@@ -81,8 +81,9 @@ func (h *exthandler) HandleRead(user string, i Item) (Item, error) {
 	result, err := h.s.read(i.Keygroup, i.ID)
 
 	if err != nil {
-		log.Error().Msgf("Error in AddReplica is: %#v", err)
-		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		log.Error().Msgf("Error in Read is: %#v", err)
+		//This prints the error stack whenever a item is not found, nobody cares about this...
+		//log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return i, errors.Errorf("error reading item %s from keygroup %s", i.ID, i.Keygroup)
 	}
 
@@ -110,7 +111,7 @@ func (h *exthandler) HandleAppend(user string, i Item) (Item, error) {
 		return i, errors.Errorf("cannot append %s to mutable keygroup", i.ID)
 	}
 
-	log.Debug().Msgf("keygroup %s is immutable, proceeding...", i.Keygroup)
+	log.Debug().Msgf("...keygroup %s is immutable", i.Keygroup)
 
 	expiry, err := h.n.GetExpiry(i.Keygroup)
 
@@ -158,7 +159,7 @@ func (h *exthandler) HandleUpdate(user string, i Item) error {
 		return errors.Errorf("cannot update item %s because keygroup is immutable", i.ID)
 	}
 
-	log.Debug().Msgf("keygroup %s is mutable, proceeding...", i.Keygroup)
+	log.Debug().Msgf("...keygroup %s is mutable", i.Keygroup)
 
 	expiry, err := h.n.GetExpiry(i.Keygroup)
 
