@@ -122,12 +122,12 @@ func (n *NameService) GetKeygroupMembers(kg fred.KeygroupName, excludeSelf bool)
 	ids = make(map[fred.NodeID]int)
 
 	for i, value := range nodes {
-		log.Debug().Msgf("NaSe: GetKeygroupMembers: Got result %d, key: %s value: %s", i, value.Key, value.Value)
 		// If status is OK then add to available replicas
 		if bytes.Equal(value.Value, []byte("ok")) {
 			// If we are to exclude ourselfes
 			if excludeSelf && n.NodeID == getNodeNameFromKgNodeString(string(value.Key)) {
-				log.Debug().Msg("Excluding this node from results since this is the own node")
+				log.Debug().Msgf("NaSe: GetKeygroupMembers: Got result %d, key: %s value: %s", i, value.Key, value.Value)
+				log.Debug().Msg("...Excluding this node from results since this is the own node")
 			} else {
 				id := getNodeNameFromKgNodeString(string(value.Key))
 				ids[fred.NodeID(id)], err = n.getKeygroupExpiry(string(kg), id)
@@ -137,7 +137,8 @@ func (n *NameService) GetKeygroupMembers(kg fred.KeygroupName, excludeSelf bool)
 			}
 
 		} else {
-			log.Debug().Msg("NaSe: GetKeygroupMembers: Above node has a status != OK, not returning it.")
+			log.Debug().Msgf("NaSe: GetKeygroupMembers: Got result %d, key: %s value: %s", i, value.Key, value.Value)
+			log.Debug().Msg("... node has a status != OK, not returning it.")
 		}
 	}
 	return

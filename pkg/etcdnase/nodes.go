@@ -21,7 +21,7 @@ func (n *NameService) GetNodeAddress(nodeID fred.NodeID) (addr string, err error
 		return "", errors.Errorf("no such node %s", nodeID)
 	}
 
-	log.Debug().Msgf("Getting adress of node %s:: %s", nodeID, resp[0].Value)
+	log.Debug().Msgf("NaSe: GetNodeAdress: Adress of node %s is %s", nodeID, resp[0].Value)
 	return string(resp[0].Value), nil
 }
 
