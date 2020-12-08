@@ -27,7 +27,7 @@ func (c *Client) getConnAndClient(host string) (client peering.NodeClient, conn 
 		log.Fatal().Err(err).Msg("Cannot create Grpc connection")
 		return nil, nil
 	}
-	log.Info().Msgf("Interclient: Created Connection to %s", host)
+	log.Debug().Msgf("Interclient: Created Connection to %s", host)
 	client = peering.NewNodeClient(conn)
 	return
 }

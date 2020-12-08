@@ -103,7 +103,7 @@ func (s *Server) checkCert(ctx context.Context) (name string, err error) {
 		return name, errors.Errorf("invalid subject common name")
 	}
 
-	log.Debug().Msgf("CN: %s", name)
+	log.Debug().Msgf("checkCert: GRPC Context Certificate Name: %s", name)
 
 	return name, nil
 }

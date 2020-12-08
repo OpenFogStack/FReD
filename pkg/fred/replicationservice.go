@@ -64,7 +64,6 @@ func (s *replicationService) createKeygroup(k Keygroup) error {
 
 	if exists {
 		log.Error().Msg("Cannot Create Keygroup since NaSe says the Kg already exists. Existing Keygroups can only be joined")
-		// TODO s.localReplStore.ExistsKeygroup returns nil, but this returns an error. Whats better?
 		err = errors.Errorf("keygroup already exists, cannot create it: %#v", k)
 		return err
 	}
