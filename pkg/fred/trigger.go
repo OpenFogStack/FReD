@@ -18,8 +18,10 @@ type Trigger struct {
 }
 
 type triggerService struct {
-	tc *credentials.TransportCredentials
-	s  *storeService
+	tc           *credentials.TransportCredentials
+	s            *storeService
+	MissedDelete map[string][]Item
+	MissedUpdate map[string][]Item
 }
 
 func (t *triggerService) getConnAndClient(host string) (client trigger.TriggerNodeClient, conn *grpc.ClientConn) {
@@ -34,23 +36,12 @@ func (t *triggerService) getConnAndClient(host string) (client trigger.TriggerNo
 }
 
 // logs the response and returns the correct error message
-func dealWithStatusResponse(res *trigger.TriggerResponse, err error, from string) error {
+func dealWithStatusResponse(res *trigger.TriggerResponse, err error, from string) {
 	if res != nil {
 		log.Debug().Msgf("Interclient got Response from %s, Status %s with Message %s and Error %s", from, res.Status, res.ErrorMessage, err)
 	} else {
 		log.Debug().Msgf("Interclient got empty Response from %s", from)
 	}
-
-	if err != nil || res == nil {
-		return err
-	}
-
-	if res.Status == trigger.EnumTriggerStatus_TRIGGER_ERROR {
-		return errors.New(res.ErrorMessage)
-	}
-
-	return nil
-
 }
 
 func newTriggerService(s *storeService, certFile, keyFile string) *triggerService {
@@ -89,10 +80,19 @@ func (t *triggerService) triggerDelete(i Item) (e error) {
 			Id:       i.ID,
 		})
 
-		err = dealWithStatusResponse(res, err, "TriggerDelete")
+		dealWithStatusResponse(res, err, "TriggerDelete")
 
 		if err != nil {
-			e = errors.Errorf("%#v %#v", e, err)
+			// Message did not reach trigger, so store in messages-to-send
+			// But only if there are less than 1000 messages, if someone forgot to delete a trigger...
+			if len(t.MissedDelete[node.ID]) < 1000 {
+				t.MissedDelete[node.ID] = append(t.MissedDelete[node.ID], i)
+				log.Info().Msgf("Trigger: triggerDelete: was not able to reach trigger, saving message to send in the future")
+			} else {
+				log.Warn().Msgf("Trigger: triggerDelete: node %s has missed more than 1000 triggers, so this trigger will be lost", node.ID)
+			}
+		} else {
+			t.checkMissedTriggers(node)
 		}
 
 		err = conn.Close()
@@ -122,10 +122,19 @@ func (t *triggerService) triggerUpdate(i Item) (e error) {
 			Val:      i.Val,
 		})
 
-		err = dealWithStatusResponse(res, err, "TriggerUpdate")
+		dealWithStatusResponse(res, err, "TriggerUpdate")
 
 		if err != nil {
-			e = errors.Errorf("%#v %#v", e, err)
+			// Message did not reach trigger, so store in messages-to-send
+			// But only if there are less than 1000 messages, if someone forgot to delete a trigger...
+			if len(t.MissedUpdate[node.ID]) < 1000 {
+				t.MissedUpdate[node.ID] = append(t.MissedUpdate[node.ID], i)
+				log.Info().Msgf("Trigger: triggerUpdate: was not able to reach trigger, saving message to send in the future")
+			} else {
+				log.Warn().Msgf("Trigger: triggerUpdate: node %s has missed more than 1000 triggers, so this trigger will be lost", node.ID)
+			}
+		} else {
+			t.checkMissedTriggers(node)
 		}
 
 		err = conn.Close()
@@ -152,6 +161,47 @@ func (t *triggerService) getTrigger(k Keygroup) ([]Trigger, error) {
 
 func (t *triggerService) removeTrigger(k Keygroup, tn Trigger) error {
 	log.Debug().Msgf("removeTrigger from triggerservice: in %#v %#v", k, tn)
+	t.MissedDelete[tn.ID] = []Item{}
+	t.MissedUpdate[tn.ID] = []Item{}
 
 	return t.s.deleteKeygroupTrigger(k.Name, tn)
+}
+
+// checkMissedTriggers checks whether this trigger node has missed any updates
+func (t *triggerService) checkMissedTriggers(node Trigger) {
+	missedU := t.MissedUpdate[node.ID]
+	missedD := t.MissedDelete[node.ID]
+	// Missed Updates:
+	if missedU != nil && len(missedU) != 0 {
+		log.Info().Msgf("triggerservice: checkMissed: node %s is reachable again and will receive %d updates", node.ID, len(missedU))
+		client, conn := t.getConnAndClient(node.Host)
+		for count, i := range missedU {
+			_, err := client.PutItemTrigger(context.Background(), &trigger.PutItemTriggerRequest{
+				Keygroup: string(i.Keygroup),
+				Id:       i.ID,
+				Val:      i.Val,
+			})
+			if err == nil {
+				// No errors == remove from Array
+				t.MissedUpdate[node.ID] = append(t.MissedUpdate[node.ID][:count], t.MissedUpdate[node.ID][count+1:]...)
+			}
+		}
+		conn.Close()
+	}
+	// Missed Deletes
+	if missedD != nil && len(missedD) != 0 {
+		log.Info().Msgf("triggerservice: checkMissed: node %s is reachable again and will receive %d deletes", node.ID, len(missedU))
+		client, conn := t.getConnAndClient(node.Host)
+		for count, i := range missedD {
+			_, err := client.DeleteItemTrigger(context.Background(), &trigger.DeleteItemTriggerRequest{
+				Keygroup: string(i.Keygroup),
+				Id:       i.ID,
+			})
+			if err == nil {
+				// No errors == remove from Array
+				t.MissedDelete[node.ID] = append(t.MissedDelete[node.ID][:count], t.MissedDelete[node.ID][count+1:]...)
+			}
+		}
+		conn.Close()
+	}
 }
