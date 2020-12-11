@@ -24,6 +24,28 @@ type triggerService struct {
 	MissedUpdate map[string][]Item
 }
 
+func newTriggerService(s *storeService, certFile, keyFile string) *triggerService {
+	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+
+	if err != nil {
+		log.Fatal().Err(err).Msg("Cannot load certificates")
+		return nil
+	}
+
+	tlsConfig := &tls.Config{
+		Certificates: []tls.Certificate{cert},
+	}
+
+	tc := credentials.NewTLS(tlsConfig)
+
+	return &triggerService{
+		tc:           &tc,
+		s:            s,
+		MissedDelete: make(map[string][]Item),
+		MissedUpdate: make(map[string][]Item),
+	}
+}
+
 func (t *triggerService) getConnAndClient(host string) (client trigger.TriggerNodeClient, conn *grpc.ClientConn) {
 	conn, err := grpc.Dial(host, grpc.WithTransportCredentials(*t.tc))
 	if err != nil {
@@ -41,26 +63,6 @@ func dealWithStatusResponse(res *trigger.TriggerResponse, err error, from string
 		log.Debug().Msgf("Interclient got Response from %s, Status %s with Message %s and Error %s", from, res.Status, res.ErrorMessage, err)
 	} else {
 		log.Debug().Msgf("Interclient got empty Response from %s", from)
-	}
-}
-
-func newTriggerService(s *storeService, certFile, keyFile string) *triggerService {
-	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
-
-	if err != nil {
-		log.Fatal().Err(err).Msg("Cannot load certificates")
-		return nil
-	}
-
-	tlsConfig := &tls.Config{
-		Certificates: []tls.Certificate{cert},
-	}
-
-	tc := credentials.NewTLS(tlsConfig)
-
-	return &triggerService{
-		tc: &tc,
-		s:  s,
 	}
 }
 
@@ -161,8 +163,8 @@ func (t *triggerService) getTrigger(k Keygroup) ([]Trigger, error) {
 
 func (t *triggerService) removeTrigger(k Keygroup, tn Trigger) error {
 	log.Debug().Msgf("removeTrigger from triggerservice: in %#v %#v", k, tn)
-	t.MissedDelete[tn.ID] = []Item{}
-	t.MissedUpdate[tn.ID] = []Item{}
+	t.MissedDelete[tn.ID] = nil
+	t.MissedUpdate[tn.ID] = nil
 
 	return t.s.deleteKeygroupTrigger(k.Name, tn)
 }
@@ -172,7 +174,7 @@ func (t *triggerService) checkMissedTriggers(node Trigger) {
 	missedU := t.MissedUpdate[node.ID]
 	missedD := t.MissedDelete[node.ID]
 	// Missed Updates:
-	if missedU != nil && len(missedU) != 0 {
+	if len(missedU) != 0 {
 		log.Info().Msgf("triggerservice: checkMissed: node %s is reachable again and will receive %d updates", node.ID, len(missedU))
 		client, conn := t.getConnAndClient(node.Host)
 		for count, i := range missedU {
@@ -189,7 +191,7 @@ func (t *triggerService) checkMissedTriggers(node Trigger) {
 		conn.Close()
 	}
 	// Missed Deletes
-	if missedD != nil && len(missedD) != 0 {
+	if len(missedD) != 0 {
 		log.Info().Msgf("triggerservice: checkMissed: node %s is reachable again and will receive %d deletes", node.ID, len(missedU))
 		client, conn := t.getConnAndClient(node.Host)
 		for count, i := range missedD {
