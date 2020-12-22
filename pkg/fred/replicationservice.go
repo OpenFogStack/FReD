@@ -422,12 +422,9 @@ func (s *replicationService) getNode(n Node) (Node, error) {
 	return n, err
 }
 
-// getNodes returns a list of all known nodes.
-func (s *replicationService) getNodes(externalView bool) ([]Node, error) {
-	if externalView {
-		return s.n.GetAllNodesExternal()
-	}
-	return s.n.GetAllNodes()
+// getNodesExternalAdress returns a list of all known nodes with the adress they can be reached at externally.
+func (s *replicationService) getNodesExternalAdress() ([]Node, error) {
+	return s.n.GetAllNodesExternal()
 }
 
 // getReplica returns a list of all replica nodes for a given keygroup.

@@ -119,34 +119,33 @@ func main() {
 
 	logNodeAction(nodeA, "Getting all Replicas that nodeA has")
 	parsed := nodeA.GetAllReplica(false)
-	// Example Response: ["nodeB", "nodeC"]
+	// Example Response: map[string]string
+	// {"nodeA": "1.2.3.4:5000", "nodeB": "4.5.6.7:4000"}
 	// Test for nodeA
 
 	if len(parsed) != 3 {
-		logNodeFailure(nodeA, "len(parsed) == 3", fmt.Sprintf("%d", len(parsed)))
+		logNodeFailure(nodeA, "GetAllReplica returns 3 nodes", fmt.Sprintf("%d", len(parsed)))
 	}
 
-	// sorry but i still love go
-	check := (len(parsed) != 3) && func() bool {
-		for _, id := range parsed {
-			if id == nodeBpeeringID {
-				return true
-			}
-		}
+	addr, ok := parsed[nodeApeeringID]
+	if !ok {
+		logNodeFailure(nodeA, "GetAllReplica response contains nodeA", "nodeA not found")
+	} else if addr != fmt.Sprintf("%s:%s", nodeAhost, nodeAhttpPort) {
+		logNodeFailure(nodeA, "nodeA address is "+fmt.Sprintf("%s:%s", nodeAhost, nodeAhttpPort), addr)
+	}
 
-		return false
-	}() && func() bool {
-		for _, id := range parsed {
-			if id == nodeCpeeringID {
-				return true
-			}
-		}
+	addr, ok = parsed[nodeBpeeringID]
+	if !ok {
+		logNodeFailure(nodeA, "GetAllReplica response contains nodeB", "nodeB not found")
+	} else if addr != fmt.Sprintf("%s:%s", nodeBhost, nodeBhttpPort) {
+		logNodeFailure(nodeA, "nodeB address is "+fmt.Sprintf("%s:%s", nodeBhost, nodeBhttpPort), addr)
+	}
 
-		return false
-	}()
-
-	if check {
-		logNodeFailure(nodeA, "parsed == ["+nodeBpeeringID+", "+nodeCpeeringID+","+nodeApeeringID+"]", fmt.Sprintf("%#v", parsed))
+	addr, ok = parsed[nodeCpeeringID]
+	if !ok {
+		logNodeFailure(nodeA, "GetAllReplica response contains nodeC", "nodeC not found")
+	} else if addr != fmt.Sprintf("%s:%s", nodeChost, nodeChttpPort) {
+		logNodeFailure(nodeA, "nodeC address is "+fmt.Sprintf("%s:%s", nodeChost, nodeChttpPort), addr)
 	}
 
 	// Fun with replicas
@@ -345,11 +344,9 @@ func main() {
 	// check if the items exist
 	if res := nodeA.GetItem("pulltest", "item1", false); res != "val1" {
 		logNodeFailure(nodeA, "val1", res)
-		nodeA.Errors++
 	}
 	if res := nodeA.GetItem("pulltest", "item2", false); res != "val2" {
 		logNodeFailure(nodeA, "val2", res)
-		nodeA.Errors++
 	}
 
 	logNodeAction(nodeA, "Add an item on nodeA, check wheter it populates to nodeB")
@@ -357,7 +354,6 @@ func main() {
 	// check if nodeB also gets that item
 	if res := nodeB.GetItem("pulltest", "item3", false); res != "val3" {
 		logNodeFailure(nodeB, "val3", res)
-		nodeB.Errors++
 	}
 
 	// test RBAC and authentication
@@ -374,7 +370,6 @@ func main() {
 	littleClient := grpcclient.NewNode(nodeAhost, port, littleCertFile, littleKeyFile)
 	if val := littleClient.GetItem("rbactest", "item1", false); val != "value1" {
 		logNodeFailure(nodeA, "value1", val)
-		nodeA.Errors++
 	}
 
 	logNodeAction(nodeA, "try to write with little client -> should not work")
@@ -392,7 +387,6 @@ func main() {
 	logNodeAction(nodeA, "try to read from keygroup with little client -> should not work")
 	if val := littleClient.GetItem("rbactest", "item1", true); val != "" {
 		logNodeFailure(nodeA, "", val)
-		nodeA.Errors++
 	}
 
 	totalerrors := nodeA.Errors + nodeB.Errors + nodeC.Errors + littleClient.Errors
@@ -412,6 +406,7 @@ func logNodeAction(node *grpcclient.Node, action string) {
 func logNodeFailure(node *grpcclient.Node, expected, result string) {
 	wait()
 	log.Warn().Str("node", node.Addr).Msgf("expected: %s, but got: %#v", expected, result)
+	node.Errors++
 }
 
 func checkTriggerNode(triggerNodeID, triggerNodeWSHost string) {
