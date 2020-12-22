@@ -344,11 +344,9 @@ func main() {
 	// check if the items exist
 	if res := nodeA.GetItem("pulltest", "item1", false); res != "val1" {
 		logNodeFailure(nodeA, "val1", res)
-		nodeA.Errors++
 	}
 	if res := nodeA.GetItem("pulltest", "item2", false); res != "val2" {
 		logNodeFailure(nodeA, "val2", res)
-		nodeA.Errors++
 	}
 
 	logNodeAction(nodeA, "Add an item on nodeA, check wheter it populates to nodeB")
@@ -356,7 +354,6 @@ func main() {
 	// check if nodeB also gets that item
 	if res := nodeB.GetItem("pulltest", "item3", false); res != "val3" {
 		logNodeFailure(nodeB, "val3", res)
-		nodeB.Errors++
 	}
 
 	// test RBAC and authentication
@@ -373,7 +370,6 @@ func main() {
 	littleClient := grpcclient.NewNode(nodeAhost, port, littleCertFile, littleKeyFile)
 	if val := littleClient.GetItem("rbactest", "item1", false); val != "value1" {
 		logNodeFailure(nodeA, "value1", val)
-		nodeA.Errors++
 	}
 
 	logNodeAction(nodeA, "try to write with little client -> should not work")
@@ -391,7 +387,6 @@ func main() {
 	logNodeAction(nodeA, "try to read from keygroup with little client -> should not work")
 	if val := littleClient.GetItem("rbactest", "item1", true); val != "" {
 		logNodeFailure(nodeA, "", val)
-		nodeA.Errors++
 	}
 
 	totalerrors := nodeA.Errors + nodeB.Errors + nodeC.Errors + littleClient.Errors
@@ -411,6 +406,7 @@ func logNodeAction(node *grpcclient.Node, action string) {
 func logNodeFailure(node *grpcclient.Node, expected, result string) {
 	wait()
 	log.Warn().Str("node", node.Addr).Msgf("expected: %s, but got: %#v", expected, result)
+	node.Errors++
 }
 
 func checkTriggerNode(triggerNodeID, triggerNodeWSHost string) {
