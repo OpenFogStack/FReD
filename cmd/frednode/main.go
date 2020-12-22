@@ -308,13 +308,15 @@ func main() {
 	}
 
 	f := fred.New(&fred.Config{
-		Store:            store,
-		Client:           c,
-		NaSe:             n,
-		PeeringHost:      fc.Peering.Host,
-		PeeringHostProxy: fc.Peering.HostProxy,
-		TriggerCert:      fc.Trigger.Cert,
-		TriggerKey:       fc.Trigger.Key,
+		Store:             store,
+		Client:            c,
+		NaSe:              n,
+		PeeringHost:       fc.Peering.Host,
+		PeeringHostProxy:  fc.Peering.HostProxy,
+		ExternalHost:      fc.Server.Host,
+		ExternalHostProxy: fc.Server.Proxy,
+		TriggerCert:       fc.Trigger.Cert,
+		TriggerKey:        fc.Trigger.Key,
 	})
 
 	log.Debug().Msg("Starting Interconnection Server...")

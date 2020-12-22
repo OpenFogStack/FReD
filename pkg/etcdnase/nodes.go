@@ -25,8 +25,17 @@ func (n *NameService) GetNodeAddress(nodeID fred.NodeID) (addr string, err error
 	return string(resp[0].Value), nil
 }
 
-// GetAllNodes returns all nodes that are stored in the NaSe
+// GetAllNodes returns all nodes that are stored in the NaSe in the way they can be reached by other nodes
 func (n *NameService) GetAllNodes() (nodes []fred.Node, err error) {
+	return n.getAllNodesBySuffix(fmt.Sprintf(sep + "address"))
+}
+
+// GetAllNodesExternal returns all nodes with the port that the exthandler is running on
+func (n *NameService) GetAllNodesExternal() (nodes []fred.Node, err error) {
+	return n.getAllNodesBySuffix(fmt.Sprintf(sep + "extaddress"))
+}
+
+func (n *NameService) getAllNodesBySuffix(suffix string) (nodes []fred.Node, err error) {
 	resp, err := n.getPrefix(nodePrefixString)
 
 	nodes = make([]fred.Node, 0)
@@ -36,6 +45,10 @@ func (n *NameService) GetAllNodes() (nodes []fred.Node, err error) {
 
 		// TODO status checks
 		if strings.HasSuffix(key, "|status") {
+			continue
+		}
+
+		if !strings.HasSuffix(key, suffix) {
 			continue
 		}
 

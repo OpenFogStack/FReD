@@ -4,7 +4,7 @@ package fred
 type NameService interface {
 	// manage information about this node
 	GetNodeID() NodeID
-	RegisterSelf(host string) error
+	RegisterSelf(host string, externalHost string) error
 
 	// manage permissions
 	AddUserPermissions(user string, method Method, keygroup KeygroupName) error
@@ -18,6 +18,7 @@ type NameService interface {
 	// manage information about another node
 	GetNodeAddress(nodeID NodeID) (addr string, err error)
 	GetAllNodes() (nodes []Node, err error)
+	GetAllNodesExternal() (nodes []Node, err error)
 
 	// manage keygroups
 	ExistsKeygroup(kg KeygroupName) (bool, error)

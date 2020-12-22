@@ -40,8 +40,8 @@ func (n *NameServiceCache) GetNodeID() fred.NodeID {
 }
 
 // RegisterSelf stores information about this node
-func (n *NameServiceCache) RegisterSelf(host string) error {
-	return n.regularNase.RegisterSelf(host)
+func (n *NameServiceCache) RegisterSelf(host string, externalHost string) error {
+	return n.regularNase.RegisterSelf(host, externalHost)
 }
 
 // ReportFailedNode report nonreachable node

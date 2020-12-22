@@ -7,18 +7,20 @@ import (
 
 // Config holds configuration parameters for an instance of FReD.
 type Config struct {
-	Store            Store
-	Client           Client
-	NaSe             NameService
-	PeeringHost      string
-	PeeringHostProxy string
-	NodeID           string
-	NaSeHosts        []string
-	NaSeCert         string
-	NaSeKey          string
-	NaSeCA           string
-	TriggerCert      string
-	TriggerKey       string
+	Store             Store
+	Client            Client
+	NaSe              NameService
+	PeeringHost       string
+	PeeringHostProxy  string
+	ExternalHost      string
+	ExternalHostProxy string
+	NodeID            string
+	NaSeHosts         []string
+	NaSeCert          string
+	NaSeKey           string
+	NaSeCA            string
+	TriggerCert       string
+	TriggerKey        string
 }
 
 // Fred is an instance of FReD.
@@ -64,7 +66,7 @@ func New(config *Config) (f Fred) {
 
 	if config.PeeringHostProxy != "" && config.PeeringHost != config.PeeringHostProxy {
 		// we are behind a proxy: register with the proxy address for everyone else to find us
-		err := config.NaSe.RegisterSelf(config.PeeringHostProxy)
+		err := config.NaSe.RegisterSelf(config.PeeringHostProxy, config.ExternalHostProxy)
 
 		if err != nil {
 			log.Err(err).Msg(err.(*errors.Error).ErrorStack())
@@ -72,7 +74,7 @@ func New(config *Config) (f Fred) {
 		}
 	} else {
 		// not behind a proxy: register with the local bind address
-		err := config.NaSe.RegisterSelf(config.PeeringHost)
+		err := config.NaSe.RegisterSelf(config.PeeringHost, config.ExternalHost)
 
 		if err != nil {
 			log.Err(err).Msg(err.(*errors.Error).ErrorStack())

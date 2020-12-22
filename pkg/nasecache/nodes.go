@@ -37,3 +37,8 @@ func (n *NameServiceCache) GetAllNodes() (nodes []fred.Node, err error) {
 
 	return n.regularNase.GetAllNodes()
 }
+
+// GetAllNodesExternal returns all nodes by their externally reachable address
+func (n *NameServiceCache) GetAllNodesExternal() (nodes []fred.Node, err error) {
+	return n.regularNase.GetAllNodesExternal()
+}
