@@ -119,34 +119,33 @@ func main() {
 
 	logNodeAction(nodeA, "Getting all Replicas that nodeA has")
 	parsed := nodeA.GetAllReplica(false)
-	// Example Response: ["nodeB", "nodeC"]
+	// Example Response: map[string]string
+	// {"nodeA": "1.2.3.4:5000", "nodeB": "4.5.6.7:4000"}
 	// Test for nodeA
 
 	if len(parsed) != 3 {
-		logNodeFailure(nodeA, "len(parsed) == 3", fmt.Sprintf("%d", len(parsed)))
+		logNodeFailure(nodeA, "GetAllReplica returns 3 nodes", fmt.Sprintf("%d", len(parsed)))
 	}
 
-	// sorry but i still love go
-	check := (len(parsed) != 3) && func() bool {
-		for _, id := range parsed {
-			if id == nodeBpeeringID {
-				return true
-			}
-		}
+	addr, ok := parsed[nodeApeeringID]
+	if !ok {
+		logNodeFailure(nodeA, "GetAllReplica response contains nodeA", "nodeA not found")
+	} else if addr != fmt.Sprintf("%s:%s", nodeAhost, nodeAhttpPort) {
+		logNodeFailure(nodeA, "nodeA address is "+fmt.Sprintf("%s:%s", nodeAhost, nodeAhttpPort), addr)
+	}
 
-		return false
-	}() && func() bool {
-		for _, id := range parsed {
-			if id == nodeCpeeringID {
-				return true
-			}
-		}
+	addr, ok = parsed[nodeBpeeringID]
+	if !ok {
+		logNodeFailure(nodeA, "GetAllReplica response contains nodeB", "nodeB not found")
+	} else if addr != fmt.Sprintf("%s:%s", nodeBhost, nodeBhttpPort) {
+		logNodeFailure(nodeA, "nodeB address is "+fmt.Sprintf("%s:%s", nodeBhost, nodeBhttpPort), addr)
+	}
 
-		return false
-	}()
-
-	if check {
-		logNodeFailure(nodeA, "parsed == ["+nodeBpeeringID+", "+nodeCpeeringID+","+nodeApeeringID+"]", fmt.Sprintf("%#v", parsed))
+	addr, ok = parsed[nodeCpeeringID]
+	if !ok {
+		logNodeFailure(nodeA, "GetAllReplica response contains nodeC", "nodeC not found")
+	} else if addr != fmt.Sprintf("%s:%s", nodeChost, nodeChttpPort) {
+		logNodeFailure(nodeA, "nodeC address is "+fmt.Sprintf("%s:%s", nodeChost, nodeChttpPort), addr)
 	}
 
 	// Fun with replicas
