@@ -176,7 +176,6 @@ func (n *Node) DeleteKeygroupReplica(kgname, replicaNodeID string, expectError b
 		return
 	}
 
-
 	if err == nil && status.Status == client.EnumStatus_ERROR && !expectError {
 		log.Warn().Msgf("DeleteKeygroupReplica: error %s with status %s", err, status.Status)
 		n.Errors++
@@ -250,7 +249,7 @@ func (n *Node) DeleteKeygroupTrigger(kgname, triggerNodeID string, expectError b
 }
 
 // GetAllReplica calls the GetAllReplica endpoint of the GRPC interface.
-func (n *Node) GetAllReplica(expectError bool) []string {
+func (n *Node) GetAllReplica(expectError bool) map[string]string {
 	res, err := n.Client.GetAllReplica(context.Background(), &client.GetAllReplicaRequest{})
 	if err != nil && !expectError {
 		log.Warn().Msgf("GetAllReplicas: error %s", err)
@@ -262,15 +261,14 @@ func (n *Node) GetAllReplica(expectError bool) []string {
 		n.Errors++
 	}
 
-
 	if res == nil {
 		return nil
 	}
 
-	ids := make([]string, len(res.Replicas))
+	ids := make(map[string]string)
 
-	for i := 0; i < len(res.Replicas); i++ {
-		ids[i] = res.Replicas[i].NodeId
+	for _, r := range res.Replicas {
+		ids[r.NodeId] = r.Host
 	}
 
 	return ids
@@ -289,7 +287,6 @@ func (n *Node) GetReplica(nodeID string, expectError bool) string {
 		log.Warn().Msg("GetReplica: Expected Error bot got no error")
 		n.Errors++
 	}
-
 
 	if res == nil {
 		return ""
