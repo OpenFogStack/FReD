@@ -12,18 +12,19 @@ import (
 )
 
 const (
-	fmtKgNodeString         = "kg|%s|node|%s"
-	fmtKgStatusString       = "kg|%s|status"
-	fmtKgMutableString      = "kg|%s|mutable"
-	fmtKgExpiryString       = "kg|%s|expiry|node|%s"
-	fmtNodeAdressString     = "node|%s|address"
-	fmtUserPermissionPrefix = "user|%s|kg"
-	fmtUserPermissionString = "user|%s|kg|%s|method|%s"
-	fmtFailedNodeKgString   = "failnode|%s|kg|%s|%s" // Node, Keygroup, ID
-	fmtFailedNodePrefix     = "failnode|%s|"
-	nodePrefixString        = "node|"
-	sep                     = "|"
-	timeout                 = 5 * time.Second
+	fmtKgNodeString             = "kg|%s|node|%s"
+	fmtKgStatusString           = "kg|%s|status"
+	fmtKgMutableString          = "kg|%s|mutable"
+	fmtKgExpiryString           = "kg|%s|expiry|node|%s"
+	fmtNodeAdressString         = "node|%s|address"
+	fmtNodeExternalAdressString = "node|%s|extaddress"
+	fmtUserPermissionPrefix     = "user|%s|kg"
+	fmtUserPermissionString     = "user|%s|kg|%s|method|%s"
+	fmtFailedNodeKgString       = "failnode|%s|kg|%s|%s" // Node, Keygroup, ID
+	fmtFailedNodePrefix         = "failnode|%s|"
+	nodePrefixString            = "node|"
+	sep                         = "|"
+	timeout                     = 5 * time.Second
 )
 
 // NameService is the interface to the etcd server that serves as NaSe
@@ -32,7 +33,6 @@ type NameService struct {
 	cli    *clientv3.Client
 	NodeID string
 }
-
 // NewNameService creates a new NameService
 func NewNameService(nodeID string, endpoints []string, certfFile string, keyFile string, caFile string) (*NameService, error) {
 	tlsInfo := transport.TLSInfo{
@@ -64,11 +64,18 @@ func NewNameService(nodeID string, endpoints []string, certfFile string, keyFile
 }
 
 // RegisterSelf stores information about this node
-func (n *NameService) RegisterSelf(host string) error {
+func (n *NameService) RegisterSelf(host string, externalHost string) error {
 	key := fmt.Sprintf(fmtNodeAdressString, n.NodeID)
 	log.Debug().Msgf("NaSe: registering self as %s // %s", key, host)
 
-	return n.put(key, host)
+	err := n.put(key, host)
+
+	if err != nil {
+		return err
+	}
+
+	key = fmt.Sprintf(fmtNodeExternalAdressString, n.NodeID)
+	return n.put(key, externalHost)
 }
 
 // GetNodeID returns the ID of this node.

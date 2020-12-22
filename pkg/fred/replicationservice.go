@@ -423,7 +423,10 @@ func (s *replicationService) getNode(n Node) (Node, error) {
 }
 
 // getNodes returns a list of all known nodes.
-func (s *replicationService) getNodes() ([]Node, error) {
+func (s *replicationService) getNodes(externalView bool) ([]Node, error) {
+	if externalView {
+		return s.n.GetAllNodesExternal()
+	}
 	return s.n.GetAllNodes()
 }
 

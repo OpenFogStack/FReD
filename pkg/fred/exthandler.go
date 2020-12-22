@@ -322,7 +322,7 @@ func (h *exthandler) HandleGetReplica(user string, n Node) (Node, error) {
 // HandleGetAllReplica handles requests to the GetAllReplica endpoint of the client interface.
 func (h *exthandler) HandleGetAllReplica(user string) ([]Node, error) {
 
-	return h.r.getNodes()
+	return h.r.getNodes(true)
 }
 
 // AddUser adds permissions to a keygroup to a new user.
