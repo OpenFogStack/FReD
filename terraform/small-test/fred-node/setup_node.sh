@@ -7,11 +7,11 @@ echo "$2" > ./gitlabtoken
 
 sudo systemctl start docker
 
-sudo cat ./gitlabtoken | sudo docker login -u="$1" --password-stdin gitlab-registry.tubit.tu-berlin.de
+sudo cat ./gitlabtoken | sudo docker login -u="$1" --password-stdin git.tu-berlin.de:5000
 
 sudo rm gitlabtoken
 
-sudo docker pull gitlab-registry.tubit.tu-berlin.de/mcc-fred/fred/fred:"$3"
+sudo docker pull git.tu-berlin.de:5000/mcc-fred/fred/fred:"$3"
 
 sudo docker run -it \
       --name=fred \
@@ -21,4 +21,4 @@ sudo docker run -it \
       -p 80:80 \
       -p 5555:5555 \
       -v /tmp/config.toml:/config.toml \
-      gitlab-registry.tubit.tu-berlin.de/mcc-fred/fred/fred:"$3" --config config.toml --ws-host "$4" "$5"
+      git.tu-berlin.de:5000/mcc-fred/fred/fred:"$3" --config config.toml --ws-host "$4" "$5"

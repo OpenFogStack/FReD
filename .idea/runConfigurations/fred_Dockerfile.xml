@@ -7,7 +7,7 @@
         <option name="command" value="" />
         <option name="containerName" value="fred" />
         <option name="entrypoint" value="" />
-        <option name="imageTag" value="gitlab-registry.tubit.tu-berlin.de/mcc-fred/fred/fred" />
+        <option name="imageTag" value="git.tu-berlin.de:5000/mcc-fred/fred/fred" />
         <option name="commandLineOptions" value="" />
         <option name="sourceFilePath" value="Dockerfile" />
       </settings>

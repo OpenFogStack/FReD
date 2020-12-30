@@ -1,12 +1,12 @@
-# FReD 
+# FReD
 
-[![pipeline status](https://gitlab.tubit.tu-berlin.de/mcc-fred/fred/badges/master/pipeline.svg)](https://gitlab.tubit.tu-berlin.de/mcc-fred/fred/commits/master)
-[![coverage report](https://gitlab.tubit.tu-berlin.de/mcc-fred/fred/badges/master/coverage.svg)](https://gitlab.tubit.tu-berlin.de/mcc-fred/fred/commits/master)
+[![pipeline status](https://git.tu-berlin.de/mcc-fred/fred/badges/master/pipeline.svg)](https://git.tu-berlin.de/mcc-fred/fred/-/commits/master)
+[![coverage report](https://git.tu-berlin.de/mcc-fred/fred/badges/master/coverage.svg)](https://git.tu-berlin.de/mcc-fred/fred/-/commits/master)
 [![License MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://img.shields.io/badge/License-MIT-brightgreen.svg)
 
 ## Setup
 
-For development, it is recommended to install [Goland](https://www.jetbrains.com/go/).
+For development, it is recommended to install [GoLand](https://www.jetbrains.com/go/).
 
 It is probably easiest to use the dockerfiles to run Fred. An example setup can be found in `tests/3NodeTest`
 
@@ -62,7 +62,7 @@ AWS_PAGER="" aws dynamodb delete-table --table-name fred
 
 - To write a new client a language binding from the proto file (`proto/client/client.proto`) needs to be created. The two tests (in `tests/`) use Go and Python and can be used as inspiration.
 - FReD requires the use of certificates to check whether a node has access to a specific keygroup or not.
-If access control is not necessary every node can just use the same certificate => they all have access to all the data. (The nodes in the 3NodeTest all use the same certificates, for example)
+  If access control is not necessary every node can just use the same certificate => they all have access to all the data. (The nodes in the 3NodeTest all use the same certificates, for example)
 
 # Caching in Nameservice
 

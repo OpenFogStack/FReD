@@ -40,7 +40,7 @@ clean: ## Remove previous build
 	@rm -f $(PROJECT_NAME)
 
 container: ## Create a Docker container
-	@docker build . -t gitlab-registry.tubit.tu-berlin.de/mcc-fred/fred/fred
+	@docker build . -t git.tu-berlin.de:5000/mcc-fred/fred/fred
 
 staticcheck: ## Do a static code check
 	@GO111MODULE=off go get -u honnef.co/go/tools/cmd/staticcheck

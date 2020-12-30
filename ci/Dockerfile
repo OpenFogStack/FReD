@@ -28,42 +28,42 @@ ENV DOCKER_CHANNEL stable
 ENV DOCKER_VERSION 19.03.5
 
 RUN set -eux; \
-	\
-	apkArch="$(arch)"; \
-	case "$apkArch" in \
-# amd64
-		x86_64) dockerArch='x86_64' ;; \
-# arm32v6
-		armhf) dockerArch='armel' ;; \
-# arm32v7
-		armv7) dockerArch='armhf' ;; \
-# arm64v8
-		aarch64) dockerArch='aarch64' ;; \
-		*) echo >&2 "error: unsupported architecture ($apkArch)"; exit 1 ;;\
-	esac; \
-	\
-	if ! wget -O docker.tgz "https://download.docker.com/linux/static/${DOCKER_CHANNEL}/${dockerArch}/docker-${DOCKER_VERSION}.tgz"; then \
-		echo >&2 "error: failed to download 'docker-${DOCKER_VERSION}' from '${DOCKER_CHANNEL}' for '${dockerArch}'"; \
-		exit 1; \
-	fi; \
-	\
-	tar xzvf docker.tgz --strip=1 -C /usr/local/bin docker/docker; \
-	rm docker.tgz; \
-	\
-	docker --version
+    \
+    apkArch="$(arch)"; \
+    case "$apkArch" in \
+    # amd64
+    x86_64) dockerArch='x86_64' ;; \
+    # arm32v6
+    armhf) dockerArch='armel' ;; \
+    # arm32v7
+    armv7) dockerArch='armhf' ;; \
+    # arm64v8
+    aarch64) dockerArch='aarch64' ;; \
+    *) echo >&2 "error: unsupported architecture ($apkArch)"; exit 1 ;;\
+    esac; \
+    \
+    if ! wget -O docker.tgz "https://download.docker.com/linux/static/${DOCKER_CHANNEL}/${dockerArch}/docker-${DOCKER_VERSION}.tgz"; then \
+    echo >&2 "error: failed to download 'docker-${DOCKER_VERSION}' from '${DOCKER_CHANNEL}' for '${dockerArch}'"; \
+    exit 1; \
+    fi; \
+    \
+    tar xzvf docker.tgz --strip=1 -C /usr/local/bin docker/docker; \
+    rm docker.tgz; \
+    \
+    docker --version
 
-# Install terraform
-ENV TERRAFORM_VER 0.12.9
+# # Install terraform
+# ENV TERRAFORM_VER 0.12.9
 
-RUN wget -O terraform.zip "https://releases.hashicorp.com/terraform/${TERRAFORM_VER}/terraform_${TERRAFORM_VER}_linux_amd64.zip"
+# RUN wget -O terraform.zip "https://releases.hashicorp.com/terraform/${TERRAFORM_VER}/terraform_${TERRAFORM_VER}_linux_amd64.zip"
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    unzip \
-     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+# RUN apt-get update && apt-get install -y --no-install-recommends \
+#     unzip \
+#     && apt-get clean \
+#     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-RUN unzip terraform.zip
-RUN mv terraform /usr/local/bin/
+# RUN unzip terraform.zip
+# RUN mv terraform /usr/local/bin/
 
 # Install Docker Compose
 RUN curl -L "https://github.com/docker/compose/releases/download/1.26.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
