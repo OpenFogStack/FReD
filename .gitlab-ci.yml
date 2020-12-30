@@ -1,4 +1,4 @@
-image: gitlab-registry.tubit.tu-berlin.de/mcc-fred/fred/ci:latest
+image: git.tu-berlin.de:5000/mcc-fred/fred/ci:latest
 
 cache:
   paths:
@@ -68,8 +68,8 @@ container:
     - if [ "$CI_COMMIT_REF_NAME" == "master" ]; then CONTAINER_TAG=latest; fi;
     - echo $CONTAINER_TAG
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker tag gitlab-registry.tubit.tu-berlin.de/mcc-fred/fred/fred gitlab-registry.tubit.tu-berlin.de/mcc-fred/fred/fred:$CONTAINER_TAG
-    - docker push gitlab-registry.tubit.tu-berlin.de/mcc-fred/fred/fred:$CONTAINER_TAG
+    - docker tag git.tu-berlin.de:5000/mcc-fred/fred/fred git.tu-berlin.de:5000/mcc-fred/fred/fred:$CONTAINER_TAG
+    - docker push git.tu-berlin.de:5000/mcc-fred/fred/fred:$CONTAINER_TAG
 
 # this adds a new stage to the CI process that tests the terraform files
 #terraform:

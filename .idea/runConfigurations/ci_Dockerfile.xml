@@ -7,7 +7,7 @@
         <option name="command" value="" />
         <option name="containerName" value="ci" />
         <option name="entrypoint" value="" />
-        <option name="imageTag" value="gitlab-registry.tubit.tu-berlin.de/mcc-fred/fred/ci" />
+        <option name="imageTag" value="git.tu-berlin.de:5000/mcc-fred/fred/ci" />
         <option name="commandLineOptions" value="" />
         <option name="sourceFilePath" value="ci/Dockerfile" />
       </settings>
