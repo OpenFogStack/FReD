@@ -52,19 +52,6 @@ RUN set -eux; \
     \
     docker --version
 
-# # Install terraform
-# ENV TERRAFORM_VER 0.12.9
-
-# RUN wget -O terraform.zip "https://releases.hashicorp.com/terraform/${TERRAFORM_VER}/terraform_${TERRAFORM_VER}_linux_amd64.zip"
-
-# RUN apt-get update && apt-get install -y --no-install-recommends \
-#     unzip \
-#     && apt-get clean \
-#     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-# RUN unzip terraform.zip
-# RUN mv terraform /usr/local/bin/
-
 # Install Docker Compose
 RUN curl -L "https://github.com/docker/compose/releases/download/1.26.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 RUN chmod +x /usr/local/bin/docker-compose

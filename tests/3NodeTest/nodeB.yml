@@ -7,7 +7,26 @@ services:
       - storeB
     image: fred/fred:local
     container_name: nodeB
-    command: --log-level "${LOG_LEVEL}" --remote-storage-host "172.26.2.2:1337" --peer-host "172.26.2.1:5555" --nodeID "nodeB" --host "172.26.2.1:9001" --cert "/cert/nodeB.crt" --key "/cert/nodeB.key" --ca-file "/cert/ca.crt" --adaptor "remote" --nase-host "https://172.26.6.1:2379" --nase-cert "/cert/nodeB.crt" --nase-key "/cert/nodeB.key" --nase-ca "/cert/ca.crt" --handler "dev" --badgerdb-path "./db" --remote-storage-cert "/cert/nodeB.crt" --remote-storage-key "/cert/nodeB.key"  --trigger-cert "/cert/nodeB.crt" --trigger-key "/cert/nodeB.key"
+    entrypoint: "fred \
+    --log-level '${LOG_LEVEL}' \
+    --remote-storage-host 172.26.2.2:1337 \
+    --peer-host 172.26.2.1:5555 \
+    --nodeID nodeB \
+    --host 172.26.2.1:9001 \
+    --cert /cert/nodeB.crt \
+    --key /cert/nodeB.key \
+    --ca-file /cert/ca.crt \
+    --adaptor remote \
+    --nase-host https://172.26.6.1:2379 \
+    --nase-cert /cert/nodeB.crt \
+    --nase-key /cert/nodeB.key \
+    --nase-ca /cert/ca.crt \
+    --handler dev \
+    --badgerdb-path ./db \
+    --remote-storage-cert /cert/nodeB.crt \
+    --remote-storage-key /cert/nodeB.key  \
+    --trigger-cert /cert/nodeB.crt \
+    --trigger-key /cert/nodeB.key"
     volumes:
       - ../../nase/tls/nodeB.crt:/cert/nodeB.crt
       - ../../nase/tls/nodeB.key:/cert/nodeB.key
@@ -24,7 +43,11 @@ services:
       dockerfile: storage.Dockerfile
     image: fred/store:local
     container_name: storeB
-    command: --log-level "${LOG_LEVEL_STORE}" --cert "/cert/cert.crt" --key "/cert/key.key" --ca-file "/cert/ca.crt"
+    entrypoint: "storageserver \
+    --log-level '${LOG_LEVEL_STORE}' \
+    --cert /cert/cert.crt \
+    --key /cert/key.key \
+    --ca-file /cert/ca.crt"
     volumes:
       - ../../nase/tls/storeB.crt:/cert/cert.crt
       - ../../nase/tls/storeB.key:/cert/key.key

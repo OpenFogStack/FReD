@@ -1,7 +1,7 @@
 # building the binary
 FROM golang:1.15-alpine as golang
 
-MAINTAINER Tobias Pfandzelter <tp@mcc.tu-berlin.de>
+LABEL maintainer="tp@mcc.tu-berlin.de"
 
 WORKDIR /go/src/gitlab.tu-berlin.de/mcc-fred/fred/
 
@@ -27,10 +27,10 @@ FROM scratch
 WORKDIR /
 
 COPY --from=golang /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=golang /go/bin/frednode frednode
+COPY --from=golang /go/bin/frednode fred
 
 EXPOSE 443
-
 EXPOSE 5555
 
-ENTRYPOINT ["./frednode"]
+ENV PATH=.
+CMD ["fred"]

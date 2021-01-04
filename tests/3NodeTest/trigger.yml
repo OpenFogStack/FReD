@@ -7,7 +7,10 @@ services:
       dockerfile: trigger.Dockerfile
     image: fred/trigger:local
     container_name: triggerA
-    command: --cert "/cert/cert.crt" --key "/cert/key.key" --ca-file "/cert/ca.crt"
+    entrypoint: "simpletrigger \
+    --cert /cert/cert.crt \
+    --key /cert/key.key \
+    --ca-file /cert/ca.crt"
     volumes:
       - ../../nase/tls/trigger.crt:/cert/cert.crt
       - ../../nase/tls/trigger.key:/cert/key.key

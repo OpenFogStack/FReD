@@ -1,6 +1,7 @@
 To run this test, go to the 3NodeTest and run `make failtest`
 
 Command used to generate the pb files:
+
 ```bash
 # ...Enter some virtualenv...
 pip install grpcio-tools

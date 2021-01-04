@@ -2,7 +2,7 @@
 # building the binary
 FROM golang:1.15-alpine as golang
 
-MAINTAINER Tobias Pfandzelter <tp@mcc.tu-berlin.de>
+LABEL maintainer="tp@mcc.tu-berlin.de"
 
 WORKDIR /go/src/gitlab.tu-berlin.de/mcc-fred/fred/
 
@@ -31,4 +31,5 @@ COPY --from=golang /go/bin/simpletrigger simpletrigger
 
 EXPOSE 3333
 
-ENTRYPOINT ["./simpletrigger"]
+ENV PATH=.
+ENTRYPOINT ["simpletrigger"]
