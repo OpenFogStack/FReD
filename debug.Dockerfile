@@ -2,7 +2,8 @@
 # building the binary
 FROM golang:1.15-buster as golang
 
-MAINTAINER Tobias Pfandzelter <tp@mcc.tu-berlin.de>
+LABEL maintainer="tp@mcc.tu-berlin.de"
+
 WORKDIR /go/src/gitlab.tu-berlin.de/mcc-fred/fred/
 
 RUN apt update && apt install -y ca-certificates git && rm -rf /var/cache/apk/*
