@@ -38,19 +38,19 @@ As an alternative to the centralized knowledge store, nodes in FogStore can mana
 When a node is configured as a replica for a keygroup, an expiration for data items can be configured: data then expires on this replica node after a certain delay (WP1.1.8).
 FogStore offers some basic access control mechanisms for multi-tenancy that allows applications to protect keygroups from read/writes from other applications (WP1.1.9).
 
-- [ ] WP1.1.1 can be installed on single or multiple machines per node
+- [x] WP1.1.1 can be installed on single or multiple machines per node
 - [ ] WP1.1.2 has logical addressing for geo-distributed sites
-- [ ] WP1.1.3 use state-of-the-art or cloud storage system as storage backend (_Universal Storage Connector and H... Interface_ (_USCHI_))
-- [ ] WP1.1.4 keygroup stores data items in append-only store or mutable table
-- [ ] WP1.1.5 applications choose replica placement
-- [ ] WP1.1.6 centralized store has replica knowledge (_Holistic Application Naming Service_ (_HANS_))
+- [x] WP1.1.3 use state-of-the-art or cloud storage system as storage backend
+- [x] WP1.1.4 keygroup stores data items in append-only store or mutable table
+- [x] WP1.1.5 applications choose replica placement
+- [x] WP1.1.6 centralized store has replica knowledge
 - [ ] WP1.1.7 alternative consensus-based replica set change
-- [ ] WP1.1.8 data items can expire on a replica if needed
-- [ ] WP1.1.9 access control mechanisms for multi-tenancy
+- [x] WP1.1.8 data items can expire on a replica if needed
+- [x] WP1.1.9 access control mechanisms for multi-tenancy
 
 #### WP1.2 - Trigger Node Software
 
-Next to nodes that store replicated data, a FogStore deployment also comprises _trigger nodes_ using _Keygroup Update Replication Triggers_ (_KURT_).
+Next to nodes that store replicated data, a FogStore deployment also comprises _trigger nodes_ using _Keygroup Update Replication Triggers_.
 A trigger node can be configured at a keygroup level.
 Trigger nodes receive all updates on data items on a specific keygroup.
 A trigger node may then use this data for external systems or to write modified data back into FogStore.
