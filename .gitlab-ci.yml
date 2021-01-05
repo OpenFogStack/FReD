@@ -5,6 +5,7 @@ cache:
     - .cache
 
 stages:
+  - analysis
   - test
   - build
   - 3nodetest
@@ -16,6 +17,16 @@ before_script:
   - export GOPATH="$CI_PROJECT_DIR/.cache"
   - export CC=clang
   - make dep
+
+lint_code:
+  stage: analysis
+  script:
+    - make lint
+
+static_check:
+  stage: analysis
+  script:
+    - make staticcheck
 
 unit_tests:
   stage: test
@@ -43,16 +54,6 @@ code_coverage_report:
     - make coverhtml
   only:
     - master
-
-lint_code:
-  stage: test
-  script:
-    - make lint
-
-static_check:
-  stage: test
-  script:
-    - make staticcheck
 
 build:
   stage: build
