@@ -14,7 +14,10 @@ import (
 // getPrefix gets every key that starts(!) with the specified string
 // the keys are sorted ascending by key for easier debugging
 func (n *NameService) getPrefix(prefix string) (kv []*mvccpb.KeyValue, err error) {
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	ctx, cncl := context.WithTimeout(context.Background(), timeout)
+
+	defer cncl()
+
 	resp, err := n.cli.Get(ctx, prefix, clientv3.WithPrefix(), clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend))
 
 	if err != nil {
@@ -22,12 +25,16 @@ func (n *NameService) getPrefix(prefix string) (kv []*mvccpb.KeyValue, err error
 	}
 
 	kv = resp.Kvs
+
 	return
 }
 
 // getExact gets the exact key
 func (n *NameService) getExact(key string) (kv []*mvccpb.KeyValue, err error) {
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	ctx, cncl := context.WithTimeout(context.Background(), timeout)
+
+	defer cncl()
+
 	resp, err := n.cli.Get(ctx, key)
 
 	if err != nil {
@@ -65,7 +72,10 @@ func (n *NameService) getKeygroupExpiry(kg string, id string) (int, error) {
 
 // put puts the value into etcd.
 func (n *NameService) put(key, value string) (err error) {
-	ctx, _ := context.WithTimeout(context.TODO(), timeout)
+	ctx, cncl := context.WithTimeout(context.TODO(), timeout)
+
+	defer cncl()
+
 	_, err = n.cli.Put(ctx, key, value)
 
 	if err != nil {
@@ -77,7 +87,10 @@ func (n *NameService) put(key, value string) (err error) {
 
 // delete removes the value from etcd.
 func (n *NameService) delete(key string) (err error) {
-	ctx, _ := context.WithTimeout(context.TODO(), timeout)
+	ctx, cncl := context.WithTimeout(context.TODO(), timeout)
+
+	defer cncl()
+
 	_, err = n.cli.Delete(ctx, key)
 
 	if err != nil {

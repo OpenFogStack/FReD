@@ -44,7 +44,11 @@ func (n *NameService) RequestNodeStatus(nodeID fred.NodeID) (kgs []fred.Item) {
 			Keygroup: fred.KeygroupName(kgname),
 			ID:       id,
 		})
-		n.delete(string(val.Key))
+		err = n.delete(string(val.Key))
+
+		if err != nil {
+			log.Err(err).Msgf("Could not remove missed data entry %s for node %v", id, nodeID)
+		}
 	}
 	return
 }

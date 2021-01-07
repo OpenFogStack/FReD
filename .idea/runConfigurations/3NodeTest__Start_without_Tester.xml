@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="3NodeTest: Start without Tester" type="MAKEFILE_TARGET_RUN_CONFIGURATION" factoryName="Makefile">
+  <configuration default="false" name="3NodeTest: Start without Tester" type="MAKEFILE_TARGET_RUN_CONFIGURATION" factoryName="Makefile" folderName="3NodeTest">
     <makefile filename="$PROJECT_DIR$/tests/3NodeTest/Makefile" target="fred" workingDirectory="" arguments="">
       <envs />
     </makefile>

@@ -24,11 +24,13 @@ func NewClient(host, certFile, keyFile string) *Client {
 
 	if err != nil {
 		log.Fatal().Err(err).Msg("Cannot load certificates")
+
 		return nil
 	}
 
 	tlsConfig := &tls.Config{
 		Certificates: []tls.Certificate{cert},
+		MinVersion:   tls.VersionTLS12,
 	}
 
 	tc := credentials.NewTLS(tlsConfig)
@@ -37,9 +39,11 @@ func NewClient(host, certFile, keyFile string) *Client {
 
 	if err != nil {
 		log.Fatal().Err(err).Msg("Cannot create Grpc connection")
+
 		return &Client{dbClient: storage.NewDatabaseClient(conn)}
 	}
 	log.Info().Msgf("Creating a connection to remote storage: %s", host)
+
 	return &Client{dbClient: storage.NewDatabaseClient(conn), con: conn}
 }
 
@@ -71,7 +75,7 @@ func (c *Client) ReadAll(kg string) (map[string]string, error) {
 
 	for {
 		in, err := stream.Recv()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			// read done.
 			break
 		}
@@ -157,7 +161,7 @@ func (c *Client) IDs(kg string) ([]string, error) {
 	var responses []string
 	for {
 		in, err := stream.Recv()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			// read done.
 			break
 		}
@@ -252,7 +256,7 @@ func (c *Client) GetKeygroupTrigger(kg string) (map[string]string, error) {
 
 	for {
 		in, err := stream.Recv()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			// read done.
 			break
 		}

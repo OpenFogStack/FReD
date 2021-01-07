@@ -18,7 +18,6 @@ const (
 	fmtKgExpiryString           = "kg|%s|expiry|node|%s"
 	fmtNodeAdressString         = "node|%s|address"
 	fmtNodeExternalAdressString = "node|%s|extaddress"
-	fmtUserPermissionPrefix     = "user|%s|kg"
 	fmtUserPermissionString     = "user|%s|kg|%s|method|%s"
 	fmtFailedNodeKgString       = "failnode|%s|kg|%s|%s" // Node, Keygroup, ID
 	fmtFailedNodePrefix         = "failnode|%s|"
@@ -33,6 +32,7 @@ type NameService struct {
 	cli    *clientv3.Client
 	NodeID string
 }
+
 // NewNameService creates a new NameService
 func NewNameService(nodeID string, endpoints []string, certfFile string, keyFile string, caFile string) (*NameService, error) {
 	tlsInfo := transport.TLSInfo{
@@ -49,7 +49,7 @@ func NewNameService(nodeID string, endpoints []string, certfFile string, keyFile
 
 	cli, err := clientv3.New(clientv3.Config{
 		Endpoints:   endpoints,
-		DialTimeout: 5 * time.Second,
+		DialTimeout: timeout,
 		TLS:         tlsConfig,
 	})
 

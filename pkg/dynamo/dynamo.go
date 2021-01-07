@@ -45,7 +45,7 @@ func makeTriggerConfigKeyName(kgname string, tid string) string {
 func getTriggerConfigKey(key string) (kg, tid string) {
 	s := strings.Split(key, sep)
 
-	if len(s) == 5 {
+	if len(s) == len([]string{"nil", "fred", "triggers", "kgname", "triggerID"}) {
 		kg = s[3]
 		tid = s[4]
 	}
@@ -57,7 +57,7 @@ func getTriggerConfigKey(key string) (kg, tid string) {
 func getKey(key string) (kg, id string) {
 	s := strings.Split(key, sep)
 	kg = s[0]
-	if len(s) > 1 {
+	if len(s) >= len([]string{"kgname", "id"}) {
 		id = s[1]
 	}
 	return

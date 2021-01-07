@@ -87,14 +87,3 @@ if ! make lint; then
 fi
 
 echo -e "${GREEN}Linter did not find mistakes!${NC}"
-
-# --------------------------------------- GO STATIC CHECK ----------------------------------------------------------
-
-echo -e "${YELLOW}Doing static code analysis...${NC}"
-
-if ! make staticcheck; then
-  echo -e "${RED}Staticcheck found mistakes!${NC}"
-  exit 1
-fi
-
-echo -e "${GREEN}Staticcheck did not find mistakes!${NC}"

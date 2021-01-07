@@ -18,15 +18,10 @@ before_script:
   - export CC=clang
   - make dep
 
-lint_code:
+golint:
   stage: analysis
   script:
     - make lint
-
-static_check:
-  stage: analysis
-  script:
-    - make staticcheck
 
 unit_tests:
   stage: test

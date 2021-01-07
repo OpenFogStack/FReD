@@ -60,6 +60,67 @@ func (s *Server) DeleteItemTrigger(_ context.Context, request *trigger.DeleteIte
 	return &trigger.TriggerResponse{Status: trigger.EnumTriggerStatus_TRIGGER_OK}, nil
 }
 
+func startServer(cert string, key string, ca string, host string, wsHost string) {
+	// Load server's certificate and private key
+	serverCert, err := tls.LoadX509KeyPair(cert, key)
+
+	if err != nil {
+		log.Fatal().Msgf("could not load key pair: %v", err)
+	}
+
+	// Create a new cert pool and add our own CA certificate
+	rootCAs := x509.NewCertPool()
+
+	loaded, err := ioutil.ReadFile(ca)
+
+	if err != nil {
+		log.Fatal().Msgf("unexpected missing certfile: %v", err)
+	}
+
+	rootCAs.AppendCertsFromPEM(loaded)
+	// Create the credentials and return it
+	config := &tls.Config{
+		Certificates: []tls.Certificate{serverCert},
+		ClientAuth:   tls.RequireAndVerifyClientCert,
+		ClientCAs:    rootCAs,
+		MinVersion:   tls.VersionTLS12,
+	}
+
+	s := &Server{grpc.NewServer(grpc.Creds(credentials.NewTLS(config))), []LogEntry{}}
+
+	lis, err := net.Listen("tcp", host)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to listen")
+	}
+
+	trigger.RegisterTriggerNodeServer(s.Server, s)
+
+	log.Debug().Msgf("Interconnection Server is listening on %s", host)
+
+	go func() {
+		defer s.GracefulStop()
+		log.Fatal().Err(s.Server.Serve(lis)).Msg("Interconnection Server")
+	}()
+
+	// start a http server that let's us see what the trigger node has received
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		l, err := json.Marshal(s.log)
+
+		if err != nil {
+			log.Err(err).Msg("error getting logs")
+		}
+
+		_, err = fmt.Fprint(w, string(l))
+
+		if err != nil {
+			log.Err(err).Msg("error getting logs")
+		}
+
+	})
+
+	log.Fatal().Err(http.ListenAndServe(wsHost, nil))
+}
+
 func main() {
 
 	host := flag.String("host", ":3333", "Host for the server to listen to")
@@ -85,62 +146,5 @@ func main() {
 		log.Fatal().Msg("Log Handler has to be either dev or prod")
 	}
 
-	// Load server's certificate and private key
-	serverCert, err := tls.LoadX509KeyPair(*cert, *key)
-
-	if err != nil {
-		log.Fatal().Msgf("could not load key pair: %v", err)
-	}
-
-	// Create a new cert pool and add our own CA certificate
-	rootCAs := x509.NewCertPool()
-
-	loaded, err := ioutil.ReadFile(*ca)
-
-	if err != nil {
-		log.Fatal().Msgf("unexpected missing certfile: %v", err)
-	}
-
-	rootCAs.AppendCertsFromPEM(loaded)
-	// Create the credentials and return it
-	config := &tls.Config{
-		Certificates: []tls.Certificate{serverCert},
-		ClientAuth:   tls.RequireAndVerifyClientCert,
-		ClientCAs:    rootCAs,
-		MinVersion:   tls.VersionTLS12,
-	}
-
-	s := &Server{grpc.NewServer(grpc.Creds(credentials.NewTLS(config))), []LogEntry{}}
-
-	lis, err := net.Listen("tcp", *host)
-	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to listen")
-	}
-
-	trigger.RegisterTriggerNodeServer(s.Server, s)
-
-	log.Debug().Msgf("Interconnection Server is listening on %s", *host)
-
-	go func() {
-		defer s.GracefulStop()
-		log.Fatal().Err(s.Server.Serve(lis)).Msg("Interconnection Server")
-	}()
-
-	// start a http server that let's us see what the trigger node has received
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		l, err := json.Marshal(s.log)
-
-		if err != nil {
-			log.Err(err).Msg("error getting logs")
-		}
-
-		_, err = fmt.Fprint(w, string(l))
-
-		if err != nil {
-			log.Err(err).Msg("error getting logs")
-		}
-
-	})
-
-	log.Fatal().Err(http.ListenAndServe(*wsHost, nil))
+	startServer(*cert, *key, *ca, *host, *wsHost)
 }
