@@ -5,8 +5,8 @@ import (
 	"crypto/tls"
 	"fmt"
 
+	"git.tu-berlin.de/mcc-fred/fred/proto/client"
 	"github.com/rs/zerolog/log"
-	"gitlab.tu-berlin.de/mcc-fred/fred/proto/client"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )

@@ -5,8 +5,8 @@ import (
 	"math"
 	"strings"
 
+	"git.tu-berlin.de/mcc-fred/fred/pkg/fred"
 	"github.com/rs/zerolog/log"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/fred"
 )
 
 // ReportFailedNode saves that a node has missed an update to a keygroup that it will get another time

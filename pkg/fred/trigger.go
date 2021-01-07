@@ -4,9 +4,9 @@ import (
 	"context"
 	"crypto/tls"
 
+	"git.tu-berlin.de/mcc-fred/fred/proto/trigger"
 	"github.com/go-errors/errors"
 	"github.com/rs/zerolog/log"
-	"gitlab.tu-berlin.de/mcc-fred/fred/proto/trigger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )

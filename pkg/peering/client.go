@@ -3,10 +3,10 @@ package peering
 import (
 	"context"
 
+	"git.tu-berlin.de/mcc-fred/fred/pkg/fred"
+	"git.tu-berlin.de/mcc-fred/fred/proto/peering"
 	"github.com/go-errors/errors"
 	"github.com/rs/zerolog/log"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/fred"
-	"gitlab.tu-berlin.de/mcc-fred/fred/proto/peering"
 	"google.golang.org/grpc"
 )
 

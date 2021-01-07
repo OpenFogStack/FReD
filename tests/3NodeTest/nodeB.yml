@@ -8,7 +8,6 @@ services:
     image: fred/fred:local
     container_name: nodeB
     entrypoint: "fred \
-    --log-level '${LOG_LEVEL}' \
     --remote-storage-host 172.26.2.2:1337 \
     --peer-host 172.26.2.1:5555 \
     --nodeID nodeB \
@@ -27,6 +26,8 @@ services:
     --remote-storage-key /cert/nodeB.key  \
     --trigger-cert /cert/nodeB.crt \
     --trigger-key /cert/nodeB.key"
+    environment:
+      - LOG_LEVEL
     volumes:
       - ../../nase/tls/nodeB.crt:/cert/nodeB.crt
       - ../../nase/tls/nodeB.key:/cert/nodeB.key

@@ -4,7 +4,7 @@ FROM golang:1.15-buster as golang
 
 LABEL maintainer="tp@mcc.tu-berlin.de"
 
-WORKDIR /go/src/gitlab.tu-berlin.de/mcc-fred/fred/
+WORKDIR /go/src/git.tu-berlin.de/mcc-fred/fred/
 
 RUN apt update && apt install -y ca-certificates git && rm -rf /var/cache/apk/*
 COPY nase/tls/ca.crt /usr/local/share/ca-certificates/ca.crt

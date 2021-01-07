@@ -24,7 +24,6 @@ services:
     image: fred/fred:local
     container_name: nodeA-1
     entrypoint: "fred \
-    --log-level '${LOG_LEVEL}' \
     --remote-storage-host 172.26.1.104:1337 \
     --peer-host 172.26.1.101:5555 \
     --peer-host-proxy 172.26.1.1:5555 \
@@ -45,6 +44,8 @@ services:
     --remote-storage-key /cert/nodeA.key  \
     --trigger-cert /cert/nodeA.crt \
     --trigger-key /cert/nodeA.key"
+    environment:
+      - LOG_LEVEL
     volumes:
       - ../../nase/tls/nodeA.crt:/cert/nodeA.crt
       - ../../nase/tls/nodeA.key:/cert/nodeA.key
@@ -61,8 +62,6 @@ services:
     image: fred/fred:local
     container_name: nodeA-2
     entrypoint: "fred \
-\
-    --log-level '${LOG_LEVEL}' \
     --remote-storage-host 172.26.1.104:1337 \
     --peer-host 172.26.1.102:5555 \
     --peer-host-proxy 172.26.1.1:5555 \
@@ -83,6 +82,8 @@ services:
     --remote-storage-key /cert/nodeA.key  \
     --trigger-cert /cert/nodeA.crt \
     --trigger-key /cert/nodeA.key"
+    environment:
+      - LOG_LEVEL
     volumes:
       - ../../nase/tls/nodeA.crt:/cert/nodeA.crt
       - ../../nase/tls/nodeA.key:/cert/nodeA.key
@@ -99,7 +100,6 @@ services:
     image: fred/fred:local
     container_name: nodeA-3
     entrypoint: "fred \
-    --log-level '${LOG_LEVEL}' \
     --remote-storage-host 172.26.1.104:1337 \
     --peer-host 172.26.1.103:5555 \
     --peer-host-proxy 172.26.1.1:5555 \
@@ -120,6 +120,8 @@ services:
     --remote-storage-key /cert/nodeA.key  \
     --trigger-cert /cert/nodeA.crt \
     --trigger-key /cert/nodeA.key"
+    environment:
+      - LOG_LEVEL
     volumes:
       - ../../nase/tls/nodeA.crt:/cert/nodeA.crt
       - ../../nase/tls/nodeA.key:/cert/nodeA.key

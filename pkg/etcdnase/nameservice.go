@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
+	"git.tu-berlin.de/mcc-fred/fred/pkg/fred"
 	"github.com/go-errors/errors"
 	"github.com/rs/zerolog/log"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/fred"
 	"go.etcd.io/etcd/clientv3"
 	"go.etcd.io/etcd/pkg/transport"
 )

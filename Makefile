@@ -1,5 +1,5 @@
 PROJECT_NAME := "fred"
-PKG := "gitlab.tu-berlin.de/mcc-fred/$(PROJECT_NAME)"
+PKG := "git.tu-berlin.de/mcc-fred/$(PROJECT_NAME)"
 PKG_LIST := $(shell go list ${PKG}/... | grep -v /vendor/ | grep -v /ext/)
 GO_FILES := $(shell find . -name '*.go' | grep -v /vendor/ | grep -v /ext/ | grep -v _test.go)
 
