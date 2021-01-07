@@ -3,9 +3,9 @@ package storageserver
 import (
 	"context"
 
+	"git.tu-berlin.de/mcc-fred/fred/pkg/fred"
+	"git.tu-berlin.de/mcc-fred/fred/proto/storage"
 	"github.com/rs/zerolog/log"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/fred"
-	"gitlab.tu-berlin.de/mcc-fred/fred/proto/storage"
 )
 
 // Server implements the DatabaseServer interface

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/fred"
+	"git.tu-berlin.de/mcc-fred/fred/pkg/fred"
 )
 
 // RevokeUserPermissions removes user's permission to perform method on kg by deleting the key in etcd.

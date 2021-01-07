@@ -4,7 +4,7 @@ FROM golang:1.15-alpine
 
 LABEL maintainer="tp@mcc.tu-berlin.de"
 
-WORKDIR /go/src/gitlab.tu-berlin.de/mcc-fred/fred/
+WORKDIR /go/src/git.tu-berlin.de/mcc-fred/fred/
 
 RUN apk update && apk add ca-certificates && rm -rf /var/cache/apk/*
 COPY nase/tls/ca.crt /usr/local/share/ca-certificates/ca.crt

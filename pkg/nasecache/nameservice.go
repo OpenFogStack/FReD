@@ -3,9 +3,9 @@ package nasecache
 import (
 	"time"
 
+	"git.tu-berlin.de/mcc-fred/fred/pkg/fred"
 	"github.com/allegro/bigcache"
 	"github.com/go-errors/errors"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/fred"
 )
 
 const (

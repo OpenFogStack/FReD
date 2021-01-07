@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
+	"git.tu-berlin.de/mcc-fred/fred/pkg/fred"
 	"github.com/go-errors/errors"
 	"github.com/rs/zerolog/log"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/fred"
 )
 
 // GetNodeAddress returns the ip and port of a node

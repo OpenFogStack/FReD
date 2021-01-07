@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"time"
 
-	"gitlab.tu-berlin.de/mcc-fred/fred/tests/3NodeTest/pkg/grpcclient"
+	"git.tu-berlin.de/mcc-fred/fred/tests/3NodeTest/pkg/grpcclient"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"

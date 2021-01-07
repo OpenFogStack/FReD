@@ -8,7 +8,7 @@ import (
 	"net"
 	"os"
 
-	storage2 "gitlab.tu-berlin.de/mcc-fred/fred/proto/storage"
+	storage2 "git.tu-berlin.de/mcc-fred/fred/proto/storage"
 	"google.golang.org/grpc/credentials"
 
 	"github.com/rs/zerolog"
@@ -16,16 +16,16 @@ import (
 
 	"google.golang.org/grpc"
 
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/badgerdb"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/fred"
-	storage "gitlab.tu-berlin.de/mcc-fred/fred/pkg/storageserver"
+	"git.tu-berlin.de/mcc-fred/fred/pkg/badgerdb"
+	"git.tu-berlin.de/mcc-fred/fred/pkg/fred"
+	storage "git.tu-berlin.de/mcc-fred/fred/pkg/storageserver"
 )
 
 func main() {
 	path := flag.String("path", "./db", "Path for badgerdb")
 	host := flag.String("port", ":1337", "Host for the server to listen to")
 	loghandler := flag.String("log-handler", "dev", "dev=>pretty, prod=>json")
-	loglevel := flag.String("log-level", "debug","Log level, can be \"debug\", \"info\" ,\"warn\", \"error\", \"fatal\", \"panic\".")
+	loglevel := flag.String("log-level", "debug", "Log level, can be \"debug\", \"info\" ,\"warn\", \"error\", \"fatal\", \"panic\".")
 
 	cert := flag.String("cert", "", "certificate file for grpc server")
 	key := flag.String("key", "", "key file for grpc server")
@@ -40,7 +40,7 @@ func main() {
 	// Setup Logging
 	// In Dev the ConsoleWriter has nice colored output, but is not very fast.
 	// In Prod the default handler is used. It writes json to stdout and is very fast.
-	if *loghandler== "dev" {
+	if *loghandler == "dev" {
 		log.Logger = log.Output(
 			zerolog.ConsoleWriter{
 				Out:     os.Stderr,

@@ -1,230 +1,175 @@
 package main
 
 import (
+	"flag"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"github.com/BurntSushi/toml"
+	"git.tu-berlin.de/mcc-fred/fred/pkg/api"
+	"git.tu-berlin.de/mcc-fred/fred/pkg/dynamo"
+	"git.tu-berlin.de/mcc-fred/fred/pkg/etcdnase"
+	"git.tu-berlin.de/mcc-fred/fred/pkg/nasecache"
+	"git.tu-berlin.de/mcc-fred/fred/pkg/peering"
+	"git.tu-berlin.de/mcc-fred/fred/pkg/storageclient"
+	"github.com/caarlos0/env/v6"
 	"github.com/go-errors/errors"
 	"github.com/mmcloughlin/geohash"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/api"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/dynamo"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/etcdnase"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/nasecache"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/peering"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/storageclient"
-	"gopkg.in/alecthomas/kingpin.v2"
 
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/badgerdb"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/fred"
+	"git.tu-berlin.de/mcc-fred/fred/pkg/badgerdb"
+	"git.tu-berlin.de/mcc-fred/fred/pkg/fred"
 )
 
 type fredConfig struct {
 	General struct {
-		nodeID string `toml:"nodeID"`
-	} `toml:"general"`
+		nodeID string `env:"NODEID"`
+	}
 	Location struct {
-		Lat float64 `toml:"lat"`
-		Lng float64 `toml:"lng"`
-	} `toml:"location"`
+		Lat float64 `env:"LAT"`
+		Lng float64 `env:"LONG"`
+	}
 	Server struct {
-		Host  string `toml:"host"`
-		Proxy string `toml:"proxy"`
-		Cert  string `toml:"cert"`
-		Key   string `toml:"key"`
-		CA    string `toml:"ca"`
-	} `toml:"server"`
+		Host  string `env:"HOST"`
+		Proxy string `env:"PROXY"`
+		Cert  string `env:"CERT"`
+		Key   string `env:"KEY"`
+		CA    string `env:"CA_FILE"`
+	}
 	Storage struct {
-		Adaptor string `toml:"adaptor"`
-	} `toml:"storage"`
+		Adaptor string `env:"STORAGE_ADAPTOR"`
+	}
 	Peering struct {
-		Host      string `toml:"host"`
-		HostProxy string `toml:"hostproxy"`
-	} `toml:"peering"`
+		Host      string `env:"PEERING_HOST"`
+		HostProxy string `env:"PEERING_PROXY"`
+	}
 	Log struct {
-		Level   string `toml:"level"`
-		Handler string `toml:"handler"`
-	} `toml:"log"`
+		Level   string `env:"LOG_LEVEL"`
+		Handler string `env:"LOG_HANDLER"`
+	}
 	NaSe struct {
-		Host   string `toml:"host"`
-		Cert   string `toml:"cert"`
-		Key    string `toml:"key"`
-		CA     string `toml:"ca"`
-		Cached bool   `toml:"cached"`
-	} `toml:"nase"`
+		Host   string `env:"NASE_HOST"`
+		Cert   string `env:"NASE_CERT"`
+		Key    string `env:"NASE_KEY"`
+		CA     string `env:"NASE_CA"`
+		Cached bool   `env:"NASE_CACHED"`
+	}
 	RemoteStore struct {
-		Host string `toml:"host"`
-		Cert string `toml:"cert"`
-		Key  string `toml:"key"`
-	} `toml:"remotestore"`
+		Host string `env:"REMOTE_STORAGE_HOST"`
+		Cert string `env:"REMOTE_STORAGE_CERT"`
+		Key  string `env:"REMOTE_STORAGE_KEY"`
+	}
 	DynamoDB struct {
-		Table      string `toml:"table"`
-		Region     string `toml:"region"`
-		PublicKey  string `toml:"publickey"`
-		PrivateKey string `toml:"privatekey"`
-	} `toml:"dynamodb"`
+		Table      string `env:"DYNAMODB_TABLE"`
+		Region     string `env:"DYNAMODB_REGION"`
+		PublicKey  string `env:"DYNAMODB_PUBLIC_KEY"`
+		PrivateKey string `env:"DYNAMODB_PRIVATE_KEY"`
+	}
 	Bdb struct {
-		Path string `toml:"path"`
-	} `toml:"badgerdb"`
+		Path string `env:"BADGERDB_PATH"`
+	}
 	Trigger struct {
-		Cert string `toml:"cert"`
-		Key  string `toml:"key"`
-	} `toml:"trigger"`
+		Cert string `env:"TRIGGER_CERT"`
+		Key  string `env:"TRIGGER_KEY"`
+	}
 }
 
-var (
+func parseArgs() (fc fredConfig) {
+
 	// General configuration
-	nodeID     = kingpin.Flag("nodeID", "Unique ID of this node. Will be calculated from lat/long if omitted").String()
-	configPath = kingpin.Flag("config", "Path to .toml configuration file.").PlaceHolder("PATH").String()
-	lat        = kingpin.Flag("lat", "Latitude of the node.").PlaceHolder("LATITUDE").Default("-200").Float64()   // Domain: [-90,90]
-	lng        = kingpin.Flag("lng", "Longitude of the node.").PlaceHolder("LONGITUDE").Default("-200").Float64() // Domain: ]-180,180]
+	flag.StringVar(&(fc.General.nodeID), "nodeID", "", "Unique ID of this node. Will be calculated from lat/long if omitted. (Env: NODEID)")
+
+	// Location configuration
+	flag.Float64Var(&(fc.Location.Lat), "lat", 0, "Latitude of the node. (Env: LAT)")   // Domain: [-90,90]
+	flag.Float64Var(&(fc.Location.Lng), "lng", 0, "Longitude of the node. (Env: LONG)") // Domain: ]-180,180]
 
 	// API server configuration
-	grpcHost      = kingpin.Flag("host", "Host address of server for external connections.").String()
-	grpcHostProxy = kingpin.Flag("host-proxy", "Publicly reachable host address of server for external connections (if behind a proxy).").String()
-	grpcCert      = kingpin.Flag("cert", "Certificate for external connections.").String()
-	grpcKey       = kingpin.Flag("key", "Key file for external connections.").String()
-	grpcCA        = kingpin.Flag("ca-file", "Certificate authority root certificate file for external connections.").String()
+	flag.StringVar(&(fc.Server.Host), "host", "", "Host address of server for external connections. (Env: HOST)")
+	flag.StringVar(&(fc.Server.Proxy), "host-proxy", "", "Publicly reachable host address of server for external connections (if behind a proxy). (Env: PROXY)")
+	flag.StringVar(&(fc.Server.Cert), "cert", "", "Certificate for external connections. (Env: CERT)")
+	flag.StringVar(&(fc.Server.Key), "key", "", "Key file for external connections. (Env: KEY)")
+	flag.StringVar(&(fc.Server.CA), "ca-file", "", "Certificate authority root certificate file for external connections. (Env: CA_FILE)")
 
 	// peering configuration
 	// this is the address that grpc will bind to (locally)
-	peerHost = kingpin.Flag("peer-host", "local address of this peering server.").String()
+	flag.StringVar(&(fc.Peering.Host), "peer-host", "", "local address of this peering server. (Env: PEERING_HOST)")
 	// this is the address that the node will advertise to nase
-	peerHostProxy = kingpin.Flag("peer-host-proxy", "Publicly reachable address of this peering server (if behind a proxy)").String()
+	flag.StringVar(&(fc.Peering.HostProxy), "peer-host-proxy", "", "Publicly reachable address of this peering server (if behind a proxy). (Env: PEERING_PROXY)")
 
 	// storage configuration
-	adaptor = kingpin.Flag("adaptor", "Storage adaptor, can be \"remote\", \"badgerdb\", \"memory\", \"dynamo\".").Enum("remote", "badgerdb", "memory", "dynamo")
+	flag.StringVar(&(fc.Storage.Adaptor), "adaptor", "", "Storage adaptor, can be \"remote\", \"badgerdb\", \"memory\", \"dynamo\". (Env: STORAGE_ADAPTOR)")
 
-	remoteStorageHost = kingpin.Flag("remote-storage-host", "Host address of GRPC Server for storage connection.").String()
-	remoteStorageCert = kingpin.Flag("remote-storage-cert", "Certificate for storage connection.").String()
-	remoteStorageKey  = kingpin.Flag("remote-storage-key", "Key file for storage connection.").String()
+	flag.StringVar(&(fc.RemoteStore.Host), "remote-storage-host", "", "Host address of GRPC Server for storage connection. (Env: REMOTE_STORAGE_HOST)")
+	flag.StringVar(&(fc.RemoteStore.Cert), "remote-storage-cert", "", "Certificate for storage connection. (Env: REMOTE_STORAGE_CERT)")
+	flag.StringVar(&(fc.RemoteStore.Key), "remote-storage-key", "", "Key file for storage connection. (Env: REMOTE_STORAGE_KEY)")
 
-	dynamoTable  = kingpin.Flag("dynamo-table", "AWS table for DynamoDB storage backend.").String()
-	dynamoRegion = kingpin.Flag("dynamo-region", "AWS region for DynamoDB storage backend.").String()
+	flag.StringVar(&(fc.DynamoDB.Table), "dynamo-table", "", "AWS table for DynamoDB storage backend. (Env: DYNAMODB_TABLE)")
+	flag.StringVar(&(fc.DynamoDB.Region), "dynamo-region", "", "AWS region for DynamoDB storage backend. (Env: DYNAMODB_REGION)")
+	flag.StringVar(&(fc.DynamoDB.PublicKey), "dynamo-public-key", "", "AWS public key for DynamoDB storage backend. (Env: DYNAMODB_PUBLIC_KEY)")
+	flag.StringVar(&(fc.DynamoDB.PrivateKey), "dynamo-private-key", "", "AWS private key for DynamoDB storage backend. (Env: DYNAMODB_PRIVATE_KEY)")
 
-	bdbPath = kingpin.Flag("badgerdb-path", "Path to the badgerdb database").String()
+	flag.StringVar(&(fc.Bdb.Path), "badgerdb-path", "", "Path to the BadgerDB database. (Env: BADGERDB_PATH)")
 
 	// logging configuration
-	logLevel = kingpin.Flag("log-level", "Log level, can be \"debug\", \"info\" ,\"warn\", \"error\", \"fatal\", \"panic\".").Enum("debug", "info", "warn", "errors", "fatal", "panic", "")
-	handler  = kingpin.Flag("handler", "Mode of log handler, can be \"dev\", \"prod\".").Enum("dev", "prod")
+	flag.StringVar(&(fc.Log.Level), "log-level", "debug", "Log level, can be \"debug\", \"info\" ,\"warn\", \"error\", \"fatal\", \"panic\". (Env: LOG_LEVEL)")
+	flag.StringVar(&(fc.Log.Handler), "handler", "dev", "Mode of log handler, can be \"dev\", \"prod\". (Env: LOG_HANDLER)")
 
 	// Nameservice configuration
 	// TODO this should be a list of nodes. One node is enough, but if we want reliability we should accept multiple etcd nodes
-	naseHost   = kingpin.Flag("nase-host", "Host where the etcd-server runs").String()
-	naseCert   = kingpin.Flag("nase-cert", "Certificate file to authenticate against etcd").String()
-	naseKey    = kingpin.Flag("nase-key", "Key file to authenticate against etcd").String()
-	naseCA     = kingpin.Flag("nase-ca", "CA certificate file to authenticate against etcd").String()
-	naseCached = kingpin.Flag("nase-cached", "Flag to indicate, whether to use a cache for nase").Bool()
+	flag.StringVar(&(fc.NaSe.Host), "nase-host", "", "Host where the etcd server runs. (Env: NASE_HOST)")
+	flag.StringVar(&(fc.NaSe.Cert), "nase-cert", "", "Certificate file to authenticate against etcd. (Env: NASE_CERT)")
+	flag.StringVar(&(fc.NaSe.Key), "nase-key", "", "Key file to authenticate against etcd. (Env: NASE_KEY)")
+	flag.StringVar(&(fc.NaSe.CA), "nase-ca", "", "CA certificate file to authenticate against etcd. (Env: NASE_CA)")
+	flag.BoolVar(&(fc.NaSe.Cached), "nase-cached", false, "Flag to indicate, whether to use a cache for NaSe. (Env: NASE_CACHED)")
 
 	// trigger node tls configuration
-	triggerCert = kingpin.Flag("trigger-cert", "Certificate for trigger node connection.").String()
-	triggerKey  = kingpin.Flag("trigger-key", "Key file for trigger node connection.").String()
-)
+	flag.StringVar(&(fc.Trigger.Cert), "trigger-cert", "", "Certificate for trigger node connection. (Env: TRIGGER_CERT)")
+	flag.StringVar(&(fc.Trigger.Key), "trigger-key", "", "Key file for trigger node connection. (Env: TRIGGER_KEY)")
+	flag.Parse()
+
+	// override with ENV variables
+	if err := env.Parse(&fc); err != nil {
+		panic(err)
+	}
+
+	// validate some stuff
+	if fc.Location.Lat > 90 || fc.Location.Lat < -90 {
+		flag.Usage()
+		log.Fatal().Msgf("Given latitude %f is not within latitude range from -90 to 90.", fc.Location.Lat)
+	}
+
+	if fc.Location.Lng > 180 || fc.Location.Lat < -180 {
+		flag.Usage()
+		log.Fatal().Msgf("Given longitutde %f is not within latitude range from -180 to 180.", fc.Location.Lng)
+	}
+
+	if fc.Storage.Adaptor != "remote" && fc.Storage.Adaptor != "badgerdb" && fc.Storage.Adaptor != "memory" && fc.Storage.Adaptor != "dynamo" {
+		flag.Usage()
+		log.Fatal().Msgf("Given storage adaptor %s is not one of: \"remote\", \"badgerdb\", \"memory\", \"dynamo\".", fc.Storage.Adaptor)
+	}
+
+	if fc.Log.Handler != "dev" && fc.Log.Handler != "prod" {
+		flag.Usage()
+		log.Fatal().Msgf("Given log handler %s is not one of: \"dev\", \"prod\".", fc.Log.Handler)
+	}
+
+	if fc.Log.Level != "debug" && fc.Log.Level != "info" && fc.Log.Level != "warn" && fc.Log.Level != "errors" && fc.Log.Level != "fatal" && fc.Log.Level != "panic" {
+		flag.Usage()
+		log.Fatal().Msgf("Given log level %s is not one of: \"debug\", \"info\" ,\"warn\", \"error\", \"fatal\", \"panic\".", fc.Log.Level)
+	}
+
+	if fc.General.nodeID == "" {
+		fc.General.nodeID = geohash.Encode(fc.Location.Lat, fc.Location.Lng)
+	}
+
+	return
+}
 
 func main() {
 	var err error
 
-	kingpin.Version("v0")
-	kingpin.HelpFlag.Short('h')
-	kingpin.CommandLine.Help = "Fog Replicated Database"
-	kingpin.Parse()
-
-	var fc fredConfig
-	if *configPath != "" {
-		if _, err := toml.DecodeFile(*configPath, &fc); err != nil {
-			log.Fatal().Err(err).Msg("Invalid configuration! Toml can not be decoded.")
-		}
-	}
-
-	// replace with set cmd args, no real sanity checks
-	// default value means unset -> don't replace
-	// numbers have negative defaults outside their domain, simple domain checks are implemented
-	// e.g. lat < -90 is ignored and toml is used (if available)
-	if *nodeID != "" {
-		fc.General.nodeID = *nodeID
-	}
-	// If no NodeID is provided use lat/long as NodeID
-	if fc.General.nodeID == "" {
-		fc.General.nodeID = geohash.Encode(fc.Location.Lat, fc.Location.Lng)
-	}
-	if *lat >= -90 && *lat <= 90 {
-		fc.Location.Lat = *lat
-	}
-	if *lng >= -180 && *lng <= 180 {
-		fc.Location.Lng = *lng
-	}
-	if *grpcHost != "" {
-		fc.Server.Host = *grpcHost
-	}
-	if *grpcHostProxy != "" {
-		fc.Server.Proxy = *grpcHostProxy
-	}
-	if *grpcCert != "" {
-		fc.Server.Cert = *grpcCert
-	}
-	if *grpcKey != "" {
-		fc.Server.Key = *grpcKey
-	}
-	if *grpcCA != "" {
-		fc.Server.CA = *grpcCA
-	}
-	if *peerHost != "" {
-		fc.Peering.Host = *peerHost
-	}
-	if *peerHostProxy != "" {
-		fc.Peering.HostProxy = *peerHostProxy
-	}
-	if *adaptor != "" {
-		fc.Storage.Adaptor = *adaptor
-	}
-	if *logLevel != "" {
-		fc.Log.Level = *logLevel
-	}
-	if *handler != "" {
-		fc.Log.Handler = *handler
-	}
-	if *remoteStorageHost != "" {
-		fc.RemoteStore.Host = *remoteStorageHost
-	}
-	if *remoteStorageCert != "" {
-		fc.RemoteStore.Cert = *remoteStorageCert
-	}
-	if *remoteStorageKey != "" {
-		fc.RemoteStore.Key = *remoteStorageKey
-	}
-	if *dynamoTable != "" {
-		fc.DynamoDB.Table = *dynamoTable
-	}
-	if *dynamoRegion != "" {
-		fc.DynamoDB.Region = *dynamoRegion
-	}
-	if *naseHost != "" {
-		fc.NaSe.Host = *naseHost
-	}
-	if *naseCert != "" {
-		fc.NaSe.Cert = *naseCert
-	}
-	if *naseKey != "" {
-		fc.NaSe.Key = *naseKey
-	}
-	if *naseCA != "" {
-		fc.NaSe.CA = *naseCA
-	}
-	if *naseCached {
-		fc.NaSe.Cached = true
-	}
-	if *bdbPath != "" {
-		fc.Bdb.Path = *bdbPath
-	}
-	if *triggerCert != "" {
-		fc.Trigger.Cert = *triggerCert
-	}
-	if *triggerKey != "" {
-		fc.Trigger.Key = *triggerKey
-	}
+	fc := parseArgs()
 
 	// Setup Logging
 	// In Dev the ConsoleWriter has nice colored output, but is not very fast.

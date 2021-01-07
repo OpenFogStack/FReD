@@ -15,10 +15,6 @@ type Config struct {
 	ExternalHost      string
 	ExternalHostProxy string
 	NodeID            string
-	NaSeHosts         []string
-	NaSeCert          string
-	NaSeKey           string
-	NaSeCA            string
 	TriggerCert       string
 	TriggerKey        string
 }

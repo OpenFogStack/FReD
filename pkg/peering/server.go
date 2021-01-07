@@ -4,11 +4,11 @@ import (
 	"context"
 	"net"
 
+	"git.tu-berlin.de/mcc-fred/fred/proto/peering"
 	"github.com/rs/zerolog/log"
-	"gitlab.tu-berlin.de/mcc-fred/fred/proto/peering"
 	"google.golang.org/grpc"
 
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/fred"
+	"git.tu-berlin.de/mcc-fred/fred/pkg/fred"
 )
 
 // Server is a grpc server that let's peers access the internal handler.

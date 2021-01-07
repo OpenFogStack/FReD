@@ -1,8 +1,8 @@
 package nasecache
 
 import (
+	"git.tu-berlin.de/mcc-fred/fred/pkg/fred"
 	"github.com/rs/zerolog/log"
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/fred"
 )
 
 // get information about a keygroup

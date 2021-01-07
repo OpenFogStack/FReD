@@ -26,13 +26,14 @@ services:
     --nase-cert /cert/nodeB.crt \
     --nase-key /cert/nodeB.key \
     --nase-ca /cert/ca.crt \
-    --log-level debug \
     --handler dev \
     --badgerdb-path ./db \
     --remote-storage-cert /cert/nodeB.crt \
     --remote-storage-key /cert/nodeB.key  \
     --trigger-cert /cert/nodeB.crt \
     --trigger-key /cert/nodeB.key"
+    environment:
+      - LOG_LEVEL
     volumes:
       - ../../nase/tls/nodeB.crt:/cert/nodeB.crt
       - ../../nase/tls/nodeB.key:/cert/nodeB.key

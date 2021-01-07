@@ -1,7 +1,7 @@
 package nasecache
 
 import (
-	"gitlab.tu-berlin.de/mcc-fred/fred/pkg/fred"
+	"git.tu-berlin.de/mcc-fred/fred/pkg/fred"
 )
 
 // manage permissions
