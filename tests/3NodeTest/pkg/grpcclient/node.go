@@ -31,6 +31,7 @@ func NewNode(addr string, port int, certFile, keyFile string) *Node {
 
 	tlsConfig := &tls.Config{
 		Certificates: []tls.Certificate{cert},
+		MinVersion:   tls.VersionTLS12,
 	}
 
 	tc := credentials.NewTLS(tlsConfig)
@@ -395,27 +396,28 @@ func (n *Node) DeleteItem(kgname, item string, expectError bool) {
 	}
 }
 
-// AddUser calls the AddUser endpoint of the GRPC interface.
-func (n *Node) AddUser(user string, kgname string, role string, expectError bool) {
-	var r client.UserRole
-
+func strToRole(role string) client.UserRole {
 	switch role {
 	case "ReadKeygroup":
-		r = client.UserRole_ReadKeygroup
+		return client.UserRole_ReadKeygroup
 	case "WriteKeygroup":
-		r = client.UserRole_WriteKeygroup
+		return client.UserRole_WriteKeygroup
 	case "ConfigureReplica":
-		r = client.UserRole_ConfigureReplica
+		return client.UserRole_ConfigureReplica
 	case "ConfigureTrigger":
-		r = client.UserRole_ConfigureTrigger
+		return client.UserRole_ConfigureTrigger
 	case "ConfigureKeygroups":
-		r = client.UserRole_ConfigureKeygroups
+		return client.UserRole_ConfigureKeygroups
 	}
+	return -1
+}
 
+// AddUser calls the AddUser endpoint of the GRPC interface.
+func (n *Node) AddUser(user string, kgname string, role string, expectError bool) {
 	status, err := n.Client.AddUser(context.Background(), &client.UserRequest{
 		User:     user,
 		Keygroup: kgname,
-		Role:     r,
+		Role:     strToRole(role),
 	})
 
 	if err != nil && !expectError {
@@ -438,25 +440,10 @@ func (n *Node) AddUser(user string, kgname string, role string, expectError bool
 
 // RemoveUser calls the RemoveUser endpoint of the GRPC interface.
 func (n *Node) RemoveUser(user string, kgname string, role string, expectError bool) {
-	var r client.UserRole
-
-	switch role {
-	case "ReadKeygroup":
-		r = client.UserRole_ReadKeygroup
-	case "WriteKeygroup":
-		r = client.UserRole_WriteKeygroup
-	case "ConfigureReplica":
-		r = client.UserRole_ConfigureReplica
-	case "ConfigureTrigger":
-		r = client.UserRole_ConfigureTrigger
-	case "ConfigureKeygroups":
-		r = client.UserRole_ConfigureKeygroups
-	}
-
 	status, err := n.Client.RemoveUser(context.Background(), &client.UserRequest{
 		User:     user,
 		Keygroup: kgname,
-		Role:     r,
+		Role:     strToRole(role),
 	})
 
 	if err != nil && !expectError {
@@ -477,7 +464,7 @@ func (n *Node) RemoveUser(user string, kgname string, role string, expectError b
 	}
 }
 
-//type FredNode interface {
+// type FredNode interface {
 //	CreateKeygroup(kgname string, expectError bool)
 //	DeleteKeygroup(kgname string, expectError bool)
 //	GetKeygroupReplica(kgname string, expectError bool)

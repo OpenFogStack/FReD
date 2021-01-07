@@ -23,10 +23,15 @@ func (n *NameServiceCache) GetNodeAddress(nodeID fred.NodeID) (addr string, err 
 		}
 
 		// put in cache
-		n.cache.Set(key, []byte(resp))
+		err = n.cache.Set(key, []byte(resp))
+
+		if err != nil {
+			log.Err(err).Msg("Could not cache NaSe response")
+		}
 
 		return resp, nil
 	}
+
 	return string(respCache), nil
 }
 

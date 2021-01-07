@@ -29,11 +29,13 @@ func (h *exthandler) HandleCreateKeygroup(user string, k Keygroup) error {
 
 	if err := h.r.createKeygroup(k); err != nil {
 		log.Debug().Msg(err.(*errors.Error).ErrorStack())
+
 		return errors.Errorf("error creating keygroup")
 	}
 
 	if err := h.s.createKeygroup(k.Name); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+
 		return errors.Errorf("error creating keygroup")
 	}
 
@@ -57,6 +59,7 @@ func (h *exthandler) HandleDeleteKeygroup(user string, k Keygroup) error {
 
 	if err := h.s.deleteKeygroup(k.Name); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+
 		return errors.Errorf("error deleting keygroup")
 	}
 
@@ -64,6 +67,7 @@ func (h *exthandler) HandleDeleteKeygroup(user string, k Keygroup) error {
 		Name: k.Name,
 	}); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+
 		return errors.Errorf("error deleting keygroup")
 	}
 
@@ -82,8 +86,8 @@ func (h *exthandler) HandleRead(user string, i Item) (Item, error) {
 
 	if err != nil {
 		log.Error().Msgf("Error in Read is: %#v", err)
-		//This prints the error stack whenever a item is not found, nobody cares about this...
-		//log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		// This prints the error stack whenever a item is not found, nobody cares about this...
+		// log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return i, errors.Errorf("error reading item %s from keygroup %s", i.ID, i.Keygroup)
 	}
 

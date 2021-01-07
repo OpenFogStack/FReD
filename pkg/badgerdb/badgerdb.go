@@ -11,6 +11,8 @@ import (
 )
 
 const sep = "|"
+const gcInterval = 5 * time.Minute
+const gcDiscardRatio = 0.7
 
 // Storage is a struct that saves all necessary information to access the database, in this case just a pointer to the BadgerDB database.
 type Storage struct {
@@ -39,7 +41,7 @@ func makeTriggerConfigKeyName(kgname string, tid string) []byte {
 func getTriggerConfigKey(key string) (kg, tid string) {
 	s := strings.Split(key, sep)
 
-	if len(s) == 5 {
+	if len(s) == len([]string{"nil", "fred", "triggers", "keygroup", "trigger id"}) {
 		kg = s[3]
 		tid = s[4]
 	}
@@ -51,19 +53,21 @@ func getTriggerConfigKey(key string) (kg, tid string) {
 func getKey(key string) (kg, id string) {
 	s := strings.Split(key, sep)
 	kg = s[0]
-	if len(s) == 2 {
+
+	if len(s) == len([]string{"keygroup", "identifier"}) {
 		id = s[1]
 	}
+
 	return
 }
 
 // garbageCollection manages triggering garbage collection for the BadgerDB database. For now, we stick to a schedule.
 func garbageCollection(db *badger.DB) {
-	ticker := time.NewTicker(5 * time.Minute)
+	ticker := time.NewTicker(gcInterval)
 	defer ticker.Stop()
 	for range ticker.C {
 		log.Debug().Msgf("BadgerDB: triggering garbage collection...")
-		for err := db.RunValueLogGC(0.7); err == nil; err = db.RunValueLogGC(0.7) {
+		for err := db.RunValueLogGC(gcDiscardRatio); err == nil; err = db.RunValueLogGC(gcDiscardRatio) {
 			log.Debug().Msgf("BadgerDB: garbage collected!")
 		}
 		log.Debug().Msgf("BadgerDB: garbage collection done")
@@ -465,7 +469,7 @@ func (s *Storage) DeleteKeygroup(kg string) error {
 		prefix := makeTriggerConfigKeyName(kg, "")
 
 		for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
-			triggers = append(ids, string(it.Item().Key()))
+			triggers = append(triggers, string(it.Item().Key()))
 		}
 		return nil
 	})

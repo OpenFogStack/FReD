@@ -101,7 +101,10 @@ func (n *NameService) CreateKeygroup(kg fred.KeygroupName, mutable bool, expiry 
 	// Why? Because all the nodes in this keygroup should be able to know that they are in a deleted keygroup
 	// This is only a problem if a node doesn't see the delete state and only the new state in which it is not a member
 	// But in this case it should just delete itself from the keygroup
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	ctx, cncl := context.WithTimeout(context.Background(), timeout)
+
+	defer cncl()
+
 	_, err = n.cli.Delete(ctx, fmt.Sprintf(fmtKgNodeString, string(kg), ""), clientv3.WithPrefix())
 
 	if err != nil {
@@ -124,7 +127,7 @@ func (n *NameService) GetKeygroupMembers(kg fred.KeygroupName, excludeSelf bool)
 	for i, value := range nodes {
 		// If status is OK then add to available replicas
 		if bytes.Equal(value.Value, []byte("ok")) {
-			// If we are to exclude ourselfes
+			// If we are to exclude ourselves
 			if excludeSelf && n.NodeID == getNodeNameFromKgNodeString(string(value.Key)) {
 				log.Debug().Msgf("NaSe: GetKeygroupMembers: Got result %d, key: %s value: %s", i, value.Key, value.Value)
 				log.Debug().Msg("...Excluding this node from results since this is the own node")

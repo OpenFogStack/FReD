@@ -63,6 +63,7 @@ func newTriggerService(s *storeService, certFile, keyFile string) *triggerServic
 
 	tlsConfig := &tls.Config{
 		Certificates: []tls.Certificate{cert},
+		MinVersion:   tls.VersionTLS12,
 	}
 
 	tc := credentials.NewTLS(tlsConfig)

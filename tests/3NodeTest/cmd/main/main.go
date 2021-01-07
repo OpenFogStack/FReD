@@ -33,27 +33,18 @@ func main() {
 	)
 
 	// Parse Flags
-	//useTLS := *flag.Bool("useTLS", false, "Use TLS (HTTPS instead of HTTP)")
 	waitUser = *flag.Bool("wait-user", false, "wait for user input after each test")
-
-	//apiVersion := *flag.String("apiVersion", "v0", "API Version (e.g. v0)")
 
 	nodeAhost := *flag.String("nodeAhost", "172.26.1.1", "host of nodeA (e.g. localhost)") // Docker: localhost
 	nodeAhttpPort := *flag.String("nodeAhttp", "9001", "port of nodeA (e.g. 9001)")        // Docker: 9002
-	//nodeAzmqhost := *flag.String("nodeAzmqhost", "172.26.0.10", "host of nodeA (e.g. localhost) that can be reached by the other nodes") // Docker: 172.26.0.10
-	//nodeApeeringPort := *flag.Int("nodeAzmqPort", 5555, "ZMQ Port of nodeA")
 	nodeApeeringID := *flag.String("nodeAzmqID", "nodeA", "ZMQ Id of nodeA")
 
 	nodeBhost := *flag.String("nodeBhost", "172.26.2.1", "host of nodeB (e.g. localhost)")
 	nodeBhttpPort := *flag.String("nodeBhttp", "9001", "port of nodeB (e.g. 9001)")
-	//nodeBzmqhost := *flag.String("nodeBzmqhost", "172.26.0.11", "host of nodeB (e.g. localhost) that can be reached by the other nodes")
-	//nodeBpeeringPort := *flag.Int("nodeBzmqPort", 5555, "ZMQ Port of nodeB")
 	nodeBpeeringID := *flag.String("nodeBzmqID", "nodeB", "ZMQ Id of nodeB")
 
 	nodeChost := *flag.String("nodeChost", "172.26.3.1", "host of nodeC (e.g. localhost)")
 	nodeChttpPort := *flag.String("nodeChttp", "9001", "port of nodeC (e.g. 9001)")
-	//nodeCzmqhost := *flag.String("nodeCzmqhost", "172.26.0.12", "host of nodeC (e.g. localhost) that can be reached by the other nodes")
-	//nodeCpeeringPort := *flag.Int("nodeCzmqPort", 5555, "ZMQ Port of nodeC")
 	nodeCpeeringID := *flag.String("nodeCzmqID", "nodeC", "ZMQ Id of nodeC")
 
 	triggerNodeHost := *flag.String("triggerNodeHost", "172.26.5.1:3333", "host of trigger node (e.g. localhost:3333)")

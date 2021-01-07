@@ -333,13 +333,16 @@ func main() {
 		log.Warn().Msg("NodeStatus: This node was offline has missed some updates, getting them from other nodes")
 		for _, item := range missedItems {
 			nodeID, addr := n.GetNodeWithBiggerExpiry(item.Keygroup)
-			log.Info().Msgf("Getting item of KG %s ID %s from Node %s @ %s", string(item.Keygroup), string(item.ID), string(nodeID), addr)
+			log.Info().Msgf("Getting item of KG %s ID %s from Node %s @ %s", string(item.Keygroup), item.ID, string(nodeID), addr)
 			item, err := c.SendGetItem(addr, item.Keygroup, item.ID)
 			if err != nil {
 				log.Err(err).Msg("Was not able to get Items from node")
 			}
 			expiry, _ := n.GetExpiry(item.Keygroup)
-			store.Update(string(item.Keygroup), item.ID, item.Val, expiry)
+			err = store.Update(string(item.Keygroup), item.ID, item.Val, expiry)
+			if err != nil {
+				log.Error().Msgf("Could not update missed item %s", item.ID)
+			}
 		}
 	} else {
 		log.Debug().Msg("NodeStatus: No updates were missed by this node.")

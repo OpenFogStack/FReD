@@ -118,15 +118,16 @@ func (s *replicationService) relayDeleteKeygroup(k Keygroup) error {
 		addr, err := s.n.GetNodeAddress(id)
 
 		if err != nil {
-			log.Err(err).Msg("Cannot Get node adress from NaSe")
+			log.Err(err).Msg("Cannot Get node address from NaSe")
 			return err
 		}
 
 		log.Debug().Msgf("RelayDeleteKeygroup from replservice: sending %#v to %#v", k, addr)
-		s.c.SendDeleteKeygroup(addr, k.Name)
-		// No error handling because:
-		// There is no need to report a node fail here since the node always gets this information from NaSe
-		// It is also not necessary to fail here because of this
+		err = s.c.SendDeleteKeygroup(addr, k.Name)
+
+		if err != nil {
+			log.Debug().Msg(err.Error())
+		}
 	}
 
 	// Only now delete the keygroup with the nase
@@ -165,13 +166,17 @@ func (s *replicationService) relayUpdate(i Item) error {
 		addr, err := s.n.GetNodeAddress(id)
 
 		if err != nil {
-			log.Err(err).Msg("Cannot Get node adress from NaSe")
+			log.Err(err).Msg("Cannot Get node address from NaSe")
 			return err
 		}
 
 		log.Debug().Msgf("RelayUpdate from replservice: sending %#v to %#v", i, addr)
 		if err := s.c.SendUpdate(addr, i.Keygroup, i.ID, i.Val); err != nil {
-			s.reportNodeFail(id, i.Keygroup, i.ID)
+			err = s.reportNodeFail(id, i.Keygroup, i.ID)
+
+			if err != nil {
+				log.Debug().Msg(err.Error())
+			}
 		}
 	}
 
@@ -197,13 +202,18 @@ func (s *replicationService) relayDelete(i Item) error {
 		addr, err := s.n.GetNodeAddress(id)
 
 		if err != nil {
-			log.Err(err).Msg("Cannot Get node adress from NaSe")
+			log.Err(err).Msg("Cannot Get node address from NaSe")
 			return err
 		}
 
 		log.Debug().Msgf("RelayDelete from replservice: sending %#v to %#v", i, addr)
 		if err := s.c.SendDelete(addr, i.Keygroup, i.ID); err != nil {
-			s.reportNodeFail(id, i.Keygroup, i.ID)
+
+			err = s.reportNodeFail(id, i.Keygroup, i.ID)
+
+			if err != nil {
+				log.Debug().Msg(err.Error())
+			}
 		}
 	}
 
@@ -268,7 +278,7 @@ func (s *replicationService) addReplica(k Keygroup, n Node, relay bool) error {
 			// get a replica node
 			replAddr, err := s.n.GetNodeAddress(currID)
 			replNode := &Node{
-				ID:   NodeID(currID),
+				ID:   currID,
 				Host: replAddr,
 			}
 
@@ -293,7 +303,7 @@ func (s *replicationService) addReplica(k Keygroup, n Node, relay bool) error {
 		// TODO so this one array contains all data items? Maybe not a good idea if there is a lot of data to be sent
 		var i []Item
 
-		if n.ID != NodeID(s.n.GetNodeID()) {
+		if n.ID != s.n.GetNodeID() {
 			// we are adding a new node and we have all the data: send our data
 			i, err = s.s.readAll(k.Name)
 
@@ -324,7 +334,10 @@ func (s *replicationService) addReplica(k Keygroup, n Node, relay bool) error {
 			// a batch might be better here
 			log.Debug().Msgf("AddReplica from replservice: sending %#v to %#v", item, n)
 			if err := s.c.SendUpdate(newNodeAddr, k.Name, item.ID, item.Val); err != nil {
-				s.reportNodeFail(n.ID, k.Name, item.ID)
+				err = s.reportNodeFail(n.ID, k.Name, item.ID)
+				if err != nil {
+					log.Debug().Msg(err.Error())
+				}
 			}
 		}
 
@@ -422,7 +435,7 @@ func (s *replicationService) getNode(n Node) (Node, error) {
 	return n, err
 }
 
-// getNodesExternalAdress returns a list of all known nodes with the adress they can be reached at externally.
+// getNodesExternalAdress returns a list of all known nodes with the address they can be reached at externally.
 func (s *replicationService) getNodesExternalAdress() ([]Node, error) {
 	return s.n.GetAllNodesExternal()
 }

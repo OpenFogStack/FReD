@@ -3,13 +3,17 @@ PKG := "gitlab.tu-berlin.de/mcc-fred/$(PROJECT_NAME)"
 PKG_LIST := $(shell go list ${PKG}/... | grep -v /vendor/ | grep -v /ext/)
 GO_FILES := $(shell find . -name '*.go' | grep -v /vendor/ | grep -v /ext/ | grep -v _test.go)
 
-.PHONY: all dep build clean test coverage coverhtml lint staticcheck container docs
+.PHONY: all dep build clean test coverage coverhtml lint megalint container docs
 
 all: build
 
 lint: ## Lint the files
-	@GO111MODULE=off go get -u golang.org/x/lint/golint
-	@golint -set_exit_status ${PKG_LIST}
+	@which golangci-lint > /dev/null || (echo "golangci-lint not installed, check https://golangci-lint.run/usage/install/" && exit 1)
+	@golangci-lint -E golint --timeout 5m0s run
+
+megalint: ## Megalint all files
+	@which golangci-lint > /dev/null || (echo "golangci-lint not installed, check https://golangci-lint.run/usage/install/" && exit 1)
+	@golangci-lint -E asciicheck -E depguard -E dogsled -E dupl -E errorlint -E exhaustive -E exportloopref -E forbidigo -E funlen  -E gochecknoinits -E gocognit -E gocritic -E gocyclo -E gofmt -E golint -E gomnd -E gomodguard -E goprintffuncname -E gosec -E interfacer -E makezero -E maligned -E misspell -E nestif -E nlreturn -E stylecheck -E unconvert -E unparam run
 
 test: ## Run unittests
 	@rm -rf pkg/leveldb/test.db
@@ -41,10 +45,6 @@ clean: ## Remove previous build
 
 container: ## Create a Docker container
 	@docker build . -t git.tu-berlin.de:5000/mcc-fred/fred/fred
-
-staticcheck: ## Do a static code check
-	@GO111MODULE=off go get -u honnef.co/go/tools/cmd/staticcheck
-	@staticcheck ${PKG_LIST}
 
 docs: ## Build the FogStore documentation
 	@mdpdf docs/doc.md 

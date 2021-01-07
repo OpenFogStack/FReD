@@ -9,7 +9,8 @@ import (
 )
 
 const (
-	sep = "|"
+	sep     = "|"
+	timeout = 40 * time.Second
 )
 
 // NameServiceCache functions like NameService, but inserts local caching
@@ -20,7 +21,7 @@ type NameServiceCache struct {
 
 // NewNameServiceCache creates a new NameServiceCache
 func NewNameServiceCache(regularNase fred.NameService) (*NameServiceCache, error) {
-	cache, err := bigcache.NewBigCache(bigcache.DefaultConfig(40 * time.Second))
+	cache, err := bigcache.NewBigCache(bigcache.DefaultConfig(timeout))
 
 	if err != nil {
 		return nil, errors.Errorf("Error initializing the cache")

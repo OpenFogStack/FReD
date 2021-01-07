@@ -23,7 +23,11 @@ func (n *NameServiceCache) IsMutable(kg fred.KeygroupName) (bool, error) {
 		}
 
 		// put in cache
-		n.cache.Set(key, boolToByteArray(resp))
+		err = n.cache.Set(key, boolToByteArray(resp))
+
+		if err != nil {
+			log.Err(err).Msg("Could not cache NaSe response")
+		}
 
 		return resp, nil
 	}
@@ -46,7 +50,11 @@ func (n *NameServiceCache) GetExpiry(kg fred.KeygroupName) (int, error) {
 		}
 
 		// put in cache
-		n.cache.Set(key, intToByteArray(resp))
+		err = n.cache.Set(key, intToByteArray(resp))
+
+		if err != nil {
+			log.Err(err).Msg("Could not cache NaSe response")
+		}
 
 		return resp, nil
 	}
@@ -71,7 +79,11 @@ func (n *NameServiceCache) ExistsKeygroup(kg fred.KeygroupName) (bool, error) {
 		}
 
 		// put in cache
-		n.cache.Set(key, boolToByteArray(resp))
+		err = n.cache.Set(key, boolToByteArray(resp))
+
+		if err != nil {
+			log.Err(err).Msg("Could not cache NaSe response")
+		}
 
 		return resp, nil
 	}
@@ -114,17 +126,29 @@ func (n *NameServiceCache) GetKeygroupMembers(kg fred.KeygroupName, excludeSelf 
 		}
 
 		// get byte array from response
-		var byte []byte
-		genericToByteArray(resp, &byte)
+		var b []byte
+		err = genericToByteArray(resp, &b)
+
+		if err != nil {
+			log.Err(err).Msg("Could not cache NaSe response: byte array conversion failed")
+		}
 
 		// put in cache
-		n.cache.Set(key, byte)
+		err = n.cache.Set(key, b)
+
+		if err != nil {
+			log.Err(err).Msg("Could not cache NaSe response")
+		}
 
 		return resp, nil
 	}
 
 	ids = make(map[fred.NodeID]int)
-	byteArrayToGeneric(respCache, &ids)
+	err = byteArrayToGeneric(respCache, &ids)
+
+	if err != nil {
+		log.Err(err).Msg("Could not cache NaSe response: byte array conversion failed")
+	}
 
 	return ids, nil
 }
