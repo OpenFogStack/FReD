@@ -1,6 +1,7 @@
 package badgerdb
 
 import (
+	"os"
 	"strconv"
 	"testing"
 	"time"
@@ -15,9 +16,11 @@ var db *Storage
 
 // TODO: better tests, maybe even for all packages that implement the Store interface?
 
-func init() {
+func TestMain(m *testing.M) {
 	zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	db = New("./test.db")
+
+	os.Exit(m.Run())
 }
 
 func TestKeygroups(t *testing.T) {
