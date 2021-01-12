@@ -4,7 +4,6 @@ services:
   tester:
     build:
       context: ../FailingNodeTest
-      dockerfile: Dockerfile
     image: fred/failtest:local
     container_name: failtest
     networks:

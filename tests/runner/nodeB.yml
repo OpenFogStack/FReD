@@ -2,22 +2,16 @@ version: "3.7"
 
 services:
   nodeB:
-    build:
-      context: ../../../fred
-      dockerfile: debug.Dockerfile
+    build: ../../
     depends_on:
       - storeB
-    image: fred/fred:local-debug
-    security_opt:
-      - seccomp:unconfined
-    cap_add:
-      - SYS_PTRACE
+    image: fred/fred:local
     container_name: nodeB
     entrypoint: "fred \
     --remote-storage-host 172.26.2.2:1337 \
     --peer-host 172.26.2.1:5555 \
     --nodeID nodeB \
-    --host :9001 \
+    --host 172.26.2.1:9001 \
     --cert /cert/nodeB.crt \
     --key /cert/nodeB.key \
     --ca-file /cert/ca.crt \
@@ -40,18 +34,18 @@ services:
       - ../../nase/tls/ca.crt:/cert/ca.crt
     ports:
       - 9003:9001
-      - 40000:40000
     networks:
       fredwork:
         ipv4_address: 172.26.2.1
 
   storeB:
     build:
-      context: ../../../fred
+      context: ../../
       dockerfile: storage.Dockerfile
     image: fred/store:local
     container_name: storeB
     entrypoint: "storageserver \
+    --log-level '${LOG_LEVEL_STORE}' \
     --cert /cert/cert.crt \
     --key /cert/key.key \
     --ca-file /cert/ca.crt"

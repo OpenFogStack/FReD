@@ -3,8 +3,8 @@ version: "3.7"
 services:
   tester:
     build:
-      context: ../../../fred
-      dockerfile: tester.Dockerfile
+      context: ../../
+      dockerfile: tests/3NodeTest/Dockerfile
     image: fred/tester:local
     container_name: tester
     command: --nodeAhost=172.26.1.1 --nodeAhttp=9001 --nodeBhost=172.26.2.1 --nodeBhttp=9001 --nodeChost=172.26.3.1 --nodeChttp=9001 --cert-file "/cert/client.crt" --key-file "/cert/client.key" --little-cert-file "/cert/littleclient.crt" --little-key-file "/cert/littleclient.key" --wait-user=false
