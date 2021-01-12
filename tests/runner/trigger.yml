@@ -3,7 +3,7 @@ version: "3.7"
 services:
   triggerA:
     build:
-      context: ../../../fred
+      context: ../../
       dockerfile: trigger.Dockerfile
     image: fred/trigger:local
     container_name: triggerA

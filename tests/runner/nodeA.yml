@@ -20,7 +20,7 @@ services:
     depends_on:
       - nodeAproxy
       - storeA
-    build: ../../../fred
+    build: ../../
     image: fred/fred:local
     container_name: nodeA-1
     entrypoint: "fred \
@@ -58,7 +58,7 @@ services:
     depends_on:
       - nodeAproxy
       - storeA
-    build: ../../../fred
+    build: ../../
     image: fred/fred:local
     container_name: nodeA-2
     entrypoint: "fred \
@@ -96,7 +96,7 @@ services:
     depends_on:
       - nodeAproxy
       - storeA
-    build: ../../../fred
+    build: ../../
     image: fred/fred:local
     container_name: nodeA-3
     entrypoint: "fred \
@@ -132,7 +132,7 @@ services:
 
   storeA:
     build:
-      context: ../../../fred
+      context: ../../
       dockerfile: storage.Dockerfile
     image: fred/store:local
     container_name: storeA
