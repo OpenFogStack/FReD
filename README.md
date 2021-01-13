@@ -508,16 +508,17 @@ Any compiler warnings and errors produced by the build process make this code in
 
 ##### Linting
 
-Linting is done with the `golint` utility.
-It finds some basic errors and style faults and marks them.
+We use the [`golangci-lint`](https://github.com/golangci/golangci-lint) to run a number of linting tasks on our code.
+Check [the documentation](https://golangci-lint.run/usage/install/#local-installation) to install it on your machine.
+
+Once the utility is available to you, run `make lint` to lint all Go code files in the repository.
+This uses the [default list of linters](https://golangci-lint.run/usage/linters/#enabled-by-default-linters), finds some basic errors and style faults, and marks them.
 These linting errors mostly don't make the code invalid but ignoring them can lead to bad code quality.
-Use `make lint` to lint everything.
 
-##### Static Check
+##### Mega-Linting
 
-The `staticcheck` utility is a more advanced linter for Go code that also checks for errors that might occur at runtime.
-Execute `make staticcheck` to check everything.
-Check the [Documentation](https://staticcheck.io/docs/) for a full list of warnings and how to fix them.
+Additionally, we also provide the `make megalint` command in our Makefile.
+This runs a number of additional checks on the code, yet passing these checks is not mandatory for code to be merged into the repository.
 
 #### Unit Tests
 
