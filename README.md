@@ -537,7 +537,7 @@ This is part of a TDD approach where tests can be defined first and the software
 
 The "3 node test" starts a FReD deployment of three FReD nodes and runs a client against the FReD cluster that validates different functionalities.
 It can be found in `./tests/3NodeTest`.
-It uses Docker compose and can thus easily be started with `make test`.
+It uses Docker compose and can thus easily be started with `make 3nodetest`.
 
 The deployment comprises a single `etcd` Docker container as a NaSe, a simple trigger node, two FReD nodes that each comprise only a single machine (node _B_ and _C_) with a storage server, and a distributed FReD node _A_ that comprises three individual FReD machines behind a `haproxy` sharing a single storage server.
 All machines are connected over a Docker network.

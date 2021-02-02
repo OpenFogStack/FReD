@@ -26,9 +26,9 @@ type Server struct {
 	*grpc.Server
 }
 
-// the roles map the internal grpc representation of rbac roles to the representation within fred
+// the Roles map the internal grpc representation of rbac Roles to the representation within fred
 var (
-	roles = map[client.UserRole]fred.Role{
+	Roles = map[client.UserRole]fred.Role{
 		client.UserRole_ReadKeygroup:       fred.ReadKeygroup,
 		client.UserRole_WriteKeygroup:      fred.WriteKeygroup,
 		client.UserRole_ConfigureReplica:   fred.ConfigureReplica,
@@ -37,8 +37,8 @@ var (
 	}
 )
 
-// checkCert checks the certificate from the given gRPC context for validity and returns the Common Name
-func (s *Server) checkCert(ctx context.Context) (name string, err error) {
+// CheckCert checks the certificate from the given gRPC context for validity and returns the Common Name
+func (s *Server) CheckCert(ctx context.Context) (name string, err error) {
 	// get peer information
 	p, ok := peer.FromContext(ctx)
 
@@ -103,7 +103,7 @@ func (s *Server) checkCert(ctx context.Context) (name string, err error) {
 		return name, errors.Errorf("invalid subject common name")
 	}
 
-	log.Debug().Msgf("checkCert: GRPC Context Certificate Name: %s", name)
+	log.Debug().Msgf("CheckCert: GRPC Context Certificate Name: %s", name)
 
 	return name, nil
 }
@@ -186,7 +186,7 @@ func (s *Server) CreateKeygroup(ctx context.Context, request *client.CreateKeygr
 
 	log.Info().Msgf("ExtServer has rcvd CreateKeygroup. In: %#v", request)
 
-	user, err := s.checkCert(ctx)
+	user, err := s.CheckCert(ctx)
 
 	if err != nil {
 		return statusResponseFromError(err)
@@ -202,7 +202,7 @@ func (s *Server) DeleteKeygroup(ctx context.Context, request *client.DeleteKeygr
 
 	log.Info().Msgf("ExtServer has rcvd DeleteKeygroup. In: %#v", request)
 
-	user, err := s.checkCert(ctx)
+	user, err := s.CheckCert(ctx)
 
 	if err != nil {
 		return statusResponseFromError(err)
@@ -217,7 +217,7 @@ func (s *Server) DeleteKeygroup(ctx context.Context, request *client.DeleteKeygr
 func (s *Server) Read(ctx context.Context, request *client.ReadRequest) (*client.ReadResponse, error) {
 	log.Info().Msgf("ExtServer has rcvd Read. In: %#v", request)
 
-	user, err := s.checkCert(ctx)
+	user, err := s.CheckCert(ctx)
 
 	if err != nil {
 		_, err = statusResponseFromError(err)
@@ -239,7 +239,7 @@ func (s *Server) Read(ctx context.Context, request *client.ReadRequest) (*client
 func (s *Server) Append(ctx context.Context, request *client.AppendRequest) (*client.AppendResponse, error) {
 	log.Info().Msgf("ExtServer has rcvd Append. In: %#v", request)
 
-	user, err := s.checkCert(ctx)
+	user, err := s.CheckCert(ctx)
 
 	if err != nil {
 		_, err = statusResponseFromError(err)
@@ -262,7 +262,7 @@ func (s *Server) Update(ctx context.Context, request *client.UpdateRequest) (*cl
 
 	log.Info().Msgf("ExtServer has rcvd Update. In: %#v", request)
 
-	user, err := s.checkCert(ctx)
+	user, err := s.CheckCert(ctx)
 
 	if err != nil {
 		_, err = statusResponseFromError(err)
@@ -278,7 +278,7 @@ func (s *Server) Update(ctx context.Context, request *client.UpdateRequest) (*cl
 func (s *Server) Delete(ctx context.Context, request *client.DeleteRequest) (*client.StatusResponse, error) {
 	log.Info().Msgf("ExtServer has rcvd Delete. In: %#v", request)
 
-	user, err := s.checkCert(ctx)
+	user, err := s.CheckCert(ctx)
 
 	if err != nil {
 		_, err = statusResponseFromError(err)
@@ -294,7 +294,7 @@ func (s *Server) Delete(ctx context.Context, request *client.DeleteRequest) (*cl
 func (s *Server) AddReplica(ctx context.Context, request *client.AddReplicaRequest) (*client.StatusResponse, error) {
 	log.Info().Msgf("ExtServer has rcvd AddReplica. In: %#v", request)
 
-	user, err := s.checkCert(ctx)
+	user, err := s.CheckCert(ctx)
 
 	if err != nil {
 		_, err = statusResponseFromError(err)
@@ -310,7 +310,7 @@ func (s *Server) AddReplica(ctx context.Context, request *client.AddReplicaReque
 func (s *Server) GetKeygroupReplica(ctx context.Context, request *client.GetKeygroupReplicaRequest) (*client.GetKeygroupReplicaResponse, error) {
 	log.Info().Msgf("ExtServer has rcvd GetKeygroupReplica. In: %#v", request)
 
-	user, err := s.checkCert(ctx)
+	user, err := s.CheckCert(ctx)
 
 	if err != nil {
 		_, err = statusResponseFromError(err)
@@ -344,7 +344,7 @@ func (s *Server) GetKeygroupReplica(ctx context.Context, request *client.GetKeyg
 func (s *Server) RemoveReplica(ctx context.Context, request *client.RemoveReplicaRequest) (*client.StatusResponse, error) {
 	log.Info().Msgf("ExtServer has rcvd RemoveReplica. In: %#v", request)
 
-	user, err := s.checkCert(ctx)
+	user, err := s.CheckCert(ctx)
 
 	if err != nil {
 		_, err = statusResponseFromError(err)
@@ -364,7 +364,7 @@ func replicaResponseFromNode(n fred.Node) *client.GetReplicaResponse {
 func (s *Server) GetReplica(ctx context.Context, request *client.GetReplicaRequest) (*client.GetReplicaResponse, error) {
 	log.Info().Msgf("ExtServer has rcvd GetReplica. In: %#v", request)
 
-	user, err := s.checkCert(ctx)
+	user, err := s.CheckCert(ctx)
 
 	if err != nil {
 		_, err = statusResponseFromError(err)
@@ -380,7 +380,7 @@ func (s *Server) GetReplica(ctx context.Context, request *client.GetReplicaReque
 func (s *Server) GetAllReplica(ctx context.Context, request *client.GetAllReplicaRequest) (*client.GetAllReplicaResponse, error) {
 	log.Info().Msgf("ExtServer has rcvd GetAllReplica. In: %#v", request)
 
-	user, err := s.checkCert(ctx)
+	user, err := s.CheckCert(ctx)
 
 	if err != nil {
 		_, err = statusResponseFromError(err)
@@ -407,7 +407,7 @@ func (s *Server) GetAllReplica(ctx context.Context, request *client.GetAllReplic
 func (s *Server) GetKeygroupTriggers(ctx context.Context, request *client.GetKeygroupTriggerRequest) (*client.GetKeygroupTriggerResponse, error) {
 	log.Info().Msgf("ExtServer has rcvd GetKeygroupTriggers. In: %#v", request)
 
-	user, err := s.checkCert(ctx)
+	user, err := s.CheckCert(ctx)
 
 	if err != nil {
 		_, err = statusResponseFromError(err)
@@ -433,7 +433,7 @@ func (s *Server) GetKeygroupTriggers(ctx context.Context, request *client.GetKey
 func (s *Server) AddTrigger(ctx context.Context, request *client.AddTriggerRequest) (*client.StatusResponse, error) {
 	log.Info().Msgf("ExtServer has rcvd AddTrigger. In: %#v", request)
 
-	user, err := s.checkCert(ctx)
+	user, err := s.CheckCert(ctx)
 
 	if err != nil {
 		_, err = statusResponseFromError(err)
@@ -449,7 +449,7 @@ func (s *Server) AddTrigger(ctx context.Context, request *client.AddTriggerReque
 func (s *Server) RemoveTrigger(ctx context.Context, request *client.RemoveTriggerRequest) (*client.StatusResponse, error) {
 	log.Info().Msgf("ExtServer has rcvd RemoveTrigger. In: %#v", request)
 
-	user, err := s.checkCert(ctx)
+	user, err := s.CheckCert(ctx)
 
 	if err != nil {
 		_, err = statusResponseFromError(err)
@@ -465,14 +465,14 @@ func (s *Server) RemoveTrigger(ctx context.Context, request *client.RemoveTrigge
 func (s *Server) AddUser(ctx context.Context, request *client.UserRequest) (*client.StatusResponse, error) {
 	log.Info().Msgf("ExtServer has rcvd AddUser. In: %#v", request)
 
-	user, err := s.checkCert(ctx)
+	user, err := s.CheckCert(ctx)
 
 	if err != nil {
 		_, err = statusResponseFromError(err)
 		return nil, err
 	}
 
-	err = s.e.HandleAddUser(user, request.User, fred.Keygroup{Name: fred.KeygroupName(request.Keygroup)}, roles[request.Role])
+	err = s.e.HandleAddUser(user, request.User, fred.Keygroup{Name: fred.KeygroupName(request.Keygroup)}, Roles[request.Role])
 
 	return statusResponseFromError(err)
 }
@@ -481,14 +481,14 @@ func (s *Server) AddUser(ctx context.Context, request *client.UserRequest) (*cli
 func (s *Server) RemoveUser(ctx context.Context, request *client.UserRequest) (*client.StatusResponse, error) {
 	log.Info().Msgf("ExtServer has rcvd RemoveUser. In: %#v", request)
 
-	user, err := s.checkCert(ctx)
+	user, err := s.CheckCert(ctx)
 
 	if err != nil {
 		_, err = statusResponseFromError(err)
 		return nil, err
 	}
 
-	err = s.e.HandleRemoveUser(user, request.User, fred.Keygroup{Name: fred.KeygroupName(request.Keygroup)}, roles[request.Role])
+	err = s.e.HandleRemoveUser(user, request.User, fred.Keygroup{Name: fred.KeygroupName(request.Keygroup)}, Roles[request.Role])
 
 	return statusResponseFromError(err)
 }
