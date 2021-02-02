@@ -1,0 +1,45 @@
+version: "3.7"
+
+services:
+  alexandra:
+    depends_on:
+      - nodeA-1
+      - nodeAproxy
+      - nodeB
+      - nodeC
+    build:
+      context: ../../
+      dockerfile: alexandra.Dockerfile
+    image: fred/alexandra:local
+    container_name: alexandra
+    command: --lighthouse 172.26.2.1:9001 --ca-cert /cert/ca.crt --alexandra-key /cert/alexandra.key --alexandra-cert /cert/alexandra.crt --clients-key /cert/alexandra.key --clients-cert /cert/alexandra.crt
+    volumes:
+      - ../../nase/tls/alexandra.crt:/cert/alexandra.crt
+      - ../../nase/tls/alexandra.key:/cert/alexandra.key
+      - ../../nase/tls/ca.crt:/cert/ca.crt
+    ports:
+      - 10000:10000
+    networks:
+      fredwork:
+        ipv4_address: 172.26.4.1
+
+  alexandra-tester:
+    depends_on:
+      - alexandra
+    build:
+      context: ../../
+      dockerfile: tests/AlexandraTest/Dockerfile
+    image: fred/alexandra-tester:local
+    container_name: alexandra-tester
+    volumes:
+      - ../../nase/tls/client.crt:/cert/client.crt
+      - ../../nase/tls/client.key:/cert/client.key
+      - ../../nase/tls/ca.crt:/cert/ca.crt
+    networks:
+      fredwork:
+        ipv4_address: 172.26.7.1
+
+networks:
+  fredwork:
+    external: true
+
