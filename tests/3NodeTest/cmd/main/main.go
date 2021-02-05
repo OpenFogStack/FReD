@@ -216,6 +216,18 @@ func main() {
 		logNodeFailure(nodeB, "resp is \"value\"", resp)
 	}
 
+	// delete the last node from a keygroup
+	logNodeAction(nodeA, "Preparing to delete all members from a keygroup...")
+	nodeA.CreateKeygroup("deletetest", true, 0, false)
+	nodeA.PutItem("deletetest", "item", "value", false)
+	nodeA.AddKeygroupReplica("deletetest", nodeBpeeringID, 0, false)
+	nodeA.DeleteKeygroupReplica("deletetest", nodeApeeringID, false)
+	// NodeB is the only replica left
+	logNodeAction(nodeB, "Removing last member of a keygroup delete-test")
+	nodeB.DeleteKeygroupReplica("deletetest", nodeBpeeringID, true)
+	nodeB.PutItem("deletetest", "item", "value", false)
+
+
 	// let's test trigger nodes
 	// create a new keygroup on nodeA
 	logNodeAction(nodeA, "Creating keygroup triggertesting")

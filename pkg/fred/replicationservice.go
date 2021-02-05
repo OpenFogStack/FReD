@@ -316,6 +316,12 @@ func (s *replicationService) addReplica(k Keygroup, n Node, relay bool) error {
 			// take a victim with a higher expiry to request data from (but not ourselves!)
 			_, addr := s.n.GetNodeWithBiggerExpiry(k.Name)
 
+			if addr == "" {
+				log.Error().Msgf("AddReplica: Can not find node to get this keygroup data from, so this keygroup is empty")
+				// TODO is this an error? because there is nothing you can do (except tell the user to not fuck up their replica placement)
+				return nil
+			}
+
 			if err != nil {
 				return err
 			}
@@ -379,9 +385,22 @@ func (s *replicationService) removeReplica(k Keygroup, n Node, relay bool) error
 			err = errors.Errorf("no such keygroup according to NaSe: %#v", k)
 			return err
 		}
-
 		if err != nil {
 			return err
+		}
+
+		members, err := s.n.GetKeygroupMembers(k.Name, false)
+		if err != nil {
+			return err
+		}
+		// Check if to-be-deleted node is in the keygorup
+		if _, ok := members[n.ID]; !ok{
+			return errors.Errorf("Can not remove node from keygroup it is not a member of.")
+		}
+		// Check if the node is the last member of the keygroup (so the only one holding data)
+		if len(members) <= 1 {
+			log.Error().Msgf("Trying to exit the only node left from the keygroup. Please delete keygroup instead.")
+			return errors.Errorf("Can not exit last node from keygroup %s. Maybe you want to delete the keygroup instead?", k.Name)
 		}
 
 		// let's tell this new node that it should delete the local copy of this keygroup
