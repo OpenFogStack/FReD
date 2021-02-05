@@ -68,7 +68,8 @@ func (n *NameService) GetNodeWithBiggerExpiry(kg fred.KeygroupName) (nodeID fred
 	}
 
 	nodes, err := n.GetKeygroupMembers(kg, true)
-	if err != nil {
+	if err != nil || len(nodes) == 0 {
+		// Error or no nodes found
 		return "", ""
 	}
 

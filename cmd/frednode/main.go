@@ -278,6 +278,10 @@ func main() {
 		log.Warn().Msg("NodeStatus: This node was offline has missed some updates, getting them from other nodes")
 		for _, item := range missedItems {
 			nodeID, addr := n.GetNodeWithBiggerExpiry(item.Keygroup)
+			if addr == "" {
+				log.Error().Msgf("NodeStatus: Was not able to find node that can provide item %s, skipping it...", item.Keygroup)
+				continue
+			}
 			log.Info().Msgf("Getting item of KG %s ID %s from Node %s @ %s", string(item.Keygroup), item.ID, string(nodeID), addr)
 			item, err := c.SendGetItem(addr, item.Keygroup, item.ID)
 			if err != nil {
