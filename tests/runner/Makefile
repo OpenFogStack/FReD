@@ -9,6 +9,11 @@ clean: ## clean up all resources
 	@docker-compose -f etcd.yml -f nodeA.yml -f nodeB.yml -f nodeC.yml -f 3NodeTester.yml -f trigger.yml build
 	@docker-compose -f etcd.yml -f nodeA.yml -f nodeB.yml -f nodeC.yml -f 3NodeTester.yml -f trigger.yml up --force-recreate --abort-on-container-exit --renew-anon-volumes --remove-orphans
 
+3nodetest-cached: ## start all containers with docker compose and run the test dockerized
+	@docker network create fredwork --gateway 172.26.0.1 --subnet 172.26.0.0/16 || true
+	@docker-compose -f etcd.yml -f nodeA_cached.yml -f nodeB_cached.yml -f nodeC_cached.yml -f 3NodeTester_range.yml -f trigger.yml build
+	@docker-compose -f etcd.yml -f nodeA_cached.yml -f nodeB_cached.yml -f nodeC_cached.yml -f 3NodeTester_range.yml -f trigger.yml up --force-recreate --abort-on-container-exit --renew-anon-volumes --remove-orphans
+
 3nodetest-debug-nodeB: ## same as "test" but with nodeB in debugger mode
 	@docker network create fredwork --gateway 172.26.0.1 --subnet 172.26.0.0/16 || true
 	@docker-compose -f etcd.yml -f nodeA.yml -f nodeB-debug.yml -f nodeC.yml -f 3NodeTester.yml -f trigger.yml build

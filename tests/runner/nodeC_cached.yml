@@ -1,0 +1,63 @@
+version: "3.7"
+
+services:
+  nodeC:
+    build: ../../
+    depends_on:
+      - storeC
+    image: fred/fred:local
+    container_name: nodeC
+    entrypoint: "fred \
+    --remote-storage-host 172.26.3.2:1337 \
+    --peer-host 172.26.3.1:5555 \
+    --nodeID nodeC \
+    --host 172.26.3.1:9001 \
+    --cert /cert/nodeC.crt \
+    --key /cert/nodeC.key \
+    --ca-file /cert/ca.crt \
+    --adaptor remote \
+    --nase-host https://172.26.6.1:2379 \
+    --nase-cert /cert/nodeC.crt \
+    --nase-key /cert/nodeC.key \
+    --nase-ca /cert/ca.crt \
+    --nase-cached \
+    --handler dev \
+    --badgerdb-path ./db  \
+    --remote-storage-cert /cert/nodeC.crt \
+    --remote-storage-key /cert/nodeC.key  \
+    --trigger-cert /cert/nodeC.crt \
+    --trigger-key /cert/nodeC.key"
+    environment:
+      - LOG_LEVEL
+    volumes:
+      - ../../nase/tls/nodeC.crt:/cert/nodeC.crt
+      - ../../nase/tls/nodeC.key:/cert/nodeC.key
+      - ../../nase/tls/ca.crt:/cert/ca.crt
+    ports:
+      - 9004:9001
+    networks:
+      fredwork:
+        ipv4_address: 172.26.3.1
+
+  storeC:
+    build:
+      context: ../../
+      dockerfile: storage.Dockerfile
+    image: fred/store:local
+    container_name: storeC
+    entrypoint: "storageserver \
+    --log-level '${LOG_LEVEL_STORE}' \
+    --cert /cert/cert.crt \
+    --key /cert/key.key \
+    --ca-file /cert/ca.crt"
+    volumes:
+      - ../../nase/tls/storeC.crt:/cert/cert.crt
+      - ../../nase/tls/storeC.key:/cert/key.key
+      - ../../nase/tls/ca.crt:/cert/ca.crt
+    networks:
+      fredwork:
+        ipv4_address: 172.26.3.2
+
+networks:
+  fredwork:
+    external: true
