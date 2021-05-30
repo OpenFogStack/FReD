@@ -1,7 +1,7 @@
 # FReD: Fog Replicated Data
 
-[![pipeline status](https://git.tu-berlin.de/mcc-fred/fred/badges/master/pipeline.svg)](https://git.tu-berlin.de/mcc-fred/fred/-/commits/master)
-[![coverage report](https://git.tu-berlin.de/mcc-fred/fred/badges/master/coverage.svg)](https://git.tu-berlin.de/mcc-fred/fred/-/commits/master)
+[![pipeline status](https://git.tu-berlin.de/mcc-fred/fred/badges/main/pipeline.svg)](https://git.tu-berlin.de/mcc-fred/fred/-/commits/main)
+[![coverage report](https://git.tu-berlin.de/mcc-fred/fred/badges/main/coverage.svg)](https://git.tu-berlin.de/mcc-fred/fred/-/commits/main)
 [![License MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://img.shields.io/badge/License-MIT-brightgreen.svg)
 
 **FReD** is a distributed middleware for **F**og **Re**plicated **D**ata.
@@ -479,17 +479,17 @@ For development, it is recommended to install [GoLand](https://www.jetbrains.com
 
 Setup git environment with `sh ./ci/env-setup.sh` (installs git hooks). Be sure to have Go (>1.15) installed.
 
-The `master` branch is protected and only approved pull requests can push to it.
+The `main` branch is protected and only approved pull requests can push to it.
 Most important part of the workflow is `rebase`, [here's](https://www.atlassian.com/git/tutorials/merging-vs-rebasing) a refresher on merging vs rebasing.
 
-1. Switch to `master` -> `git checkout master`
-2. Update `master` -> `git pull --rebase` (ALWAYS use `rebase` when pulling!!!)
-3. Create new branch from `master` -> `git checkout -b tp/new-feature` (where 'tp' is your own name/abbreviation)
+1. Switch to `main` -> `git checkout main`
+2. Update `main` -> `git pull --rebase` (ALWAYS use `rebase` when pulling!!!)
+3. Create new branch from `main` -> `git checkout -b tp/new-feature` (where 'tp' is your own name/abbreviation)
 4. Work on branch and push changes
-5. Rebase master onto branch to not have merge conflicts later -> `git pull origin master --rebase` (AGAIN use`--rebase`)
-6. Push branch again, this time force push to include rebased master (`git push --force`)
-7. Create a pull request from git.tu-berlin.de
-8. Get pull request reviewed and merge it into master
+5. Rebase `main` onto branch to not have merge conflicts later -> `git pull origin main --rebase` (AGAIN use`--rebase`)
+6. Push branch again, this time force push to include rebased `main` (`git push --force`)
+7. Create a pull request from `git.tu-berlin.de`
+8. Get pull request reviewed and merge it into `main`
 
 Some last words, keep pull requests small (not 100 files changed etc :D), so they are easier to review and rather create a lot of small pull requests than one big.
 
