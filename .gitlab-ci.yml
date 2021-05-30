@@ -48,7 +48,7 @@ code_coverage_report:
   script:
     - make coverhtml
   only:
-    - master
+    - main
 
 build:
   stage: build
@@ -61,7 +61,7 @@ container:
     - make container
     - IFS='/' read -ra components <<< "$CI_COMMIT_REF_NAME"
     - CONTAINER_TAG=${components[0]}
-    - if [ "$CI_COMMIT_REF_NAME" == "master" ]; then CONTAINER_TAG=latest; fi;
+    - if [ "$CI_COMMIT_REF_NAME" == "main" ]; then CONTAINER_TAG=latest; fi;
     - echo $CONTAINER_TAG
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker tag git.tu-berlin.de:5000/mcc-fred/fred/fred git.tu-berlin.de:5000/mcc-fred/fred/fred:$CONTAINER_TAG
