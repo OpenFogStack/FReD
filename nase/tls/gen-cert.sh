@@ -35,7 +35,7 @@ echo "CN = ${NAME}" >> "${NAME}".conf
 
 cat >> ${NAME}.conf <<EOF
 [v3_req]
-keyUsage = keyEncipherment, dataEncipherment
+keyUsage = keyEncipherment, dataEncipherment, digitalSignature
 extendedKeyUsage = serverAuth, clientAuth
 subjectAltName = @alt_names
 
