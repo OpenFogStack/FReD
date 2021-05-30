@@ -11,6 +11,10 @@ Applications have full control over keygroup replication: replicate your data wh
 FReD is maintained by [Tobias Pfandzelter, Trever Schirmer, and Nils Japke of the Mobile Cloud Computing research group at Technische Universität Berlin and Einstein Center Digital Future in the scope of the FogStore project](https://www.mcc.tu-berlin.de/).
 Funded by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) -- 415899119.
 
+FReD is open-source software and contributions are welcome.
+All contributions should be submitted as merge requests on the [main repository on the TU Berlin GitLab](https://git.tu-berlin.de/mcc-fred/fred) and are subject to review by the maintainers.
+Check out the [Contributing](#contributing) section for more information.
+
 ## Architecture
 
 A FReD deployment comprises a FReD node on all or a subset of fog nodes in the available fog infrastructure.
@@ -469,9 +473,6 @@ This improves performance for requests to `fred` but may lead to data inconsiste
 By default it is turned off.
 
 ## Contributing
-
-FReD is open-source software and contributions are welcome.
-All contributions should be submitted as merge requests on the [main repository on the TU Berlin GitLab](https://git.tu-berlin.de/mcc-fred/fred) and are subject to review by the maintainers.
 
 For development, it is recommended to install [GoLand](https://www.jetbrains.com/go/).
 
