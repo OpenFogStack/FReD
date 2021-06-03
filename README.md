@@ -183,7 +183,7 @@ Your initial FReD deployment is now complete!
 If you want to try it out, use the `client.proto` in `./proto` to build a client or use [`grpcc`](https://github.com/njpatel/grpcc) to get a REPL interface:
 
 ```bash
-docker build -it grpcc -f grpcc.Dockerfile .
+docker build -t grpcc -f grpcc.Dockerfile .
 docker run \
 -v $(pwd)/nase/tls/fredclient.crt:/cert/fredclient.crt \
 -v $(pwd)/nase/tls/fredclient.key:/cert/fredclient.key \
@@ -191,6 +191,7 @@ docker run \
 -v $(pwd)/proto/client/client.proto:/client.proto \
 --network=fredwork \
 --ip=172.26.1.3 \
+-it \
 grpcc \
 grpcc -p client.proto \
 -a 172.26.1.2:9001 \
