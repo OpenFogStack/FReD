@@ -7,13 +7,15 @@ import (
 )
 
 type authService struct {
-	n NameService
+	n           NameService
+	disableRBAC bool
 }
 
 // newAuthService creates a new authorization service.
-func newAuthService(n NameService) *authService {
+func newAuthService(n NameService, disableRBAC bool) *authService {
 	return &authService{
-		n: n,
+		n:           n,
+		disableRBAC: disableRBAC,
 	}
 }
 
@@ -50,6 +52,11 @@ func (a *authService) revokeRoles(u string, r []Role, k KeygroupName) error {
 
 func (a *authService) isAllowed(u string, m Method, k KeygroupName) (bool, error) {
 	log.Debug().Msgf("checking if user %s is allowed to perform %s on keygroup %s...", u, m, k)
+
+	if a.disableRBAC {
+		return true, nil
+	}
+
 	p, err := a.n.GetUserPermissions(u, k)
 
 	if err != nil {

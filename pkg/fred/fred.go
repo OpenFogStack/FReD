@@ -17,6 +17,7 @@ type Config struct {
 	NodeID            string
 	TriggerCert       string
 	TriggerKey        string
+	DisableRBAC       bool
 }
 
 // Fred is an instance of FReD.
@@ -84,7 +85,7 @@ func New(config *Config) (f Fred) {
 
 	t := newTriggerService(s, config.TriggerCert, config.TriggerKey)
 
-	a := newAuthService(config.NaSe)
+	a := newAuthService(config.NaSe, config.DisableRBAC)
 
 	return Fred{
 		E: newExthandler(s, r, t, a, config.NaSe),

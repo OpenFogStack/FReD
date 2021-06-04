@@ -73,6 +73,9 @@ type fredConfig struct {
 		Cert string `env:"TRIGGER_CERT"`
 		Key  string `env:"TRIGGER_KEY"`
 	}
+	Auth struct {
+		DisableRBAC bool `env:"AUTH_DISABLE_RBAC"`
+	}
 }
 
 func parseArgs() (fc fredConfig) {
@@ -127,6 +130,9 @@ func parseArgs() (fc fredConfig) {
 	flag.StringVar(&(fc.Trigger.Cert), "trigger-cert", "", "Certificate for trigger node connection. (Env: TRIGGER_CERT)")
 	flag.StringVar(&(fc.Trigger.Key), "trigger-key", "", "Key file for trigger node connection. (Env: TRIGGER_KEY)")
 	flag.Parse()
+
+	// authentication and authorization configuration
+	flag.BoolVar(&(fc.Auth.DisableRBAC), "auth-disable-rbac", false, "Disable RBAC, effectively gives all users all roles. (Env: AUTH_DISABLE_RBAC)")
 
 	// override with ENV variables
 	if err := env.Parse(&fc); err != nil {
@@ -262,6 +268,7 @@ func main() {
 		ExternalHostProxy: fc.Server.Proxy,
 		TriggerCert:       fc.Trigger.Cert,
 		TriggerKey:        fc.Trigger.Key,
+		DisableRBAC:       fc.Auth.DisableRBAC,
 	})
 
 	log.Debug().Msg("Starting Interconnection Server...")
