@@ -64,18 +64,18 @@ fi
 
 echo -e "${GREEN}No AWS access keys found!${NC}"
 
-# -------------------------------------- PREVENT PUSH TO MASTER ----------------------------------------------------
+# --------------------------------------- PREVENT PUSH TO MAIN -----------------------------------------------------
 
-echo -e "${YELLOW}Checking if you're trying to commit to master...${NC}"
+echo -e "${YELLOW}Checking if you're trying to commit to main...${NC}"
 
 branch=$(git rev-parse --abbrev-ref HEAD)
 
-if [ "$branch" = "master" ]; then
+if [ "$branch" = "main" ]; then
   echo -e "You can't commit directly to '${branch}' branch" # webstorm or intellij will show this as popup
   exit 1 # if you remove this line then it won't block commit but send message to group and on command line
 fi
 
-echo -e "${GREEN}You're not trying to commit to master!${NC}"
+echo -e "${GREEN}You're not trying to commit to main!${NC}"
 
 # ------------------------------------------- GO LINT --------------------------------------------------------------
 
