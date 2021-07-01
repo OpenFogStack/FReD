@@ -11,14 +11,17 @@ type ReplicaSuite struct {
 
 func (t *ReplicaSuite) RunTests() {
 	// Fun with replicas
-	logNodeAction(t.c.nodeA, "Adding nodeB as Replica node for KG1")
-	t.c.nodeA.AddKeygroupReplica("KG1", t.c.nodeBpeeringID, 0, false)
+	logNodeAction(t.c.nodeA, "Create keygroup KGRep")
+	t.c.nodeA.CreateKeygroup("KGRep", true, 0, false)
 
-	logNodeAction(t.c.nodeB, "Deleting the value from KG1")
-	t.c.nodeB.DeleteItem("KG1", "KG1Item", false)
+	logNodeAction(t.c.nodeA, "Adding nodeB as Replica node for KGRep")
+	t.c.nodeA.AddKeygroupReplica("KGRep", t.c.nodeBpeeringID, 0, false)
 
-	logNodeAction(t.c.nodeB, "Getting the deleted value in KG1")
-	_ = t.c.nodeB.GetItem("KG1", "KG1Item", true)
+	logNodeAction(t.c.nodeB, "Deleting the value from KGRep")
+	t.c.nodeB.DeleteItem("KGRep", "KGRepItem", false)
+
+	logNodeAction(t.c.nodeB, "Getting the deleted value in KGRep")
+	_ = t.c.nodeB.GetItem("KGRep", "KGRepItem", true)
 
 	// Test sending data between nodes
 	logNodeAction(t.c.nodeB, "Creating a new Keygroup (KGN) in nodeB, setting nodeA as Replica node")

@@ -3,6 +3,10 @@ version: "3.7"
 services:
   # this haproxy proxies between 172.26.1.101, 172.26.1.102, 172.26.1.103
   nodeAproxy:
+    depends_on:
+      - nodeA-1
+      - nodeA-2
+      - nodeA-3
     build:
       context: .
       dockerfile: haproxy.Dockerfile
@@ -18,7 +22,7 @@ services:
 
   nodeA-1:
     depends_on:
-      - nodeAproxy
+      - etcd
       - storeA
     build: ../../
     image: fred/fred:local
@@ -56,7 +60,7 @@ services:
 
   nodeA-2:
     depends_on:
-      - nodeAproxy
+      - etcd
       - storeA
     build: ../../
     image: fred/fred:local
@@ -94,7 +98,7 @@ services:
 
   nodeA-3:
     depends_on:
-      - nodeAproxy
+      - etcd
       - storeA
     build: ../../
     image: fred/fred:local

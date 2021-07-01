@@ -16,7 +16,7 @@ import (
 
 var (
 	// Wait for the user to press enter to continue
-	waitUser bool
+	waitUser *bool
 	reader   = bufio.NewReader(os.Stdin)
 )
 
@@ -31,73 +31,73 @@ func main() {
 	)
 
 	// Parse Flags
-	waitUser = *flag.Bool("wait-user", false, "wait for user input after each test")
+	waitUser = flag.Bool("wait-user", false, "wait for user input after each test")
 
-	nodeAhost := *flag.String("nodeAhost", "172.26.1.1", "host of nodeA (e.g. localhost)") // Docker: localhost
-	nodeAhttpPort := *flag.String("nodeAhttp", "9001", "port of nodeA (e.g. 9001)")        // Docker: 9002
-	nodeApeeringID := *flag.String("nodeAzmqID", "nodeA", "ZMQ Id of nodeA")
+	nodeAhost := flag.String("nodeAhost", "", "host of nodeA (e.g. localhost)") // Docker: localhost
+	nodeAhttpPort := flag.String("nodeAhttp", "", "port of nodeA (e.g. 9001)")  // Docker: 9002
+	nodeApeeringID := flag.String("nodeApeeringID", "", "Peering Id of nodeA")
 
-	nodeBhost := *flag.String("nodeBhost", "172.26.2.1", "host of nodeB (e.g. localhost)")
-	nodeBhttpPort := *flag.String("nodeBhttp", "9001", "port of nodeB (e.g. 9001)")
-	nodeBpeeringID := *flag.String("nodeBzmqID", "nodeB", "ZMQ Id of nodeB")
+	nodeBhost := flag.String("nodeBhost", "", "host of nodeB (e.g. localhost)")
+	nodeBhttpPort := flag.String("nodeBhttp", "", "port of nodeB (e.g. 9001)")
+	nodeBpeeringID := flag.String("nodeBpeeringID", "", "Peering Id of nodeB")
 
-	nodeChost := *flag.String("nodeChost", "172.26.3.1", "host of nodeC (e.g. localhost)")
-	nodeChttpPort := *flag.String("nodeChttp", "9001", "port of nodeC (e.g. 9001)")
-	nodeCpeeringID := *flag.String("nodeCzmqID", "nodeC", "ZMQ Id of nodeC")
+	nodeChost := flag.String("nodeChost", "", "host of nodeC (e.g. localhost)")
+	nodeChttpPort := flag.String("nodeChttp", "", "port of nodeC (e.g. 9001)")
+	nodeCpeeringID := flag.String("nodeCpeeringID", "", "Peering Id of nodeC")
 
-	triggerNodeHost := *flag.String("triggerNodeHost", "172.26.5.1:3333", "host of trigger node (e.g. localhost:3333)")
-	triggerNodeWSHost := *flag.String("triggerNodeWSHost", "172.26.5.1:80", "host of trigger node web server (e.g. localhost:80)")
-	triggerNodeID := *flag.String("triggerNodeID", "triggernode", "Id of trigger node")
+	triggerNodeHost := flag.String("triggerNodeHost", "", "host of trigger node (e.g. localhost:3333)")
+	triggerNodeWSHost := flag.String("triggerNodeWSHost", "", "host of trigger node web server (e.g. localhost:80)")
+	triggerNodeID := flag.String("triggerNodeID", "", "Id of trigger node")
 
-	certFile := *flag.String("cert-file", "/cert/client.crt", "Certificate to talk to FReD")
-	keyFile := *flag.String("key-file", "/cert/client.key", "Keyfile to talk to FReD")
+	certFile := flag.String("cert-file", "", "Certificate to talk to FReD")
+	keyFile := flag.String("key-file", "", "Keyfile to talk to FReD")
 
-	littleCertFile := *flag.String("little-cert-file", "/cert/littleclient.crt", "Certificate to talk to FReD as \"littleclient\"")
-	littleKeyFile := *flag.String("little-key-file", "/cert/littleclient.key", "Keyfile to talk to FReD as \"littleclient\"")
+	littleCertFile := flag.String("little-cert-file", "", "Certificate to talk to FReD as \"littleclient\"")
+	littleKeyFile := flag.String("little-key-file", "", "Keyfile to talk to FReD as \"littleclient\"")
 
-	testRange := *flag.String("test-range", "-", "Give tests to execute as a dash-separated range. Omitted start or end become the lowest or highest possible index, respectively. Default: All tests (\"-\"). Examples: 2-7, 1-, -6, -")
+	testRange := flag.String("test-range", "-", "Give tests to execute as a dash-separated range. Omitted start or end become the lowest or highest possible index, respectively. Default: All tests (\"-\"). Examples: 2-7, 1-, -6, -")
 
 	flag.Parse()
 
-	port, _ := strconv.Atoi(nodeAhttpPort)
-	nodeA := grpcclient.NewNode(nodeAhost, port, certFile, keyFile)
-	port, _ = strconv.Atoi(nodeBhttpPort)
-	nodeB := grpcclient.NewNode(nodeBhost, port, certFile, keyFile)
-	port, _ = strconv.Atoi(nodeChttpPort)
-	nodeC := grpcclient.NewNode(nodeChost, port, certFile, keyFile)
-	port, _ = strconv.Atoi(nodeAhttpPort)
-	littleClient := grpcclient.NewNode(nodeAhost, port, littleCertFile, littleKeyFile)
+	port, _ := strconv.Atoi(*nodeAhttpPort)
+	nodeA := grpcclient.NewNode(*nodeAhost, port, *certFile, *keyFile)
+	port, _ = strconv.Atoi(*nodeBhttpPort)
+	nodeB := grpcclient.NewNode(*nodeBhost, port, *certFile, *keyFile)
+	port, _ = strconv.Atoi(*nodeChttpPort)
+	nodeC := grpcclient.NewNode(*nodeChost, port, *certFile, *keyFile)
+	port, _ = strconv.Atoi(*nodeAhttpPort)
+	littleClient := grpcclient.NewNode(*nodeAhost, port, *littleCertFile, *littleKeyFile)
 
 	time.Sleep(15 * time.Second)
 
 	config := &Config{
-		waitUser: waitUser,
+		waitUser: *waitUser,
 
-		nodeAhost:      nodeAhost,
-		nodeAhttpPort:  nodeAhttpPort,
-		nodeApeeringID: nodeApeeringID,
+		nodeAhost:      *nodeAhost,
+		nodeAhttpPort:  *nodeAhttpPort,
+		nodeApeeringID: *nodeApeeringID,
 
-		nodeBhost:      nodeBhost,
-		nodeBhttpPort:  nodeBhttpPort,
-		nodeBpeeringID: nodeBpeeringID,
+		nodeBhost:      *nodeBhost,
+		nodeBhttpPort:  *nodeBhttpPort,
+		nodeBpeeringID: *nodeBpeeringID,
 
-		nodeChost:      nodeChost,
-		nodeChttpPort:  nodeChttpPort,
-		nodeCpeeringID: nodeCpeeringID,
+		nodeChost:      *nodeChost,
+		nodeChttpPort:  *nodeChttpPort,
+		nodeCpeeringID: *nodeCpeeringID,
 
-		triggerNodeHost:   triggerNodeHost,
-		triggerNodeWSHost: triggerNodeWSHost,
-		triggerNodeID:     triggerNodeID,
+		triggerNodeHost:   *triggerNodeHost,
+		triggerNodeWSHost: *triggerNodeWSHost,
+		triggerNodeID:     *triggerNodeID,
 
-		certFile: certFile,
-		keyFile:  keyFile,
+		certFile: *certFile,
+		keyFile:  *keyFile,
 
-		littleCertFile: littleCertFile,
-		littleKeyFile:  littleKeyFile,
+		littleCertFile: *littleCertFile,
+		littleKeyFile:  *littleKeyFile,
 
-		nodeA: nodeA,
-		nodeB: nodeB,
-		nodeC: nodeC,
+		nodeA:        nodeA,
+		nodeB:        nodeB,
+		nodeC:        nodeC,
 		littleClient: littleClient,
 	}
 
@@ -116,7 +116,7 @@ func main() {
 	// parse testRange, starts at 1
 	minTest := 1
 	maxTest := len(testSuites)
-	testRangeSplit := strings.Split(testRange, "-")
+	testRangeSplit := strings.Split(*testRange, "-")
 	if len(testRangeSplit[0]) > 0 {
 		minTestInput, errMin := strconv.Atoi(testRangeSplit[0])
 		if errMin == nil {
@@ -139,7 +139,7 @@ func main() {
 
 	// run tests
 	// minTest and maxTest are indexed with 1 at the beginning, but the slice starts at 0
-	for i := minTest-1; i < maxTest ; i++ {
+	for i := minTest - 1; i < maxTest; i++ {
 		testSuites[i].RunTests()
 	}
 
@@ -153,9 +153,9 @@ func main() {
 	os.Exit(totalerrors)
 }
 
-func logNodeAction(node *grpcclient.Node, action string) {
+func logNodeAction(node *grpcclient.Node, format string, a ...interface{}) {
 	wait()
-	log.Info().Str("node", node.Addr).Msg(action)
+	log.Info().Str("node", node.Addr).Msgf(format, a...)
 }
 
 func logNodeFailure(node *grpcclient.Node, expected, result string) {
@@ -165,7 +165,7 @@ func logNodeFailure(node *grpcclient.Node, expected, result string) {
 }
 
 func wait() {
-	if waitUser {
+	if *waitUser {
 		log.Info().Msg("Please press enter to continue:")
 		_, _, _ = reader.ReadLine()
 	} else {

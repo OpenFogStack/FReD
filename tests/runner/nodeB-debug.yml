@@ -6,6 +6,7 @@ services:
       context: ../../
       dockerfile: debug.Dockerfile
     depends_on:
+      - etcd
       - storeB
     image: fred/fred:local-debug
     security_opt:
