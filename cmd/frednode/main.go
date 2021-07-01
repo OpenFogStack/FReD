@@ -154,7 +154,7 @@ func parseArgs() (fc fredConfig) {
 		log.Fatal().Msgf("Given log handler %s is not one of: \"dev\", \"prod\".", fc.Log.Handler)
 	}
 
-	if fc.Log.Level != "debug" && fc.Log.Level != "info" && fc.Log.Level != "warn" && fc.Log.Level != "errors" && fc.Log.Level != "fatal" && fc.Log.Level != "panic" {
+	if fc.Log.Level != "debug" && fc.Log.Level != "info" && fc.Log.Level != "warn" && fc.Log.Level != "error" && fc.Log.Level != "fatal" && fc.Log.Level != "panic" {
 		flag.Usage()
 		log.Fatal().Msgf("Given log level %s is not one of: \"debug\", \"info\" ,\"warn\", \"error\", \"fatal\", \"panic\".", fc.Log.Level)
 	}
