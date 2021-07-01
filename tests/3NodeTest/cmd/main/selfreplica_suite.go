@@ -16,7 +16,7 @@ func (t *SelfReplicaSuite) RunTests() {
 	t.c.nodeB.PutItem("pulltest", "item2", "val2", false)
 
 	logNodeAction(t.c.nodeA, "add nodeA as a replica to that keygroup and see if it pulls the needed data on its own (sleep 3s)")
-	t.c.nodeA.AddKeygroupReplica("pulltest", t.c.nodeApeeringID, 0, false)
+	t.c.nodeA.AddKeygroupReplica("pulltest", t.c.nodeA.ID, 0, false)
 	time.Sleep(3 * time.Second)
 	// check if the items exist
 	if res := t.c.nodeA.GetItem("pulltest", "item1", false); res != "val1" {

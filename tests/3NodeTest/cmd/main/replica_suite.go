@@ -15,7 +15,7 @@ func (t *ReplicaSuite) RunTests() {
 	t.c.nodeA.CreateKeygroup("KGRep", true, 0, false)
 
 	logNodeAction(t.c.nodeA, "Adding nodeB as Replica node for KGRep")
-	t.c.nodeA.AddKeygroupReplica("KGRep", t.c.nodeBpeeringID, 0, false)
+	t.c.nodeA.AddKeygroupReplica("KGRep", t.c.nodeB.ID, 0, false)
 
 	logNodeAction(t.c.nodeB, "Deleting the value from KGRep")
 	t.c.nodeB.DeleteItem("KGRep", "KGRepItem", false)
@@ -26,7 +26,7 @@ func (t *ReplicaSuite) RunTests() {
 	// Test sending data between nodes
 	logNodeAction(t.c.nodeB, "Creating a new Keygroup (KGN) in nodeB, setting nodeA as Replica node")
 	t.c.nodeB.CreateKeygroup("KGN", true, 0, false)
-	t.c.nodeB.AddKeygroupReplica("KGN", t.c.nodeApeeringID, 0, false)
+	t.c.nodeB.AddKeygroupReplica("KGN", t.c.nodeA.ID, 0, false)
 
 	logNodeAction(t.c.nodeB, "Putting something in KGN on nodeB, testing whether nodeA gets Replica (sleep 1.5s in between)")
 	t.c.nodeB.PutItem("KGN", "Item", "Value", false)
@@ -45,18 +45,18 @@ func (t *ReplicaSuite) RunTests() {
 	}
 
 	logNodeAction(t.c.nodeA, "Adding a replica for a nonexisting Keygroup")
-	t.c.nodeA.AddKeygroupReplica("trololololo", t.c.nodeBpeeringID, 0, true)
+	t.c.nodeA.AddKeygroupReplica("trololololo", t.c.nodeB.ID, 0, true)
 
 	logNodeAction(t.c.nodeC, "Creating an already existing keygroup with another node")
 	t.c.nodeC.CreateKeygroup("KGN", true, 0, true)
 
 	logNodeAction(t.c.nodeC, "Telling a node that is not part of the keygroup that it is now part of that keygroup")
-	t.c.nodeC.AddKeygroupReplica("KGN", t.c.nodeCpeeringID, 0, false)
+	t.c.nodeC.AddKeygroupReplica("KGN", t.c.nodeC.ID, 0, false)
 
 	logNodeAction(t.c.nodeA, "Creating a new Keygroup (kgall) with all three nodes as replica")
 	t.c.nodeA.CreateKeygroup("kgall", true, 0, false)
-	t.c.nodeA.AddKeygroupReplica("kgall", t.c.nodeBpeeringID, 0, false)
-	t.c.nodeB.AddKeygroupReplica("kgall", t.c.nodeCpeeringID, 0, false)
+	t.c.nodeA.AddKeygroupReplica("kgall", t.c.nodeB.ID, 0, false)
+	t.c.nodeB.AddKeygroupReplica("kgall", t.c.nodeC.ID, 0, false)
 
 	logNodeAction(t.c.nodeC, "... sending data to one node, checking whether all nodes get the replica (sleep 1.5s)")
 	t.c.nodeC.PutItem("kgall", "item", "value", false)
@@ -69,14 +69,14 @@ func (t *ReplicaSuite) RunTests() {
 	}
 
 	logNodeAction(t.c.nodeB, "...removing node from the keygroup all and checking whether it still has the data (sleep 1.5s)")
-	t.c.nodeB.DeleteKeygroupReplica("kgall", t.c.nodeBpeeringID, false)
+	t.c.nodeB.DeleteKeygroupReplica("kgall", t.c.nodeB.ID, false)
 	time.Sleep(1500 * time.Millisecond)
 	respB = t.c.nodeB.GetItem("kgall", "item", true)
 
 	logNodeAction(t.c.nodeB, fmt.Sprintf("Got Response %s", respB))
 
 	logNodeAction(t.c.nodeB, "...re-adding the node to the keygroup all and checking whether it now gets the data (sleep 1.5s)")
-	t.c.nodeA.AddKeygroupReplica("kgall", t.c.nodeBpeeringID, 0, false)
+	t.c.nodeA.AddKeygroupReplica("kgall", t.c.nodeB.ID, 0, false)
 	time.Sleep(1500 * time.Millisecond)
 	respA = t.c.nodeA.GetItem("kgall", "item", false)
 
@@ -94,11 +94,11 @@ func (t *ReplicaSuite) RunTests() {
 	logNodeAction(t.c.nodeA, "Preparing to delete all members from a keygroup...")
 	t.c.nodeA.CreateKeygroup("deletetest", true, 0, false)
 	t.c.nodeA.PutItem("deletetest", "item", "value", false)
-	t.c.nodeA.AddKeygroupReplica("deletetest", t.c.nodeBpeeringID, 0, false)
-	t.c.nodeA.DeleteKeygroupReplica("deletetest", t.c.nodeApeeringID, false)
+	t.c.nodeA.AddKeygroupReplica("deletetest", t.c.nodeB.ID, 0, false)
+	t.c.nodeA.DeleteKeygroupReplica("deletetest", t.c.nodeA.ID, false)
 	// NodeB is the only replica left
 	logNodeAction(t.c.nodeB, "Removing last member of a keygroup delete-test")
-	t.c.nodeB.DeleteKeygroupReplica("deletetest", t.c.nodeBpeeringID, true)
+	t.c.nodeB.DeleteKeygroupReplica("deletetest", t.c.nodeB.ID, true)
 }
 
 func NewReplicaSuite(c *Config) *ReplicaSuite {

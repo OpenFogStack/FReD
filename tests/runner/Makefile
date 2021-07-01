@@ -1,4 +1,4 @@
-.PHONY: all clean 3nodetest 3nodetest-debug-nodeB 3n-all 3n-standard 3n-replica 3n-trigger 3n-immutable 3n-expiry 3n-selfreplica 3n-auth fred failtest alexandra
+.PHONY: all clean 3nodetest 3nodetest-debug-nodeB 3n-all 3n-standard 3n-replica 3n-trigger 3n-immutable 3n-expiry 3n-selfreplica 3n-auth 3n-concurrency fred failtest alexandra
 
 all: clean 3n-all clean
 
@@ -14,7 +14,8 @@ clean: ## clean up all resources
 3n-expiry: export TEST_RANGE = 5-5
 3n-selfreplica: export TEST_RANGE = 6-6
 3n-auth: export TEST_RANGE = 7-7
-3n-all 3n-standard 3n-replica 3n-trigger 3n-immutable 3n-expiry 3n-selfreplica 3n-auth: 3nodetest
+3n-concurrency: export TEST_RANGE = 8-8
+3n-all 3n-standard 3n-replica 3n-trigger 3n-immutable 3n-expiry 3n-selfreplica 3n-auth 3n-concurrency: 3nodetest
 
 3nodetest: clean ## start all containers with docker compose and run the test dockerized
 	@docker network create fredwork --gateway 172.26.0.1 --subnet 172.26.0.0/16 || true

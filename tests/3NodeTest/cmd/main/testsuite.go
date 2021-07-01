@@ -13,17 +13,14 @@ type TestSuite interface {
 type Config struct {
 	waitUser bool
 
-	nodeAhost      string
-	nodeAhttpPort  string
-	nodeApeeringID string
+	nodeAhost     string
+	nodeAhttpPort string
 
-	nodeBhost      string
-	nodeBhttpPort  string
-	nodeBpeeringID string
+	nodeBhost     string
+	nodeBhttpPort string
 
-	nodeChost      string
-	nodeChttpPort  string
-	nodeCpeeringID string
+	nodeChost     string
+	nodeChttpPort string
 
 	triggerNodeHost   string
 	triggerNodeWSHost string
@@ -35,8 +32,8 @@ type Config struct {
 	littleCertFile string
 	littleKeyFile  string
 
-	nodeA 		 *grpcclient.Node
-	nodeB 		 *grpcclient.Node
-	nodeC 		 *grpcclient.Node
+	nodeA        *grpcclient.Node
+	nodeB        *grpcclient.Node
+	nodeC        *grpcclient.Node
 	littleClient *grpcclient.Node
 }

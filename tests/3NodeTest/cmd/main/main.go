@@ -60,30 +60,27 @@ func main() {
 	flag.Parse()
 
 	port, _ := strconv.Atoi(*nodeAhttpPort)
-	nodeA := grpcclient.NewNode(*nodeAhost, port, *certFile, *keyFile)
+	nodeA := grpcclient.NewNode(*nodeAhost, port, *nodeApeeringID, *certFile, *keyFile)
 	port, _ = strconv.Atoi(*nodeBhttpPort)
-	nodeB := grpcclient.NewNode(*nodeBhost, port, *certFile, *keyFile)
+	nodeB := grpcclient.NewNode(*nodeBhost, port, *nodeBpeeringID, *certFile, *keyFile)
 	port, _ = strconv.Atoi(*nodeChttpPort)
-	nodeC := grpcclient.NewNode(*nodeChost, port, *certFile, *keyFile)
+	nodeC := grpcclient.NewNode(*nodeChost, port, *nodeCpeeringID, *certFile, *keyFile)
 	port, _ = strconv.Atoi(*nodeAhttpPort)
-	littleClient := grpcclient.NewNode(*nodeAhost, port, *littleCertFile, *littleKeyFile)
+	littleClient := grpcclient.NewNode(*nodeAhost, port, *nodeApeeringID, *littleCertFile, *littleKeyFile)
 
 	time.Sleep(15 * time.Second)
 
 	config := &Config{
 		waitUser: *waitUser,
 
-		nodeAhost:      *nodeAhost,
-		nodeAhttpPort:  *nodeAhttpPort,
-		nodeApeeringID: *nodeApeeringID,
+		nodeAhost:     *nodeAhost,
+		nodeAhttpPort: *nodeAhttpPort,
 
-		nodeBhost:      *nodeBhost,
-		nodeBhttpPort:  *nodeBhttpPort,
-		nodeBpeeringID: *nodeBpeeringID,
+		nodeBhost:     *nodeBhost,
+		nodeBhttpPort: *nodeBhttpPort,
 
-		nodeChost:      *nodeChost,
-		nodeChttpPort:  *nodeChttpPort,
-		nodeCpeeringID: *nodeCpeeringID,
+		nodeChost:     *nodeChost,
+		nodeChttpPort: *nodeChttpPort,
 
 		triggerNodeHost:   *triggerNodeHost,
 		triggerNodeWSHost: *triggerNodeWSHost,
@@ -102,7 +99,7 @@ func main() {
 	}
 
 	// to add a test suite, increase the size by one and add the instance of the suite to the slice
-	testSuites := make([]TestSuite, 7)
+	testSuites := make([]TestSuite, 8)
 
 	// initiate test suites
 	testSuites[0] = NewStandardSuite(config)
@@ -112,6 +109,7 @@ func main() {
 	testSuites[4] = NewExpirySuite(config)
 	testSuites[5] = NewSelfReplicaSuite(config)
 	testSuites[6] = NewAuthenticationSuite(config)
+	testSuites[7] = NewConcurrencySuite(config)
 
 	// parse testRange, starts at 1
 	minTest := 1
@@ -155,12 +153,12 @@ func main() {
 
 func logNodeAction(node *grpcclient.Node, format string, a ...interface{}) {
 	wait()
-	log.Info().Str("node", node.Addr).Msgf(format, a...)
+	log.Info().Str("node", node.ID).Msgf(format, a...)
 }
 
 func logNodeFailure(node *grpcclient.Node, expected, result string) {
 	wait()
-	log.Warn().Str("node", node.Addr).Msgf("expected: %s, but got: %#v", expected, result)
+	log.Warn().Str("node", node.ID).Msgf("expected: %s, but got: %#v", expected, result)
 	node.Errors++
 }
 

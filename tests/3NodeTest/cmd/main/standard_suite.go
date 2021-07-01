@@ -59,21 +59,21 @@ func (t *StandardSuite) RunTests() {
 		logNodeFailure(t.c.nodeA, "GetAllReplica returns 3 nodes", fmt.Sprintf("%d", len(parsed)))
 	}
 
-	addr, ok := parsed[t.c.nodeApeeringID]
+	addr, ok := parsed[t.c.nodeA.ID]
 	if !ok {
 		logNodeFailure(t.c.nodeA, "GetAllReplica response contains nodeA", "nodeA not found")
 	} else if addr != fmt.Sprintf("%s:%s", t.c.nodeAhost, t.c.nodeAhttpPort) {
 		logNodeFailure(t.c.nodeA, "nodeA address is "+fmt.Sprintf("%s:%s", t.c.nodeAhost, t.c.nodeAhttpPort), addr)
 	}
 
-	addr, ok = parsed[t.c.nodeBpeeringID]
+	addr, ok = parsed[t.c.nodeB.ID]
 	if !ok {
 		logNodeFailure(t.c.nodeA, "GetAllReplica response contains nodeB", "nodeB not found")
 	} else if addr != fmt.Sprintf("%s:%s", t.c.nodeBhost, t.c.nodeBhttpPort) {
 		logNodeFailure(t.c.nodeA, "nodeB address is "+fmt.Sprintf("%s:%s", t.c.nodeBhost, t.c.nodeBhttpPort), addr)
 	}
 
-	addr, ok = parsed[t.c.nodeCpeeringID]
+	addr, ok = parsed[t.c.nodeC.ID]
 	if !ok {
 		logNodeFailure(t.c.nodeA, "GetAllReplica response contains nodeC", "nodeC not found")
 	} else if addr != fmt.Sprintf("%s:%s", t.c.nodeChost, t.c.nodeChttpPort) {

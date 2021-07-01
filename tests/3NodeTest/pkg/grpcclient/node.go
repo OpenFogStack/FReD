@@ -14,13 +14,14 @@ import (
 // Node represents the API to a single FReD Node
 type Node struct {
 	Errors int
+	ID     string
 	Client client.ClientClient
 	conn   *grpc.ClientConn
 	Addr   string
 }
 
 // NewNode creates a new Node that represents a connection to a single fred instance
-func NewNode(addr string, port int, certFile, keyFile string) *Node {
+func NewNode(addr string, port int, id string, certFile, keyFile string) *Node {
 
 	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 
@@ -48,6 +49,7 @@ func NewNode(addr string, port int, certFile, keyFile string) *Node {
 	return &Node{
 		Errors: 0,
 		Client: c,
+		ID:     id,
 		conn:   conn,
 		Addr:   addr,
 	}

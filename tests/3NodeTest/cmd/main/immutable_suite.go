@@ -30,7 +30,7 @@ func (t *ImmutableSuite) RunTests() {
 	t.c.nodeB.DeleteItem("log", "testitem", true)
 
 	logNodeAction(t.c.nodeB, "Adding nodeC as replica to immutable keygroup")
-	t.c.nodeB.AddKeygroupReplica("log", t.c.nodeCpeeringID, 0, false)
+	t.c.nodeB.AddKeygroupReplica("log", t.c.nodeC.ID, 0, false)
 
 	logNodeAction(t.c.nodeC, "Updating immutable item on other nodeC")
 	t.c.nodeC.PutItem("log", "testitem", "value-3", true)
