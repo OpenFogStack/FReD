@@ -28,7 +28,7 @@ func (t *AuthenticationSuite) RunTests() {
 	t.c.nodeA.AddUser("littleclient", "rbactest", "ConfigureReplica", false)
 
 	logNodeAction(t.c.nodeA, "add replica nodeB to keygroup with little client -> should work")
-	t.c.littleClient.AddKeygroupReplica("rbactest", t.c.nodeBpeeringID, 0, false)
+	t.c.littleClient.AddKeygroupReplica("rbactest", t.c.nodeB.ID, 0, false)
 
 	logNodeAction(t.c.nodeB, "remove permission to read from keygroup -> should work")
 	t.c.nodeB.RemoveUser("littleclient", "rbactest", "ReadKeygroup", false)

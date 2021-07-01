@@ -14,7 +14,7 @@ func (t *ExpirySuite) RunTests() {
 	t.c.nodeC.CreateKeygroup("expirytest", true, 0, false)
 
 	logNodeAction(t.c.nodeC, "Add nodeA as replica with expiry of 5s")
-	t.c.nodeC.AddKeygroupReplica("expirytest", t.c.nodeApeeringID, 5, false)
+	t.c.nodeC.AddKeygroupReplica("expirytest", t.c.nodeA.ID, 5, false)
 
 	logNodeAction(t.c.nodeC, "Update something on nodeC")
 	t.c.nodeC.PutItem("expirytest", "test", "test", false)

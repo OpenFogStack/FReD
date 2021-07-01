@@ -38,7 +38,7 @@ func (t *TriggerSuite) RunTests() {
 	t.c.nodeA.PutItem("nottriggertesting", "item3", "value3", false)
 	//add keygroup to nodeB as well
 	logNodeAction(t.c.nodeA, "add keygroup triggertesting to nodeB as well")
-	t.c.nodeA.AddKeygroupReplica("triggertesting", t.c.nodeBpeeringID, 0, false)
+	t.c.nodeA.AddKeygroupReplica("triggertesting", t.c.nodeB.ID, 0, false)
 	//post item4 to nodeB
 	logNodeAction(t.c.nodeB, "post item4 to nodeB in keygroup triggertesting")
 	t.c.nodeB.PutItem("triggertesting", "item4", "value4", false)
