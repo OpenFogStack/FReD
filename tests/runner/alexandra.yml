@@ -12,7 +12,12 @@ services:
       dockerfile: alexandra.Dockerfile
     image: fred/alexandra:local
     container_name: alexandra
-    command: --lighthouse 172.26.2.1:9001 --ca-cert /cert/ca.crt --alexandra-key /cert/alexandra.key --alexandra-cert /cert/alexandra.crt --clients-key /cert/alexandra.key --clients-cert /cert/alexandra.crt
+    command: "--lighthouse 172.26.2.1:9001 \
+      --ca-cert /cert/ca.crt \
+      --alexandra-key /cert/alexandra.key \
+      --alexandra-cert /cert/alexandra.crt \
+      --clients-key /cert/alexandra.key \
+      --clients-cert /cert/alexandra.crt"
     volumes:
       - ../../nase/tls/alexandra.crt:/cert/alexandra.crt
       - ../../nase/tls/alexandra.key:/cert/alexandra.key

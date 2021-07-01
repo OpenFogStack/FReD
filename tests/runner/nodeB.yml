@@ -4,6 +4,7 @@ services:
   nodeB:
     build: ../../
     depends_on:
+      - etcd
       - storeB
     image: fred/fred:local
     container_name: nodeB
