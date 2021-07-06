@@ -15,7 +15,7 @@ type ClientsMgr struct {
 }
 
 type Client struct {
-	client alexandraProto.ClientClient
+	client alexandraProto.MiddlewareClient
 	conn   *grpc.ClientConn
 }
 
@@ -55,8 +55,8 @@ func newClient(host, certFile, keyFile string) *Client {
 
 	if err != nil {
 		log.Fatal().Err(err).Msgf("Cannot create Grpc connection to client %s", host)
-		return &Client{client: alexandraProto.NewClientClient(conn)}
+		return &Client{client: alexandraProto.NewMiddlewareClient(conn)}
 	}
 	log.Info().Msgf("Creating a connection to fred node: %s", host)
-	return &Client{client: alexandraProto.NewClientClient(conn), conn: conn}
+	return &Client{client: alexandraProto.NewMiddlewareClient(conn), conn: conn}
 }

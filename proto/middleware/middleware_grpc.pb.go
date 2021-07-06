@@ -14,10 +14,10 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// ClientClient is the client API for Client service.
+// MiddlewareClient is the client API for Middleware service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type ClientClient interface {
+type MiddlewareClient interface {
 	CreateKeygroup(ctx context.Context, in *CreateKeygroupRequest, opts ...grpc.CallOption) (*StatusResponse, error)
 	DeleteKeygroup(ctx context.Context, in *DeleteKeygroupRequest, opts ...grpc.CallOption) (*StatusResponse, error)
 	Read(ctx context.Context, in *ReadRequest, opts ...grpc.CallOption) (*ReadResponse, error)
@@ -36,162 +36,162 @@ type ClientClient interface {
 	RemoveUser(ctx context.Context, in *UserRequest, opts ...grpc.CallOption) (*StatusResponse, error)
 }
 
-type clientClient struct {
+type middlewareClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewClientClient(cc grpc.ClientConnInterface) ClientClient {
-	return &clientClient{cc}
+func NewMiddlewareClient(cc grpc.ClientConnInterface) MiddlewareClient {
+	return &middlewareClient{cc}
 }
 
-func (c *clientClient) CreateKeygroup(ctx context.Context, in *CreateKeygroupRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
+func (c *middlewareClient) CreateKeygroup(ctx context.Context, in *CreateKeygroupRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
 	out := new(StatusResponse)
-	err := c.cc.Invoke(ctx, "/mcc.fred.client.Client/CreateKeygroup", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/mcc.fred.middleware.Middleware/CreateKeygroup", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *clientClient) DeleteKeygroup(ctx context.Context, in *DeleteKeygroupRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
+func (c *middlewareClient) DeleteKeygroup(ctx context.Context, in *DeleteKeygroupRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
 	out := new(StatusResponse)
-	err := c.cc.Invoke(ctx, "/mcc.fred.client.Client/DeleteKeygroup", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/mcc.fred.middleware.Middleware/DeleteKeygroup", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *clientClient) Read(ctx context.Context, in *ReadRequest, opts ...grpc.CallOption) (*ReadResponse, error) {
+func (c *middlewareClient) Read(ctx context.Context, in *ReadRequest, opts ...grpc.CallOption) (*ReadResponse, error) {
 	out := new(ReadResponse)
-	err := c.cc.Invoke(ctx, "/mcc.fred.client.Client/Read", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/mcc.fred.middleware.Middleware/Read", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *clientClient) Update(ctx context.Context, in *UpdateRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
+func (c *middlewareClient) Update(ctx context.Context, in *UpdateRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
 	out := new(StatusResponse)
-	err := c.cc.Invoke(ctx, "/mcc.fred.client.Client/Update", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/mcc.fred.middleware.Middleware/Update", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *clientClient) Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
+func (c *middlewareClient) Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
 	out := new(StatusResponse)
-	err := c.cc.Invoke(ctx, "/mcc.fred.client.Client/Delete", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/mcc.fred.middleware.Middleware/Delete", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *clientClient) Append(ctx context.Context, in *AppendRequest, opts ...grpc.CallOption) (*AppendResponse, error) {
+func (c *middlewareClient) Append(ctx context.Context, in *AppendRequest, opts ...grpc.CallOption) (*AppendResponse, error) {
 	out := new(AppendResponse)
-	err := c.cc.Invoke(ctx, "/mcc.fred.client.Client/Append", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/mcc.fred.middleware.Middleware/Append", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *clientClient) AddReplica(ctx context.Context, in *AddReplicaRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
+func (c *middlewareClient) AddReplica(ctx context.Context, in *AddReplicaRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
 	out := new(StatusResponse)
-	err := c.cc.Invoke(ctx, "/mcc.fred.client.Client/AddReplica", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/mcc.fred.middleware.Middleware/AddReplica", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *clientClient) GetKeygroupReplica(ctx context.Context, in *GetKeygroupReplicaRequest, opts ...grpc.CallOption) (*GetKeygroupReplicaResponse, error) {
+func (c *middlewareClient) GetKeygroupReplica(ctx context.Context, in *GetKeygroupReplicaRequest, opts ...grpc.CallOption) (*GetKeygroupReplicaResponse, error) {
 	out := new(GetKeygroupReplicaResponse)
-	err := c.cc.Invoke(ctx, "/mcc.fred.client.Client/GetKeygroupReplica", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/mcc.fred.middleware.Middleware/GetKeygroupReplica", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *clientClient) RemoveReplica(ctx context.Context, in *RemoveReplicaRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
+func (c *middlewareClient) RemoveReplica(ctx context.Context, in *RemoveReplicaRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
 	out := new(StatusResponse)
-	err := c.cc.Invoke(ctx, "/mcc.fred.client.Client/RemoveReplica", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/mcc.fred.middleware.Middleware/RemoveReplica", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *clientClient) GetReplica(ctx context.Context, in *GetReplicaRequest, opts ...grpc.CallOption) (*GetReplicaResponse, error) {
+func (c *middlewareClient) GetReplica(ctx context.Context, in *GetReplicaRequest, opts ...grpc.CallOption) (*GetReplicaResponse, error) {
 	out := new(GetReplicaResponse)
-	err := c.cc.Invoke(ctx, "/mcc.fred.client.Client/GetReplica", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/mcc.fred.middleware.Middleware/GetReplica", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *clientClient) GetAllReplica(ctx context.Context, in *GetAllReplicaRequest, opts ...grpc.CallOption) (*GetAllReplicaResponse, error) {
+func (c *middlewareClient) GetAllReplica(ctx context.Context, in *GetAllReplicaRequest, opts ...grpc.CallOption) (*GetAllReplicaResponse, error) {
 	out := new(GetAllReplicaResponse)
-	err := c.cc.Invoke(ctx, "/mcc.fred.client.Client/GetAllReplica", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/mcc.fred.middleware.Middleware/GetAllReplica", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *clientClient) GetKeygroupTriggers(ctx context.Context, in *GetKeygroupTriggerRequest, opts ...grpc.CallOption) (*GetKeygroupTriggerResponse, error) {
+func (c *middlewareClient) GetKeygroupTriggers(ctx context.Context, in *GetKeygroupTriggerRequest, opts ...grpc.CallOption) (*GetKeygroupTriggerResponse, error) {
 	out := new(GetKeygroupTriggerResponse)
-	err := c.cc.Invoke(ctx, "/mcc.fred.client.Client/GetKeygroupTriggers", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/mcc.fred.middleware.Middleware/GetKeygroupTriggers", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *clientClient) AddTrigger(ctx context.Context, in *AddTriggerRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
+func (c *middlewareClient) AddTrigger(ctx context.Context, in *AddTriggerRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
 	out := new(StatusResponse)
-	err := c.cc.Invoke(ctx, "/mcc.fred.client.Client/AddTrigger", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/mcc.fred.middleware.Middleware/AddTrigger", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *clientClient) RemoveTrigger(ctx context.Context, in *RemoveTriggerRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
+func (c *middlewareClient) RemoveTrigger(ctx context.Context, in *RemoveTriggerRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
 	out := new(StatusResponse)
-	err := c.cc.Invoke(ctx, "/mcc.fred.client.Client/RemoveTrigger", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/mcc.fred.middleware.Middleware/RemoveTrigger", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *clientClient) AddUser(ctx context.Context, in *UserRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
+func (c *middlewareClient) AddUser(ctx context.Context, in *UserRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
 	out := new(StatusResponse)
-	err := c.cc.Invoke(ctx, "/mcc.fred.client.Client/AddUser", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/mcc.fred.middleware.Middleware/AddUser", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *clientClient) RemoveUser(ctx context.Context, in *UserRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
+func (c *middlewareClient) RemoveUser(ctx context.Context, in *UserRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
 	out := new(StatusResponse)
-	err := c.cc.Invoke(ctx, "/mcc.fred.client.Client/RemoveUser", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/mcc.fred.middleware.Middleware/RemoveUser", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// ClientServer is the server API for Client service.
-// All implementations should embed UnimplementedClientServer
+// MiddlewareServer is the server API for Middleware service.
+// All implementations should embed UnimplementedMiddlewareServer
 // for forward compatibility
-type ClientServer interface {
+type MiddlewareServer interface {
 	CreateKeygroup(context.Context, *CreateKeygroupRequest) (*StatusResponse, error)
 	DeleteKeygroup(context.Context, *DeleteKeygroupRequest) (*StatusResponse, error)
 	Read(context.Context, *ReadRequest) (*ReadResponse, error)
@@ -210,428 +210,428 @@ type ClientServer interface {
 	RemoveUser(context.Context, *UserRequest) (*StatusResponse, error)
 }
 
-// UnimplementedClientServer should be embedded to have forward compatible implementations.
-type UnimplementedClientServer struct {
+// UnimplementedMiddlewareServer should be embedded to have forward compatible implementations.
+type UnimplementedMiddlewareServer struct {
 }
 
-func (UnimplementedClientServer) CreateKeygroup(context.Context, *CreateKeygroupRequest) (*StatusResponse, error) {
+func (UnimplementedMiddlewareServer) CreateKeygroup(context.Context, *CreateKeygroupRequest) (*StatusResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateKeygroup not implemented")
 }
-func (UnimplementedClientServer) DeleteKeygroup(context.Context, *DeleteKeygroupRequest) (*StatusResponse, error) {
+func (UnimplementedMiddlewareServer) DeleteKeygroup(context.Context, *DeleteKeygroupRequest) (*StatusResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteKeygroup not implemented")
 }
-func (UnimplementedClientServer) Read(context.Context, *ReadRequest) (*ReadResponse, error) {
+func (UnimplementedMiddlewareServer) Read(context.Context, *ReadRequest) (*ReadResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Read not implemented")
 }
-func (UnimplementedClientServer) Update(context.Context, *UpdateRequest) (*StatusResponse, error) {
+func (UnimplementedMiddlewareServer) Update(context.Context, *UpdateRequest) (*StatusResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
 }
-func (UnimplementedClientServer) Delete(context.Context, *DeleteRequest) (*StatusResponse, error) {
+func (UnimplementedMiddlewareServer) Delete(context.Context, *DeleteRequest) (*StatusResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
 }
-func (UnimplementedClientServer) Append(context.Context, *AppendRequest) (*AppendResponse, error) {
+func (UnimplementedMiddlewareServer) Append(context.Context, *AppendRequest) (*AppendResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Append not implemented")
 }
-func (UnimplementedClientServer) AddReplica(context.Context, *AddReplicaRequest) (*StatusResponse, error) {
+func (UnimplementedMiddlewareServer) AddReplica(context.Context, *AddReplicaRequest) (*StatusResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddReplica not implemented")
 }
-func (UnimplementedClientServer) GetKeygroupReplica(context.Context, *GetKeygroupReplicaRequest) (*GetKeygroupReplicaResponse, error) {
+func (UnimplementedMiddlewareServer) GetKeygroupReplica(context.Context, *GetKeygroupReplicaRequest) (*GetKeygroupReplicaResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetKeygroupReplica not implemented")
 }
-func (UnimplementedClientServer) RemoveReplica(context.Context, *RemoveReplicaRequest) (*StatusResponse, error) {
+func (UnimplementedMiddlewareServer) RemoveReplica(context.Context, *RemoveReplicaRequest) (*StatusResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveReplica not implemented")
 }
-func (UnimplementedClientServer) GetReplica(context.Context, *GetReplicaRequest) (*GetReplicaResponse, error) {
+func (UnimplementedMiddlewareServer) GetReplica(context.Context, *GetReplicaRequest) (*GetReplicaResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetReplica not implemented")
 }
-func (UnimplementedClientServer) GetAllReplica(context.Context, *GetAllReplicaRequest) (*GetAllReplicaResponse, error) {
+func (UnimplementedMiddlewareServer) GetAllReplica(context.Context, *GetAllReplicaRequest) (*GetAllReplicaResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAllReplica not implemented")
 }
-func (UnimplementedClientServer) GetKeygroupTriggers(context.Context, *GetKeygroupTriggerRequest) (*GetKeygroupTriggerResponse, error) {
+func (UnimplementedMiddlewareServer) GetKeygroupTriggers(context.Context, *GetKeygroupTriggerRequest) (*GetKeygroupTriggerResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetKeygroupTriggers not implemented")
 }
-func (UnimplementedClientServer) AddTrigger(context.Context, *AddTriggerRequest) (*StatusResponse, error) {
+func (UnimplementedMiddlewareServer) AddTrigger(context.Context, *AddTriggerRequest) (*StatusResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddTrigger not implemented")
 }
-func (UnimplementedClientServer) RemoveTrigger(context.Context, *RemoveTriggerRequest) (*StatusResponse, error) {
+func (UnimplementedMiddlewareServer) RemoveTrigger(context.Context, *RemoveTriggerRequest) (*StatusResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveTrigger not implemented")
 }
-func (UnimplementedClientServer) AddUser(context.Context, *UserRequest) (*StatusResponse, error) {
+func (UnimplementedMiddlewareServer) AddUser(context.Context, *UserRequest) (*StatusResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddUser not implemented")
 }
-func (UnimplementedClientServer) RemoveUser(context.Context, *UserRequest) (*StatusResponse, error) {
+func (UnimplementedMiddlewareServer) RemoveUser(context.Context, *UserRequest) (*StatusResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveUser not implemented")
 }
 
-// UnsafeClientServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to ClientServer will
+// UnsafeMiddlewareServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to MiddlewareServer will
 // result in compilation errors.
-type UnsafeClientServer interface {
-	mustEmbedUnimplementedClientServer()
+type UnsafeMiddlewareServer interface {
+	mustEmbedUnimplementedMiddlewareServer()
 }
 
-func RegisterClientServer(s grpc.ServiceRegistrar, srv ClientServer) {
-	s.RegisterService(&Client_ServiceDesc, srv)
+func RegisterMiddlewareServer(s grpc.ServiceRegistrar, srv MiddlewareServer) {
+	s.RegisterService(&Middleware_ServiceDesc, srv)
 }
 
-func _Client_CreateKeygroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Middleware_CreateKeygroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateKeygroupRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClientServer).CreateKeygroup(ctx, in)
+		return srv.(MiddlewareServer).CreateKeygroup(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/mcc.fred.client.Client/CreateKeygroup",
+		FullMethod: "/mcc.fred.middleware.Middleware/CreateKeygroup",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServer).CreateKeygroup(ctx, req.(*CreateKeygroupRequest))
+		return srv.(MiddlewareServer).CreateKeygroup(ctx, req.(*CreateKeygroupRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Client_DeleteKeygroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Middleware_DeleteKeygroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DeleteKeygroupRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClientServer).DeleteKeygroup(ctx, in)
+		return srv.(MiddlewareServer).DeleteKeygroup(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/mcc.fred.client.Client/DeleteKeygroup",
+		FullMethod: "/mcc.fred.middleware.Middleware/DeleteKeygroup",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServer).DeleteKeygroup(ctx, req.(*DeleteKeygroupRequest))
+		return srv.(MiddlewareServer).DeleteKeygroup(ctx, req.(*DeleteKeygroupRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Client_Read_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Middleware_Read_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ReadRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClientServer).Read(ctx, in)
+		return srv.(MiddlewareServer).Read(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/mcc.fred.client.Client/Read",
+		FullMethod: "/mcc.fred.middleware.Middleware/Read",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServer).Read(ctx, req.(*ReadRequest))
+		return srv.(MiddlewareServer).Read(ctx, req.(*ReadRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Client_Update_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Middleware_Update_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClientServer).Update(ctx, in)
+		return srv.(MiddlewareServer).Update(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/mcc.fred.client.Client/Update",
+		FullMethod: "/mcc.fred.middleware.Middleware/Update",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServer).Update(ctx, req.(*UpdateRequest))
+		return srv.(MiddlewareServer).Update(ctx, req.(*UpdateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Client_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Middleware_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DeleteRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClientServer).Delete(ctx, in)
+		return srv.(MiddlewareServer).Delete(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/mcc.fred.client.Client/Delete",
+		FullMethod: "/mcc.fred.middleware.Middleware/Delete",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServer).Delete(ctx, req.(*DeleteRequest))
+		return srv.(MiddlewareServer).Delete(ctx, req.(*DeleteRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Client_Append_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Middleware_Append_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AppendRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClientServer).Append(ctx, in)
+		return srv.(MiddlewareServer).Append(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/mcc.fred.client.Client/Append",
+		FullMethod: "/mcc.fred.middleware.Middleware/Append",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServer).Append(ctx, req.(*AppendRequest))
+		return srv.(MiddlewareServer).Append(ctx, req.(*AppendRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Client_AddReplica_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Middleware_AddReplica_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AddReplicaRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClientServer).AddReplica(ctx, in)
+		return srv.(MiddlewareServer).AddReplica(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/mcc.fred.client.Client/AddReplica",
+		FullMethod: "/mcc.fred.middleware.Middleware/AddReplica",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServer).AddReplica(ctx, req.(*AddReplicaRequest))
+		return srv.(MiddlewareServer).AddReplica(ctx, req.(*AddReplicaRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Client_GetKeygroupReplica_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Middleware_GetKeygroupReplica_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetKeygroupReplicaRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClientServer).GetKeygroupReplica(ctx, in)
+		return srv.(MiddlewareServer).GetKeygroupReplica(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/mcc.fred.client.Client/GetKeygroupReplica",
+		FullMethod: "/mcc.fred.middleware.Middleware/GetKeygroupReplica",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServer).GetKeygroupReplica(ctx, req.(*GetKeygroupReplicaRequest))
+		return srv.(MiddlewareServer).GetKeygroupReplica(ctx, req.(*GetKeygroupReplicaRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Client_RemoveReplica_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Middleware_RemoveReplica_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RemoveReplicaRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClientServer).RemoveReplica(ctx, in)
+		return srv.(MiddlewareServer).RemoveReplica(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/mcc.fred.client.Client/RemoveReplica",
+		FullMethod: "/mcc.fred.middleware.Middleware/RemoveReplica",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServer).RemoveReplica(ctx, req.(*RemoveReplicaRequest))
+		return srv.(MiddlewareServer).RemoveReplica(ctx, req.(*RemoveReplicaRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Client_GetReplica_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Middleware_GetReplica_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetReplicaRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClientServer).GetReplica(ctx, in)
+		return srv.(MiddlewareServer).GetReplica(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/mcc.fred.client.Client/GetReplica",
+		FullMethod: "/mcc.fred.middleware.Middleware/GetReplica",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServer).GetReplica(ctx, req.(*GetReplicaRequest))
+		return srv.(MiddlewareServer).GetReplica(ctx, req.(*GetReplicaRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Client_GetAllReplica_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Middleware_GetAllReplica_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetAllReplicaRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClientServer).GetAllReplica(ctx, in)
+		return srv.(MiddlewareServer).GetAllReplica(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/mcc.fred.client.Client/GetAllReplica",
+		FullMethod: "/mcc.fred.middleware.Middleware/GetAllReplica",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServer).GetAllReplica(ctx, req.(*GetAllReplicaRequest))
+		return srv.(MiddlewareServer).GetAllReplica(ctx, req.(*GetAllReplicaRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Client_GetKeygroupTriggers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Middleware_GetKeygroupTriggers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetKeygroupTriggerRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClientServer).GetKeygroupTriggers(ctx, in)
+		return srv.(MiddlewareServer).GetKeygroupTriggers(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/mcc.fred.client.Client/GetKeygroupTriggers",
+		FullMethod: "/mcc.fred.middleware.Middleware/GetKeygroupTriggers",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServer).GetKeygroupTriggers(ctx, req.(*GetKeygroupTriggerRequest))
+		return srv.(MiddlewareServer).GetKeygroupTriggers(ctx, req.(*GetKeygroupTriggerRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Client_AddTrigger_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Middleware_AddTrigger_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AddTriggerRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClientServer).AddTrigger(ctx, in)
+		return srv.(MiddlewareServer).AddTrigger(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/mcc.fred.client.Client/AddTrigger",
+		FullMethod: "/mcc.fred.middleware.Middleware/AddTrigger",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServer).AddTrigger(ctx, req.(*AddTriggerRequest))
+		return srv.(MiddlewareServer).AddTrigger(ctx, req.(*AddTriggerRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Client_RemoveTrigger_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Middleware_RemoveTrigger_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RemoveTriggerRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClientServer).RemoveTrigger(ctx, in)
+		return srv.(MiddlewareServer).RemoveTrigger(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/mcc.fred.client.Client/RemoveTrigger",
+		FullMethod: "/mcc.fred.middleware.Middleware/RemoveTrigger",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServer).RemoveTrigger(ctx, req.(*RemoveTriggerRequest))
+		return srv.(MiddlewareServer).RemoveTrigger(ctx, req.(*RemoveTriggerRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Client_AddUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Middleware_AddUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UserRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClientServer).AddUser(ctx, in)
+		return srv.(MiddlewareServer).AddUser(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/mcc.fred.client.Client/AddUser",
+		FullMethod: "/mcc.fred.middleware.Middleware/AddUser",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServer).AddUser(ctx, req.(*UserRequest))
+		return srv.(MiddlewareServer).AddUser(ctx, req.(*UserRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Client_RemoveUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Middleware_RemoveUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UserRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClientServer).RemoveUser(ctx, in)
+		return srv.(MiddlewareServer).RemoveUser(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/mcc.fred.client.Client/RemoveUser",
+		FullMethod: "/mcc.fred.middleware.Middleware/RemoveUser",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServer).RemoveUser(ctx, req.(*UserRequest))
+		return srv.(MiddlewareServer).RemoveUser(ctx, req.(*UserRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// Client_ServiceDesc is the grpc.ServiceDesc for Client service.
+// Middleware_ServiceDesc is the grpc.ServiceDesc for Middleware service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var Client_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "mcc.fred.client.Client",
-	HandlerType: (*ClientServer)(nil),
+var Middleware_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "mcc.fred.middleware.Middleware",
+	HandlerType: (*MiddlewareServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "CreateKeygroup",
-			Handler:    _Client_CreateKeygroup_Handler,
+			Handler:    _Middleware_CreateKeygroup_Handler,
 		},
 		{
 			MethodName: "DeleteKeygroup",
-			Handler:    _Client_DeleteKeygroup_Handler,
+			Handler:    _Middleware_DeleteKeygroup_Handler,
 		},
 		{
 			MethodName: "Read",
-			Handler:    _Client_Read_Handler,
+			Handler:    _Middleware_Read_Handler,
 		},
 		{
 			MethodName: "Update",
-			Handler:    _Client_Update_Handler,
+			Handler:    _Middleware_Update_Handler,
 		},
 		{
 			MethodName: "Delete",
-			Handler:    _Client_Delete_Handler,
+			Handler:    _Middleware_Delete_Handler,
 		},
 		{
 			MethodName: "Append",
-			Handler:    _Client_Append_Handler,
+			Handler:    _Middleware_Append_Handler,
 		},
 		{
 			MethodName: "AddReplica",
-			Handler:    _Client_AddReplica_Handler,
+			Handler:    _Middleware_AddReplica_Handler,
 		},
 		{
 			MethodName: "GetKeygroupReplica",
-			Handler:    _Client_GetKeygroupReplica_Handler,
+			Handler:    _Middleware_GetKeygroupReplica_Handler,
 		},
 		{
 			MethodName: "RemoveReplica",
-			Handler:    _Client_RemoveReplica_Handler,
+			Handler:    _Middleware_RemoveReplica_Handler,
 		},
 		{
 			MethodName: "GetReplica",
-			Handler:    _Client_GetReplica_Handler,
+			Handler:    _Middleware_GetReplica_Handler,
 		},
 		{
 			MethodName: "GetAllReplica",
-			Handler:    _Client_GetAllReplica_Handler,
+			Handler:    _Middleware_GetAllReplica_Handler,
 		},
 		{
 			MethodName: "GetKeygroupTriggers",
-			Handler:    _Client_GetKeygroupTriggers_Handler,
+			Handler:    _Middleware_GetKeygroupTriggers_Handler,
 		},
 		{
 			MethodName: "AddTrigger",
-			Handler:    _Client_AddTrigger_Handler,
+			Handler:    _Middleware_AddTrigger_Handler,
 		},
 		{
 			MethodName: "RemoveTrigger",
-			Handler:    _Client_RemoveTrigger_Handler,
+			Handler:    _Middleware_RemoveTrigger_Handler,
 		},
 		{
 			MethodName: "AddUser",
-			Handler:    _Client_AddUser_Handler,
+			Handler:    _Middleware_AddUser_Handler,
 		},
 		{
 			MethodName: "RemoveUser",
-			Handler:    _Client_RemoveUser_Handler,
+			Handler:    _Middleware_RemoveUser_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

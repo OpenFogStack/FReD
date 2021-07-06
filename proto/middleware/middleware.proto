@@ -1,10 +1,10 @@
 syntax = "proto3";
 
-package mcc.fred.client;
+package mcc.fred.middleware;
 option go_package = ".;alexandra";
 
-// This extends the Fred client for more conventient functions.
-service Client {
+// This extends the Fred client for more convenient functions.
+service Middleware {
   rpc CreateKeygroup (CreateKeygroupRequest) returns (StatusResponse);
   rpc DeleteKeygroup (DeleteKeygroupRequest) returns (StatusResponse);
   rpc Read (ReadRequest) returns (ReadResponse);

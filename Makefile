@@ -16,10 +16,8 @@ megalint: ## Megalint all files
 	@golangci-lint -E asciicheck -E depguard -E dogsled -E dupl -E errorlint -E exhaustive -E exportloopref -E forbidigo -E funlen  -E gochecknoinits -E gocognit -E gocritic -E gocyclo -E gofmt -E revive -E gomnd -E gomodguard -E goprintffuncname -E gosec -E interfacer -E makezero -E maligned -E misspell -E nestif -E nlreturn -E stylecheck -E unconvert -E unparam run
 
 test: ## Run unittests
-	@rm -rf pkg/leveldb/test.db
 	@rm -rf pkg/badgerdb/test.db
 	@go test -short ${PKG_LIST}
-	@rm -rf pkg/leveldb/test.db
 	@rm -rf pkg/badgerdb/test.db
 
 race: dep ## Run data race detector
@@ -38,7 +36,7 @@ dep: ## Get the dependencies
 	@go get -d ./...
 
 build: dep ## Build the binary file
-	@go build -i -v $(PKG)/cmd/frednode
+	@go build -v $(PKG)/cmd/frednode
 
 clean: ## Remove previous build
 	@rm -f $(PROJECT_NAME)
