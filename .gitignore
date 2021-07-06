@@ -7,6 +7,9 @@ frednode
 db/
 test.db/
 
+# etcd local database
+.default.etcd/
+
 ### tubCloud ###
 *_conflic*
 

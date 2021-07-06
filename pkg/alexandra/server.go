@@ -19,9 +19,9 @@ import (
 // Server listens to GRPC requests from clients (and sends them to the relevant Fred Node etc.)
 // The implementation is split up into different files in this folder.
 type Server struct {
-	roots     *x509.CertPool
-	isProxied bool
-	proxyHost string
+	roots      *x509.CertPool
+	isProxied  bool
+	proxyHost  string
 	clientsMgr *ClientsMgr
 	lighthouse string
 	lis        net.Listener
@@ -75,7 +75,7 @@ func NewServer(host string, caCert string, serverCert string, serverKey string, 
 		),
 	}
 
-	alexandraProto.RegisterClientServer(s.Server, s)
+	alexandraProto.RegisterMiddlewareServer(s.Server, s)
 
 	log.Debug().Msgf("Alexandra Server is listening on %s", host)
 

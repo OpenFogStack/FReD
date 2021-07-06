@@ -11,7 +11,7 @@ import (
 )
 
 type AlexandraClient struct {
-	client alexandra.ClientClient
+	client alexandra.MiddlewareClient
 }
 
 func NewAlexandraClient(address string) AlexandraClient {
@@ -36,7 +36,7 @@ func NewAlexandraClient(address string) AlexandraClient {
 		log.Fatal().Err(err).Msg("Cannot create Grpc connection")
 		return AlexandraClient{}
 	}
-	c := alexandra.NewClientClient(conn)
+	c := alexandra.NewMiddlewareClient(conn)
 
 	return AlexandraClient{
 		client: c,

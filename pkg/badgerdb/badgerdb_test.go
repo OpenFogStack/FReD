@@ -12,13 +12,29 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const badgerDBPath = "./test.db"
+
 var db *Storage
 
 // TODO: better tests, maybe even for all packages that implement the Store interface?
 
 func TestMain(m *testing.M) {
 	zerolog.SetGlobalLevel(zerolog.DebugLevel)
-	db = New("./test.db")
+
+	fInfo, err := os.Stat(badgerDBPath)
+
+	if err == nil {
+		if !fInfo.IsDir() {
+			panic(errors.Errorf("%s is not a directory!", badgerDBPath))
+		}
+
+		err = os.RemoveAll(badgerDBPath)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	db = New(badgerDBPath)
 
 	os.Exit(m.Run())
 }
