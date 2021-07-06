@@ -1,20 +1,12 @@
 image: git.tu-berlin.de:5000/mcc-fred/fred/ci:latest
 
-cache:
-  paths:
-    - .cache
-
 stages:
   - analysis
   - test
   - build
-  - 3nodetest
   - release
-#  - test_aws
 
 before_script:
-  - mkdir -p .cache
-  - export GOPATH="$CI_PROJECT_DIR/.cache"
   - export CC=clang
   - make dep
 
