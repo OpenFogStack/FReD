@@ -8,7 +8,7 @@ import (
 	"git.tu-berlin.de/mcc-fred/fred/pkg/fred"
 	"github.com/go-errors/errors"
 	"github.com/rs/zerolog/log"
-	"go.etcd.io/etcd/clientv3"
+	"go.etcd.io/etcd/client/v3"
 )
 
 // ExitOtherNodeFromKeygroup deletes the node from the NaSe

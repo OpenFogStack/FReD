@@ -1,10 +1,10 @@
 # Base image: https://hub.docker.com/_/golang/
-FROM golang:1.15
+FROM golang:1.16
 
 # Install golint
 ENV GOPATH /go
 ENV PATH ${GOPATH}/bin:$PATH
-RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.34.1
+RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.41.1
 
 # Add apt key for LLVM repository
 RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -

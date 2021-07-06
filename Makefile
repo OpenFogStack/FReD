@@ -9,11 +9,11 @@ all: build
 
 lint: ## Lint the files
 	@which golangci-lint > /dev/null || (echo "golangci-lint not installed, check https://golangci-lint.run/usage/install/" && exit 1)
-	@golangci-lint -E golint --timeout 5m0s run
+	@golangci-lint -E revive --timeout 5m0s run
 
 megalint: ## Megalint all files
 	@which golangci-lint > /dev/null || (echo "golangci-lint not installed, check https://golangci-lint.run/usage/install/" && exit 1)
-	@golangci-lint -E asciicheck -E depguard -E dogsled -E dupl -E errorlint -E exhaustive -E exportloopref -E forbidigo -E funlen  -E gochecknoinits -E gocognit -E gocritic -E gocyclo -E gofmt -E golint -E gomnd -E gomodguard -E goprintffuncname -E gosec -E interfacer -E makezero -E maligned -E misspell -E nestif -E nlreturn -E stylecheck -E unconvert -E unparam run
+	@golangci-lint -E asciicheck -E depguard -E dogsled -E dupl -E errorlint -E exhaustive -E exportloopref -E forbidigo -E funlen  -E gochecknoinits -E gocognit -E gocritic -E gocyclo -E gofmt -E revive -E gomnd -E gomodguard -E goprintffuncname -E gosec -E interfacer -E makezero -E maligned -E misspell -E nestif -E nlreturn -E stylecheck -E unconvert -E unparam run
 
 test: ## Run unittests
 	@rm -rf pkg/leveldb/test.db
