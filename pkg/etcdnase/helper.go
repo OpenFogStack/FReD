@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/go-errors/errors"
-	"go.etcd.io/etcd/clientv3"
-	"go.etcd.io/etcd/mvcc/mvccpb"
+	"go.etcd.io/etcd/api/v3/mvccpb"
+	"go.etcd.io/etcd/client/v3"
 )
 
 // getPrefix gets every key that starts(!) with the specified string
