@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dgraph-io/badger/v2"
+	"github.com/dgraph-io/badger/v3"
 	"github.com/go-errors/errors"
 	"github.com/rs/zerolog/log"
 )
@@ -16,7 +16,8 @@ const gcDiscardRatio = 0.7
 
 // Storage is a struct that saves all necessary information to access the database, in this case just a pointer to the BadgerDB database.
 type Storage struct {
-	db *badger.DB
+	db  *badger.DB
+	seq map[string]*badger.Sequence
 }
 
 // makeKeyName creates the internal BadgerDB key given a keygroup name and an id.
@@ -35,6 +36,10 @@ func makeKeygroupConfigKeyName(kgname string) []byte {
 
 func makeTriggerConfigKeyName(kgname string, tid string) []byte {
 	return []byte(sep + "fred" + sep + "triggers" + sep + kgname + sep + tid)
+}
+
+func makeLogConfigKeyName(kgname string) []byte {
+	return []byte(sep + "fred" + sep + "rolling" + sep + kgname)
 }
 
 // getTriggerConfigKey returns the keygroup and id of a key.
@@ -82,7 +87,8 @@ func New(dbPath string) (s *Storage) {
 	}
 
 	s = &Storage{
-		db: db,
+		db:  db,
+		seq: make(map[string]*badger.Sequence),
 	}
 
 	go garbageCollection(db)
@@ -98,7 +104,8 @@ func NewMemory() (s *Storage) {
 	}
 
 	s = &Storage{
-		db: db,
+		db:  db,
+		seq: make(map[string]*badger.Sequence),
 	}
 
 	go garbageCollection(db)
@@ -275,44 +282,28 @@ func (s *Storage) Append(kg, val string, expiry int) (string, error) {
 	// first, get the latest key
 	// maximum of 18446744073709551615, though!
 	// if you reach this maximum, please send me a letter
-	newest := ^uint64(0)
 
-	err := s.db.View(func(txn *badger.Txn) error {
+	seq, ok := s.seq[kg]
 
-		prefix := makeKeygroupKeyName(kg)
+	if !ok {
+		newSeq, err := s.db.GetSequence(makeLogConfigKeyName(kg), 100)
 
-		opts := badger.DefaultIteratorOptions
-		opts.Prefix = prefix
-		opts.PrefetchValues = false
-		// I know this would be better to get directly to the key we need, but it didn't work
-		// opts.Reverse = true
-		it := txn.NewIterator(opts)
-		defer it.Close()
-
-		for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
-			item := it.Item()
-			_, key := getKey(string(item.Key()))
-
-			n, err := strconv.ParseUint(key, 10, 64)
-			if err != nil {
-				return err
-			}
-
-			if n == 0 || n > newest {
-				newest = n
-			}
+		if err != nil {
+			return "", errors.New(err)
 		}
-		return nil
-	})
+
+		s.seq[kg] = newSeq
+		seq = newSeq
+	}
+
+	n, err := seq.Next()
 
 	if err != nil {
 		return "", errors.New(err)
 	}
 
-	// increment by one
-	// conveniently, if we reach MaxUint64, we can still increment by 1 to get back to 0
-	id := strconv.FormatUint(newest+1, 10)
-	log.Debug().Msgf("next key is %s, which is 1 bigger than %d", id, newest)
+	id := strconv.FormatUint(n, 10)
+	log.Debug().Msgf("append got next ID: %s", id)
 
 	err = s.db.Update(func(txn *badger.Txn) error {
 		key := makeKeyName(kg, id)
@@ -324,7 +315,7 @@ func (s *Storage) Append(kg, val string, expiry int) (string, error) {
 				ExpiresAt: uint64(time.Now().Unix()) + uint64(expiry),
 			})
 			if err != nil {
-				return err
+				return errors.New(err)
 			}
 			return nil
 		}
@@ -332,7 +323,7 @@ func (s *Storage) Append(kg, val string, expiry int) (string, error) {
 		err := txn.Set(key, []byte(val))
 
 		if err != nil {
-			return err
+			return errors.New(err)
 		}
 		return nil
 	})
@@ -389,6 +380,13 @@ func (s *Storage) CreateKeygroup(kg string) error {
 		if err != nil {
 			return err
 		}
+
+		s.seq[kg], err = s.db.GetSequence(makeLogConfigKeyName(kg), 100)
+
+		if err != nil {
+			return err
+		}
+
 		return nil
 	})
 
@@ -493,6 +491,16 @@ func (s *Storage) DeleteKeygroup(kg string) error {
 
 	if err != nil {
 		return errors.New(err)
+	}
+
+	if seq, ok := s.seq[kg]; ok {
+		err = seq.Release()
+
+		if err != nil {
+			return err
+		}
+
+		delete(s.seq, kg)
 	}
 
 	return nil

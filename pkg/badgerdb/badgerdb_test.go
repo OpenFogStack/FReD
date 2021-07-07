@@ -1,6 +1,7 @@
 package badgerdb
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 	"testing"
@@ -428,6 +429,55 @@ func TestAppend(t *testing.T) {
 	}
 }
 
+func TestConcurrentAppend(t *testing.T) {
+	kg := "logconcurrent"
+	concurrent := 4
+	items := 100
+
+	err := db.CreateKeygroup(kg)
+
+	if err != nil {
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		t.Error(err)
+	}
+
+	keys := make([]map[string]struct{}, concurrent)
+	done := make(chan struct{})
+
+	for i := 0; i < concurrent; i++ {
+		keys[i] = make(map[string]struct{})
+		go func(id int, keys *map[string]struct{}) {
+			for j := 2; j < items; j++ {
+				v := fmt.Sprintf("value-%d-%d", id, j)
+				key, err := db.Append(kg, v, 0)
+
+				if err != nil {
+					t.Error(err.(*errors.Error).ErrorStack())
+				}
+
+				(*keys)[key] = struct{}{}
+			}
+			done <- struct{}{}
+		}(i, &keys[i])
+	}
+
+	for i := 0; i < concurrent; i++ {
+		<-done
+	}
+
+	for i, k := range keys {
+		for key := range k {
+			found := false
+			for j := i + 1; j < concurrent; j++ {
+				_, ok := keys[j][key]
+				found = found || ok
+			}
+			assert.False(t, found, "key given out multiple times")
+		}
+	}
+
+}
+
 func TestTriggerNodes(t *testing.T) {
 	kg := "kg1"
 
@@ -573,11 +623,7 @@ func TestClose(t *testing.T) {
 		t.Error(err)
 	}
 
-	assert.Panics(t, func() {
-		_, err := db.Read(kg, id)
-		if err == nil {
-			log.Err(err).Msg("got response after closing database")
-		}
-	}, "got response after closing database")
+	_, err = db.Read(kg, id)
+	assert.Error(t, err)
 
 }
