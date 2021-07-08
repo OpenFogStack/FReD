@@ -86,6 +86,32 @@ func New(config *Config) (f Fred) {
 
 	a := newAuthService(config.NaSe)
 
+	// TODO this code should live somewhere where it is called every n seconds, but for testing purposes the easiest way
+	// TODO to simulate an internet shutdown is via killing a node, so testing once at startup should be enough
+	missedItems := config.NaSe.RequestNodeStatus(config.NaSe.GetNodeID())
+	if missedItems != nil {
+		log.Warn().Msg("NodeStatus: This node was offline has missed some updates, getting them from other nodes")
+		for _, item := range missedItems {
+			nodeID, addr := config.NaSe.GetNodeWithBiggerExpiry(item.Keygroup)
+			if addr == "" {
+				log.Error().Msgf("NodeStatus: Was not able to find node that can provide item %s, skipping it...", item.Keygroup)
+				continue
+			}
+			log.Info().Msgf("Getting item of KG %s ID %s from Node %s @ %s", string(item.Keygroup), item.ID, string(nodeID), addr)
+			item, err := config.Client.SendGetItem(addr, item.Keygroup, item.ID)
+			if err != nil {
+				log.Err(err).Msg("Was not able to get Items from node")
+			}
+			expiry, _ := config.NaSe.GetExpiry(item.Keygroup)
+			err = s.update(item, expiry)
+			if err != nil {
+				log.Error().Msgf("Could not update missed item %s", item.ID)
+			}
+		}
+	} else {
+		log.Debug().Msg("NodeStatus: No updates were missed by this node.")
+	}
+
 	return Fred{
 		E: newExthandler(s, r, t, a, config.NaSe),
 		I: newInthandler(s, r, t, config.NaSe),

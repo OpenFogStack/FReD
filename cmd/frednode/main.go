@@ -4,22 +4,24 @@ import (
 	"flag"
 	"os"
 	"os/signal"
+	"runtime"
+	"runtime/pprof"
 	"syscall"
 
-	"git.tu-berlin.de/mcc-fred/fred/pkg/api"
-	"git.tu-berlin.de/mcc-fred/fred/pkg/dynamo"
-	"git.tu-berlin.de/mcc-fred/fred/pkg/etcdnase"
-	"git.tu-berlin.de/mcc-fred/fred/pkg/nasecache"
-	"git.tu-berlin.de/mcc-fred/fred/pkg/peering"
-	"git.tu-berlin.de/mcc-fred/fred/pkg/storageclient"
 	"github.com/caarlos0/env/v6"
 	"github.com/go-errors/errors"
 	"github.com/mmcloughlin/geohash"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
+	"git.tu-berlin.de/mcc-fred/fred/pkg/api"
 	"git.tu-berlin.de/mcc-fred/fred/pkg/badgerdb"
+	"git.tu-berlin.de/mcc-fred/fred/pkg/dynamo"
+	"git.tu-berlin.de/mcc-fred/fred/pkg/etcdnase"
 	"git.tu-berlin.de/mcc-fred/fred/pkg/fred"
+	"git.tu-berlin.de/mcc-fred/fred/pkg/nasecache"
+	"git.tu-berlin.de/mcc-fred/fred/pkg/peering"
+	"git.tu-berlin.de/mcc-fred/fred/pkg/storageclient"
 )
 
 type fredConfig struct {
@@ -72,6 +74,10 @@ type fredConfig struct {
 	Trigger struct {
 		Cert string `env:"TRIGGER_CERT"`
 		Key  string `env:"TRIGGER_KEY"`
+	}
+	Profiling struct {
+		CPUProfPath string `env:"PROFILING_CPU_PATH"`
+		MemProfPath string `env:"PROFILING_MEM_PATH"`
 	}
 }
 
@@ -126,6 +132,10 @@ func parseArgs() (fc fredConfig) {
 	// trigger node tls configuration
 	flag.StringVar(&(fc.Trigger.Cert), "trigger-cert", "", "Certificate for trigger node connection. (Env: TRIGGER_CERT)")
 	flag.StringVar(&(fc.Trigger.Key), "trigger-key", "", "Key file for trigger node connection. (Env: TRIGGER_KEY)")
+
+	flag.StringVar(&(fc.Profiling.CPUProfPath), "cpuprofile", "", "Enable CPU profiling and specify path for pprof output")
+	flag.StringVar(&(fc.Profiling.MemProfPath), "memprofile", "", "Enable memory profiling and specify path for pprof output")
+
 	flag.Parse()
 
 	// override with ENV variables
@@ -183,6 +193,36 @@ func main() {
 		)
 	} else if fc.Log.Handler != "prod" {
 		log.Fatal().Msg("Log ExtHandler has to be either dev or prod")
+	}
+
+	// https://github.com/influxdata/influxdb/blob/master/cmd/influxd/internal/profile/profile.go
+	var prof struct {
+		cpu *os.File
+		mem *os.File
+	}
+
+	if fc.Profiling.CPUProfPath != "" {
+		prof.cpu, err = os.Create(fc.Profiling.CPUProfPath)
+
+		if err != nil {
+			log.Fatal().Msgf("cpuprofile: %v", err)
+		}
+
+		err = pprof.StartCPUProfile(prof.cpu)
+
+		if err != nil {
+			log.Fatal().Msgf("cpuprofile: %v", err)
+		}
+	}
+
+	if fc.Profiling.CPUProfPath != "" {
+		prof.mem, err = os.Create(fc.Profiling.MemProfPath)
+
+		if err != nil {
+			log.Fatal().Msgf("memprofile: %v", err)
+		}
+
+		runtime.MemProfileRate = 4096
 	}
 
 	// Uncomment to print json config
@@ -271,42 +311,30 @@ func main() {
 	isProxied := fc.Server.Proxy != "" && fc.Server.Host != fc.Server.Proxy
 	es := api.NewServer(fc.Server.Host, f.E, fc.Server.Cert, fc.Server.Key, fc.Server.CA, isProxied, fc.Server.Proxy)
 
-	// TODO this code should live somewhere where it is called every n seconds, but for testing purposes the easiest way
-	// TODO to simulate an internet shutdown is via killing a node, so testing once at startup should be enough
-	missedItems := n.RequestNodeStatus(n.GetNodeID())
-	if missedItems != nil {
-		log.Warn().Msg("NodeStatus: This node was offline has missed some updates, getting them from other nodes")
-		for _, item := range missedItems {
-			nodeID, addr := n.GetNodeWithBiggerExpiry(item.Keygroup)
-			if addr == "" {
-				log.Error().Msgf("NodeStatus: Was not able to find node that can provide item %s, skipping it...", item.Keygroup)
-				continue
-			}
-			log.Info().Msgf("Getting item of KG %s ID %s from Node %s @ %s", string(item.Keygroup), item.ID, string(nodeID), addr)
-			item, err := c.SendGetItem(addr, item.Keygroup, item.ID)
-			if err != nil {
-				log.Err(err).Msg("Was not able to get Items from node")
-			}
-			expiry, _ := n.GetExpiry(item.Keygroup)
-			err = store.Update(string(item.Keygroup), item.ID, item.Val, expiry)
-			if err != nil {
-				log.Error().Msgf("Could not update missed item %s", item.ID)
-			}
-		}
-	} else {
-		log.Debug().Msg("NodeStatus: No updates were missed by this node.")
-	}
-
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit,
-		syscall.SIGINT,
-		syscall.SIGTERM,
-		syscall.SIGQUIT)
-	func() {
-		<-quit
-		c.Destroy()
-		log.Err(is.Close()).Msg("error closing peering server")
-		log.Err(es.Close()).Msg("error closing api server")
-		log.Err(store.Close()).Msg("error closing database")
-	}()
+		os.Interrupt,
+		syscall.SIGTERM)
+
+	<-quit
+	log.Info().Msg("FReD Node Closing Now!")
+	c.Destroy()
+	log.Err(is.Close()).Msg("closing peering server")
+	log.Err(es.Close()).Msg("closing api server")
+	log.Err(store.Close()).Msg("closing database")
+
+	if prof.cpu != nil {
+		pprof.StopCPUProfile()
+		err = prof.cpu.Close()
+		log.Err(err).Msg("stopping cpu profile")
+		prof.cpu = nil
+	}
+
+	if prof.mem != nil {
+		err = pprof.Lookup("heap").WriteTo(prof.mem, 0)
+		log.Err(err).Msg("stopping mem profile")
+		err = prof.mem.Close()
+		log.Err(err).Msg("stopping mem profile")
+		prof.mem = nil
+	}
 }

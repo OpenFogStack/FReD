@@ -563,3 +563,22 @@ It starts the same deployment as in the 3 node test and runs a number of queries
 It uses the Docker API to destroy and start the corresponding containers.
 
 The code can be found in `./tests/FailingNodeTest` but can be started with `make failtest` in `./tests/3NodeTest/` after a deployment has been created with `make fred`.
+
+#### Profiling
+
+FReD supports CPU and memory profiling for the main `frednode` binary.
+Use the `--cpuprofile` and `--memprofile´ flags in addition to your other flags to enable profiling.
+Keep in mind that this may have an impact on performance in some cases.
+
+```sh
+# start fred with profiling
+$ ./frednode --cpuprofile fredcpu.pprof --memprof fredmem.pprof [ALL_YOUR_OTHER_FLAGS...]
+
+# run tests, benchmarks, your application, etc.
+# then quit fred with SIGINT or SIGKILL and your files will be written
+# open pprof files and convert to pdf (note that you need graphviz installed)
+# you also need to provide the path to your frednode binary
+$ go tool pprof --pdf ./frednode fredcpu.pprof > cpu.pdf
+$ go tool pprof --pdf ./frednode fredmem.pprof > mem.pdf
+
+```

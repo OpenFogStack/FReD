@@ -33,7 +33,12 @@ func NewServer(host string, handler fred.IntHandler) *Server {
 	log.Debug().Msgf("Interconnection Server is listening on %s", host)
 
 	go func() {
-		log.Fatal().Err(s.Server.Serve(lis)).Msg("Interconnection Server")
+		err := s.Server.Serve(lis)
+
+		// if Serve returns without an error, we probably intentionally closed it
+		if err != nil {
+			log.Fatal().Msgf("Interconnection Server exited: %s", err.Error())
+		}
 	}()
 
 	return s

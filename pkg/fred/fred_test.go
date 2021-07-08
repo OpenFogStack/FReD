@@ -34,7 +34,7 @@ func TestMain(m *testing.M) {
 		},
 	)
 
-	zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	zerolog.SetGlobalLevel(zerolog.ErrorLevel)
 
 	fInfo, err := os.Stat(etcdDir)
 
@@ -62,6 +62,8 @@ func TestMain(m *testing.M) {
 		TrustedCAFile:  certBasePath + "ca.crt",
 		ClientCertAuth: true,
 	}
+
+	cfg.LogLevel = "error"
 
 	e, err := embed.StartEtcd(cfg)
 
@@ -231,4 +233,132 @@ func TestMisformedKeygroupInput(t *testing.T) {
 	// testMisformedKeygroupInput(t, "user920194\n", "misformed2", "id", "value")
 	testMisformedKeygroupInput(t, "user", "misf%?ormed", "id", "value")
 	testMisformedKeygroupInput(t, "use|r", "misf|ormed", "id|", "val|ue")
+}
+
+func BenchmarkPut(b *testing.B) {
+	user := "user"
+	kg := "benchmarkPut"
+	id := "benchmarkItem"
+	value := "benchmarkVal"
+
+	err := f.E.HandleCreateKeygroup(user, fred.Keygroup{
+		Name:    fred.KeygroupName(kg),
+		Mutable: true,
+		Expiry:  0,
+	})
+
+	if err != nil {
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		b.Error(err)
+	}
+
+	for i := 0; i < b.N; i++ {
+		err = f.E.HandleUpdate(user, fred.Item{
+			Keygroup: fred.KeygroupName(kg),
+			ID:       id,
+			Val:      value,
+		})
+
+		if err != nil {
+			log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+			b.Error(err)
+		}
+	}
+
+	err = f.E.HandleDeleteKeygroup(user, fred.Keygroup{
+		Name: fred.KeygroupName(kg),
+	})
+
+	if err != nil {
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		b.Error(err)
+	}
+}
+
+func BenchmarkGet(b *testing.B) {
+	user := "user"
+	kg := "benchmarkGet"
+	id := "benchmarkItem"
+	value := "benchmarkVal"
+
+	err := f.E.HandleCreateKeygroup(user, fred.Keygroup{
+		Name:    fred.KeygroupName(kg),
+		Mutable: true,
+		Expiry:  0,
+	})
+
+	if err != nil {
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		b.Error(err)
+	}
+
+	err = f.E.HandleUpdate(user, fred.Item{
+		Keygroup: fred.KeygroupName(kg),
+		ID:       id,
+		Val:      value,
+	})
+
+	if err != nil {
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		b.Error(err)
+	}
+
+	for i := 0; i < b.N; i++ {
+		_, err := f.E.HandleRead(user, fred.Item{
+			Keygroup: fred.KeygroupName(kg),
+			ID:       id,
+		})
+
+		if err != nil {
+			log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+			b.Error(err)
+		}
+	}
+
+	err = f.E.HandleDeleteKeygroup(user, fred.Keygroup{
+		Name: fred.KeygroupName(kg),
+	})
+
+	if err != nil {
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		b.Error(err)
+	}
+}
+
+func BenchmarkAppend(b *testing.B) {
+	user := "user"
+	kg := "benchmarkAppend"
+	value := "benchmarkVal"
+
+	err := f.E.HandleCreateKeygroup(user, fred.Keygroup{
+		Name:    fred.KeygroupName(kg),
+		Mutable: false,
+		Expiry:  0,
+	})
+
+	if err != nil {
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		b.Error(err)
+	}
+
+	for i := 0; i < b.N; i++ {
+		_, err = f.E.HandleAppend(user, fred.Item{
+			Keygroup: fred.KeygroupName(kg),
+			Val:      value,
+		})
+
+		if err != nil {
+			log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+			b.Error(err)
+		}
+	}
+
+	err = f.E.HandleDeleteKeygroup(user, fred.Keygroup{
+		Name: fred.KeygroupName(kg),
+	})
+
+	if err != nil {
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		b.Error(err)
+	}
 }

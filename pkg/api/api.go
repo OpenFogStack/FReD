@@ -158,7 +158,12 @@ func NewServer(host string, handler fred.ExtHandler, cert string, key string, ca
 	log.Debug().Msgf("Externalconnection Server is listening on %s", host)
 
 	go func() {
-		log.Fatal().Err(s.Server.Serve(lis)).Msg("Externalconnection Server")
+		err := s.Server.Serve(lis)
+
+		// if Serve returns without an error, we probably intentionally closed it
+		if err != nil {
+			log.Fatal().Msgf("Externalconnection Server exited: %s", err.Error())
+		}
 	}()
 
 	return s

@@ -5,6 +5,7 @@
       <excludeFolder url="file://$MODULE_DIR$/coverage" />
       <excludeFolder url="file://$MODULE_DIR$/pkg/badgerdb/test.db" />
       <excludeFolder url="file://$MODULE_DIR$/.default.etcd" />
+      <excludeFolder url="file://$MODULE_DIR$/pkg/fred/.default.etcd" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

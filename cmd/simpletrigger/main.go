@@ -98,8 +98,11 @@ func startServer(cert string, key string, ca string, host string, wsHost string)
 	log.Debug().Msgf("Interconnection Server is listening on %s", host)
 
 	go func() {
+		err := s.Server.Serve(lis)
 		defer s.GracefulStop()
-		log.Fatal().Err(s.Server.Serve(lis)).Msg("Interconnection Server")
+		if err != nil {
+			log.Fatal().Msgf("Interconnection Server exited: %s", err.Error())
+		}
 	}()
 
 	// start a http server that let's us see what the trigger node has received

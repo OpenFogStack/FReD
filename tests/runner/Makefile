@@ -20,13 +20,13 @@ clean: ## clean up all resources
 3nodetest: clean ## start all containers with docker compose and run the test dockerized
 	@docker network create fredwork --gateway 172.26.0.1 --subnet 172.26.0.0/16 || true
 	@docker-compose -f etcd.yml -f nodeA.yml -f nodeB.yml -f nodeC.yml -f 3NodeTester.yml -f trigger.yml build
-	@docker-compose -f etcd.yml -f nodeA.yml -f nodeB.yml -f nodeC.yml -f 3NodeTester.yml -f trigger.yml up --force-recreate --abort-on-container-exit --renew-anon-volumes --remove-orphans
+	@docker-compose -f etcd.yml -f nodeA.yml -f nodeB.yml -f nodeC.yml -f 3NodeTester.yml -f trigger.yml up --force-recreate --abort-on-container-exit --exit-code-from tester --renew-anon-volumes --remove-orphans
 
 3nodetest-debug-nodeB: export TEST_RANGE = -
 3nodetest-debug-nodeB: ## same as "test" but with nodeB in debugger mode
 	@docker network create fredwork --gateway 172.26.0.1 --subnet 172.26.0.0/16 || true
 	@docker-compose -f etcd.yml -f nodeA.yml -f nodeB-debug.yml -f nodeC.yml -f 3NodeTester.yml -f trigger.yml build
-	@docker-compose -f etcd.yml -f nodeA.yml -f nodeB-debug.yml -f nodeC.yml -f 3NodeTester.yml -f trigger.yml up --force-recreate --abort-on-container-exit --renew-anon-volumes --remove-orphans
+	@docker-compose -f etcd.yml -f nodeA.yml -f nodeB-debug.yml -f nodeC.yml -f 3NodeTester.yml -f trigger.yml up --force-recreate --abort-on-container-exit --exit-code-from tester --renew-anon-volumes --remove-orphans
 
 fred: clean ## Start all containers except the tester so that other clients can access them
 	@docker network create fredwork --gateway 172.26.0.1 --subnet 172.26.0.0/16 || true
@@ -35,7 +35,7 @@ fred: clean ## Start all containers except the tester so that other clients can 
 
 failtest: ## Start the failtest
 	@docker-compose -f failtest.yml build
-	@docker-compose -f failtest.yml up --force-recreate --abort-on-container-exit --renew-anon-volumes
+	@docker-compose -f failtest.yml up --force-recreate --abort-on-container-exit --renew-anon-volumes --exit-code-from tester
 
 alexandra: clean ## start fred with alexandra
 	@docker network create fredwork --gateway 172.26.0.1 --subnet 172.26.0.0/16 || true

@@ -38,6 +38,8 @@ services:
     --key /cert/nodeA.key \
     --ca-file /cert/ca.crt \
     --adaptor remote \
+    --cpuprofile /profiles/cpuprofile.pprof \
+    --memprofile /profiles/memprofile.pprof \
     --nase-host https://172.26.6.1:2379 \
     --nase-cert /cert/nodeA.crt \
     --nase-key /cert/nodeA.key \
@@ -50,10 +52,12 @@ services:
     --trigger-key /cert/nodeA.key"
     environment:
       - LOG_LEVEL
+    stop_signal: SIGINT
     volumes:
       - ../../nase/tls/nodeA.crt:/cert/nodeA.crt
       - ../../nase/tls/nodeA.key:/cert/nodeA.key
       - ../../nase/tls/ca.crt:/cert/ca.crt
+      - .:/profiles
     networks:
       fredwork:
         ipv4_address: 172.26.1.101

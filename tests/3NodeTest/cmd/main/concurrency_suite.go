@@ -63,7 +63,7 @@ func concurrentUpdates(nodes []*grpcclient.Node, concurrent int, updates int, ru
 
 	// let's check if everything worked
 
-	for i := range expected {
+	for i := 0; i < concurrent; i++ {
 		for key, val := range expected[i] {
 			v := nodes[0].GetItem(keygroup, key, false)
 
@@ -147,7 +147,7 @@ func concurrentUpdatesImmutable(nodes []*grpcclient.Node, concurrent int, update
 		v := nodes[0].GetItem(keygroup, key, false)
 		found := 0
 
-		for i := range expected {
+		for i := 0; i < concurrent; i++ {
 			val, ok := expected[i][key]
 
 			if !ok {
@@ -197,12 +197,12 @@ func (t *ConcurrencySuite) RunTests() {
 	// Test 5: create immutable keygroup, have 100 goroutines append data
 	// expected behavior: all updates arrive
 	run++
-	concurrentUpdatesImmutable([]*grpcclient.Node{t.c.nodeA}, 100, 100, run)
+	concurrentUpdatesImmutable([]*grpcclient.Node{t.c.nodeA}, 100, 50, run)
 
 	// Test 6: create immutable keygroup on two nodes, have one goroutine each append data
 	// expected behavior: all updates arrive
 	run++
-	concurrentUpdatesImmutable([]*grpcclient.Node{t.c.nodeA, t.c.nodeB}, 2, 500, run)
+	concurrentUpdatesImmutable([]*grpcclient.Node{t.c.nodeA, t.c.nodeB}, 2, 100, run)
 
 }
 
