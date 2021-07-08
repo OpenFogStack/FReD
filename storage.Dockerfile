@@ -16,8 +16,8 @@ COPY go.sum .
 
 RUN go mod download
 
+COPY cmd/storageserver cmd/storageserver
 COPY pkg pkg
-COPY cmd cmd
 COPY proto proto
 
 # Static build required so that we can safely copy the binary over.

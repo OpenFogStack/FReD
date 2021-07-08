@@ -15,8 +15,8 @@ COPY go.sum .
 
 RUN go mod download
 
+COPY cmd/frednode cmd/frednode
 COPY pkg pkg
-COPY cmd cmd
 COPY proto proto
 
 RUN CGO_ENABLED=0 go install ./cmd/frednode/
