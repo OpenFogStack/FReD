@@ -7,4 +7,4 @@ client peering storage trigger middleware: ## Compile all proto files
 
 docker: ## Compile proto files in Docker
 	@docker build -t protoc .
-	@docker run --rm -v $(CURDIR)/.:/proto protoc client
+	@docker run --rm -v $(CURDIR)/.:/proto protoc all
