@@ -567,7 +567,7 @@ The code can be found in `./tests/FailingNodeTest` but can be started with `make
 #### Profiling
 
 FReD supports CPU and memory profiling for the main `frednode` binary.
-Use the `--cpuprofile` and `--memprofile´ flags in addition to your other flags to enable profiling.
+Use the `--cpuprofile` and `--memprofile` flags in addition to your other flags to enable profiling.
 Keep in mind that this may have an impact on performance in some cases.
 
 ```sh
