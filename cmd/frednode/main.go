@@ -20,7 +20,6 @@ import (
 	"git.tu-berlin.de/mcc-fred/fred/pkg/dynamo"
 	"git.tu-berlin.de/mcc-fred/fred/pkg/etcdnase"
 	"git.tu-berlin.de/mcc-fred/fred/pkg/fred"
-	"git.tu-berlin.de/mcc-fred/fred/pkg/nasecache"
 	"git.tu-berlin.de/mcc-fred/fred/pkg/peering"
 	"git.tu-berlin.de/mcc-fred/fred/pkg/storageclient"
 )
@@ -281,20 +280,11 @@ func main() {
 	log.Debug().Msg("Starting NaSe Client...")
 
 	var n fred.NameService
-	n, err = etcdnase.NewNameService(fc.General.nodeID, []string{fc.NaSe.Host}, fc.NaSe.Cert, fc.NaSe.Key, fc.NaSe.CA)
+	n, err = etcdnase.NewNameService(fc.General.nodeID, []string{fc.NaSe.Host}, fc.NaSe.Cert, fc.NaSe.Key, fc.NaSe.CA, fc.NaSe.Cached)
 
 	if err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		panic(err)
-	}
-
-	if fc.NaSe.Cached {
-		n, err = nasecache.NewNameServiceCache(n)
-
-		if err != nil {
-			log.Err(err).Msg(err.(*errors.Error).ErrorStack())
-			panic(err)
-		}
 	}
 
 	f := fred.New(&fred.Config{

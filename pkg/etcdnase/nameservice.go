@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"git.tu-berlin.de/mcc-fred/fred/pkg/fred"
+	"github.com/dgraph-io/ristretto"
 	"github.com/go-errors/errors"
 	"github.com/rs/zerolog/log"
 	"go.etcd.io/etcd/client/pkg/v3/transport"
@@ -29,12 +30,15 @@ const (
 // NameService is the interface to the etcd server that serves as NaSe
 // It is used by the replservice to sync updates to keygroups with other nodes and thereby makes sure that ReplicationStorage always has up to date information
 type NameService struct {
-	cli    *clientv3.Client
-	NodeID string
+	cli     *clientv3.Client
+	watcher clientv3.Watcher
+	local   *ristretto.Cache
+	cached  bool
+	NodeID  string
 }
 
 // NewNameService creates a new NameService
-func NewNameService(nodeID string, endpoints []string, certfFile string, keyFile string, caFile string) (*NameService, error) {
+func NewNameService(nodeID string, endpoints []string, certfFile string, keyFile string, caFile string, cached bool) (*NameService, error) {
 	tlsInfo := transport.TLSInfo{
 		CertFile:      certfFile,
 		KeyFile:       keyFile,
@@ -58,8 +62,27 @@ func NewNameService(nodeID string, endpoints []string, certfFile string, keyFile
 		return nil, errors.Errorf("Error starting the etcd client: %v", err)
 	}
 
+	var cache *ristretto.Cache
+	var watcher clientv3.Watcher
+	if cached {
+		cache, err = ristretto.NewCache(&ristretto.Config{
+			NumCounters: 1e7,     // number of keys to track frequency of (10M).
+			MaxCost:     1 << 30, // maximum cost of cache (1GB).
+			BufferItems: 64,      // number of keys per Get buffer.
+		})
+
+		if err != nil {
+			return nil, errors.Errorf("error creating a local ristretto cache: %s", err.Error())
+		}
+		watcher = clientv3.NewWatcher(cli)
+	}
+
 	return &NameService{
-		cli: cli, NodeID: nodeID,
+		cli:     cli,
+		watcher: watcher,
+		local:   cache,
+		NodeID:  nodeID,
+		cached:  cached,
 	}, nil
 }
 

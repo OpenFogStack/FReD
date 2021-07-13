@@ -27,8 +27,8 @@ func (n *NameService) GetUserPermissions(user string, kg fred.KeygroupName) (map
 
 	permissions := make(map[fred.Method]struct{})
 
-	for _, kv := range res {
-		permissions[fred.Method(strings.Split(string(kv.Key), sep)[5])] = struct{}{}
+	for k := range res {
+		permissions[fred.Method(strings.Split(k, sep)[5])] = struct{}{}
 	}
 
 	return permissions, nil

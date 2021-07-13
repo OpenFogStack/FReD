@@ -44,6 +44,7 @@ services:
     --nase-cert /cert/nodeA.crt \
     --nase-key /cert/nodeA.key \
     --nase-ca /cert/ca.crt \
+    --nase-cached \
     --handler dev \
     --badgerdb-path ./db  \
     --remote-storage-cert /cert/nodeA.crt \
@@ -86,6 +87,7 @@ services:
     --nase-cert /cert/nodeA.crt \
     --nase-key /cert/nodeA.key \
     --nase-ca /cert/ca.crt \
+    --nase-cached \
     --handler dev \
     --badgerdb-path ./db  \
     --remote-storage-cert /cert/nodeA.crt \
@@ -126,6 +128,7 @@ services:
     --nase-cert /cert/nodeA.crt \
     --nase-key /cert/nodeA.key \
     --nase-ca /cert/ca.crt \
+    --nase-cached \
     --handler dev \
     --badgerdb-path ./db  \
     --remote-storage-cert /cert/nodeA.crt \

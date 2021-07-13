@@ -73,7 +73,7 @@ func TestMain(m *testing.M) {
 
 	<-e.Server.ReadyNotify()
 
-	n, err := etcdnase.NewNameService(nodeID, []string{"127.0.0.1:6000"}, certBasePath+"nodeA.crt", certBasePath+"nodeA.key", certBasePath+"ca.crt")
+	n, err := etcdnase.NewNameService(nodeID, []string{"127.0.0.1:6000"}, certBasePath+"nodeA.crt", certBasePath+"nodeA.key", certBasePath+"ca.crt", true)
 
 	if err != nil {
 		panic(err)
