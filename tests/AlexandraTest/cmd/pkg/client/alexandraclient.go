@@ -3,6 +3,8 @@ package client
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
+	"io/ioutil"
 
 	alexandra "git.tu-berlin.de/mcc-fred/fred/proto/middleware"
 	"github.com/rs/zerolog/log"
@@ -21,6 +23,17 @@ func NewAlexandraClient(address string) AlexandraClient {
 		log.Fatal().Err(err).Msg("Cannot load certificates")
 		return AlexandraClient{}
 	}
+
+	// Create a new cert pool and add our own CA certificate
+	rootCAs := x509.NewCertPool()
+
+	loaded, err := ioutil.ReadFile("/cert/ca.crt")
+
+	if err != nil {
+		log.Fatal().Msgf("unexpected missing certfile: %v", err)
+	}
+
+	rootCAs.AppendCertsFromPEM(loaded)
 
 	tlsConfig := &tls.Config{
 		Certificates: []tls.Certificate{cert},

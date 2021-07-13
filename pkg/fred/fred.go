@@ -17,6 +17,7 @@ type Config struct {
 	NodeID            string
 	TriggerCert       string
 	TriggerKey        string
+	TriggerCA         []string
 }
 
 // Fred is an instance of FReD.
@@ -82,7 +83,7 @@ func New(config *Config) (f Fred) {
 
 	r := newReplicationService(s, config.Client, config.NaSe)
 
-	t := newTriggerService(s, config.TriggerCert, config.TriggerKey)
+	t := newTriggerService(s, config.TriggerCert, config.TriggerKey, config.TriggerCA)
 
 	a := newAuthService(config.NaSe)
 

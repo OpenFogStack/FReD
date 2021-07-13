@@ -3,6 +3,8 @@ package fred
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
+	"io/ioutil"
 
 	"git.tu-berlin.de/mcc-fred/fred/proto/trigger"
 	"github.com/go-errors/errors"
@@ -53,7 +55,7 @@ func dealWithStatusResponse(res *trigger.TriggerResponse, err error, from string
 
 }
 
-func newTriggerService(s *storeService, certFile, keyFile string) *triggerService {
+func newTriggerService(s *storeService, certFile string, keyFile string, caFiles []string) *triggerService {
 	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 
 	if err != nil {
@@ -61,9 +63,28 @@ func newTriggerService(s *storeService, certFile, keyFile string) *triggerServic
 		return nil
 	}
 
+	// Create a new cert pool and add our own CA certificate
+	rootCAs, err := x509.SystemCertPool()
+
+	if err != nil {
+		log.Fatal().Err(err).Msg("Cannot load root certificates")
+		return nil
+	}
+
+	for _, f := range caFiles {
+		loaded, err := ioutil.ReadFile(f)
+
+		if err != nil {
+			log.Fatal().Msgf("unexpected missing certfile: %v", err)
+		}
+
+		rootCAs.AppendCertsFromPEM(loaded)
+	}
+
 	tlsConfig := &tls.Config{
 		Certificates: []tls.Certificate{cert},
 		MinVersion:   tls.VersionTLS12,
+		RootCAs:      rootCAs,
 	}
 
 	tc := credentials.NewTLS(tlsConfig)

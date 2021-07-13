@@ -19,9 +19,9 @@ services:
       --clients-key /cert/alexandra.key \
       --clients-cert /cert/alexandra.crt"
     volumes:
-      - ../../nase/tls/alexandra.crt:/cert/alexandra.crt
-      - ../../nase/tls/alexandra.key:/cert/alexandra.key
-      - ../../nase/tls/ca.crt:/cert/ca.crt
+      - ./certificates/alexandra.crt:/cert/alexandra.crt
+      - ./certificates/alexandra.key:/cert/alexandra.key
+      - ./certificates/ca.crt:/cert/ca.crt
     ports:
       - 10000:10000
     networks:
@@ -37,9 +37,9 @@ services:
     image: fred/alexandra-tester:local
     container_name: alexandra-tester
     volumes:
-      - ../../nase/tls/client.crt:/cert/client.crt
-      - ../../nase/tls/client.key:/cert/client.key
-      - ../../nase/tls/ca.crt:/cert/ca.crt
+      - ./certificates/client.crt:/cert/client.crt
+      - ./certificates/client.key:/cert/client.key
+      - ./certificates/ca.crt:/cert/ca.crt
     networks:
       fredwork:
         ipv4_address: 172.26.7.1

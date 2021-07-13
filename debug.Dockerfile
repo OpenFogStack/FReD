@@ -7,7 +7,6 @@ LABEL maintainer="tp@mcc.tu-berlin.de"
 WORKDIR /go/src/git.tu-berlin.de/mcc-fred/fred/
 
 RUN apt update && apt install -y ca-certificates git && rm -rf /var/cache/apk/*
-COPY nase/tls/ca.crt /usr/local/share/ca-certificates/ca.crt
 RUN update-ca-certificates
 
 RUN go get github.com/go-delve/delve/cmd/dlv

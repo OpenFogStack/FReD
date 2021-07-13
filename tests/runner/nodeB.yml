@@ -25,14 +25,16 @@ services:
     --badgerdb-path ./db \
     --remote-storage-cert /cert/nodeB.crt \
     --remote-storage-key /cert/nodeB.key  \
+    --remote-storage-ca /cert/ca.crt  \
     --trigger-cert /cert/nodeB.crt \
-    --trigger-key /cert/nodeB.key"
+    --trigger-key /cert/nodeB.key \
+    --trigger-ca /cert/ca.crt"
     environment:
       - LOG_LEVEL
     volumes:
-      - ../../nase/tls/nodeB.crt:/cert/nodeB.crt
-      - ../../nase/tls/nodeB.key:/cert/nodeB.key
-      - ../../nase/tls/ca.crt:/cert/ca.crt
+      - ./certificates/nodeB.crt:/cert/nodeB.crt
+      - ./certificates/nodeB.key:/cert/nodeB.key
+      - ./certificates/ca.crt:/cert/ca.crt
     ports:
       - 9003:9001
     networks:
@@ -51,9 +53,9 @@ services:
     --key /cert/key.key \
     --ca-file /cert/ca.crt"
     volumes:
-      - ../../nase/tls/storeB.crt:/cert/cert.crt
-      - ../../nase/tls/storeB.key:/cert/key.key
-      - ../../nase/tls/ca.crt:/cert/ca.crt
+      - ./certificates/storeB.crt:/cert/cert.crt
+      - ./certificates/storeB.key:/cert/key.key
+      - ./certificates/ca.crt:/cert/ca.crt
     networks:
       fredwork:
         ipv4_address: 172.26.2.2

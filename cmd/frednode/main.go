@@ -6,6 +6,7 @@ import (
 	"os/signal"
 	"runtime"
 	"runtime/pprof"
+	"strings"
 	"syscall"
 
 	"github.com/caarlos0/env/v6"
@@ -61,6 +62,7 @@ type fredConfig struct {
 		Host string `env:"REMOTE_STORAGE_HOST"`
 		Cert string `env:"REMOTE_STORAGE_CERT"`
 		Key  string `env:"REMOTE_STORAGE_KEY"`
+		CA   string `env:"REMOTE_STORAGE_CA"`
 	}
 	DynamoDB struct {
 		Table      string `env:"DYNAMODB_TABLE"`
@@ -74,6 +76,7 @@ type fredConfig struct {
 	Trigger struct {
 		Cert string `env:"TRIGGER_CERT"`
 		Key  string `env:"TRIGGER_KEY"`
+		CA   string `env:"TRIGGER_CA"`
 	}
 	Profiling struct {
 		CPUProfPath string `env:"PROFILING_CPU_PATH"`
@@ -109,6 +112,7 @@ func parseArgs() (fc fredConfig) {
 	flag.StringVar(&(fc.RemoteStore.Host), "remote-storage-host", "", "Host address of GRPC Server for storage connection. (Env: REMOTE_STORAGE_HOST)")
 	flag.StringVar(&(fc.RemoteStore.Cert), "remote-storage-cert", "", "Certificate for storage connection. (Env: REMOTE_STORAGE_CERT)")
 	flag.StringVar(&(fc.RemoteStore.Key), "remote-storage-key", "", "Key file for storage connection. (Env: REMOTE_STORAGE_KEY)")
+	flag.StringVar(&(fc.RemoteStore.CA), "remote-storage-ca", "", "Comma-separated list of CA certificate files for storage connection. (Env: REMOTE_STORAGE_KEY)")
 
 	flag.StringVar(&(fc.DynamoDB.Table), "dynamo-table", "", "AWS table for DynamoDB storage backend. (Env: DYNAMODB_TABLE)")
 	flag.StringVar(&(fc.DynamoDB.Region), "dynamo-region", "", "AWS region for DynamoDB storage backend. (Env: DYNAMODB_REGION)")
@@ -132,6 +136,7 @@ func parseArgs() (fc fredConfig) {
 	// trigger node tls configuration
 	flag.StringVar(&(fc.Trigger.Cert), "trigger-cert", "", "Certificate for trigger node connection. (Env: TRIGGER_CERT)")
 	flag.StringVar(&(fc.Trigger.Key), "trigger-key", "", "Key file for trigger node connection. (Env: TRIGGER_KEY)")
+	flag.StringVar(&(fc.Trigger.CA), "trigger-ca", "", "Comma-separated list of CA certificate files for trigger node connection. (Env: TRIGGER_CA)")
 
 	flag.StringVar(&(fc.Profiling.CPUProfPath), "cpuprofile", "", "Enable CPU profiling and specify path for pprof output")
 	flag.StringVar(&(fc.Profiling.MemProfPath), "memprofile", "", "Enable memory profiling and specify path for pprof output")
@@ -260,7 +265,7 @@ func main() {
 	case "memory":
 		store = badgerdb.NewMemory()
 	case "remote":
-		store = storageclient.NewClient(fc.RemoteStore.Host, fc.RemoteStore.Cert, fc.RemoteStore.Key)
+		store = storageclient.NewClient(fc.RemoteStore.Host, fc.RemoteStore.Cert, fc.RemoteStore.Key, strings.Split(fc.RemoteStore.CA, ","))
 	case "dynamo":
 		store, err = dynamo.New(fc.DynamoDB.Table, fc.DynamoDB.Region)
 		if err != nil {
@@ -302,6 +307,7 @@ func main() {
 		ExternalHostProxy: fc.Server.Proxy,
 		TriggerCert:       fc.Trigger.Cert,
 		TriggerKey:        fc.Trigger.Key,
+		TriggerCA:         strings.Split(fc.Trigger.CA, ","),
 	})
 
 	log.Debug().Msg("Starting Interconnection Server...")

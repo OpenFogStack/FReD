@@ -7,7 +7,6 @@ LABEL maintainer="tp@mcc.tu-berlin.de"
 WORKDIR /go/src/git.tu-berlin.de/mcc-fred/fred/
 
 RUN apk update && apk add ca-certificates && rm -rf /var/cache/apk/*
-COPY nase/tls/ca.crt /usr/local/share/ca-certificates/ca.crt
 RUN update-ca-certificates
 
 # Make an extra layer for the installed packages so that they dont have to be downloaded everytime

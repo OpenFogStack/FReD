@@ -18,9 +18,9 @@ services:
       --client-cert-auth \
       --trusted-ca-file=/cert/ca.crt"
     volumes:
-      - ../../nase/tls/etcd.crt:/cert/server.crt
-      - ../../nase/tls/etcd.key:/cert/server.key
-      - ../../nase/tls/ca.crt:/cert/ca.crt
+      - ./certificates/etcd.crt:/cert/server.crt
+      - ./certificates/etcd.key:/cert/server.key
+      - ./certificates/ca.crt:/cert/ca.crt
     ports:
       - 2379:2379
       - 2380:2380

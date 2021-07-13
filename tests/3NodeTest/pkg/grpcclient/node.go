@@ -3,7 +3,9 @@ package grpcclient
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"io/ioutil"
 
 	"git.tu-berlin.de/mcc-fred/fred/proto/client"
 	"github.com/rs/zerolog/log"
@@ -21,7 +23,7 @@ type Node struct {
 }
 
 // NewNode creates a new Node that represents a connection to a single fred instance
-func NewNode(addr string, port int, id string, certFile, keyFile string) *Node {
+func NewNode(addr string, port int, id string, certFile string, keyFile string, caFile string) *Node {
 
 	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 
@@ -30,9 +32,28 @@ func NewNode(addr string, port int, id string, certFile, keyFile string) *Node {
 		return nil
 	}
 
+	// from https://forfuncsake.github.io/post/2017/08/trust-extra-ca-cert-in-go-app/
+	// Get the SystemCertPool, continue with an empty pool on error
+	rootCAs, _ := x509.SystemCertPool()
+	if rootCAs == nil {
+		rootCAs = x509.NewCertPool()
+	}
+
+	// Read in the cert file
+	certs, err := ioutil.ReadFile(caFile)
+	if err != nil {
+		log.Fatal().Err(err).Msgf("Failed to append %q to RootCAs: %v", caFile, err)
+	}
+
+	// Append our cert to the system pool
+	if ok := rootCAs.AppendCertsFromPEM(certs); !ok {
+		log.Fatal().Err(err).Msgf("No certs appended, using system certs only")
+	}
+
 	tlsConfig := &tls.Config{
 		Certificates: []tls.Certificate{cert},
 		MinVersion:   tls.VersionTLS12,
+		RootCAs:      rootCAs,
 	}
 
 	tc := credentials.NewTLS(tlsConfig)

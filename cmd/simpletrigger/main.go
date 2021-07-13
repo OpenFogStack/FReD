@@ -78,6 +78,7 @@ func startServer(cert string, key string, ca string, host string, wsHost string)
 	}
 
 	rootCAs.AppendCertsFromPEM(loaded)
+
 	// Create the credentials and return it
 	config := &tls.Config{
 		Certificates: []tls.Certificate{serverCert},
