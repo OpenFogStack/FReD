@@ -52,7 +52,7 @@ Alternatively, you are of course able to run every component manually.
 #### Certificates
 
 Before deploying `etcd` and `fred` software, certificates have to be created to secure the connection between all components and authenticate the individual services.
-The `./nase/tls` folder includes a number of existing certificates and tooling to create new certificates.
+We provide tooling to create new certificates.
 More information about authentication and authorization with certificates can be found further down in this introduction.
 This guide is adapted from [scriptcrunch.com](https://scriptcrunch.com/create-ca-tls-ssl-certificates-keys/).
 
@@ -61,8 +61,6 @@ This guide is adapted from [scriptcrunch.com](https://scriptcrunch.com/create-ca
 First, a certificate authority (CA) has to be created to issue new certificates.
 
 ```bash
-cd ./nase/tls
-
 # generate a CA private key
 openssl genrsa -out ca.key 2048
 
@@ -100,11 +98,9 @@ Although not strictly required, it is recommended to generate unique certificate
 In this example case, the following commands are required:
 
 ```bash
-cd ./nase/tls
 ./gen-cert.sh etcdnase 172.26.1.1
 ./gen-cert.sh frednode 172.26.1.2
 ./gen-cert.sh fredclient 172.26.1.3
-cd ../..
 ```
 
 #### Network
@@ -122,9 +118,9 @@ To start a simple `etcd` instance in Docker with our certificates mounted as vol
 ```bash
 docker pull quay.io/coreos/etcd:v3.4.10
 docker run -d \
--v $(pwd)/nase/tls/etcdnase.crt:/cert/etcdnase.crt \
--v $(pwd)/nase/tls/etcdnase.key:/cert/etcdnase.key \
--v $(pwd)/nase/tls/ca.crt:/cert/ca.crt \
+-v $(pwd)/etcdnase.crt:/cert/etcdnase.crt \
+-v $(pwd)/etcdnase.key:/cert/etcdnase.key \
+-v $(pwd)/ca.crt:/cert/ca.crt \
 --network=fredwork \
 --ip=172.26.1.1 \
 quay.io/coreos/etcd:v3.4.10 \
@@ -152,9 +148,9 @@ Running the `fred` software is similar to running `etcd`, but the image has to b
 ```bash
 docker build -t fred .
 docker run -d \
--v $(pwd)/nase/tls/frednode.crt:/cert/frednode.crt \
--v $(pwd)/nase/tls/frednode.key:/cert/frednode.key \
--v $(pwd)/nase/tls/ca.crt:/cert/ca.crt \
+-v $(pwd)/frednode.crt:/cert/frednode.crt \
+-v $(pwd)/frednode.key:/cert/frednode.key \
+-v $(pwd)/ca.crt:/cert/ca.crt \
 --network=fredwork \
 --ip=172.26.1.2 \
 fred \
@@ -171,6 +167,7 @@ fred --log-level info \
 --nase-ca /cert/ca.crt \
 --trigger-cert /cert/frednode.crt \
 --trigger-key /cert/frednode.key \
+--trigger-ca /cert/ca.crt
 --cert /cert/frednode.crt \
 --key /cert/frednode.key \
 --ca-file /cert/ca.crt
@@ -187,9 +184,9 @@ If you want to try it out, use the `client.proto` in `./proto` to build a client
 ```bash
 docker build -t grpcc -f grpcc.Dockerfile .
 docker run \
--v $(pwd)/nase/tls/fredclient.crt:/cert/fredclient.crt \
--v $(pwd)/nase/tls/fredclient.key:/cert/fredclient.key \
--v $(pwd)/nase/tls/ca.crt:/cert/ca.crt \
+-v $(pwd)/fredclient.crt:/cert/fredclient.crt \
+-v $(pwd)/fredclient.key:/cert/fredclient.key \
+-v $(pwd)/ca.crt:/cert/ca.crt \
 -v $(pwd)/proto/client/client.proto:/client.proto \
 --network=fredwork \
 --ip=172.26.1.3 \

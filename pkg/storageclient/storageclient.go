@@ -3,7 +3,9 @@ package storageclient
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"io"
+	"io/ioutil"
 
 	"git.tu-berlin.de/mcc-fred/fred/proto/storage"
 	"github.com/go-errors/errors"
@@ -19,7 +21,7 @@ type Client struct {
 }
 
 // NewClient Client creates a new Client to communicate with a GRpc server
-func NewClient(host, certFile, keyFile string) *Client {
+func NewClient(host, certFile string, keyFile string, caFiles []string) *Client {
 	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 
 	if err != nil {
@@ -28,9 +30,28 @@ func NewClient(host, certFile, keyFile string) *Client {
 		return nil
 	}
 
+	// Create a new cert pool and add our own CA certificate
+	rootCAs, err := x509.SystemCertPool()
+
+	if err != nil {
+		log.Fatal().Err(err).Msg("Cannot load root certificates")
+		return nil
+	}
+
+	for _, f := range caFiles {
+		loaded, err := ioutil.ReadFile(f)
+
+		if err != nil {
+			log.Fatal().Msgf("unexpected missing certfile: %v", err)
+		}
+
+		rootCAs.AppendCertsFromPEM(loaded)
+	}
+
 	tlsConfig := &tls.Config{
 		Certificates: []tls.Certificate{cert},
 		MinVersion:   tls.VersionTLS12,
+		RootCAs:      rootCAs,
 	}
 
 	tc := credentials.NewTLS(tlsConfig)

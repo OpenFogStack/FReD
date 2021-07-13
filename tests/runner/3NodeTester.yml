@@ -21,15 +21,17 @@ services:
       --triggerNodeID=triggernode \
       --cert-file='/cert/client.crt' \
       --key-file='/cert/client.key' \
+      --ca-file '/cert/ca.crt' \
       --little-cert-file='/cert/littleclient.crt' \
       --little-key-file='/cert/littleclient.key' \
       --test-range=${TEST_RANGE} \
       --wait-user=false"
     volumes:
-      - ../../nase/tls/client.crt:/cert/client.crt
-      - ../../nase/tls/client.key:/cert/client.key
-      - ../../nase/tls/littleclient.crt:/cert/littleclient.crt
-      - ../../nase/tls/littleclient.key:/cert/littleclient.key
+      - ./certificates/client.crt:/cert/client.crt
+      - ./certificates/client.key:/cert/client.key
+      - ./certificates/littleclient.crt:/cert/littleclient.crt
+      - ./certificates/littleclient.key:/cert/littleclient.key
+      - ./certificates/ca.crt:/cert/ca.crt
     depends_on:
       - nodeA-1
       - nodeA-2

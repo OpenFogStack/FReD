@@ -67,7 +67,7 @@ func NewServer(host string, caCert string, serverCert string, serverKey string, 
 		rootCAs,
 		isProxied,
 		proxyHost,
-		newClientsManager(nodesCert, nodesKey),
+		newClientsManager(nodesCert, nodesKey, caCert),
 		lighthouse,
 		lis,
 		grpc.NewServer(

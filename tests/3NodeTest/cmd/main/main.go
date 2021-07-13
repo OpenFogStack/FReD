@@ -51,6 +51,7 @@ func main() {
 
 	certFile := flag.String("cert-file", "", "Certificate to talk to FReD")
 	keyFile := flag.String("key-file", "", "Keyfile to talk to FReD")
+	caFile := flag.String("ca-file", "", "Root certificate used to sign client certificates")
 
 	littleCertFile := flag.String("little-cert-file", "", "Certificate to talk to FReD as \"littleclient\"")
 	littleKeyFile := flag.String("little-key-file", "", "Keyfile to talk to FReD as \"littleclient\"")
@@ -60,13 +61,13 @@ func main() {
 	flag.Parse()
 
 	port, _ := strconv.Atoi(*nodeAhttpPort)
-	nodeA := grpcclient.NewNode(*nodeAhost, port, *nodeApeeringID, *certFile, *keyFile)
+	nodeA := grpcclient.NewNode(*nodeAhost, port, *nodeApeeringID, *certFile, *keyFile, *caFile)
 	port, _ = strconv.Atoi(*nodeBhttpPort)
-	nodeB := grpcclient.NewNode(*nodeBhost, port, *nodeBpeeringID, *certFile, *keyFile)
+	nodeB := grpcclient.NewNode(*nodeBhost, port, *nodeBpeeringID, *certFile, *keyFile, *caFile)
 	port, _ = strconv.Atoi(*nodeChttpPort)
-	nodeC := grpcclient.NewNode(*nodeChost, port, *nodeCpeeringID, *certFile, *keyFile)
+	nodeC := grpcclient.NewNode(*nodeChost, port, *nodeCpeeringID, *certFile, *keyFile, *caFile)
 	port, _ = strconv.Atoi(*nodeAhttpPort)
-	littleClient := grpcclient.NewNode(*nodeAhost, port, *nodeApeeringID, *littleCertFile, *littleKeyFile)
+	littleClient := grpcclient.NewNode(*nodeAhost, port, *nodeApeeringID, *littleCertFile, *littleKeyFile, *caFile)
 
 	time.Sleep(15 * time.Second)
 

@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	certBasePath = "../../nase/tls/"
+	certBasePath = "../../tests/runner/certificates/"
 	etcdDir      = ".default.etcd"
 )
 
@@ -73,7 +73,7 @@ func TestMain(m *testing.M) {
 
 	<-e.Server.ReadyNotify()
 
-	n, err := etcdnase.NewNameService(nodeID, []string{"127.0.0.1:6000"}, certBasePath+"client.crt", certBasePath+"client.key", certBasePath+"ca.crt")
+	n, err := etcdnase.NewNameService(nodeID, []string{"127.0.0.1:6000"}, certBasePath+"nodeA.crt", certBasePath+"nodeA.key", certBasePath+"ca.crt")
 
 	if err != nil {
 		panic(err)
@@ -88,8 +88,9 @@ func TestMain(m *testing.M) {
 		ExternalHost:      "127.0.0.1:9000",
 		ExternalHostProxy: "",
 		NodeID:            nodeID,
-		TriggerCert:       certBasePath + "client.crt",
-		TriggerKey:        certBasePath + "client.key",
+		TriggerCert:       certBasePath + "nodeA.crt",
+		TriggerKey:        certBasePath + "nodeA.key",
+		TriggerCA:         []string{certBasePath + "ca.crt"},
 	}
 
 	f = fred.New(&config)

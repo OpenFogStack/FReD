@@ -13,9 +13,9 @@ services:
     image: fred/fredproxy:local
     container_name: nodeAproxy
     volumes:
-      - ../../nase/tls/nodeA.crt:/cert/nodeA.crt
-      - ../../nase/tls/nodeA.key:/cert/nodeA.crt.key
-      - ../../nase/tls/ca.crt:/cert/ca.crt
+      - ./certificates/nodeA.crt:/cert/nodeA.crt
+      - ./certificates/nodeA.key:/cert/nodeA.crt.key
+      - ./certificates/ca.crt:/cert/ca.crt
     networks:
       fredwork:
         ipv4_address: 172.26.1.1
@@ -48,15 +48,17 @@ services:
     --badgerdb-path ./db  \
     --remote-storage-cert /cert/nodeA.crt \
     --remote-storage-key /cert/nodeA.key  \
+    --remote-storage-ca /cert/ca.crt  \
     --trigger-cert /cert/nodeA.crt \
-    --trigger-key /cert/nodeA.key"
+    --trigger-key /cert/nodeA.key \
+    --trigger-ca /cert/ca.crt"
     environment:
       - LOG_LEVEL
     stop_signal: SIGINT
     volumes:
-      - ../../nase/tls/nodeA.crt:/cert/nodeA.crt
-      - ../../nase/tls/nodeA.key:/cert/nodeA.key
-      - ../../nase/tls/ca.crt:/cert/ca.crt
+      - ./certificates/nodeA.crt:/cert/nodeA.crt
+      - ./certificates/nodeA.key:/cert/nodeA.key
+      - ./certificates/ca.crt:/cert/ca.crt
       - .:/profiles
     networks:
       fredwork:
@@ -88,14 +90,16 @@ services:
     --badgerdb-path ./db  \
     --remote-storage-cert /cert/nodeA.crt \
     --remote-storage-key /cert/nodeA.key  \
+    --remote-storage-ca /cert/ca.crt  \
     --trigger-cert /cert/nodeA.crt \
-    --trigger-key /cert/nodeA.key"
+    --trigger-key /cert/nodeA.key \
+    --trigger-ca /cert/ca.crt"
     environment:
       - LOG_LEVEL
     volumes:
-      - ../../nase/tls/nodeA.crt:/cert/nodeA.crt
-      - ../../nase/tls/nodeA.key:/cert/nodeA.key
-      - ../../nase/tls/ca.crt:/cert/ca.crt
+      - ./certificates/nodeA.crt:/cert/nodeA.crt
+      - ./certificates/nodeA.key:/cert/nodeA.key
+      - ./certificates/ca.crt:/cert/ca.crt
     networks:
       fredwork:
         ipv4_address: 172.26.1.102
@@ -126,14 +130,16 @@ services:
     --badgerdb-path ./db  \
     --remote-storage-cert /cert/nodeA.crt \
     --remote-storage-key /cert/nodeA.key  \
+    --remote-storage-ca /cert/ca.crt  \
     --trigger-cert /cert/nodeA.crt \
-    --trigger-key /cert/nodeA.key"
+    --trigger-key /cert/nodeA.key \
+    --trigger-ca /cert/ca.crt"
     environment:
       - LOG_LEVEL
     volumes:
-      - ../../nase/tls/nodeA.crt:/cert/nodeA.crt
-      - ../../nase/tls/nodeA.key:/cert/nodeA.key
-      - ../../nase/tls/ca.crt:/cert/ca.crt
+      - ./certificates/nodeA.crt:/cert/nodeA.crt
+      - ./certificates/nodeA.key:/cert/nodeA.key
+      - ./certificates/ca.crt:/cert/ca.crt
     networks:
       fredwork:
         ipv4_address: 172.26.1.103
@@ -150,9 +156,9 @@ services:
     --key /cert/key.key \
     --ca-file /cert/ca.crt"
     volumes:
-      - ../../nase/tls/storeA.crt:/cert/cert.crt
-      - ../../nase/tls/storeA.key:/cert/key.key
-      - ../../nase/tls/ca.crt:/cert/ca.crt
+      - ./certificates/storeA.crt:/cert/cert.crt
+      - ./certificates/storeA.key:/cert/key.key
+      - ./certificates/ca.crt:/cert/ca.crt
     networks:
       fredwork:
         ipv4_address: 172.26.1.104
