@@ -12,7 +12,9 @@ type Store interface {
 	Append(kg, val string, expiry int) (string, error)
 	// Needs: keygroup, id; Returns: val
 	Read(kg, id string) (string, error)
-	// Needs: keygroup; Returns: keygroup, id, val
+	// Needs: keygroup, id, range; Returns: ids and values
+	ReadSome(kg, id string, count uint64) (map[string]string, error)
+	// Needs: keygroup; Returns: ids and values
 	ReadAll(kg string) (map[string]string, error)
 	// Needs: keygroup, Returns:[] keygroup, id
 	IDs(kg string) ([]string, error)
@@ -68,6 +70,47 @@ func (s *storeService) read(kg KeygroupName, id string) (string, error) {
 	return data, nil
 }
 
+// Scan returns a list of count items starting with id from the key-value store.
+func (s *storeService) scan(kg KeygroupName, id string, count uint64) ([]Item, error) {
+	err := checkKGandID(kg, id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !s.iS.ExistsKeygroup(string(kg)) {
+		return nil, errors.Errorf("no such keygroup in store: %#v", kg)
+	}
+
+	if !s.exists(Item{
+		Keygroup: kg,
+		ID:       id,
+	}) {
+		return nil, errors.Errorf("no such item %s in keygroup %#v", id, kg)
+	}
+
+	data, err := s.iS.ReadSome(string(kg), id, count)
+
+	if err != nil {
+		return nil, err
+	}
+
+	i := make([]Item, len(data))
+	c := 0
+
+	for id, val := range data {
+		i[c] = Item{
+			Keygroup: kg,
+			ID:       id,
+			Val:      val,
+		}
+
+		c++
+	}
+
+	return i, nil
+}
+
 // ReadAll returns all items of a particular keygroup from the key-value store.
 func (s *storeService) readAll(kg KeygroupName) ([]Item, error) {
 	err := checkKeygroup(kg)
@@ -99,7 +142,7 @@ func (s *storeService) readAll(kg KeygroupName) ([]Item, error) {
 		c++
 	}
 
-	return i, err
+	return i, nil
 }
 
 // exists checks if an item exists in the key-value store.

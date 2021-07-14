@@ -70,9 +70,31 @@ func (s Server) Read(_ context.Context, key *storage.Key) (*storage.Val, error) 
 	return &storage.Val{Val: res}, nil
 }
 
+// Scan calls specific method of the storage interface
+func (s Server) Scan(req *storage.ScanRequest, server storage.Database_ScanServer) error {
+	// Stream: call server.send for every item, return if none left.
+	log.Debug().Msgf("GRPCServer: Scan in=%#v", req)
+	res, err := s.store.ReadSome(req.Key.Keygroup, req.Key.Id, req.Count)
+	if err != nil {
+		log.Err(err).Msgf("GRPCServer has encountered an error while scanning %d items from keygroup %#v", req.Count, req.Key.Keygroup)
+		return err
+	}
+	for id, elem := range res {
+		err := server.Send(&storage.Item{
+			Id:  id,
+			Val: elem,
+		})
+		if err != nil {
+			return err
+		}
+	}
+	// Return nil == successful transfer
+	return nil
+}
+
 // ReadAll calls specific method of the storage interface
 func (s Server) ReadAll(kg *storage.Keygroup, server storage.Database_ReadAllServer) error {
-	// Steam: call server.send for every item, return if none left.
+	// Stream: call server.send for every item, return if none left.
 	log.Debug().Msgf("GRPCServer: ReadAll in=%#v", kg)
 	res, err := s.store.ReadAll(kg.Keygroup)
 	if err != nil {

@@ -157,6 +157,45 @@ func (s *Storage) Read(kg string, id string) (string, error) {
 
 }
 
+// ReadSome returns count number of items in the specified keygroup starting at id.
+func (s *Storage) ReadSome(kg, id string, count uint64) (map[string]string, error) {
+	items := make(map[string]string)
+
+	err := s.db.View(func(txn *badger.Txn) error {
+		prefix := makeKeygroupKeyName(kg)
+		start := makeKeyName(kg, id)
+
+		opts := badger.DefaultIteratorOptions
+		opts.Prefix = prefix
+
+		it := txn.NewIterator(opts)
+		defer it.Close()
+
+		var i uint64
+		for it.Seek(start); it.ValidForPrefix(prefix) && i < count; it.Next() {
+			item := it.Item()
+			_, key := getKey(string(item.Key()))
+
+			v, err := item.ValueCopy(nil)
+
+			if err != nil {
+				return err
+			}
+
+			items[key] = string(v)
+			i++
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, errors.New(err)
+	}
+
+	return items, nil
+}
+
 // ReadAll returns all items in the specified keygroup.
 func (s *Storage) ReadAll(kg string) (map[string]string, error) {
 	items := make(map[string]string)

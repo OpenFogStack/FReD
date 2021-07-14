@@ -43,6 +43,7 @@ type ExtHandler interface {
 	HandleCreateKeygroup(user string, k Keygroup) error
 	HandleDeleteKeygroup(user string, k Keygroup) error
 	HandleRead(user string, i Item) (Item, error)
+	HandleScan(user string, i Item, count uint64) ([]Item, error)
 	HandleUpdate(user string, i Item) error
 	HandleDelete(user string, i Item) error
 	HandleAppend(user string, i Item) (Item, error)

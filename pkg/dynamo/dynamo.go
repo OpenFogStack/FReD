@@ -5,15 +5,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
-	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
-	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
-	"github.com/rs/zerolog/log"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
+	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
 	"github.com/go-errors/errors"
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -153,9 +152,63 @@ func (s *Storage) Read(kg string, id string) (string, error) {
 
 }
 
+func (s *Storage) ReadSome(kg, id string, count uint64) (map[string]string, error) {
+	key := makeKeygroupKeyName(kg)
+	start := makeKeyName(kg, id)
+
+	filt := expression.Name(keyName).BeginsWith(key).And(expression.Name(key).GreaterThan(expression.Key(start)))
+
+	expr, err := expression.NewBuilder().WithFilter(filt).Build()
+	if err != nil {
+		return nil, errors.New(err)
+	}
+
+	l := int64(count)
+	params := &dynamodb.ScanInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		FilterExpression:          expr.Filter(),
+		ProjectionExpression:      expr.Projection(),
+		TableName:                 aws.String(s.dynamotable),
+		Limit:                     &l,
+	}
+
+	// Make the DynamoDB Query API call
+	result, err := s.svc.Scan(params)
+	if err != nil {
+		return nil, errors.New(err)
+	}
+
+	items := make(map[string]string)
+
+	for _, i := range result.Items {
+
+		item := struct {
+			Key   string
+			Value string
+		}{}
+
+		err = dynamodbattribute.UnmarshalMap(i, &item)
+
+		if err != nil {
+			return items, errors.New(err)
+		}
+
+		if item.Key == key {
+			continue
+		}
+
+		_, id := getKey(item.Key)
+
+		items[id] = item.Value
+
+	}
+
+	return items, nil
+}
+
 // ReadAll returns all items in the specified keygroup.
 func (s *Storage) ReadAll(kg string) (map[string]string, error) {
-	items := make(map[string]string)
 
 	key := makeKeygroupKeyName(kg)
 
@@ -163,7 +216,7 @@ func (s *Storage) ReadAll(kg string) (map[string]string, error) {
 
 	expr, err := expression.NewBuilder().WithFilter(filt).Build()
 	if err != nil {
-		return items, errors.New(err)
+		return nil, errors.New(err)
 	}
 
 	params := &dynamodb.ScanInput{
@@ -177,8 +230,10 @@ func (s *Storage) ReadAll(kg string) (map[string]string, error) {
 	// Make the DynamoDB Query API call
 	result, err := s.svc.Scan(params)
 	if err != nil {
-		return items, errors.New(err)
+		return nil, errors.New(err)
 	}
+
+	items := make(map[string]string)
 
 	for _, i := range result.Items {
 

@@ -240,6 +240,40 @@ func (s *Server) Read(ctx context.Context, request *client.ReadRequest) (*client
 
 }
 
+// Scan calls this method on the exthandler
+func (s *Server) Scan(ctx context.Context, request *client.ScanRequest) (*client.ScanResponse, error) {
+	log.Info().Msgf("ExtServer has rcvd Read. In: %#v", request)
+
+	user, err := s.CheckCert(ctx)
+
+	if err != nil {
+		_, err = statusResponseFromError(err)
+		return nil, err
+	}
+
+	res, err := s.e.HandleScan(user, fred.Item{Keygroup: fred.KeygroupName(request.Keygroup), ID: request.Id}, request.Count)
+
+	if err != nil {
+		log.Debug().Msgf("ExtServer is returning error: %#v", err)
+		return &client.ScanResponse{}, err
+
+	}
+
+	data := make([]*client.Data, len(res))
+
+	for i := 0; i < len(res); i++ {
+		data[i] = &client.Data{
+			Id:  res[i].ID,
+			Val: res[i].Val,
+		}
+	}
+
+	return &client.ScanResponse{
+		Data: data,
+	}, nil
+
+}
+
 // Append calls this method on the exthandler
 func (s *Server) Append(ctx context.Context, request *client.AppendRequest) (*client.AppendResponse, error) {
 	log.Info().Msgf("ExtServer has rcvd Append. In: %#v", request)

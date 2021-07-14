@@ -10,6 +10,10 @@ func (s *Server) Read(ctx context.Context, request *alexandraProto.ReadRequest) 
 	return s.clientsMgr.GetClientTo(s.lighthouse).client.Read(ctx, request)
 }
 
+func (s *Server) Scan(ctx context.Context, request *alexandraProto.ScanRequest) (*alexandraProto.ScanResponse, error) {
+	return s.clientsMgr.GetClientTo(s.lighthouse).client.Scan(ctx, request)
+}
+
 func (s *Server) Update(ctx context.Context, request *alexandraProto.UpdateRequest) (*alexandraProto.StatusResponse, error) {
 	return s.clientsMgr.GetClientTo(s.lighthouse).client.Update(ctx, request)
 }

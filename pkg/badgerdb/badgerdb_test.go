@@ -37,7 +37,22 @@ func TestMain(m *testing.M) {
 
 	db = New(badgerDBPath)
 
-	os.Exit(m.Run())
+	stat := m.Run()
+
+	fInfo, err = os.Stat(badgerDBPath)
+
+	if err == nil {
+		if !fInfo.IsDir() {
+			panic(errors.Errorf("%s is not a directory!", badgerDBPath))
+		}
+
+		err = os.RemoveAll(badgerDBPath)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	os.Exit(stat)
 }
 
 func TestKeygroups(t *testing.T) {
@@ -64,6 +79,51 @@ func TestKeygroups(t *testing.T) {
 		t.Fatal("Keygroup does still exist after deletion")
 	}
 
+}
+
+func TestReadSome(t *testing.T) {
+	kg := "test-kg-scan"
+	updates := 10
+	scanStart := 3
+	scanRange := 5
+
+	err := db.CreateKeygroup(kg)
+
+	if err != nil {
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		t.Error(err)
+	}
+
+	// 2. put in a bunch of items
+	ids := make([]string, updates)
+	vals := make([]string, updates)
+
+	for i := 0; i < updates; i++ {
+		ids[i] = "id" + strconv.Itoa(i)
+		vals[i] = "val" + strconv.Itoa(i)
+
+		err = db.Update(kg, ids[i], vals[i], 0)
+
+		if err != nil {
+			log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+			t.Error(err)
+		}
+
+	}
+
+	res, err := db.ReadSome(kg, "id"+strconv.Itoa(scanStart), uint64(scanRange))
+
+	if err != nil {
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		t.Error(err)
+	}
+
+	assert.Len(t, res, scanRange)
+
+	for i := scanStart; i < scanStart+scanRange; i++ {
+		assert.Contains(t, res, ids[i])
+		assert.Equal(t, res[ids[i]], vals[i])
+	}
 }
 
 func TestReadAll(t *testing.T) {

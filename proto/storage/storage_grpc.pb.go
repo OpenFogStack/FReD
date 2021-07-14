@@ -22,6 +22,7 @@ type DatabaseClient interface {
 	Delete(ctx context.Context, in *Key, opts ...grpc.CallOption) (*Response, error)
 	Append(ctx context.Context, in *AppendItem, opts ...grpc.CallOption) (*Key, error)
 	Read(ctx context.Context, in *Key, opts ...grpc.CallOption) (*Val, error)
+	Scan(ctx context.Context, in *ScanRequest, opts ...grpc.CallOption) (Database_ScanClient, error)
 	ReadAll(ctx context.Context, in *Keygroup, opts ...grpc.CallOption) (Database_ReadAllClient, error)
 	IDs(ctx context.Context, in *Keygroup, opts ...grpc.CallOption) (Database_IDsClient, error)
 	Exists(ctx context.Context, in *Key, opts ...grpc.CallOption) (*Response, error)
@@ -77,8 +78,40 @@ func (c *databaseClient) Read(ctx context.Context, in *Key, opts ...grpc.CallOpt
 	return out, nil
 }
 
+func (c *databaseClient) Scan(ctx context.Context, in *ScanRequest, opts ...grpc.CallOption) (Database_ScanClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Database_ServiceDesc.Streams[0], "/mcc.fred.storage.Database/Scan", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &databaseScanClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type Database_ScanClient interface {
+	Recv() (*Item, error)
+	grpc.ClientStream
+}
+
+type databaseScanClient struct {
+	grpc.ClientStream
+}
+
+func (x *databaseScanClient) Recv() (*Item, error) {
+	m := new(Item)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 func (c *databaseClient) ReadAll(ctx context.Context, in *Keygroup, opts ...grpc.CallOption) (Database_ReadAllClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Database_ServiceDesc.Streams[0], "/mcc.fred.storage.Database/ReadAll", opts...)
+	stream, err := c.cc.NewStream(ctx, &Database_ServiceDesc.Streams[1], "/mcc.fred.storage.Database/ReadAll", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +143,7 @@ func (x *databaseReadAllClient) Recv() (*Item, error) {
 }
 
 func (c *databaseClient) IDs(ctx context.Context, in *Keygroup, opts ...grpc.CallOption) (Database_IDsClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Database_ServiceDesc.Streams[1], "/mcc.fred.storage.Database/IDs", opts...)
+	stream, err := c.cc.NewStream(ctx, &Database_ServiceDesc.Streams[2], "/mcc.fred.storage.Database/IDs", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -196,7 +229,7 @@ func (c *databaseClient) DeleteKeygroupTrigger(ctx context.Context, in *Keygroup
 }
 
 func (c *databaseClient) GetKeygroupTrigger(ctx context.Context, in *Keygroup, opts ...grpc.CallOption) (Database_GetKeygroupTriggerClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Database_ServiceDesc.Streams[2], "/mcc.fred.storage.Database/GetKeygroupTrigger", opts...)
+	stream, err := c.cc.NewStream(ctx, &Database_ServiceDesc.Streams[3], "/mcc.fred.storage.Database/GetKeygroupTrigger", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -235,6 +268,7 @@ type DatabaseServer interface {
 	Delete(context.Context, *Key) (*Response, error)
 	Append(context.Context, *AppendItem) (*Key, error)
 	Read(context.Context, *Key) (*Val, error)
+	Scan(*ScanRequest, Database_ScanServer) error
 	ReadAll(*Keygroup, Database_ReadAllServer) error
 	IDs(*Keygroup, Database_IDsServer) error
 	Exists(context.Context, *Key) (*Response, error)
@@ -261,6 +295,9 @@ func (UnimplementedDatabaseServer) Append(context.Context, *AppendItem) (*Key, e
 }
 func (UnimplementedDatabaseServer) Read(context.Context, *Key) (*Val, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Read not implemented")
+}
+func (UnimplementedDatabaseServer) Scan(*ScanRequest, Database_ScanServer) error {
+	return status.Errorf(codes.Unimplemented, "method Scan not implemented")
 }
 func (UnimplementedDatabaseServer) ReadAll(*Keygroup, Database_ReadAllServer) error {
 	return status.Errorf(codes.Unimplemented, "method ReadAll not implemented")
@@ -371,6 +408,27 @@ func _Database_Read_Handler(srv interface{}, ctx context.Context, dec func(inter
 		return srv.(DatabaseServer).Read(ctx, req.(*Key))
 	}
 	return interceptor(ctx, in, info, handler)
+}
+
+func _Database_Scan_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(ScanRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(DatabaseServer).Scan(m, &databaseScanServer{stream})
+}
+
+type Database_ScanServer interface {
+	Send(*Item) error
+	grpc.ServerStream
+}
+
+type databaseScanServer struct {
+	grpc.ServerStream
+}
+
+func (x *databaseScanServer) Send(m *Item) error {
+	return x.ServerStream.SendMsg(m)
 }
 
 func _Database_ReadAll_Handler(srv interface{}, stream grpc.ServerStream) error {
@@ -593,6 +651,11 @@ var Database_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "Scan",
+			Handler:       _Database_Scan_Handler,
+			ServerStreams: true,
+		},
 		{
 			StreamName:    "ReadAll",
 			Handler:       _Database_ReadAll_Handler,
