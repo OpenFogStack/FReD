@@ -1,6 +1,6 @@
 # Shamelessly stolen from the original dockerfile
 # building the binary
-FROM golang:1.15-alpine
+FROM golang:1.16-alpine
 
 LABEL maintainer="tp@mcc.tu-berlin.de"
 

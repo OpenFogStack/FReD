@@ -9,6 +9,10 @@ type ReplicaSuite struct {
 	c *Config
 }
 
+func (t *ReplicaSuite) Name() string {
+	return "Replication"
+}
+
 func (t *ReplicaSuite) RunTests() {
 	// Fun with replicas
 	logNodeAction(t.c.nodeA, "Create keygroup KGRep")

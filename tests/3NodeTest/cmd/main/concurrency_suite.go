@@ -173,6 +173,10 @@ func concurrentUpdatesImmutable(nodes []*grpcclient.Node, concurrent int, update
 	}
 }
 
+func (t *ConcurrencySuite) Name() string {
+	return "Concurrency"
+}
+
 func (t *ConcurrencySuite) RunTests() {
 	run := 0
 	// Test 1: create a keygroup on a node, have it updated by two concurrent goroutines

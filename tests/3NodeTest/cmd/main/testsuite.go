@@ -8,6 +8,7 @@ import (
 type TestSuite interface {
 	// RunTests runs all tests of this testsuite
 	RunTests()
+	Name() string
 }
 
 type Config struct {

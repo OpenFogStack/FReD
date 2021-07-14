@@ -26,6 +26,8 @@ services:
       --little-key-file='/cert/littleclient.key' \
       --test-range=${TEST_RANGE} \
       --wait-user=false"
+    environment:
+      SECRET_KEY: "${SECRET_KEY:-default_secret_key}"
     volumes:
       - ./certificates/client.crt:/cert/client.crt
       - ./certificates/client.key:/cert/client.key

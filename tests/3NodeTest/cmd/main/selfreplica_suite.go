@@ -8,6 +8,10 @@ type SelfReplicaSuite struct {
 	c *Config
 }
 
+func (t *SelfReplicaSuite) Name() string {
+	return "Self Replication"
+}
+
 func (t *SelfReplicaSuite) RunTests() {
 	// testing adding a node as a replica for a keygroup on itself
 	logNodeAction(t.c.nodeB, "Create and populate a new keygroup to test pulling")

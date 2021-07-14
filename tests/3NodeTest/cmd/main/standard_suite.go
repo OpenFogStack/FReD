@@ -8,6 +8,10 @@ type StandardSuite struct {
 	c *Config
 }
 
+func (t *StandardSuite) Name() string {
+	return "Standard"
+}
+
 func (t *StandardSuite) RunTests() {
 	// Test Keygroups
 	logNodeAction(t.c.nodeA, "Creating keygroup testing")
