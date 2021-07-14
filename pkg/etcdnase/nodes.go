@@ -21,8 +21,8 @@ func (n *NameService) GetNodeAddress(nodeID fred.NodeID) (addr string, err error
 		return "", errors.Errorf("no such node %s", nodeID)
 	}
 
-	log.Debug().Msgf("NaSe: GetNodeAdress: Address of node %s is %s", nodeID, resp[0].Value)
-	return string(resp[0].Value), nil
+	log.Debug().Msgf("NaSe: GetNodeAdress: Address of node %s is %s", nodeID, resp)
+	return resp, nil
 }
 
 // GetAllNodes returns all nodes that are stored in the NaSe in the way they can be reached by other nodes
@@ -40,26 +40,25 @@ func (n *NameService) getAllNodesBySuffix(suffix string) (nodes []fred.Node, err
 
 	nodes = make([]fred.Node, 0)
 
-	for _, value := range resp {
-		key := string(value.Key)
+	for k, v := range resp {
 
 		// TODO status checks
-		if strings.HasSuffix(key, "|status") {
+		if strings.HasSuffix(k, "|status") {
 			continue
 		}
 
-		if !strings.HasSuffix(key, suffix) {
+		if !strings.HasSuffix(k, suffix) {
 			continue
 		}
 
 		// Now add node to return []
-		nodeID := strings.Split(key, sep)[1]
+		nodeID := strings.Split(k, sep)[1]
 
-		log.Debug().Msgf("NaSe: GetAllNodes: Got Response %s // %s", nodeID, string(value.Value))
+		log.Debug().Msgf("NaSe: GetAllNodes: Got Response %s // %s", nodeID, v)
 
 		nodes = append(nodes, fred.Node{
 			ID:   fred.NodeID(nodeID),
-			Host: string(value.Value),
+			Host: v,
 		})
 	}
 	return

@@ -7,13 +7,30 @@ import (
 	"strings"
 
 	"github.com/go-errors/errors"
+	"github.com/rs/zerolog/log"
 	"go.etcd.io/etcd/api/v3/mvccpb"
 	"go.etcd.io/etcd/client/v3"
 )
 
 // getPrefix gets every key that starts(!) with the specified string
 // the keys are sorted ascending by key for easier debugging
-func (n *NameService) getPrefix(prefix string) (kv []*mvccpb.KeyValue, err error) {
+func (n *NameService) getPrefix(prefix string) (kv map[string]string, err error) {
+	if n.cached {
+		// let's check the local cache first
+		// store prefix directly in cache
+		val, ok := n.local.Get(prefix)
+
+		log.Debug().Msgf("prefix: %s cache hit", prefix)
+
+		// found something!
+		if ok {
+			return val.(map[string]string), nil
+		}
+	}
+
+	log.Debug().Msgf("prefix: %s cache miss", prefix)
+
+	// didn't find anything? ask nameservice, cache, and be sure to invalidate on change
 	ctx, cncl := context.WithTimeout(context.Background(), timeout)
 
 	defer cncl()
@@ -24,13 +41,55 @@ func (n *NameService) getPrefix(prefix string) (kv []*mvccpb.KeyValue, err error
 		return nil, errors.New(err)
 	}
 
-	kv = resp.Kvs
+	kv = make(map[string]string)
 
-	return
+	for _, val := range resp.Kvs {
+		kv[string(val.Key)] = string(val.Value)
+	}
+
+	if n.cached {
+		n.local.Set(prefix, kv, 1)
+
+		go func() {
+			watchCtx, watchCncl := context.WithCancel(context.Background())
+			c := n.watcher.Watch(watchCtx, prefix, clientv3.WithPrefix())
+
+			defer watchCncl()
+			for r := range c {
+				for _, ev := range r.Events {
+					if ev.IsModify() {
+						if ev.Type == mvccpb.DELETE {
+							n.local.Del(prefix)
+							log.Debug().Msgf("prefix: %s cache invalidation", prefix)
+							return
+						}
+					}
+				}
+			}
+		}()
+	}
+	return kv, nil
 }
 
 // getExact gets the exact key
-func (n *NameService) getExact(key string) (kv []*mvccpb.KeyValue, err error) {
+func (n *NameService) getExact(key string) (v string, err error) {
+
+	if n.cached {
+		// let's check the local cache first
+		val, ok := n.local.Get(key)
+
+		log.Debug().Msgf("key: %s cache hit", key)
+
+		// found something!
+		if ok {
+			return val.(string), nil
+		}
+
+	}
+
+	log.Debug().Msgf("key: %s cache miss", key)
+
+	// didn't find anything? ask nameservice, cache, and be sure to invalidate on change
 	ctx, cncl := context.WithTimeout(context.Background(), timeout)
 
 	defer cncl()
@@ -38,36 +97,58 @@ func (n *NameService) getExact(key string) (kv []*mvccpb.KeyValue, err error) {
 	resp, err := n.cli.Get(ctx, key)
 
 	if err != nil {
-		return nil, errors.New(err)
+		return "", errors.New(err)
 	}
 
-	kv = resp.Kvs
-	return
+	if len(resp.Kvs) != 0 {
+		v = string(resp.Kvs[0].Value)
+	}
+
+	if n.cached {
+		n.local.Set(key, v, 1)
+
+		go func() {
+			watchCtx, watchCncl := context.WithCancel(context.Background())
+			c := n.watcher.Watch(watchCtx, key)
+
+			defer watchCncl()
+			for r := range c {
+				for _, ev := range r.Events {
+					if ev.IsModify() {
+						if ev.Type == mvccpb.DELETE {
+							n.local.Del(key)
+							log.Debug().Msgf("key: %s cache invalidation", key)
+							return
+						}
+					}
+				}
+			}
+		}()
+
+	}
+
+	return v, nil
 }
 
 func (n *NameService) getKeygroupStatus(kg string) (string, error) {
 	resp, err := n.getExact(fmt.Sprintf(fmtKgStatusString, kg))
-	if resp == nil {
-		return "", err
-	}
-	return string(resp[0].Value), err
+
+	return resp, err
 }
 
 func (n *NameService) getKeygroupMutable(kg string) (string, error) {
 	resp, err := n.getExact(fmt.Sprintf(fmtKgMutableString, kg))
-	if resp == nil {
-		return "", err
-	}
-	return string(resp[0].Value), err
+
+	return resp, err
 }
 
 func (n *NameService) getKeygroupExpiry(kg string, id string) (int, error) {
 	resp, err := n.getExact(fmt.Sprintf(fmtKgExpiryString, kg, id))
-	if resp == nil {
+	if resp == "" {
 		return 0, err
 	}
 
-	return strconv.Atoi(string(resp[0].Value))
+	return strconv.Atoi(resp)
 }
 
 // put puts the value into etcd.
@@ -75,6 +156,12 @@ func (n *NameService) put(key, value string) (err error) {
 	ctx, cncl := context.WithTimeout(context.TODO(), timeout)
 
 	defer cncl()
+
+	if n.cached {
+		n.local.Del(key)
+		log.Debug().Msgf("key: %s cache invalidation", key)
+
+	}
 
 	_, err = n.cli.Put(ctx, key, value)
 
@@ -90,6 +177,12 @@ func (n *NameService) delete(key string) (err error) {
 	ctx, cncl := context.WithTimeout(context.TODO(), timeout)
 
 	defer cncl()
+
+	if n.cached {
+		n.local.Del(key)
+		log.Debug().Msgf("key: %s cache invalidation", key)
+
+	}
 
 	_, err = n.cli.Delete(ctx, key)
 

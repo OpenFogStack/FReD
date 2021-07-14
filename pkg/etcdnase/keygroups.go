@@ -1,7 +1,6 @@
 package etcdnase
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 
@@ -124,15 +123,15 @@ func (n *NameService) GetKeygroupMembers(kg fred.KeygroupName, excludeSelf bool)
 
 	ids = make(map[fred.NodeID]int)
 
-	for i, value := range nodes {
+	for k, v := range nodes {
 		// If status is OK then add to available replicas
-		if bytes.Equal(value.Value, []byte("ok")) {
+		if v == "ok" {
 			// If we are to exclude ourselves
-			if excludeSelf && n.NodeID == getNodeNameFromKgNodeString(string(value.Key)) {
-				log.Debug().Msgf("NaSe: GetKeygroupMembers: Got result %d, key: %s value: %s", i, value.Key, value.Value)
+			if excludeSelf && n.NodeID == getNodeNameFromKgNodeString(k) {
+				log.Debug().Msgf("NaSe: GetKeygroupMembers: Got result key: %s value: %s", k, v)
 				log.Debug().Msg("...Excluding this node from results since this is the own node")
 			} else {
-				id := getNodeNameFromKgNodeString(string(value.Key))
+				id := getNodeNameFromKgNodeString(k)
 				ids[fred.NodeID(id)], err = n.getKeygroupExpiry(string(kg), id)
 				if err != nil {
 					return
@@ -140,7 +139,7 @@ func (n *NameService) GetKeygroupMembers(kg fred.KeygroupName, excludeSelf bool)
 			}
 
 		} else {
-			log.Debug().Msgf("NaSe: GetKeygroupMembers: Got result %d, key: %s value: %s", i, value.Key, value.Value)
+			log.Debug().Msgf("NaSe: GetKeygroupMembers: Got result key: %s value: %s", k, v)
 			log.Debug().Msg("... node has a status != OK, not returning it.")
 		}
 	}

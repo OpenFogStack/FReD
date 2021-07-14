@@ -35,16 +35,16 @@ func (n *NameService) RequestNodeStatus(nodeID fred.NodeID) (kgs []fred.Item) {
 
 	log.Debug().Msgf("Nase: RequestNodeStatus: found %d items that were missed", len(resp))
 
-	for i, val := range resp {
-		split := strings.Split(string(val.Key), sep)
+	for k := range resp {
+		split := strings.Split(k, sep)
 		kgname := split[3]
 		id := split[4]
-		log.Debug().Msgf("NaSe: RequestNodeStatus: missed item %d has kgname %s and id %s (from key in NaSe: %s)", i, kgname, id, val)
+		log.Debug().Msgf("NaSe: RequestNodeStatus: missed item has kgname %s and id %s (from key in NaSe: %s)", kgname, id, k)
 		kgs = append(kgs, fred.Item{
 			Keygroup: fred.KeygroupName(kgname),
 			ID:       id,
 		})
-		err = n.delete(string(val.Key))
+		err = n.delete(k)
 
 		if err != nil {
 			log.Err(err).Msgf("Could not remove missed data entry %s for node %v", id, nodeID)

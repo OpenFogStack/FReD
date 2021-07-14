@@ -21,6 +21,7 @@ services:
     --nase-cert /cert/nodeC.crt \
     --nase-key /cert/nodeC.key \
     --nase-ca /cert/ca.crt \
+    --nase-cached \
     --handler dev \
     --badgerdb-path ./db  \
     --remote-storage-cert /cert/nodeC.crt \
