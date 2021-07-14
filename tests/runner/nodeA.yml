@@ -27,8 +27,7 @@ services:
     build: ../../
     image: fred/fred:local
     container_name: nodeA-1
-    entrypoint: "fred \
-    --remote-storage-host 172.26.1.104:1337 \
+    command: "--remote-storage-host 172.26.1.104:1337 \
     --peer-host 172.26.1.101:5555 \
     --peer-host-proxy 172.26.1.1:5555 \
     --nodeID nodeA \
@@ -72,8 +71,7 @@ services:
     build: ../../
     image: fred/fred:local
     container_name: nodeA-2
-    entrypoint: "fred \
-    --remote-storage-host 172.26.1.104:1337 \
+    command: "--remote-storage-host 172.26.1.104:1337 \
     --peer-host 172.26.1.102:5555 \
     --peer-host-proxy 172.26.1.1:5555 \
     --nodeID nodeA \
@@ -113,8 +111,7 @@ services:
     build: ../../
     image: fred/fred:local
     container_name: nodeA-3
-    entrypoint: "fred \
-    --remote-storage-host 172.26.1.104:1337 \
+    command: "--remote-storage-host 172.26.1.104:1337 \
     --peer-host 172.26.1.103:5555 \
     --peer-host-proxy 172.26.1.1:5555 \
     --nodeID nodeA \
@@ -153,8 +150,7 @@ services:
       dockerfile: storage.Dockerfile
     image: fred/store:local
     container_name: storeA
-    entrypoint: "storageserver \
-    --log-level '${LOG_LEVEL_STORE}' \
+    command: "--log-level '${LOG_LEVEL_STORE}' \
     --cert /cert/cert.crt \
     --key /cert/key.key \
     --ca-file /cert/ca.crt"

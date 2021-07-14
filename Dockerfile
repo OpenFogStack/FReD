@@ -1,5 +1,5 @@
 # building the binary
-FROM golang:1.15-alpine as golang
+FROM golang:1.16-alpine as golang
 
 LABEL maintainer="tp@mcc.tu-berlin.de"
 
@@ -32,4 +32,4 @@ EXPOSE 443
 EXPOSE 5555
 
 ENV PATH=.
-CMD ["fred"]
+ENTRYPOINT ["fred"]

@@ -12,6 +12,9 @@ type TriggerSuite struct {
 	c *Config
 }
 
+func (t *TriggerSuite) Name() string {
+	return "Trigger"
+}
 func (t *TriggerSuite) RunTests() {
 	// let's test trigger nodes
 	// create a new keygroup on nodeA

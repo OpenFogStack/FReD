@@ -4,6 +4,10 @@ type AuthenticationSuite struct {
 	c *Config
 }
 
+func (t *AuthenticationSuite) Name() string {
+	return "Authentication"
+}
+
 func (t *AuthenticationSuite) RunTests() {
 	// test RBAC and authentication
 	logNodeAction(t.c.nodeA, "create keygroup \"rbactest\"")

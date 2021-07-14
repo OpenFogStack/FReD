@@ -478,7 +478,7 @@ For development, it is recommended to install [GoLand](https://www.jetbrains.com
 
 ### Git Workflow
 
-Setup git environment with `sh ./ci/env-setup.sh` (installs git hooks). Be sure to have Go (>1.15) installed.
+Setup git environment with `sh ./ci/env-setup.sh` (installs git hooks). Be sure to have Go (>1.16) installed.
 
 The `main` branch is protected and only approved pull requests can push to it.
 Most important part of the workflow is `rebase`, [here's](https://www.atlassian.com/git/tutorials/merging-vs-rebasing) a refresher on merging vs rebasing.

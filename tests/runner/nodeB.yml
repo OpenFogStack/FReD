@@ -8,8 +8,7 @@ services:
       - storeB
     image: fred/fred:local
     container_name: nodeB
-    entrypoint: "fred \
-    --remote-storage-host 172.26.2.2:1337 \
+    command: "--remote-storage-host 172.26.2.2:1337 \
     --peer-host 172.26.2.1:5555 \
     --nodeID nodeB \
     --host 172.26.2.1:9001 \
@@ -48,8 +47,7 @@ services:
       dockerfile: storage.Dockerfile
     image: fred/store:local
     container_name: storeB
-    entrypoint: "storageserver \
-    --log-level '${LOG_LEVEL_STORE}' \
+    command: "--log-level '${LOG_LEVEL_STORE}' \
     --cert /cert/cert.crt \
     --key /cert/key.key \
     --ca-file /cert/ca.crt"

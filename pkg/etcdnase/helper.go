@@ -60,7 +60,7 @@ func (n *NameService) getPrefix(prefix string) (kv map[string]string, err error)
 					if ev.IsModify() {
 						if ev.Type == mvccpb.DELETE {
 							n.local.Del(prefix)
-							log.Debug().Msgf("prefix: %s cache invalidation", prefix)
+							log.Debug().Msgf("prefix: %s remote cache invalidation", prefix)
 							return
 						}
 					}
@@ -117,7 +117,7 @@ func (n *NameService) getExact(key string) (v string, err error) {
 					if ev.IsModify() {
 						if ev.Type == mvccpb.DELETE {
 							n.local.Del(key)
-							log.Debug().Msgf("key: %s cache invalidation", key)
+							log.Debug().Msgf("key: %s remote cache invalidation", key)
 							return
 						}
 					}
@@ -159,7 +159,7 @@ func (n *NameService) put(key, value string) (err error) {
 
 	if n.cached {
 		n.local.Del(key)
-		log.Debug().Msgf("key: %s cache invalidation", key)
+		log.Debug().Msgf("key: %s local cache invalidation", key)
 
 	}
 
@@ -180,7 +180,7 @@ func (n *NameService) delete(key string) (err error) {
 
 	if n.cached {
 		n.local.Del(key)
-		log.Debug().Msgf("key: %s cache invalidation", key)
+		log.Debug().Msgf("key: %s local cache invalidation", key)
 
 	}
 

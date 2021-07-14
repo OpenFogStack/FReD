@@ -8,6 +8,10 @@ type ExpirySuite struct {
 	c *Config
 }
 
+func (t *ExpirySuite) Name() string {
+	return "Expiry"
+}
+
 func (t *ExpirySuite) RunTests() {
 	// test expiring data items
 	logNodeAction(t.c.nodeC, "Create normal keygroup on nodeC without expiry")

@@ -4,6 +4,10 @@ type ImmutableSuite struct {
 	c *Config
 }
 
+func (t *ImmutableSuite) Name() string {
+	return "Immutable"
+}
+
 func (t *ImmutableSuite) RunTests() {
 	// testing immutable keygroups
 	logNodeAction(t.c.nodeB, "Testing immutable keygroups by creating a new immutable keygroup on nodeB")

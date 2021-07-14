@@ -1,6 +1,6 @@
 # This is a compy from the dockerfile that adds support for debugging. It is used in the 3NodeTest to debug nodeB
 # building the binary
-FROM golang:1.15-buster as golang
+FROM golang:1.16-buster as golang
 
 LABEL maintainer="tp@mcc.tu-berlin.de"
 
@@ -36,5 +36,5 @@ EXPOSE 443
 EXPOSE 5555
 EXPOSE 40000
 
-#ENTRYPOINT ["/dlv"]
-ENTRYPOINT ["./dlv", "--listen=:40000", "--headless=true", "--api-version=2", "--accept-multiclient", "exec", "./frednode", "--"]
+ENTRYPOINT ["./dlv"]
+CMD ["--listen=:40000", "--headless=true", "--api-version=2", "--accept-multiclient", "exec", "./frednode", "--"]

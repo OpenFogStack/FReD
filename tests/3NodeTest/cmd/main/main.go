@@ -16,8 +16,11 @@ import (
 
 var (
 	// Wait for the user to press enter to continue
-	waitUser *bool
-	reader   = bufio.NewReader(os.Stdin)
+	waitUser  *bool
+	waitTime  *time.Duration
+	reader    = bufio.NewReader(os.Stdin)
+	currSuite int
+	failures  map[int]int
 )
 
 func main() {
@@ -32,6 +35,7 @@ func main() {
 
 	// Parse Flags
 	waitUser = flag.Bool("wait-user", false, "wait for user input after each test")
+	waitTime = flag.Duration("wait-time", 1*time.Millisecond, "time to wait between commands")
 
 	nodeAhost := flag.String("nodeAhost", "", "host of nodeA (e.g. localhost)") // Docker: localhost
 	nodeAhttpPort := flag.String("nodeAhttp", "", "port of nodeA (e.g. 9001)")  // Docker: 9002
@@ -136,18 +140,31 @@ func main() {
 		minTest = maxTest
 	}
 
+	failures = make(map[int]int)
+
+	startTime := time.Now()
+
 	// run tests
 	// minTest and maxTest are indexed with 1 at the beginning, but the slice starts at 0
-	for i := minTest - 1; i < maxTest; i++ {
-		testSuites[i].RunTests()
+	for currSuite = minTest - 1; currSuite < maxTest; currSuite++ {
+		testSuites[currSuite].RunTests()
 	}
 
 	// tally errors
 	totalerrors := nodeA.Errors + nodeB.Errors + nodeC.Errors + littleClient.Errors
 
 	if totalerrors > 0 {
+		for s, errorCount := range failures {
+			if errorCount > 0 {
+				log.Error().Msgf("Suite %s: %d Errors", testSuites[s].Name(), errorCount)
+				continue
+			}
+			log.Info().Msgf("Suite %s: OK!", testSuites[s].Name())
+		}
 		log.Error().Msgf("Total Errors: %d", totalerrors)
 	}
+
+	log.Info().Msgf("%d Tests Completed in %.2f seconds", maxTest-minTest+1, float64(time.Now().UnixNano()-startTime.UnixNano())/1e9)
 
 	os.Exit(totalerrors)
 }
@@ -161,6 +178,8 @@ func logNodeFailure(node *grpcclient.Node, expected, result string) {
 	wait()
 	log.Warn().Str("node", node.ID).Msgf("expected: %s, but got: %#v", expected, result)
 	node.Errors++
+	failures[currSuite]++
+
 }
 
 func wait() {
@@ -168,6 +187,6 @@ func wait() {
 		log.Info().Msg("Please press enter to continue:")
 		_, _, _ = reader.ReadLine()
 	} else {
-		time.Sleep(1 * time.Second)
+		time.Sleep(*waitTime)
 	}
 }
