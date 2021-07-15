@@ -85,6 +85,35 @@ func (c *Client) Read(kg string, id string) (string, error) {
 	return response.Val, nil
 }
 
+// Scan calls the same method on the remote server
+func (c *Client) ReadSome(kg string, id string, count uint64) (map[string]string, error) {
+	stream, err := c.dbClient.Scan(context.Background(), &storage.ScanRequest{
+		Key:   &storage.Key{Keygroup: kg, Id: id},
+		Count: count,
+	})
+	if err != nil {
+		log.Err(err).Msgf("StorageClient: Error in Scan in: %#v count %d", kg, count)
+		return nil, errors.New(err)
+	}
+	responses := make(map[string]string)
+
+	for {
+		in, err := stream.Recv()
+		if errors.Is(err, io.EOF) {
+			// read done.
+			break
+		}
+		if err != nil {
+			log.Err(err).Msg("StorageClient: Error in Scan while receiving a Item")
+			return nil, errors.New(err)
+		}
+
+		responses[in.Id] = in.Val
+
+	}
+	return responses, nil
+}
+
 // ReadAll calls the same method on the remote server
 func (c *Client) ReadAll(kg string) (map[string]string, error) {
 	stream, err := c.dbClient.ReadAll(context.Background(), &storage.Keygroup{Keygroup: kg})

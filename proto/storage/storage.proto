@@ -8,6 +8,7 @@ service Database {
     rpc Delete (Key) returns (Response) {}
     rpc Append (AppendItem) returns (Key) {}
     rpc Read (Key) returns (Val) {}
+    rpc Scan (ScanRequest) returns (stream Item) {}
     rpc ReadAll (Keygroup) returns (stream Item) {}
     rpc IDs (Keygroup) returns (stream Key) {}
     rpc Exists (Key) returns (Response) {}
@@ -23,6 +24,11 @@ message Item {
     string keygroup = 1;
     string id = 2;
     string val = 3;
+}
+
+message ScanRequest {
+    Key key = 1;
+    uint64 count = 2;
 }
 
 message UpdateItem {

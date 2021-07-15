@@ -96,6 +96,30 @@ func (h *exthandler) HandleRead(user string, i Item) (Item, error) {
 	return i, nil
 }
 
+// HandleScan handles requests to the Scan endpoint of the client interface.
+func (h *exthandler) HandleScan(user string, i Item, count uint64) ([]Item, error) {
+	allowed, err := h.a.isAllowed(user, Read, i.Keygroup)
+
+	if err != nil || !allowed {
+		return nil, errors.Errorf("user %s cannot read from keygroup %s", user, i.Keygroup)
+	}
+
+	if count <= 0 {
+		return nil, errors.Errorf("count must be at least 1, got %d", count)
+	}
+
+	result, err := h.s.scan(i.Keygroup, i.ID, count)
+
+	if err != nil {
+		log.Error().Msgf("Error in Scan is: %#v", err)
+		// This prints the error stack whenever a item is not found, nobody cares about this...
+		// log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		return nil, errors.Errorf("error scanning %d items starting at %s from keygroup %s", count, i.ID, i.Keygroup)
+	}
+
+	return result, nil
+}
+
 // HandleAppend handles requests to the Append endpoint of the client interface.
 func (h *exthandler) HandleAppend(user string, i Item) (Item, error) {
 	allowed, err := h.a.isAllowed(user, Update, i.Keygroup)

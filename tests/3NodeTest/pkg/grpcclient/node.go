@@ -393,6 +393,37 @@ func (n *Node) GetItem(kgname, item string, expectError bool) string {
 	return res.Data
 }
 
+// ScanItems calls the Scan endpoint of the GRPC interface.
+func (n *Node) ScanItems(kgname, item string, count uint64, expectError bool) map[string]string {
+	res, err := n.Client.Scan(context.Background(), &client.ScanRequest{
+		Keygroup: kgname,
+		Id:       item,
+		Count:    count,
+	})
+
+	if err != nil && !expectError {
+		log.Warn().Msgf("ScanItems: error %s", err)
+		n.Errors++
+	}
+
+	if err == nil && expectError {
+		log.Warn().Msg("ScanItems: Expected Error bot got no error")
+		n.Errors++
+	}
+
+	if res == nil {
+		return nil
+	}
+
+	items := make(map[string]string)
+
+	for _, d := range res.Data {
+		items[d.Id] = d.Val
+	}
+
+	return items
+}
+
 // DeleteItem calls the DeleteItem endpoint of the GRPC interface.
 func (n *Node) DeleteItem(kgname, item string, expectError bool) {
 

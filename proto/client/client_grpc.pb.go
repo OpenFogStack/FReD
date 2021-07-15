@@ -21,6 +21,7 @@ type ClientClient interface {
 	CreateKeygroup(ctx context.Context, in *CreateKeygroupRequest, opts ...grpc.CallOption) (*StatusResponse, error)
 	DeleteKeygroup(ctx context.Context, in *DeleteKeygroupRequest, opts ...grpc.CallOption) (*StatusResponse, error)
 	Read(ctx context.Context, in *ReadRequest, opts ...grpc.CallOption) (*ReadResponse, error)
+	Scan(ctx context.Context, in *ScanRequest, opts ...grpc.CallOption) (*ScanResponse, error)
 	Update(ctx context.Context, in *UpdateRequest, opts ...grpc.CallOption) (*StatusResponse, error)
 	Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*StatusResponse, error)
 	Append(ctx context.Context, in *AppendRequest, opts ...grpc.CallOption) (*AppendResponse, error)
@@ -65,6 +66,15 @@ func (c *clientClient) DeleteKeygroup(ctx context.Context, in *DeleteKeygroupReq
 func (c *clientClient) Read(ctx context.Context, in *ReadRequest, opts ...grpc.CallOption) (*ReadResponse, error) {
 	out := new(ReadResponse)
 	err := c.cc.Invoke(ctx, "/mcc.fred.client.Client/Read", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clientClient) Scan(ctx context.Context, in *ScanRequest, opts ...grpc.CallOption) (*ScanResponse, error) {
+	out := new(ScanResponse)
+	err := c.cc.Invoke(ctx, "/mcc.fred.client.Client/Scan", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -195,6 +205,7 @@ type ClientServer interface {
 	CreateKeygroup(context.Context, *CreateKeygroupRequest) (*StatusResponse, error)
 	DeleteKeygroup(context.Context, *DeleteKeygroupRequest) (*StatusResponse, error)
 	Read(context.Context, *ReadRequest) (*ReadResponse, error)
+	Scan(context.Context, *ScanRequest) (*ScanResponse, error)
 	Update(context.Context, *UpdateRequest) (*StatusResponse, error)
 	Delete(context.Context, *DeleteRequest) (*StatusResponse, error)
 	Append(context.Context, *AppendRequest) (*AppendResponse, error)
@@ -222,6 +233,9 @@ func (UnimplementedClientServer) DeleteKeygroup(context.Context, *DeleteKeygroup
 }
 func (UnimplementedClientServer) Read(context.Context, *ReadRequest) (*ReadResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Read not implemented")
+}
+func (UnimplementedClientServer) Scan(context.Context, *ScanRequest) (*ScanResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Scan not implemented")
 }
 func (UnimplementedClientServer) Update(context.Context, *UpdateRequest) (*StatusResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
@@ -324,6 +338,24 @@ func _Client_Read_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClientServer).Read(ctx, req.(*ReadRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Client_Scan_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ScanRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClientServer).Scan(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/mcc.fred.client.Client/Scan",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClientServer).Scan(ctx, req.(*ScanRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -580,6 +612,10 @@ var Client_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Read",
 			Handler:    _Client_Read_Handler,
+		},
+		{
+			MethodName: "Scan",
+			Handler:    _Client_Scan_Handler,
 		},
 		{
 			MethodName: "Update",

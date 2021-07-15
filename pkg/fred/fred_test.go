@@ -3,6 +3,7 @@ package fred_test
 import (
 	"net/url"
 	"os"
+	"strconv"
 	"testing"
 
 	"git.tu-berlin.de/mcc-fred/fred/pkg/badgerdb"
@@ -95,7 +96,22 @@ func TestMain(m *testing.M) {
 
 	f = fred.New(&config)
 
-	os.Exit(m.Run())
+	stat := m.Run()
+
+	fInfo, err = os.Stat(etcdDir)
+
+	if err == nil {
+		if !fInfo.IsDir() {
+			panic(errors.Errorf("%s is not a directory!", etcdDir))
+		}
+
+		err = os.RemoveAll(etcdDir)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	os.Exit(stat)
 }
 
 func testPut(t *testing.T, user, kg, id, value string) {
@@ -234,6 +250,131 @@ func TestMisformedKeygroupInput(t *testing.T) {
 	// testMisformedKeygroupInput(t, "user920194\n", "misformed2", "id", "value")
 	testMisformedKeygroupInput(t, "user", "misf%?ormed", "id", "value")
 	testMisformedKeygroupInput(t, "use|r", "misf|ormed", "id|", "val|ue")
+}
+
+func testScan(t *testing.T, user string, kg string, mutable bool, updates int, scanStart int, scanRange int) {
+
+	// 1. create a keygroup
+	err := f.E.HandleCreateKeygroup(user, fred.Keygroup{
+		Name:    fred.KeygroupName(kg),
+		Mutable: mutable,
+		Expiry:  0,
+	})
+
+	if err != nil {
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		t.Error(err)
+	}
+
+	defer func() {
+		err := f.E.HandleDeleteKeygroup(user, fred.Keygroup{
+			Name: fred.KeygroupName(kg),
+		})
+
+		if err != nil {
+			log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+			t.Error(err)
+		}
+	}()
+
+	// 2. put in a bunch of items
+	ids := make([]string, updates)
+	vals := make([]string, updates)
+
+	for i := 0; i < updates; i++ {
+		vals[i] = "val" + strconv.Itoa(i)
+		if mutable {
+			ids[i] = "id" + strconv.Itoa(i)
+			err := f.E.HandleUpdate(user, fred.Item{
+				Keygroup: fred.KeygroupName(kg),
+				ID:       ids[i],
+				Val:      vals[i],
+			})
+			if err != nil {
+				log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+				t.Error(err)
+			}
+		} else {
+			item, err := f.E.HandleAppend(user, fred.Item{
+				Keygroup: fred.KeygroupName(kg),
+				Val:      vals[i],
+			})
+			if err != nil {
+				log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+				t.Error(err)
+				continue
+			}
+			ids[i] = item.ID
+		}
+	}
+
+	// 3. do a scan read
+	// we expect [scanRange] amount of items, starting with [scanStart]
+	var startKey string
+	if mutable {
+		startKey = "id" + strconv.Itoa(scanStart)
+	} else {
+		startKey = strconv.Itoa(scanStart)
+	}
+
+	items, err := f.E.HandleScan(user, fred.Item{
+		Keygroup: fred.KeygroupName(kg),
+		ID:       startKey,
+	}, uint64(scanRange))
+
+	// if scanRange == 0 we expect an empty array
+	if scanRange == 0 {
+		assert.Len(t, items, 0, "scanRange %d == 0", scanRange)
+		return
+	}
+
+	// if startkey (scanStart not in [0, updates[) is not found, we also expect an error
+	if scanStart < 0 || scanStart >= updates {
+		assert.Error(t, err, "scanStart %d not in [0, updates[", scanStart)
+		return
+	}
+
+	// if scanRange < updates, we expect exactly min(updates - scanStart, scanRange) items
+	// in this case we obviously want all the values to be correct as well!
+
+	if err != nil {
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		t.Error(err)
+	}
+
+	expected := updates - scanStart
+	if scanRange < expected {
+		expected = scanRange
+	}
+
+	assert.Len(t, items, expected, "expect exactly updates - scanStart items")
+
+	// we make no assumptions about the ordering of key-value pairs on a scan read
+
+	res := make(map[string]string)
+
+	for _, i := range items {
+		res[i.ID] = i.Val
+	}
+
+	for i := 0; i < updates; i++ {
+		if i < scanStart || i >= scanStart+expected {
+			continue
+		}
+		assert.Contains(t, res, ids[i])
+		assert.Equal(t, vals[i], res[ids[i]])
+	}
+}
+
+func TestScan(t *testing.T) {
+	testScan(t, "user", "scankeygroup1", true, 10, 3, 5)
+	testScan(t, "user", "scankeygroup2", false, 10, 3, 5)
+	testScan(t, "user", "scankeygroup3", true, 100, 0, 100)
+	testScan(t, "user", "scankeygroup4", false, 100, 0, 100)
+	testScan(t, "user", "scankeygroup5", true, 10, 11, 5)
+	testScan(t, "user", "scankeygroup6", true, 10, 0, 11)
+	testScan(t, "user", "scankeygroup7", false, 10, 11, 5)
+	testScan(t, "user", "scankeygroup8", false, 10, 0, 11)
 }
 
 func BenchmarkPut(b *testing.B) {

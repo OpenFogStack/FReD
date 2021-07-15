@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 )
 
 type StandardSuite struct {
@@ -51,6 +52,49 @@ func (t *StandardSuite) RunTests() {
 	resp = t.c.nodeA.GetItem("KG1", "KG1Item", false)
 	if resp != "KG1Value2" {
 		logNodeFailure(t.c.nodeA, "resp is \"KG1Value2\"", resp)
+	}
+
+	// test scanning
+	logNodeAction(t.c.nodeA, "Creating kg scantest")
+	t.c.nodeA.CreateKeygroup("scantest", true, 0, false)
+	numItems := 20
+	scanStart := 5
+	scanRange := 10
+	// 2. put in a bunch of items
+	ids := make([]string, numItems)
+	vals := make([]string, numItems)
+
+	for i := 0; i < 20; i++ {
+		vals[i] = "val" + strconv.Itoa(i)
+		ids[i] = "id" + strconv.Itoa(i)
+		t.c.nodeA.PutItem("scantest", ids[i], vals[i], false)
+	}
+
+	// 3. do a scan read
+	// we expect [scanRange] amount of items, starting with [scanStart]
+	startKey := "id" + strconv.Itoa(scanStart)
+
+	items := t.c.nodeA.ScanItems("scantest", startKey, uint64(scanRange), false)
+
+	expected := scanRange - scanStart
+
+	if len(items) != expected {
+		logNodeFailure(t.c.nodeA, fmt.Sprintf("%d items", expected), fmt.Sprintf("%d items", len(items)))
+	}
+
+	for i := 0; i < numItems; i++ {
+		if i < scanStart || i >= scanStart+expected {
+			continue
+		}
+		val, ok := items[ids[i]]
+		if !ok {
+			logNodeFailure(t.c.nodeA, fmt.Sprintf("%s is in returned items", ids[i]), fmt.Sprintf("%s is not in returned items", ids[i]))
+			continue
+		}
+		if val != vals[i] {
+			logNodeFailure(t.c.nodeA, fmt.Sprintf("item %s is %s", ids[i], vals[i]), fmt.Sprintf("item %s is %s", ids[i], items[ids[i]]))
+			continue
+		}
 	}
 
 	logNodeAction(t.c.nodeA, "Getting all Replicas that nodeA has")
