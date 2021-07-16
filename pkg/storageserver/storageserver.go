@@ -23,7 +23,7 @@ func NewStorageServer(store *fred.Store) *Server {
 func (s *Server) Update(_ context.Context, item *storage.UpdateItem) (*storage.Response, error) {
 	log.Debug().Msgf("GRPCServer: Update in=%#v", item)
 
-	err := s.store.Update(item.Keygroup, item.Id, item.Val, int(item.Expiry))
+	err := s.store.Update(item.Keygroup, item.Id, item.Val, item.Append, int(item.Expiry))
 	if err != nil {
 		log.Err(err).Msgf("GRPCServer has encountered an error while updating item %#v", item)
 		return &storage.Response{Success: false}, err

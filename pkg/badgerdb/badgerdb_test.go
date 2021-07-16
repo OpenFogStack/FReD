@@ -102,7 +102,7 @@ func TestReadSome(t *testing.T) {
 		ids[i] = "id" + strconv.Itoa(i)
 		vals[i] = "val" + strconv.Itoa(i)
 
-		err = db.Update(kg, ids[i], vals[i], 0)
+		err = db.Update(kg, ids[i], vals[i], false, 0)
 
 		if err != nil {
 			log.Err(err).Msg(err.(*errors.Error).ErrorStack())
@@ -135,21 +135,21 @@ func TestReadAll(t *testing.T) {
 		t.Error(err)
 	}
 
-	err = db.Update(kg, "id-1", "data-1", 0)
+	err = db.Update(kg, "id-1", "data-1", false, 0)
 
 	if err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		t.Error(err)
 	}
 
-	err = db.Update(kg, "id-2", "data-2", 0)
+	err = db.Update(kg, "id-2", "data-2", false, 0)
 
 	if err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		t.Error(err)
 	}
 
-	err = db.Update(kg, "id-3", "data-3", 0)
+	err = db.Update(kg, "id-3", "data-3", false, 0)
 
 	if err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
@@ -165,21 +165,21 @@ func TestReadAll(t *testing.T) {
 		t.Error(err)
 	}
 
-	err = db.Update(kg2, "id-1", "data-1", 0)
+	err = db.Update(kg2, "id-1", "data-1", false, 0)
 
 	if err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		t.Error(err)
 	}
 
-	err = db.Update(kg2, "id-2", "data-2", 0)
+	err = db.Update(kg2, "id-2", "data-2", false, 0)
 
 	if err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		t.Error(err)
 	}
 
-	err = db.Update(kg2, "id-3", "data-3", 0)
+	err = db.Update(kg2, "id-3", "data-3", false, 0)
 
 	if err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
@@ -208,21 +208,21 @@ func TestIDs(t *testing.T) {
 		t.Error(err)
 	}
 
-	err = db.Update(kg, "id-1", "data-1", 0)
+	err = db.Update(kg, "id-1", "data-1", false, 0)
 
 	if err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		t.Error(err)
 	}
 
-	err = db.Update(kg, "id-2", "data-2", 0)
+	err = db.Update(kg, "id-2", "data-2", false, 0)
 
 	if err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		t.Error(err)
 	}
 
-	err = db.Update(kg, "id-3", "data-3", 0)
+	err = db.Update(kg, "id-3", "data-3", false, 0)
 
 	if err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
@@ -238,21 +238,21 @@ func TestIDs(t *testing.T) {
 		t.Error(err)
 	}
 
-	err = db.Update(kg2, "id-1", "data-1", 0)
+	err = db.Update(kg2, "id-1", "data-1", false, 0)
 
 	if err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		t.Error(err)
 	}
 
-	err = db.Update(kg2, "id-2", "data-2", 0)
+	err = db.Update(kg2, "id-2", "data-2", false, 0)
 
 	if err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		t.Error(err)
 	}
 
-	err = db.Update(kg2, "id-3", "data-3", 0)
+	err = db.Update(kg2, "id-3", "data-3", false, 0)
 
 	if err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
@@ -283,7 +283,7 @@ func TestItemExists(t *testing.T) {
 		t.Error(err)
 	}
 
-	err = db.Update(kg, id, value, 0)
+	err = db.Update(kg, id, value, false, 0)
 
 	if err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
@@ -314,7 +314,7 @@ func TestItemGet(t *testing.T) {
 		t.Error(err)
 	}
 
-	err = db.Update(kg, id, value, 0)
+	err = db.Update(kg, id, value, false, 0)
 
 	if err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
@@ -343,7 +343,7 @@ func TestItemDelete(t *testing.T) {
 		t.Error(err)
 	}
 
-	err = db.Update(kg, id, value, 0)
+	err = db.Update(kg, id, value, false, 0)
 
 	if err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
@@ -390,7 +390,7 @@ func TestItemAfterDeleteKeygroup(t *testing.T) {
 		t.Error(err)
 	}
 
-	err = db.Update(kg, id, value, 0)
+	err = db.Update(kg, id, value, false, 0)
 
 	if err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
@@ -422,7 +422,7 @@ func TestExpiry(t *testing.T) {
 		t.Error(err)
 	}
 
-	err = db.Update(kg, id, value, 10)
+	err = db.Update(kg, id, value, false, 10)
 
 	if err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
@@ -662,7 +662,7 @@ func TestClose(t *testing.T) {
 		t.Error(err)
 	}
 
-	err = db.Update(kg, id, value, 0)
+	err = db.Update(kg, id, value, false, 0)
 
 	if err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())

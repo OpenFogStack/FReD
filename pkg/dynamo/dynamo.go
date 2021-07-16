@@ -412,7 +412,7 @@ func (s *Storage) IDs(kg string) ([]string, error) {
 }
 
 // Update updates the item with the specified id in the specified keygroup.
-func (s *Storage) Update(kg, id, val string, expiry int) error {
+func (s *Storage) Update(kg, id, val string, _ bool, expiry int) error {
 
 	key := makeKeyName(kg, id)
 

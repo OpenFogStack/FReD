@@ -155,7 +155,7 @@ func (h *exthandler) HandleAppend(user string, i Item) (Item, error) {
 		return i, errors.Errorf("error updating item")
 	}
 
-	if err := h.r.relayUpdate(result); err != nil {
+	if err := h.r.relayAppend(result); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return result, errors.Errorf("error updating item")
 	}
@@ -200,7 +200,7 @@ func (h *exthandler) HandleUpdate(user string, i Item) error {
 		return errors.Errorf("error updating item")
 	}
 
-	if err := h.s.update(i, expiry); err != nil {
+	if err := h.s.update(i, false, expiry); err != nil {
 		log.Printf("%#v", err)
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error updating item")

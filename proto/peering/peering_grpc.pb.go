@@ -18,14 +18,15 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type NodeClient interface {
-	CreateKeygroup(ctx context.Context, in *CreateKeygroupRequest, opts ...grpc.CallOption) (*StatusResponse, error)
-	DeleteKeygroup(ctx context.Context, in *DeleteKeygroupRequest, opts ...grpc.CallOption) (*StatusResponse, error)
-	PutItem(ctx context.Context, in *PutItemRequest, opts ...grpc.CallOption) (*StatusResponse, error)
+	CreateKeygroup(ctx context.Context, in *CreateKeygroupRequest, opts ...grpc.CallOption) (*Empty, error)
+	DeleteKeygroup(ctx context.Context, in *DeleteKeygroupRequest, opts ...grpc.CallOption) (*Empty, error)
+	PutItem(ctx context.Context, in *PutItemRequest, opts ...grpc.CallOption) (*Empty, error)
+	AppendItem(ctx context.Context, in *AppendItemRequest, opts ...grpc.CallOption) (*Empty, error)
 	GetItem(ctx context.Context, in *GetItemRequest, opts ...grpc.CallOption) (*GetItemResponse, error)
 	GetAllItems(ctx context.Context, in *GetAllItemsRequest, opts ...grpc.CallOption) (*GetAllItemsResponse, error)
-	DeleteItem(ctx context.Context, in *DeleteItemRequest, opts ...grpc.CallOption) (*StatusResponse, error)
-	AddReplica(ctx context.Context, in *AddReplicaRequest, opts ...grpc.CallOption) (*StatusResponse, error)
-	RemoveReplica(ctx context.Context, in *RemoveReplicaRequest, opts ...grpc.CallOption) (*StatusResponse, error)
+	DeleteItem(ctx context.Context, in *DeleteItemRequest, opts ...grpc.CallOption) (*Empty, error)
+	AddReplica(ctx context.Context, in *AddReplicaRequest, opts ...grpc.CallOption) (*Empty, error)
+	RemoveReplica(ctx context.Context, in *RemoveReplicaRequest, opts ...grpc.CallOption) (*Empty, error)
 }
 
 type nodeClient struct {
@@ -36,8 +37,8 @@ func NewNodeClient(cc grpc.ClientConnInterface) NodeClient {
 	return &nodeClient{cc}
 }
 
-func (c *nodeClient) CreateKeygroup(ctx context.Context, in *CreateKeygroupRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
-	out := new(StatusResponse)
+func (c *nodeClient) CreateKeygroup(ctx context.Context, in *CreateKeygroupRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/mcc.fred.peering.Node/CreateKeygroup", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -45,8 +46,8 @@ func (c *nodeClient) CreateKeygroup(ctx context.Context, in *CreateKeygroupReque
 	return out, nil
 }
 
-func (c *nodeClient) DeleteKeygroup(ctx context.Context, in *DeleteKeygroupRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
-	out := new(StatusResponse)
+func (c *nodeClient) DeleteKeygroup(ctx context.Context, in *DeleteKeygroupRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/mcc.fred.peering.Node/DeleteKeygroup", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -54,9 +55,18 @@ func (c *nodeClient) DeleteKeygroup(ctx context.Context, in *DeleteKeygroupReque
 	return out, nil
 }
 
-func (c *nodeClient) PutItem(ctx context.Context, in *PutItemRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
-	out := new(StatusResponse)
+func (c *nodeClient) PutItem(ctx context.Context, in *PutItemRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/mcc.fred.peering.Node/PutItem", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *nodeClient) AppendItem(ctx context.Context, in *AppendItemRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, "/mcc.fred.peering.Node/AppendItem", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -81,8 +91,8 @@ func (c *nodeClient) GetAllItems(ctx context.Context, in *GetAllItemsRequest, op
 	return out, nil
 }
 
-func (c *nodeClient) DeleteItem(ctx context.Context, in *DeleteItemRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
-	out := new(StatusResponse)
+func (c *nodeClient) DeleteItem(ctx context.Context, in *DeleteItemRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/mcc.fred.peering.Node/DeleteItem", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -90,8 +100,8 @@ func (c *nodeClient) DeleteItem(ctx context.Context, in *DeleteItemRequest, opts
 	return out, nil
 }
 
-func (c *nodeClient) AddReplica(ctx context.Context, in *AddReplicaRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
-	out := new(StatusResponse)
+func (c *nodeClient) AddReplica(ctx context.Context, in *AddReplicaRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/mcc.fred.peering.Node/AddReplica", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -99,8 +109,8 @@ func (c *nodeClient) AddReplica(ctx context.Context, in *AddReplicaRequest, opts
 	return out, nil
 }
 
-func (c *nodeClient) RemoveReplica(ctx context.Context, in *RemoveReplicaRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
-	out := new(StatusResponse)
+func (c *nodeClient) RemoveReplica(ctx context.Context, in *RemoveReplicaRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/mcc.fred.peering.Node/RemoveReplica", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -112,28 +122,32 @@ func (c *nodeClient) RemoveReplica(ctx context.Context, in *RemoveReplicaRequest
 // All implementations should embed UnimplementedNodeServer
 // for forward compatibility
 type NodeServer interface {
-	CreateKeygroup(context.Context, *CreateKeygroupRequest) (*StatusResponse, error)
-	DeleteKeygroup(context.Context, *DeleteKeygroupRequest) (*StatusResponse, error)
-	PutItem(context.Context, *PutItemRequest) (*StatusResponse, error)
+	CreateKeygroup(context.Context, *CreateKeygroupRequest) (*Empty, error)
+	DeleteKeygroup(context.Context, *DeleteKeygroupRequest) (*Empty, error)
+	PutItem(context.Context, *PutItemRequest) (*Empty, error)
+	AppendItem(context.Context, *AppendItemRequest) (*Empty, error)
 	GetItem(context.Context, *GetItemRequest) (*GetItemResponse, error)
 	GetAllItems(context.Context, *GetAllItemsRequest) (*GetAllItemsResponse, error)
-	DeleteItem(context.Context, *DeleteItemRequest) (*StatusResponse, error)
-	AddReplica(context.Context, *AddReplicaRequest) (*StatusResponse, error)
-	RemoveReplica(context.Context, *RemoveReplicaRequest) (*StatusResponse, error)
+	DeleteItem(context.Context, *DeleteItemRequest) (*Empty, error)
+	AddReplica(context.Context, *AddReplicaRequest) (*Empty, error)
+	RemoveReplica(context.Context, *RemoveReplicaRequest) (*Empty, error)
 }
 
 // UnimplementedNodeServer should be embedded to have forward compatible implementations.
 type UnimplementedNodeServer struct {
 }
 
-func (UnimplementedNodeServer) CreateKeygroup(context.Context, *CreateKeygroupRequest) (*StatusResponse, error) {
+func (UnimplementedNodeServer) CreateKeygroup(context.Context, *CreateKeygroupRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateKeygroup not implemented")
 }
-func (UnimplementedNodeServer) DeleteKeygroup(context.Context, *DeleteKeygroupRequest) (*StatusResponse, error) {
+func (UnimplementedNodeServer) DeleteKeygroup(context.Context, *DeleteKeygroupRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteKeygroup not implemented")
 }
-func (UnimplementedNodeServer) PutItem(context.Context, *PutItemRequest) (*StatusResponse, error) {
+func (UnimplementedNodeServer) PutItem(context.Context, *PutItemRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PutItem not implemented")
+}
+func (UnimplementedNodeServer) AppendItem(context.Context, *AppendItemRequest) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AppendItem not implemented")
 }
 func (UnimplementedNodeServer) GetItem(context.Context, *GetItemRequest) (*GetItemResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetItem not implemented")
@@ -141,13 +155,13 @@ func (UnimplementedNodeServer) GetItem(context.Context, *GetItemRequest) (*GetIt
 func (UnimplementedNodeServer) GetAllItems(context.Context, *GetAllItemsRequest) (*GetAllItemsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAllItems not implemented")
 }
-func (UnimplementedNodeServer) DeleteItem(context.Context, *DeleteItemRequest) (*StatusResponse, error) {
+func (UnimplementedNodeServer) DeleteItem(context.Context, *DeleteItemRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteItem not implemented")
 }
-func (UnimplementedNodeServer) AddReplica(context.Context, *AddReplicaRequest) (*StatusResponse, error) {
+func (UnimplementedNodeServer) AddReplica(context.Context, *AddReplicaRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddReplica not implemented")
 }
-func (UnimplementedNodeServer) RemoveReplica(context.Context, *RemoveReplicaRequest) (*StatusResponse, error) {
+func (UnimplementedNodeServer) RemoveReplica(context.Context, *RemoveReplicaRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveReplica not implemented")
 }
 
@@ -212,6 +226,24 @@ func _Node_PutItem_Handler(srv interface{}, ctx context.Context, dec func(interf
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(NodeServer).PutItem(ctx, req.(*PutItemRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Node_AppendItem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AppendItemRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NodeServer).AppendItem(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/mcc.fred.peering.Node/AppendItem",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NodeServer).AppendItem(ctx, req.(*AppendItemRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -324,6 +356,10 @@ var Node_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "PutItem",
 			Handler:    _Node_PutItem_Handler,
+		},
+		{
+			MethodName: "AppendItem",
+			Handler:    _Node_AppendItem_Handler,
 		},
 		{
 			MethodName: "GetItem",

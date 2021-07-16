@@ -263,7 +263,21 @@ func (s *Storage) IDs(kg string) ([]string, error) {
 }
 
 // Update updates the item with the specified id in the specified keygroup.
-func (s *Storage) Update(kg, id, val string, expiry int) error {
+func (s *Storage) Update(kg, id, val string, append bool, expiry int) error {
+
+	if append {
+		// make sure that we have our local sequence on point
+		key, err := strconv.Atoi(id)
+		if err != nil {
+			return errors.New(err)
+		}
+		for n, err := s.incrementSequence(kg); n < uint64(key); n, err = s.incrementSequence(kg) {
+			if err != nil {
+				return errors.New(err)
+			}
+		}
+	}
+
 	err := s.db.Update(func(txn *badger.Txn) error {
 		key := makeKeyName(kg, id)
 
@@ -322,20 +336,7 @@ func (s *Storage) Append(kg, val string, expiry int) (string, error) {
 	// maximum of 18446744073709551615, though!
 	// if you reach this maximum, please send me a letter
 
-	seq, ok := s.seq[kg]
-
-	if !ok {
-		newSeq, err := s.db.GetSequence(makeLogConfigKeyName(kg), 100)
-
-		if err != nil {
-			return "", errors.New(err)
-		}
-
-		s.seq[kg] = newSeq
-		seq = newSeq
-	}
-
-	n, err := seq.Next()
+	n, err := s.incrementSequence(kg)
 
 	if err != nil {
 		return "", errors.New(err)
@@ -372,6 +373,29 @@ func (s *Storage) Append(kg, val string, expiry int) (string, error) {
 	}
 
 	return id, nil
+}
+
+func (s *Storage) incrementSequence(kg string) (uint64, error) {
+	seq, ok := s.seq[kg]
+
+	if !ok {
+		newSeq, err := s.db.GetSequence(makeLogConfigKeyName(kg), 100)
+
+		if err != nil {
+			return 0, errors.New(err)
+		}
+
+		s.seq[kg] = newSeq
+		seq = newSeq
+	}
+
+	n, err := seq.Next()
+
+	if err != nil {
+		return 0, errors.New(err)
+	}
+
+	return n, nil
 }
 
 // Exists checks if the given data item exists in the badgerdb database.

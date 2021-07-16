@@ -31,20 +31,19 @@ func (t *ImmutableSuite) RunTests() {
 	}
 
 	logNodeAction(t.c.nodeB, "Deleting an item in immutable keygroup")
-	t.c.nodeB.DeleteItem("log", "testitem", true)
+	t.c.nodeB.DeleteItem("log", "0", true)
 
 	logNodeAction(t.c.nodeB, "Adding nodeC as replica to immutable keygroup")
 	t.c.nodeB.AddKeygroupReplica("log", t.c.nodeC.ID, 0, false)
 
 	logNodeAction(t.c.nodeC, "Updating immutable item on other nodeC")
-	t.c.nodeC.PutItem("log", "testitem", "value-3", true)
+	t.c.nodeC.PutItem("log", "0", "value-3", true)
 
-	// TODO is this the right place???
 	logNodeAction(t.c.nodeC, "Appending another item to readonly log.")
-	res = t.c.nodeC.AppendItem("log", "value-2", false)
+	res = t.c.nodeC.AppendItem("log", "value-4", false)
 
 	if res != "1" {
-		logNodeFailure(t.c.nodeB, "1", res)
+		logNodeFailure(t.c.nodeC, "1", res)
 	}
 }
 

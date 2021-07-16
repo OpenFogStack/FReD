@@ -50,40 +50,55 @@ func (s *Server) Close() error {
 	return nil
 }
 
-func createResponse(err error) (*peering.StatusResponse, error) {
-	if err == nil {
-		return &peering.StatusResponse{Status: peering.EnumStatus_OK}, nil
-	}
-	// TODO Behave differently depending on error message
-	// if error == leveldb.ErrNotFound {
-	//
-	// }
-	return &peering.StatusResponse{Status: peering.EnumStatus_ERROR, ErrorMessage: err.Error()}, err
-}
-
 // CreateKeygroup calls this Method on the Inthandler
-func (s *Server) CreateKeygroup(_ context.Context, request *peering.CreateKeygroupRequest) (*peering.StatusResponse, error) {
+func (s *Server) CreateKeygroup(_ context.Context, request *peering.CreateKeygroupRequest) (*peering.Empty, error) {
 	log.Info().Msgf("InterServer has rcvd CreateKeygroup. In: %#v", request)
 	err := s.i.HandleCreateKeygroup(fred.Keygroup{Name: fred.KeygroupName(request.Keygroup)})
-	return createResponse(err)
+	if err != nil {
+		return nil, err
+	}
+	return &peering.Empty{}, nil
 }
 
 // DeleteKeygroup calls this Method on the Inthandler
-func (s *Server) DeleteKeygroup(_ context.Context, request *peering.DeleteKeygroupRequest) (*peering.StatusResponse, error) {
+func (s *Server) DeleteKeygroup(_ context.Context, request *peering.DeleteKeygroupRequest) (*peering.Empty, error) {
 	log.Info().Msgf("InterServer has rcvd DeleteKeygroup. In: %#v", request)
 	err := s.i.HandleDeleteKeygroup(fred.Keygroup{Name: fred.KeygroupName(request.Keygroup)})
-	return createResponse(err)
+	if err != nil {
+		return nil, err
+	}
+	return &peering.Empty{}, nil
 }
 
 // PutItem calls HandleUpdate on the Inthandler
-func (s *Server) PutItem(_ context.Context, request *peering.PutItemRequest) (*peering.StatusResponse, error) {
+func (s *Server) PutItem(_ context.Context, request *peering.PutItemRequest) (*peering.Empty, error) {
 	log.Info().Msgf("InterServer has rcvd PutItem. In: %#v", request)
 	err := s.i.HandleUpdate(fred.Item{
 		Keygroup: fred.KeygroupName(request.Keygroup),
 		ID:       request.Id,
 		Val:      request.Data,
 	})
-	return createResponse(err)
+	if err != nil {
+		return nil, err
+	}
+	return &peering.Empty{}, nil
+}
+
+// AppendItem calls HandleAppend on the Inthandler
+func (s *Server) AppendItem(_ context.Context, request *peering.AppendItemRequest) (*peering.Empty, error) {
+	log.Info().Msgf("InterServer has rcvd AppendItem. In: %#v", request)
+
+	err := s.i.HandleAppend(fred.Item{
+		Keygroup: fred.KeygroupName(request.Keygroup),
+		ID:       request.Id,
+		Val:      request.Data,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &peering.Empty{}, nil
 }
 
 // GetItem has no implementation
@@ -95,15 +110,10 @@ func (s *Server) GetItem(_ context.Context, request *peering.GetItemRequest) (*p
 	})
 
 	if err != nil {
-		return &peering.GetItemResponse{
-			Status:       peering.EnumStatus_ERROR,
-			ErrorMessage: err.Error(),
-		}, err
+		return nil, err
 	}
-
 	return &peering.GetItemResponse{
-		Data:   data.Val,
-		Status: peering.EnumStatus_OK,
+		Data: data.Val,
 	}, nil
 }
 
@@ -113,12 +123,8 @@ func (s *Server) GetAllItems(_ context.Context, request *peering.GetAllItemsRequ
 	data, err := s.i.HandleGetAllItems(fred.Keygroup{
 		Name: fred.KeygroupName(request.Keygroup),
 	})
-
 	if err != nil {
-		return &peering.GetAllItemsResponse{
-			Status:       peering.EnumStatus_ERROR,
-			ErrorMessage: err.Error(),
-		}, err
+		return nil, err
 	}
 
 	d := make([]*peering.Data, len(data))
@@ -131,31 +137,39 @@ func (s *Server) GetAllItems(_ context.Context, request *peering.GetAllItemsRequ
 	}
 
 	return &peering.GetAllItemsResponse{
-		Data:   d,
-		Status: peering.EnumStatus_OK,
+		Data: d,
 	}, nil
 }
 
 // DeleteItem calls this Method on the Inthandler
-func (s *Server) DeleteItem(_ context.Context, request *peering.DeleteItemRequest) (*peering.StatusResponse, error) {
+func (s *Server) DeleteItem(_ context.Context, request *peering.DeleteItemRequest) (*peering.Empty, error) {
 	log.Info().Msgf("InterServer has rcvd DeleteItem. In: %#v", request)
 	err := s.i.HandleDelete(fred.Item{
 		Keygroup: fred.KeygroupName(request.Keygroup),
 		ID:       request.Id,
 	})
-	return createResponse(err)
+	if err != nil {
+		return nil, err
+	}
+	return &peering.Empty{}, nil
 }
 
 // AddReplica calls this Method on the Inthandler
-func (s *Server) AddReplica(_ context.Context, request *peering.AddReplicaRequest) (*peering.StatusResponse, error) {
+func (s *Server) AddReplica(_ context.Context, request *peering.AddReplicaRequest) (*peering.Empty, error) {
 	log.Info().Msgf("InterServer has rcvd AddReplica. In: %#v", request)
 	err := s.i.HandleAddReplica(fred.Keygroup{Name: fred.KeygroupName(request.Keygroup), Expiry: int(request.Expiry)}, fred.Node{ID: fred.NodeID(request.NodeId)})
-	return createResponse(err)
+	if err != nil {
+		return nil, err
+	}
+	return &peering.Empty{}, nil
 }
 
 // RemoveReplica calls this Method on the Inthandler
-func (s *Server) RemoveReplica(_ context.Context, request *peering.RemoveReplicaRequest) (*peering.StatusResponse, error) {
+func (s *Server) RemoveReplica(_ context.Context, request *peering.RemoveReplicaRequest) (*peering.Empty, error) {
 	log.Info().Msgf("InterServer has rcvd RemoveReplica. In: %#v", request)
 	err := s.i.HandleRemoveReplica(fred.Keygroup{Name: fred.KeygroupName(request.Keygroup)}, fred.Node{ID: fred.NodeID(request.NodeId)})
-	return createResponse(err)
+	if err != nil {
+		return nil, err
+	}
+	return &peering.Empty{}, nil
 }

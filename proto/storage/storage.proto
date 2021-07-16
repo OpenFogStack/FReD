@@ -35,7 +35,8 @@ message UpdateItem {
     string keygroup = 1;
     string id = 2;
     string val = 3;
-    int64 expiry = 4;
+    bool append = 4;
+    int64 expiry = 5;
 }
 
 message AppendItem {

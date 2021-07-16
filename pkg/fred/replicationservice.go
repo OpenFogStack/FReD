@@ -10,6 +10,7 @@ type Client interface {
 	SendCreateKeygroup(host string, kgname KeygroupName, expiry int) error
 	SendDeleteKeygroup(host string, kgname KeygroupName) error
 	SendUpdate(host string, kgname KeygroupName, id string, value string) error
+	SendAppend(host string, kgname KeygroupName, id string, value string) error
 	SendDelete(host string, kgname KeygroupName, id string) error
 	SendAddReplica(host string, kgname KeygroupName, node Node, expiry int) error
 	SendRemoveReplica(host string, kgname KeygroupName, node Node) error
@@ -158,7 +159,7 @@ func (s *replicationService) relayUpdate(i Item) error {
 	// inform all other nodes about the update, get a list of all nodes subscribed to this keygroup
 	ids, err := s.n.GetKeygroupMembers(i.Keygroup, true)
 	if err != nil {
-		log.Err(err).Msg("Cannot delete keygroup because the nase threw an error")
+		log.Err(err).Msg("Cannot relayUpdate because the nase threw an error")
 		return err
 	}
 
@@ -172,6 +173,48 @@ func (s *replicationService) relayUpdate(i Item) error {
 
 		log.Debug().Msgf("RelayUpdate from replservice: sending %#v to %#v", i, addr)
 		if err := s.c.SendUpdate(addr, i.Keygroup, i.ID, i.Val); err != nil {
+			err = s.reportNodeFail(id, i.Keygroup, i.ID)
+
+			if err != nil {
+				log.Debug().Msg(err.Error())
+			}
+		}
+	}
+
+	return nil
+}
+
+// relayAppend handles replication after requests to the Append endpoint of the client interface.
+// It sends the append to all other nodes by calling their Append method
+func (s *replicationService) relayAppend(i Item) error {
+	log.Debug().Msgf("relayAppend from replservice: in %#v", i)
+
+	exists, err := s.n.ExistsKeygroup(i.Keygroup)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		err = errors.Errorf("no such keygroup according to NaSe: %#v", i.Keygroup)
+		return err
+	}
+
+	// inform all other nodes about the append, get a list of all nodes subscribed to this keygroup
+	ids, err := s.n.GetKeygroupMembers(i.Keygroup, true)
+	if err != nil {
+		log.Err(err).Msg("Cannot relayAppend because the nase threw an error")
+		return err
+	}
+
+	for id := range ids {
+		addr, err := s.n.GetNodeAddress(id)
+
+		if err != nil {
+			log.Err(err).Msg("Cannot Get node address from NaSe")
+			return err
+		}
+
+		log.Debug().Msgf("relayAppend from replservice: sending %#v to %#v", i, addr)
+		if err := s.c.SendAppend(addr, i.Keygroup, i.ID, i.Val); err != nil {
 			err = s.reportNodeFail(id, i.Keygroup, i.ID)
 
 			if err != nil {
@@ -334,15 +377,31 @@ func (s *replicationService) addReplica(k Keygroup, n Node, relay bool) error {
 			}
 		}
 
+		mutable, err := s.n.IsMutable(k.Name)
+
+		if err != nil {
+			return err
+		}
+
 		log.Debug().Msgf("AddReplica from replservice: About to send %d Elements to new node", len(i))
 		for _, item := range i {
 			// iterate over all data for that keygroup and send it to the new node
 			// a batch might be better here
-			log.Debug().Msgf("AddReplica from replservice: sending %#v to %#v", item, n)
-			if err := s.c.SendUpdate(newNodeAddr, k.Name, item.ID, item.Val); err != nil {
-				err = s.reportNodeFail(n.ID, k.Name, item.ID)
-				if err != nil {
-					log.Debug().Msg(err.Error())
+			if mutable {
+				log.Debug().Msgf("AddReplica from replservice: sending %#v to %#v (update)", item, n)
+				if err := s.c.SendUpdate(newNodeAddr, k.Name, item.ID, item.Val); err != nil {
+					err = s.reportNodeFail(n.ID, k.Name, item.ID)
+					if err != nil {
+						log.Debug().Msg(err.Error())
+					}
+				}
+			} else {
+				log.Debug().Msgf("AddReplica from replservice: sending %#v to %#v (append)", item, n)
+				if err := s.c.SendAppend(newNodeAddr, k.Name, item.ID, item.Val); err != nil {
+					err = s.reportNodeFail(n.ID, k.Name, item.ID)
+					if err != nil {
+						log.Debug().Msg(err.Error())
+					}
 				}
 			}
 		}
@@ -394,7 +453,7 @@ func (s *replicationService) removeReplica(k Keygroup, n Node, relay bool) error
 			return err
 		}
 		// Check if to-be-deleted node is in the keygorup
-		if _, ok := members[n.ID]; !ok{
+		if _, ok := members[n.ID]; !ok {
 			return errors.Errorf("Can not remove node from keygroup it is not a member of.")
 		}
 		// Check if the node is the last member of the keygroup (so the only one holding data)
