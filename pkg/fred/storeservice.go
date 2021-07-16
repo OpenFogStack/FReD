@@ -5,7 +5,7 @@ import "github.com/go-errors/errors"
 // Store is an interface for the storage medium that the key-value val items are persisted on.
 type Store interface {
 	// Needs: keygroup, id, val
-	Update(kg, id, val string, expiry int) error
+	Update(kg, id, val string, append bool, expiry int) error
 	// Needs: keygroup, id
 	Delete(kg, id string) error
 	// Needs: keygroup, val, Returns: key
@@ -151,7 +151,7 @@ func (s *storeService) exists(i Item) bool {
 }
 
 // Update updates an item in the key-value store.
-func (s *storeService) update(i Item, expiry int) error {
+func (s *storeService) update(i Item, append bool, expiry int) error {
 	err := checkItem(i)
 
 	if err != nil {
@@ -162,7 +162,7 @@ func (s *storeService) update(i Item, expiry int) error {
 		return errors.Errorf("no such keygroup in store: %#v", i.Keygroup)
 	}
 
-	err = s.iS.Update(string(i.Keygroup), i.ID, i.Val, expiry)
+	err = s.iS.Update(string(i.Keygroup), i.ID, i.Val, append, expiry)
 
 	if err != nil {
 		return err

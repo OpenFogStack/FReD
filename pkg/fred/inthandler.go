@@ -86,7 +86,29 @@ func (h *inthandler) HandleUpdate(i Item) error {
 		return err
 	}
 
-	if err := h.s.update(i, expiry); err != nil {
+	if err := h.s.update(i, false, expiry); err != nil {
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		return errors.Errorf("error updating item")
+	}
+
+	if err := h.t.triggerUpdate(i); err != nil {
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		return errors.Errorf("error updating item")
+	}
+
+	return nil
+}
+
+// HandleAppend handles requests to the Append endpoint of the internal interface.
+func (h *inthandler) HandleAppend(i Item) error {
+
+	expiry, err := h.n.GetExpiry(i.Keygroup)
+
+	if err != nil {
+		return err
+	}
+
+	if err := h.s.update(i, true, expiry); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error updating item")
 	}

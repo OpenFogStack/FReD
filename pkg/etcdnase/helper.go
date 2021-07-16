@@ -8,7 +8,6 @@ import (
 
 	"github.com/go-errors/errors"
 	"github.com/rs/zerolog/log"
-	"go.etcd.io/etcd/api/v3/mvccpb"
 	"go.etcd.io/etcd/client/v3"
 )
 
@@ -20,10 +19,9 @@ func (n *NameService) getPrefix(prefix string) (kv map[string]string, err error)
 		// store prefix directly in cache
 		val, ok := n.local.Get(prefix)
 
-		log.Debug().Msgf("prefix: %s cache hit", prefix)
-
 		// found something!
 		if ok {
+			log.Debug().Msgf("prefix: %s cache hit", prefix)
 			return val.(map[string]string), nil
 		}
 	}
@@ -58,11 +56,9 @@ func (n *NameService) getPrefix(prefix string) (kv map[string]string, err error)
 			for r := range c {
 				for _, ev := range r.Events {
 					if ev.IsModify() {
-						if ev.Type == mvccpb.DELETE {
-							n.local.Del(prefix)
-							log.Debug().Msgf("prefix: %s remote cache invalidation", prefix)
-							return
-						}
+						n.local.Del(prefix)
+						log.Debug().Msgf("prefix: %s remote cache invalidation", prefix)
+						return
 					}
 				}
 			}
@@ -78,13 +74,11 @@ func (n *NameService) getExact(key string) (v string, err error) {
 		// let's check the local cache first
 		val, ok := n.local.Get(key)
 
-		log.Debug().Msgf("key: %s cache hit", key)
-
 		// found something!
 		if ok {
+			log.Debug().Msgf("key: %s cache hit", key)
 			return val.(string), nil
 		}
-
 	}
 
 	log.Debug().Msgf("key: %s cache miss", key)
@@ -115,11 +109,10 @@ func (n *NameService) getExact(key string) (v string, err error) {
 			for r := range c {
 				for _, ev := range r.Events {
 					if ev.IsModify() {
-						if ev.Type == mvccpb.DELETE {
-							n.local.Del(key)
-							log.Debug().Msgf("key: %s remote cache invalidation", key)
-							return
-						}
+						n.local.Del(key)
+						log.Debug().Msgf("key: %s remote cache invalidation", key)
+						return
+
 					}
 				}
 			}
@@ -160,7 +153,6 @@ func (n *NameService) put(key, value string) (err error) {
 	if n.cached {
 		n.local.Del(key)
 		log.Debug().Msgf("key: %s local cache invalidation", key)
-
 	}
 
 	_, err = n.cli.Put(ctx, key, value)

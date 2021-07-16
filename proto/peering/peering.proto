@@ -5,26 +5,18 @@ option go_package = ".;peering";
 
 // Represents another node
 service Node {
-    rpc CreateKeygroup (CreateKeygroupRequest) returns (StatusResponse);
-    rpc DeleteKeygroup (DeleteKeygroupRequest) returns (StatusResponse);
-    rpc PutItem (PutItemRequest) returns (StatusResponse);
+    rpc CreateKeygroup (CreateKeygroupRequest) returns (Empty);
+    rpc DeleteKeygroup (DeleteKeygroupRequest) returns (Empty);
+    rpc PutItem (PutItemRequest) returns (Empty);
+    rpc AppendItem (AppendItemRequest) returns (Empty);
     rpc GetItem (GetItemRequest) returns (GetItemResponse);
     rpc GetAllItems (GetAllItemsRequest) returns (GetAllItemsResponse);
-    rpc DeleteItem (DeleteItemRequest) returns (StatusResponse);
-    rpc AddReplica (AddReplicaRequest) returns (StatusResponse);
-    rpc RemoveReplica (RemoveReplicaRequest) returns (StatusResponse);
+    rpc DeleteItem (DeleteItemRequest) returns (Empty);
+    rpc AddReplica (AddReplicaRequest) returns (Empty);
+    rpc RemoveReplica (RemoveReplicaRequest) returns (Empty);
 }
 
-enum EnumStatus {
-    OK = 0;
-    ERROR = 1;
-}
-
-message StatusResponse {
-    EnumStatus status = 1;
-    // This is an optional message, only to be sent if the status is not OK
-    string errorMessage = 2;
-}
+message Empty{}
 
 message CreateKeygroupRequest {
     string keygroup = 1;
@@ -47,10 +39,7 @@ message GetItemRequest {
 }
 
 message GetItemResponse {
-    EnumStatus status = 1;
-    // This is an optional message, only to be sent if the status is not OK
-    string errorMessage = 2;
-    string data = 3;
+    string data = 1;
 }
 
 message GetAllItemsRequest {
@@ -58,10 +47,7 @@ message GetAllItemsRequest {
 }
 
 message GetAllItemsResponse {
-    EnumStatus status = 1;
-    // This is an optional message, only to be sent if the status is not OK
-    string errorMessage = 2;
-    repeated Data data = 3;
+    repeated Data data = 1;
 }
 
 message Data {
@@ -70,6 +56,12 @@ message Data {
 }
 
 message UpdateItemRequest {
+    string keygroup = 1;
+    string id = 2;
+    string data = 3;
+}
+
+message AppendItemRequest {
     string keygroup = 1;
     string id = 2;
     string data = 3;

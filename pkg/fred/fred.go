@@ -31,6 +31,7 @@ type IntHandler interface {
 	HandleCreateKeygroup(k Keygroup) error
 	HandleDeleteKeygroup(k Keygroup) error
 	HandleUpdate(i Item) error
+	HandleAppend(i Item) error
 	HandleDelete(i Item) error
 	HandleAddReplica(k Keygroup, n Node) error
 	HandleRemoveReplica(k Keygroup, n Node) error
@@ -105,7 +106,7 @@ func New(config *Config) (f Fred) {
 				log.Err(err).Msg("Was not able to get Items from node")
 			}
 			expiry, _ := config.NaSe.GetExpiry(item.Keygroup)
-			err = s.update(item, expiry)
+			err = s.update(item, false, expiry)
 			if err != nil {
 				log.Error().Msgf("Could not update missed item %s", item.ID)
 			}
