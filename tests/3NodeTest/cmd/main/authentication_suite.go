@@ -37,6 +37,8 @@ func (t *AuthenticationSuite) RunTests() {
 	logNodeAction(t.c.nodeB, "remove permission to read from keygroup -> should work")
 	t.c.nodeB.RemoveUser("littleclient", "rbactest", "ReadKeygroup", false)
 
+	// TODO: delay is caused by etcd taking some time to inform watcher to invalidate cache
+	// time.Sleep(100 * time.Second)
 	logNodeAction(t.c.nodeA, "try to read from keygroup with little client -> should not work")
 	if val := t.c.littleClient.GetItem("rbactest", "item1", true); val != "" {
 		logNodeFailure(t.c.nodeA, "", val)
