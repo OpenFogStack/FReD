@@ -104,7 +104,7 @@ func (n *NameService) CreateKeygroup(kg fred.KeygroupName, mutable bool, expiry 
 
 	defer cncl()
 
-	_, err = n.cli.Delete(ctx, fmt.Sprintf(fmtKgNodeString, string(kg), ""), clientv3.WithPrefix())
+	_, err = n.cli.Delete(ctx, fmt.Sprintf(fmtKgNodeStringPrefix, string(kg)), clientv3.WithPrefix())
 
 	if err != nil {
 		return errors.New(err)
@@ -115,7 +115,7 @@ func (n *NameService) CreateKeygroup(kg fred.KeygroupName, mutable bool, expiry 
 // GetKeygroupMembers returns all IDs of the Members of a Keygroup by iterating over all saved keys that start with the keygroup name.
 // The value of the map is the expiry in seconds.
 func (n *NameService) GetKeygroupMembers(kg fred.KeygroupName, excludeSelf bool) (ids map[fred.NodeID]int, err error) {
-	nodes, err := n.getPrefix(fmt.Sprintf(fmtKgNodeString, string(kg), ""))
+	nodes, err := n.getPrefix(fmt.Sprintf(fmtKgNodeStringPrefix, string(kg)))
 
 	if err != nil {
 		return nil, err

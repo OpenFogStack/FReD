@@ -94,7 +94,7 @@ func (n *Node) CreateKeygroup(kgname string, mutable bool, expiry int, expectErr
 	}
 
 	if err == nil && expectError {
-		log.Warn().Msg("CreateKeygroup: Expected Error bot got no error :(")
+		log.Warn().Msg("CreateKeygroup: Expected Error but got no error :(")
 		n.Errors++
 		return
 	}
@@ -117,7 +117,7 @@ func (n *Node) DeleteKeygroup(kgname string, expectError bool) {
 	}
 
 	if err == nil && expectError {
-		log.Warn().Msg("DeleteKeygroup: Expected Error bot got no error")
+		log.Warn().Msg("DeleteKeygroup: Expected Error but got no error")
 		n.Errors++
 		return
 	}
@@ -139,7 +139,7 @@ func (n *Node) GetKeygroupReplica(kgname string, expectError bool) map[string]in
 	}
 
 	if err == nil && expectError {
-		log.Warn().Msg("GetKeygroupReplica: Expected Error bot got no error")
+		log.Warn().Msg("GetKeygroupReplica: Expected Error but got no error")
 		n.Errors++
 	}
 
@@ -171,7 +171,7 @@ func (n *Node) AddKeygroupReplica(kgname, replicaNodeID string, expiry int, expe
 	}
 
 	if err == nil && expectError {
-		log.Warn().Msg("AddKeygroupReplica: Expected Error bot got no error")
+		log.Warn().Msg("AddKeygroupReplica: Expected Error but got no error")
 		n.Errors++
 		return
 	}
@@ -195,7 +195,7 @@ func (n *Node) DeleteKeygroupReplica(kgname, replicaNodeID string, expectError b
 		return
 	}
 	if err == nil && expectError {
-		log.Warn().Msg("DeleteKeygroupReplica: Expected Error bot got no error")
+		log.Warn().Msg("DeleteKeygroupReplica: Expected Error but got no error")
 		n.Errors++
 		return
 	}
@@ -216,7 +216,7 @@ func (n *Node) GetKeygroupTriggers(kgname string, expectError bool) []*client.Tr
 	}
 
 	if err == nil && expectError {
-		log.Warn().Msg("GetKeygroupTriggers: Expected Error bot got no error")
+		log.Warn().Msg("GetKeygroupTriggers: Expected Error but got no error")
 		n.Errors++
 	}
 
@@ -238,7 +238,7 @@ func (n *Node) AddKeygroupTrigger(kgname, triggerNodeID, triggerNodeHost string,
 	}
 
 	if err == nil && expectError {
-		log.Warn().Msg("AddKeygroupTrigger: Expected Error bot got no error")
+		log.Warn().Msg("AddKeygroupTrigger: Expected Error but got no error")
 		n.Errors++
 		return
 	}
@@ -261,7 +261,7 @@ func (n *Node) DeleteKeygroupTrigger(kgname, triggerNodeID string, expectError b
 	}
 
 	if err == nil && expectError {
-		log.Warn().Msg("DeleteKeygroupTrigger: Expected Error bot got no error")
+		log.Warn().Msg("DeleteKeygroupTrigger: Expected Error but got no error")
 		n.Errors++
 		return
 	}
@@ -281,7 +281,7 @@ func (n *Node) GetAllReplica(expectError bool) map[string]string {
 	}
 
 	if err == nil && expectError {
-		log.Warn().Msg("GetAllReplicas: Expected Error bot got no error")
+		log.Warn().Msg("GetAllReplicas: Expected Error but got no error")
 		n.Errors++
 	}
 
@@ -308,7 +308,7 @@ func (n *Node) GetReplica(nodeID string, expectError bool) string {
 	}
 
 	if err == nil && expectError {
-		log.Warn().Msg("GetReplica: Expected Error bot got no error")
+		log.Warn().Msg("GetReplica: Expected Error but got no error")
 		n.Errors++
 	}
 
@@ -334,7 +334,7 @@ func (n *Node) PutItem(kgname, item string, data string, expectError bool) {
 	}
 
 	if err == nil && expectError {
-		log.Warn().Msg("Update: Expected Error bot got no error")
+		log.Warn().Msg("Update: Expected Error but got no error")
 		n.Errors++
 		return
 	}
@@ -358,7 +358,7 @@ func (n *Node) AppendItem(kgname string, data string, expectError bool) string {
 	}
 
 	if err == nil && expectError {
-		log.Warn().Msg("Append: Expected Error bot got no error")
+		log.Warn().Msg("Append: Expected Error but got no error")
 		n.Errors++
 	}
 
@@ -382,7 +382,7 @@ func (n *Node) GetItem(kgname, item string, expectError bool) string {
 	}
 
 	if err == nil && expectError {
-		log.Warn().Msg("GetItem: Expected Error bot got no error")
+		log.Warn().Msg("GetItem: Expected Error but got no error")
 		n.Errors++
 	}
 
@@ -407,7 +407,7 @@ func (n *Node) ScanItems(kgname, item string, count uint64, expectError bool) ma
 	}
 
 	if err == nil && expectError {
-		log.Warn().Msg("ScanItems: Expected Error bot got no error")
+		log.Warn().Msg("ScanItems: Expected Error but got no error")
 		n.Errors++
 	}
 
@@ -439,7 +439,7 @@ func (n *Node) DeleteItem(kgname, item string, expectError bool) {
 	}
 
 	if err == nil && expectError {
-		log.Warn().Msg("Delete: Expected Error bot got no error")
+		log.Warn().Msg("Delete: Expected Error but got no error")
 		n.Errors++
 		return
 	}
@@ -481,7 +481,7 @@ func (n *Node) AddUser(user string, kgname string, role string, expectError bool
 	}
 
 	if err == nil && expectError {
-		log.Warn().Msg("AddUser: Expected Error bot got no error")
+		log.Warn().Msg("AddUser: Expected Error but got no error")
 		n.Errors++
 		return
 	}
@@ -507,7 +507,7 @@ func (n *Node) RemoveUser(user string, kgname string, role string, expectError b
 	}
 
 	if err == nil && expectError {
-		log.Warn().Msg("RemoveUser: Expected Error bot got no error")
+		log.Warn().Msg("RemoveUser: Expected Error but got no error")
 		n.Errors++
 		return
 	}

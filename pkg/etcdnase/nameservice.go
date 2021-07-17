@@ -13,18 +13,18 @@ import (
 )
 
 const (
-	fmtKgNodeString             = "kg|%s|node|%s"
-	fmtKgStatusString           = "kg|%s|status"
-	fmtKgMutableString          = "kg|%s|mutable"
-	fmtKgExpiryString           = "kg|%s|expiry|node|%s"
-	fmtNodeAdressString         = "node|%s|address"
-	fmtNodeExternalAdressString = "node|%s|extaddress"
-	fmtUserPermissionString     = "user|%s|kg|%s|method|%s"
-	fmtFailedNodeKgString       = "failnode|%s|kg|%s|%s" // Node, Keygroup, ID
-	fmtFailedNodePrefix         = "failnode|%s|"
-	nodePrefixString            = "node|"
-	sep                         = "|"
-	timeout                     = 5 * time.Second
+	fmtKgNodeStringPrefix         = "kg|%s|node|"
+	fmtKgStatusString             = "kg|%s|status"
+	fmtKgMutableString            = "kg|%s|mutable"
+	fmtKgExpiryStringPrefix       = "kg|%s|expiry|node|"
+	fmtNodeAdressString           = "node|%s|address"
+	fmtNodeExternalAdressString   = "node|%s|extaddress"
+	fmtUserPermissionStringPrefix = "user|%s|kg|%s|method|"
+	fmtFailedNodeKgStringPrefix   = "failnode|%s|kg|%s|" // Node, Keygroup, ID
+	fmtFailedNodePrefix           = "failnode|%s|"
+	nodePrefixString              = "node|"
+	sep                           = "|"
+	timeout                       = 5 * time.Second
 )
 
 // NameService is the interface to the etcd server that serves as NaSe
