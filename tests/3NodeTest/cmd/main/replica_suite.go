@@ -21,6 +21,9 @@ func (t *ReplicaSuite) RunTests() {
 	logNodeAction(t.c.nodeA, "Adding nodeB as Replica node for KGRep")
 	t.c.nodeA.AddKeygroupReplica("KGRep", t.c.nodeB.ID, 0, false)
 
+	logNodeAction(t.c.nodeB, "Putting a valuein KGRep")
+	t.c.nodeB.PutItem("KGRep", "KGRepItem", "val", false)
+
 	logNodeAction(t.c.nodeB, "Deleting the value from KGRep")
 	t.c.nodeB.DeleteItem("KGRep", "KGRepItem", false)
 

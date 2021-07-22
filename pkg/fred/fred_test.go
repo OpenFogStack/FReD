@@ -82,7 +82,7 @@ func TestMain(m *testing.M) {
 
 	config := fred.Config{
 		Store:             badgerdb.NewMemory(),
-		Client:            peering.NewClient(),
+		Client:            peering.NewClient(certBasePath+"nodeA.crt", certBasePath+"nodeA.key", certBasePath+"ca.crt"),
 		NaSe:              n,
 		PeeringHost:       "127.0.0.1:8000",
 		PeeringHostProxy:  "",

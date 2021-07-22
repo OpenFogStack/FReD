@@ -1,20 +1,29 @@
 version: "3.7"
 
 services:
-  # this haproxy proxies between 172.26.1.101, 172.26.1.102, 172.26.1.103
   nodeAproxy:
     depends_on:
       - nodeA-1
       - nodeA-2
       - nodeA-3
     build:
-      context: .
-      dockerfile: haproxy.Dockerfile
+      context: ../../
+      dockerfile: proxy.Dockerfile
     image: fred/fredproxy:local
     container_name: nodeAproxy
+    command: "--log-level '${LOG_LEVEL}' \
+      --client-port 9001 \
+      --peering-port 5555 \
+      --machines 172.26.1.101,172.26.1.102,172.26.1.103 \
+      --api-cert /cert/nodeA.crt \
+      --api-key /cert/nodeA.key \
+      --api-ca /cert/ca.crt
+      --peer-cert /cert/nodeA.crt \
+      --peer-key /cert/nodeA.key \
+      --peer-ca /cert/ca.crt"
     volumes:
       - ./certificates/nodeA.crt:/cert/nodeA.crt
-      - ./certificates/nodeA.key:/cert/nodeA.crt.key
+      - ./certificates/nodeA.key:/cert/nodeA.key
       - ./certificates/ca.crt:/cert/ca.crt
     networks:
       fredwork:
@@ -36,6 +45,9 @@ services:
     --cert /cert/nodeA.crt \
     --key /cert/nodeA.key \
     --ca-file /cert/ca.crt \
+    --peer-cert /cert/nodeA.crt \
+    --peer-key /cert/nodeA.key \
+    --peer-ca /cert/ca.crt \
     --adaptor remote \
     --cpuprofile /profiles/cpuprofile.pprof \
     --memprofile /profiles/memprofile.pprof \
@@ -80,6 +92,9 @@ services:
     --cert /cert/nodeA.crt \
     --key /cert/nodeA.key \
     --ca-file /cert/ca.crt \
+    --peer-cert /cert/nodeA.crt \
+    --peer-key /cert/nodeA.key \
+    --peer-ca /cert/ca.crt \
     --adaptor remote \
     --nase-host https://172.26.6.1:2379 \
     --nase-cert /cert/nodeA.crt \
@@ -120,6 +135,9 @@ services:
     --cert /cert/nodeA.crt \
     --key /cert/nodeA.key \
     --ca-file /cert/ca.crt \
+    --peer-cert /cert/nodeA.crt \
+    --peer-key /cert/nodeA.key \
+    --peer-ca /cert/ca.crt \
     --adaptor remote \
     --nase-host https://172.26.6.1:2379 \
     --nase-cert /cert/nodeA.crt \

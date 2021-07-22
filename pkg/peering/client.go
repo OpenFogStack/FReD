@@ -2,29 +2,69 @@ package peering
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
+	"io/ioutil"
 
 	"git.tu-berlin.de/mcc-fred/fred/pkg/fred"
 	"git.tu-berlin.de/mcc-fred/fred/proto/peering"
 	"github.com/go-errors/errors"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 // Client is an peering client to communicate with peers.
 type Client struct {
-	conn map[string]peering.NodeClient
+	conn        map[string]peering.NodeClient
+	credentials credentials.TransportCredentials
 }
 
 // NewClient creates a new empty client to communicate with peers.
-func NewClient() *Client {
+func NewClient(certFile string, keyFile string, caFile string) *Client {
+	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+
+	if err != nil {
+		log.Fatal().Err(err).Msg("Cannot load certificates")
+
+		return nil
+	}
+
+	// Create a new cert pool and add our own CA certificate
+	rootCAs, err := x509.SystemCertPool()
+
+	if err != nil {
+		log.Fatal().Err(err).Msg("Cannot load root certificates")
+		return nil
+	}
+
+	loaded, err := ioutil.ReadFile(caFile)
+
+	if err != nil {
+		log.Fatal().Msgf("unexpected missing certfile: %v", err)
+	}
+
+	rootCAs.AppendCertsFromPEM(loaded)
+
+	tlsConfig := &tls.Config{
+		Certificates: []tls.Certificate{cert},
+		MinVersion:   tls.VersionTLS12,
+		RootCAs:      rootCAs,
+	}
+
 	return &Client{
-		conn: make(map[string]peering.NodeClient),
+		conn:        make(map[string]peering.NodeClient),
+		credentials: credentials.NewTLS(tlsConfig),
 	}
 }
 
 // getClient creates a new connection to a server or uses an existing one.
 func (c *Client) getClient(host string) (peering.NodeClient, error) {
-	conn, err := grpc.Dial(host, grpc.WithInsecure())
+	if client, ok := c.conn[host]; ok {
+		return client, nil
+	}
+
+	conn, err := grpc.Dial(host, grpc.WithTransportCredentials(c.credentials))
 
 	if err != nil {
 		log.Error().Err(err).Msg("Cannot create Grpc connection")
@@ -33,9 +73,9 @@ func (c *Client) getClient(host string) (peering.NodeClient, error) {
 
 	log.Debug().Msgf("Interclient: Created Connection to %s", host)
 
-	c.conn[host] = peering.NewNodeClient(conn)
-
-	return c.conn[host], nil
+	client := peering.NewNodeClient(conn)
+	c.conn[host] = client
+	return client, nil
 }
 
 // Destroy currently does nothing, but might delete open connections if they are implemented
