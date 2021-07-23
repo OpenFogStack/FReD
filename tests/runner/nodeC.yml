@@ -15,6 +15,9 @@ services:
     --cert /cert/nodeC.crt \
     --key /cert/nodeC.key \
     --ca-file /cert/ca.crt \
+    --peer-cert /cert/nodeC.crt \
+    --peer-key /cert/nodeC.key \
+    --peer-ca /cert/ca.crt \
     --adaptor remote \
     --nase-host https://172.26.6.1:2379 \
     --nase-cert /cert/nodeC.crt \

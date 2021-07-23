@@ -14,6 +14,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
 )
 
@@ -23,6 +24,8 @@ type Server struct {
 	roots     *x509.CertPool
 	isProxied bool
 	proxyHost string
+	proxyPort string
+
 	*grpc.Server
 }
 
@@ -38,30 +41,30 @@ var (
 )
 
 // CheckCert checks the certificate from the given gRPC context for validity and returns the Common Name
-func (s *Server) CheckCert(ctx context.Context) (name string, err error) {
+func (s *Server) CheckCert(ctx context.Context) (string, error) {
 	// get peer information
 	p, ok := peer.FromContext(ctx)
 
 	if !ok {
-		return name, errors.Errorf("no peer found")
+		return "", errors.Errorf("no peer found")
 	}
 
 	// get TLS credential information for this connection
 	tlsAuth, ok := p.AuthInfo.(credentials.TLSInfo)
 
 	if !ok {
-		return name, errors.Errorf("unexpected peer transport credentials")
+		return "", errors.Errorf("unexpected peer transport credentials")
 	}
 
 	// check that the certificate exists
 	if len(tlsAuth.State.VerifiedChains) == 0 || len(tlsAuth.State.VerifiedChains[0]) == 0 {
-		return name, errors.Errorf("could not verify peer certificate: %v", tlsAuth.State)
+		return "", errors.Errorf("could not verify peer certificate: %v", tlsAuth.State)
 	}
 
 	host, _, err := net.SplitHostPort(p.Addr.String())
 
 	if err != nil {
-		return name, errors.New(err)
+		return "", errors.New(err)
 	}
 
 	// verify the certificate:
@@ -80,36 +83,57 @@ func (s *Server) CheckCert(ctx context.Context) (name string, err error) {
 		})
 
 		if err != nil {
-			return name, errors.New(err)
+			return "", errors.New(err)
 		}
-	} else {
-		// ELSE we sit behind a proxy and the proxy should be the one tunneling the gRPC connection to us
-		// hence if we can ensure that it is indeed the proxy that is talking to us and not someone who has found
-		// their way into the network, we can be sure that the proxy/LB has checked the certificate
-		_, err = tlsAuth.State.VerifiedChains[0][0].Verify(x509.VerifyOptions{
-			Roots:         s.roots,
-			CurrentTime:   time.Now(),
-			Intermediates: x509.NewCertPool(),
-			KeyUsages:     []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
-		})
 
-		if err != nil {
-			return name, errors.New(err)
+		// Check subject common name exists and return it as the user name for that client
+		name := tlsAuth.State.VerifiedChains[0][0].Subject.CommonName
+
+		if name == "" {
+			return "", errors.Errorf("invalid subject common name")
 		}
+
+		log.Debug().Msgf("CheckCert: GRPC Context Certificate Name: %s", name)
+
+		return name, nil
+	}
+	// ELSE we sit behind a proxy and the proxy should be the one tunneling the gRPC connection to us
+	// hence if we can ensure that it is indeed the proxy that is talking to us and not someone who has found
+	// their way into the network, we can be sure that the proxy/LB has checked the certificate
+	// in this case, the proxy will give the user name to us as a header (thanks, proxy!)
+
+	if host != s.proxyHost {
+		return "", errors.Errorf("node is proxied but got request not from proxy (%s instead of %s)", host, s.proxyHost)
 	}
 
-	// Check subject common name exists and return it as the user name for that client
-	if name = tlsAuth.State.VerifiedChains[0][0].Subject.CommonName; name == "" {
-		return name, errors.Errorf("invalid subject common name")
+	_, err = tlsAuth.State.VerifiedChains[0][0].Verify(x509.VerifyOptions{
+		Roots:         s.roots,
+		CurrentTime:   time.Now(),
+		Intermediates: x509.NewCertPool(),
+		KeyUsages:     []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
+	})
+
+	if err != nil {
+		return "", errors.New(err)
 	}
 
-	log.Debug().Msgf("CheckCert: GRPC Context Certificate Name: %s", name)
+	md, ok := metadata.FromIncomingContext(ctx)
 
-	return name, nil
+	if !ok {
+		return "", errors.Errorf("no metadata could be found for proxied request")
+	}
+
+	u := md.Get("user")
+
+	if len(u) != 1 {
+		return "", errors.Errorf("invalid user header for proxied request")
+	}
+
+	return u[0], nil
 }
 
 // NewServer creates a new Server for requests from Fred Clients
-func NewServer(host string, handler fred.ExtHandler, cert string, key string, caCert string, isProxied bool, proxyHost string) *Server {
+func NewServer(host string, handler fred.ExtHandler, cert string, key string, caCert string, isProxied bool, proxy string) *Server {
 	// Load server's certificate and private key
 	serverCert, err := tls.LoadX509KeyPair(cert, key)
 
@@ -136,12 +160,20 @@ func NewServer(host string, handler fred.ExtHandler, cert string, key string, ca
 		MinVersion:   tls.VersionTLS12,
 	}
 
+	proxyHost, proxyPort, err := net.SplitHostPort(proxy)
+
+	if isProxied && err != nil {
+		log.Fatal().Err(err).Msg("Failed to parse proxy host and port")
+		return nil
+	}
+
 	s := &Server{
-		handler,
-		rootCAs,
-		isProxied,
-		proxyHost,
-		grpc.NewServer(
+		e:         handler,
+		roots:     rootCAs,
+		isProxied: isProxied,
+		proxyHost: proxyHost,
+		proxyPort: proxyPort,
+		Server: grpc.NewServer(
 			grpc.Creds(credentials.NewTLS(config)),
 		),
 	}

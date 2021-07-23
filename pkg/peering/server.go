@@ -2,11 +2,15 @@ package peering
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
+	"io/ioutil"
 	"net"
 
 	"git.tu-berlin.de/mcc-fred/fred/proto/peering"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 
 	"git.tu-berlin.de/mcc-fred/fred/pkg/fred"
 )
@@ -18,9 +22,34 @@ type Server struct {
 }
 
 // NewServer creates a new Server for communication to the inthandler from other nodes
-func NewServer(host string, handler fred.IntHandler) *Server {
+func NewServer(host string, handler fred.IntHandler, certFile string, keyFile string, caFile string) *Server {
+	// Load server's certificate and private key
+	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 
-	s := &Server{handler, grpc.NewServer()}
+	if err != nil {
+		log.Fatal().Msgf("could not load key pair: %v", err)
+	}
+
+	// Create a new cert pool and add our own CA certificate
+	rootCAs := x509.NewCertPool()
+
+	loaded, err := ioutil.ReadFile(caFile)
+
+	if err != nil {
+		log.Fatal().Msgf("unexpected missing certfile: %v", err)
+	}
+
+	rootCAs.AppendCertsFromPEM(loaded)
+
+	// Create the credentials and return it
+	config := &tls.Config{
+		Certificates: []tls.Certificate{cert},
+		ClientAuth:   tls.RequireAndVerifyClientCert,
+		ClientCAs:    rootCAs,
+		MinVersion:   tls.VersionTLS12,
+	}
+
+	s := &Server{handler, grpc.NewServer(grpc.Creds(credentials.NewTLS(config)))}
 
 	lis, err := net.Listen("tcp", host)
 	if err != nil {

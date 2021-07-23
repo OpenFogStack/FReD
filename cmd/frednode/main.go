@@ -43,8 +43,11 @@ type fredConfig struct {
 		Adaptor string `env:"STORAGE_ADAPTOR"`
 	}
 	Peering struct {
-		Host      string `env:"PEERING_HOST"`
-		HostProxy string `env:"PEERING_PROXY"`
+		Host  string `env:"PEERING_HOST"`
+		Proxy string `env:"PEERING_PROXY"`
+		Cert  string `env:"PEERING_CERT"`
+		Key   string `env:"PEERING_KEY"`
+		CA    string `env:"PEERING_CA"`
 	}
 	Log struct {
 		Level   string `env:"LOG_LEVEL"`
@@ -103,7 +106,10 @@ func parseArgs() (fc fredConfig) {
 	// this is the address that grpc will bind to (locally)
 	flag.StringVar(&(fc.Peering.Host), "peer-host", "", "local address of this peering server. (Env: PEERING_HOST)")
 	// this is the address that the node will advertise to nase
-	flag.StringVar(&(fc.Peering.HostProxy), "peer-host-proxy", "", "Publicly reachable address of this peering server (if behind a proxy). (Env: PEERING_PROXY)")
+	flag.StringVar(&(fc.Peering.Proxy), "peer-host-proxy", "", "Publicly reachable address of this peering server (if behind a proxy). (Env: PEERING_PROXY)")
+	flag.StringVar(&(fc.Peering.Cert), "peer-cert", "", "Certificate for peering connection. (Env: PEERING_CERT)")
+	flag.StringVar(&(fc.Peering.Key), "peer-key", "", "Key file for peering connection. (Env: PEERING_KEY)")
+	flag.StringVar(&(fc.Peering.CA), "peer-ca", "", "Certificate authority root certificate file for peering connections. (Env: PEERING)")
 
 	// storage configuration
 	flag.StringVar(&(fc.Storage.Adaptor), "adaptor", "", "Storage adaptor, can be \"remote\", \"badgerdb\", \"memory\", \"dynamo\". (Env: STORAGE_ADAPTOR)")
@@ -275,7 +281,7 @@ func main() {
 	}
 
 	log.Debug().Msg("Starting Interconnection Client...")
-	c := peering.NewClient()
+	c := peering.NewClient(fc.Peering.Cert, fc.Peering.Key, fc.Peering.CA)
 
 	log.Debug().Msg("Starting NaSe Client...")
 
@@ -292,7 +298,7 @@ func main() {
 		Client:            c,
 		NaSe:              n,
 		PeeringHost:       fc.Peering.Host,
-		PeeringHostProxy:  fc.Peering.HostProxy,
+		PeeringHostProxy:  fc.Peering.Proxy,
 		ExternalHost:      fc.Server.Host,
 		ExternalHostProxy: fc.Server.Proxy,
 		TriggerCert:       fc.Trigger.Cert,
@@ -301,7 +307,7 @@ func main() {
 	})
 
 	log.Debug().Msg("Starting Interconnection Server...")
-	is := peering.NewServer(fc.Peering.Host, f.I)
+	is := peering.NewServer(fc.Peering.Host, f.I, fc.Peering.Cert, fc.Peering.Key, fc.Peering.CA)
 
 	log.Debug().Msg("Starting GRPC Server for Client (==Externalconnection)...")
 	isProxied := fc.Server.Proxy != "" && fc.Server.Host != fc.Server.Proxy
