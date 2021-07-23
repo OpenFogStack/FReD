@@ -5,6 +5,7 @@
 [![License MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://img.shields.io/badge/License-MIT-brightgreen.svg)
 [![Go Report Card](https://goreportcard.com/badge/git.tu-berlin.de/mcc-fred/fred)](https://goreportcard.com/report/git.tu-berlin.de/mcc-fred/fred)
 [![Godoc](http://img.shields.io/badge/go-documentation-blue.svg)](https://pkg.go.dev/git.tu-berlin.de/mcc-fred/fred)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FOpenFogStack%2FFReD.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FOpenFogStack%2FFReD?ref=badge_shield)
 
 **FReD** is a distributed middleware for **F**og **Re**plicated **D**ata.
 It abstracts data management for fog-based applications by grouping data into _keygroups_, each keygroup a set of key-value pairs that can be managed independently.
@@ -581,3 +582,7 @@ $ go tool pprof --pdf ./frednode fredcpu.pprof > cpu.pdf
 $ go tool pprof --pdf ./frednode fredmem.pprof > mem.pdf
 
 ```
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FOpenFogStack%2FFReD.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FOpenFogStack%2FFReD?ref=badge_large)
