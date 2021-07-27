@@ -276,10 +276,11 @@ func (h *exthandler) HandleGetKeygroupReplica(user string, k Keygroup) ([]Node, 
 	allowed, err := h.a.isAllowed(user, GetReplica, k.Name)
 
 	if err != nil || !allowed {
+		log.Err(err).Msg("Exthandler uer is not allowed to GetKeygroupReplica")
 		return nil, nil, errors.Errorf("user %s cannot get replica for keygroup %s", user, k.Name)
 	}
 
-	return h.r.getReplica(k)
+	return h.r.getReplicaExternal(k)
 }
 
 // HandleRemoveReplica handles requests to the RemoveKeygroupReplica endpoint of the client interface.
@@ -298,7 +299,7 @@ func (h *exthandler) HandleRemoveReplica(user string, k Keygroup, n Node) error 
 	return nil
 }
 
-// HandleAddReplica handles requests to the AddKeygroupTrigger endpoint of the client interface.
+// HandleAddTrigger handles requests to the AddKeygroupTrigger endpoint of the client interface.
 func (h *exthandler) HandleAddTrigger(user string, k Keygroup, t Trigger) error {
 	allowed, err := h.a.isAllowed(user, AddTrigger, k.Name)
 
@@ -344,7 +345,7 @@ func (h *exthandler) HandleRemoveTrigger(user string, k Keygroup, t Trigger) err
 // HandleGetReplica handles requests to the GetReplica endpoint of the client interface.
 func (h *exthandler) HandleGetReplica(user string, n Node) (Node, error) {
 
-	return h.r.getNode(n)
+	return h.r.getNodeExternal(n)
 }
 
 // HandleGetAllReplica handles requests to the GetAllReplica endpoint of the client interface.

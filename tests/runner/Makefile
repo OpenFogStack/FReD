@@ -16,7 +16,8 @@ clean: ## clean up all resources
 3n-selfreplica: export TEST_RANGE = 6-6
 3n-auth: export TEST_RANGE = 7-7
 3n-concurrency: export TEST_RANGE = 8-8
-3n-all 3n-standard 3n-replica 3n-trigger 3n-immutable 3n-expiry 3n-selfreplica 3n-auth 3n-concurrency: 3nodetest
+3n-allworking: export TEST_RANGE = 1-7
+3n-all 3n-standard 3n-replica 3n-trigger 3n-immutable 3n-expiry 3n-selfreplica 3n-auth 3n-concurrency 3n-allworking: 3nodetest
 
 3nodetest: clean ## start all containers with docker compose and run the test dockerized
 	@docker network create fredwork --gateway 172.26.0.1 --subnet 172.26.0.0/16 || true
@@ -38,7 +39,12 @@ failtest: ## Start the failtest
 	@docker-compose -f failtest.yml build
 	@docker-compose -f failtest.yml up --force-recreate --abort-on-container-exit --renew-anon-volumes --exit-code-from tester
 
-alexandra: clean ## start fred with alexandra
+alexandratest: ## Test alexandra (starts 3node, alexandra, alexandra-test)
+	@docker network create fredwork --gateway 172.26.0.1 --subnet 172.26.0.0/16 || true
+	@docker-compose -f etcd.yml -f nodeA.yml -f nodeB.yml -f nodeC.yml -f trigger.yml -f alexandra.yml -f alexandra-test.yml build
+	@docker-compose -f etcd.yml -f nodeA.yml -f nodeB.yml -f nodeC.yml -f trigger.yml -f alexandra.yml -f alexandra-test.yml up --abort-on-container-exit --force-recreate --renew-anon-volumes --remove-orphans
+
+alexandra: ## alexandra (starts 3node, alexandra)
 	@docker network create fredwork --gateway 172.26.0.1 --subnet 172.26.0.0/16 || true
 	@docker-compose -f etcd.yml -f nodeA.yml -f nodeB.yml -f nodeC.yml -f trigger.yml -f alexandra.yml build
 	@docker-compose -f etcd.yml -f nodeA.yml -f nodeB.yml -f nodeC.yml -f trigger.yml -f alexandra.yml up --abort-on-container-exit --force-recreate --renew-anon-volumes --remove-orphans

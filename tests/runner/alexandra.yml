@@ -28,23 +28,6 @@ services:
       fredwork:
         ipv4_address: 172.26.4.1
 
-  alexandra-tester:
-    depends_on:
-      - alexandra
-    build:
-      context: ../../
-      dockerfile: tests/AlexandraTest/Dockerfile
-    image: fred/alexandra-tester:local
-    container_name: alexandra-tester
-    volumes:
-      - ./certificates/client.crt:/cert/client.crt
-      - ./certificates/client.key:/cert/client.key
-      - ./certificates/ca.crt:/cert/ca.crt
-    networks:
-      fredwork:
-        ipv4_address: 172.26.7.1
-
 networks:
   fredwork:
     external: true
-

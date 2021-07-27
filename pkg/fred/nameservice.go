@@ -17,6 +17,7 @@ type NameService interface {
 
 	// manage information about another node
 	GetNodeAddress(nodeID NodeID) (addr string, err error)
+	GetNodeAddressExternal(nodeID NodeID) (addr string, err error)
 	GetAllNodes() (nodes []Node, err error)
 	GetAllNodesExternal() (nodes []Node, err error)
 

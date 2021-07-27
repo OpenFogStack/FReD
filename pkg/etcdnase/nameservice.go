@@ -98,6 +98,7 @@ func (n *NameService) RegisterSelf(host string, externalHost string) error {
 	}
 
 	key = fmt.Sprintf(fmtNodeExternalAdressString, n.NodeID)
+	log.Debug().Msgf("NaSe: registering external address as %s // %s", key, externalHost)
 	return n.put(key, externalHost)
 }
 

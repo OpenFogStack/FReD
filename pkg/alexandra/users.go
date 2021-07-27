@@ -3,6 +3,7 @@ package alexandra
 import (
 	"context"
 
+	fredClients "git.tu-berlin.de/mcc-fred/fred/proto/client"
 	alexandraProto "git.tu-berlin.de/mcc-fred/fred/proto/middleware"
 )
 
@@ -17,10 +18,30 @@ import (
 //	}
 //)
 
-func (s *Server) AddUser(ctx context.Context, request *alexandraProto.UserRequest) (*alexandraProto.StatusResponse, error) {
-	return s.clientsMgr.GetClientTo(s.lighthouse).client.AddUser(ctx, request)
+func (s *Server) AddUser(ctx context.Context, request *alexandraProto.UserRequest) (*alexandraProto.Empty, error) {
+	_, err := s.clientsMgr.GetClientTo(s.lighthouse).Client.AddUser(ctx, &fredClients.UserRequest{
+		User:     request.User,
+		Keygroup: request.Keygroup,
+		Role:     fredClients.UserRole(request.Role),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &alexandraProto.Empty{}, err
 }
 
-func (s *Server) RemoveUser(ctx context.Context, request *alexandraProto.UserRequest) (*alexandraProto.StatusResponse, error) {
-	return s.clientsMgr.GetClientTo(s.lighthouse).client.RemoveUser(ctx, request)
+func (s *Server) RemoveUser(ctx context.Context, request *alexandraProto.UserRequest) (*alexandraProto.Empty, error) {
+	_, err := s.clientsMgr.GetClientTo(s.lighthouse).Client.RemoveUser(ctx, &fredClients.UserRequest{
+		User:     request.User,
+		Keygroup: request.Keygroup,
+		Role:     fredClients.UserRole(request.Role),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &alexandraProto.Empty{}, err
 }

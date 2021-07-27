@@ -502,9 +502,19 @@ func (s *replicationService) removeReplica(k Keygroup, n Node, relay bool) error
 }
 
 // getNode returns the locally saved node with this ID
-func (s *replicationService) getNode(n Node) (Node, error) {
-	addr, err := s.n.GetNodeAddress(n.ID)
+//func (s *replicationService) getNode(n Node) (Node, error) {
+//	addr, err := s.n.GetNodeAddress(n.ID)
+//	n = Node{
+//		ID:   n.ID,
+//		Host: addr,
+//	}
+//
+//	return n, err
+//}
 
+// getNode returns the locally saved node with this ID
+func (s *replicationService) getNodeExternal(n Node) (Node, error) {
+	addr, err := s.n.GetNodeAddressExternal(n.ID)
 	n = Node{
 		ID:   n.ID,
 		Host: addr,
@@ -519,8 +529,42 @@ func (s *replicationService) getNodesExternalAdress() ([]Node, error) {
 }
 
 // getReplica returns a list of all replica nodes for a given keygroup.
-func (s *replicationService) getReplica(k Keygroup) (nodes []Node, expiries map[NodeID]int, err error) {
-	log.Debug().Msgf("GetReplica from replservice: in %#v", k)
+//func (s *replicationService) getReplica(k Keygroup) (nodes []Node, expiries map[NodeID]int, err error) {
+//	log.Debug().Msgf("GetReplica from replservice: in %#v", k)
+//
+//	exists, err := s.n.ExistsKeygroup(k.Name)
+//	if !exists {
+//		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+//		return nil, nil, errors.Errorf("no such keygroup according to NaSe")
+//	}
+//	if err != nil {
+//		return nil, nil, err
+//	}
+//
+//	expiries = make(map[NodeID]int)
+//
+//	ids, err := s.n.GetKeygroupMembers(k.Name, true)
+//	for id, expiry := range ids {
+//		addr, err := s.n.GetNodeAddress(id)
+//
+//		if err != nil {
+//			return nil, nil, err
+//		}
+//
+//		newNode := &Node{
+//			ID:   id,
+//			Host: addr,
+//		}
+//		// TODO is this the optimal solution?
+//		nodes = append(nodes, *newNode)
+//		expiries[id] = expiry
+//	}
+//	return
+//}
+
+// getReplicaExternal returns a list of all replica nodes for a given keygroup.
+func (s *replicationService) getReplicaExternal(k Keygroup) (nodes []Node, expiries map[NodeID]int, err error) {
+	log.Debug().Msgf("GetReplicaExternal from replservice: in %#v", k)
 
 	exists, err := s.n.ExistsKeygroup(k.Name)
 	if !exists {
@@ -533,9 +577,10 @@ func (s *replicationService) getReplica(k Keygroup) (nodes []Node, expiries map[
 
 	expiries = make(map[NodeID]int)
 
-	ids, err := s.n.GetKeygroupMembers(k.Name, true)
+	ids, err := s.n.GetKeygroupMembers(k.Name, false)
+	log.Debug().Msgf("...got Nodes: %#v", ids)
 	for id, expiry := range ids {
-		addr, err := s.n.GetNodeAddress(id)
+		addr, err := s.n.GetNodeAddressExternal(id)
 
 		if err != nil {
 			return nil, nil, err
