@@ -114,6 +114,7 @@ message GetKeygroupReplicaResponse {
 message KeygroupReplica {
   string nodeId = 1;
   int64 expiry = 2;
+  string host = 3;
 }
 
 message RemoveReplicaRequest {

@@ -5,28 +5,23 @@ option go_package = ".;alexandra";
 
 // This extends the Fred client for more convenient functions.
 service Middleware {
-  rpc CreateKeygroup (CreateKeygroupRequest) returns (StatusResponse);
-  rpc DeleteKeygroup (DeleteKeygroupRequest) returns (StatusResponse);
+  rpc CreateKeygroup (CreateKeygroupRequest) returns (Empty);
+  rpc DeleteKeygroup (DeleteKeygroupRequest) returns (Empty);
   rpc Read (ReadRequest) returns (ReadResponse);
   rpc Scan (ScanRequest) returns (ScanResponse);
-  rpc Update (UpdateRequest) returns (StatusResponse);
-  rpc Delete (DeleteRequest) returns (StatusResponse);
+  rpc Update (UpdateRequest) returns (Empty);
+  rpc Delete (DeleteRequest) returns (Empty);
   rpc Append (AppendRequest) returns (AppendResponse);
-  rpc AddReplica (AddReplicaRequest) returns (StatusResponse);
+  rpc AddReplica (AddReplicaRequest) returns (Empty);
   rpc GetKeygroupReplica (GetKeygroupReplicaRequest) returns (GetKeygroupReplicaResponse);
-  rpc RemoveReplica (RemoveReplicaRequest) returns (StatusResponse);
+  rpc RemoveReplica (RemoveReplicaRequest) returns (Empty);
   rpc GetReplica (GetReplicaRequest) returns (GetReplicaResponse);
   rpc GetAllReplica (GetAllReplicaRequest) returns (GetAllReplicaResponse);
   rpc GetKeygroupTriggers (GetKeygroupTriggerRequest) returns (GetKeygroupTriggerResponse);
-  rpc AddTrigger (AddTriggerRequest) returns (StatusResponse);
-  rpc RemoveTrigger (RemoveTriggerRequest) returns (StatusResponse);
-  rpc AddUser (UserRequest) returns (StatusResponse);
-  rpc RemoveUser (UserRequest) returns (StatusResponse);
-}
-
-enum EnumStatus {
-  OK = 0;
-  ERROR = 1;
+  rpc AddTrigger (AddTriggerRequest) returns (Empty);
+  rpc RemoveTrigger (RemoveTriggerRequest) returns (Empty);
+  rpc AddUser (UserRequest) returns (Empty);
+  rpc RemoveUser (UserRequest) returns (Empty);
 }
 
 enum UserRole {
@@ -37,16 +32,13 @@ enum UserRole {
   ConfigureKeygroups = 4;
 }
 
-message StatusResponse {
-  EnumStatus status = 1;
-  // This is an optional message, only to be sent if the status is not OK
-  string errorMessage = 2;
-}
+message Empty {}
 
 message CreateKeygroupRequest {
   string keygroup = 1;
   bool mutable = 2;
   int64 expiry = 3;
+  string firstNodeId = 4;
 }
 
 message DeleteKeygroupRequest {
@@ -56,6 +48,7 @@ message DeleteKeygroupRequest {
 message ReadRequest {
   string keygroup = 1;
   string id = 2;
+  int64 minExpiry = 3;
 }
 
 message ReadResponse {
@@ -114,6 +107,7 @@ message GetKeygroupReplicaResponse {
 message KeygroupReplica {
   string nodeId = 1;
   int64 expiry = 2;
+  string host = 3;
 }
 
 message RemoveReplicaRequest {

@@ -25,6 +25,22 @@ func (n *NameService) GetNodeAddress(nodeID fred.NodeID) (addr string, err error
 	return resp, nil
 }
 
+// GetNodeAddressExternal returns the ip and port of a node, the one accesable from the outside
+func (n *NameService) GetNodeAddressExternal(nodeID fred.NodeID) (addr string, err error) {
+	resp, err := n.getExact(fmt.Sprintf(fmtNodeExternalAdressString, string(nodeID)))
+
+	if err != nil {
+		return "", errors.New(err)
+	}
+
+	if len(resp) == 0 {
+		return "", errors.Errorf("no such node with nodeId=%s", nodeID)
+	}
+
+	log.Debug().Msgf("NaSe: GetNodeAddress: Address of node %s is %s", nodeID, resp)
+	return resp, nil
+}
+
 // GetAllNodes returns all nodes that are stored in the NaSe in the way they can be reached by other nodes
 func (n *NameService) GetAllNodes() (nodes []fred.Node, err error) {
 	return n.getAllNodesBySuffix(fmt.Sprintf(sep + "address"))

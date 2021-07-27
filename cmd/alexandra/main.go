@@ -44,8 +44,6 @@ func parseArgs() (c config) {
 func main() {
 	c := parseArgs()
 
-	log.Info().Msgf("%#v", c)
-
 	// Setup Logging as always
 	if c.logHandler == "dev" {
 		log.Logger = log.Output(
@@ -54,6 +52,8 @@ func main() {
 				NoColor: false,
 			},
 		)
+
+		log.Info().Msgf("%#v", c)
 	} else if c.logHandler != "prod" {
 		log.Fatal().Msg("Log Handler has to be either dev or prod")
 	}

@@ -38,7 +38,7 @@ func (h *inthandler) HandleGet(i Item) (Item, error) {
 	}, nil
 }
 
-// HandleGet handles requests to the Get endpoint of the internal interface.
+// HandleGetAllItems handles requests to the Get endpoint of the internal interface.
 func (h *inthandler) HandleGetAllItems(k Keygroup) ([]Item, error) {
 	data, err := h.s.readAll(k.Name)
 

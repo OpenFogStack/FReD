@@ -385,10 +385,13 @@ func (s *Server) GetKeygroupReplica(ctx context.Context, request *client.GetKeyg
 
 	if err != nil {
 		_, err = statusResponseFromError(err)
+		log.Debug().Msgf("ExtServer is returning error: %#v", err)
 		return nil, err
 	}
 
 	n, e, err := s.e.HandleGetKeygroupReplica(user, fred.Keygroup{Name: fred.KeygroupName(request.Keygroup)})
+
+	log.Debug().Msgf("... received replicas: %#v", n)
 
 	// Copy only the interesting values into a new array
 	replicas := make([]*client.KeygroupReplica, len(n))
@@ -397,6 +400,7 @@ func (s *Server) GetKeygroupReplica(ctx context.Context, request *client.GetKeyg
 		replicas[i] = &client.KeygroupReplica{
 			NodeId: string(n[i].ID),
 			Expiry: int64(e[n[i].ID]),
+			Host: n[i].Host,
 		}
 	}
 
@@ -404,6 +408,8 @@ func (s *Server) GetKeygroupReplica(ctx context.Context, request *client.GetKeyg
 		log.Debug().Msgf("ExtServer is returning error: %#v", err)
 		return &client.GetKeygroupReplicaResponse{}, err
 	}
+
+	log.Debug().Msgf("...out: %#v", replicas)
 
 	return &client.GetKeygroupReplicaResponse{
 		Replica: replicas,
