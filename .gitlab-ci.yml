@@ -49,6 +49,8 @@ build:
 
 container:
   stage: release
+  only:
+    - main
   script:
     - make container
     - IFS='/' read -ra components <<< "$CI_COMMIT_REF_NAME"
