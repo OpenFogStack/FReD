@@ -1,23 +1,26 @@
-package badgerdb
+package dynamo
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strconv"
 	"testing"
 	"time"
 
-	"github.com/go-errors/errors"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
+	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/wait"
 )
 
-const badgerDBPath = "./test.db"
+const table = "fred"
 
 var db *Storage
-
-// TODO: better tests, maybe even for all packages that implement the Store interface?
 
 func TestMain(m *testing.M) {
 	zerolog.SetGlobalLevel(zerolog.DebugLevel)
@@ -28,37 +31,129 @@ func TestMain(m *testing.M) {
 		},
 	)
 
-	fInfo, err := os.Stat(badgerDBPath)
-
-	if err == nil {
-		if !fInfo.IsDir() {
-			panic(errors.Errorf("%s is not a directory!", badgerDBPath))
-		}
-
-		err = os.RemoveAll(badgerDBPath)
-		if err != nil {
-			panic(err)
-		}
+	ctx := context.Background()
+	req := testcontainers.ContainerRequest{
+		Image:        "amazon/dynamodb-local:latest",
+		Cmd:          []string{"-jar", "DynamoDBLocal.jar", "-inMemory"},
+		ExposedPorts: []string{"8000/tcp"},
+		//BindMounts:   map[string]string{"8000": "8000"},
+		WaitingFor: wait.NewHostPortStrategy("8000"),
 	}
 
-	db = New(badgerDBPath)
+	d, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+		ContainerRequest: req,
+		Started:          true,
+	})
 
-	stat := m.Run()
-
-	fInfo, err = os.Stat(badgerDBPath)
-
-	if err == nil {
-		if !fInfo.IsDir() {
-			panic(errors.Errorf("%s is not a directory!", badgerDBPath))
-		}
-
-		err = os.RemoveAll(badgerDBPath)
-		if err != nil {
-			panic(err)
-		}
+	if err != nil {
+		log.Fatal().Msg(err.Error())
+		return
 	}
 
-	os.Exit(stat)
+	defer func(d testcontainers.Container, ctx context.Context) {
+		err := d.Terminate(ctx)
+		if err != nil {
+			log.Fatal().Msgf(err.Error())
+		}
+	}(d, ctx)
+
+	ip, err := d.Host(ctx)
+
+	if err != nil {
+		log.Fatal().Msg(err.Error())
+		return
+	}
+
+	port, err := d.MappedPort(ctx, "8000")
+
+	if err != nil {
+		log.Fatal().Msg(err.Error())
+	}
+
+	sess := session.Must(session.NewSession(&aws.Config{
+		Endpoint: aws.String(fmt.Sprintf("http://%s:%s", ip, port)),
+		Region:   aws.String("eu-central-1"),
+	}))
+
+	svc := dynamodb.New(sess)
+
+	log.Debug().Msg("Created session - OK!")
+
+	// aws dynamodb create-table --table-name fred --attribute-definitions "AttributeName=Key,AttributeType=S AttributeName=Value,AttributeType=S AttributeName=Expiry,AttributeType=N" --key-schema "AttributeName=Key,KeyType=HASH" --provisioned-throughput "ReadCapacityUnits=1,WriteCapacityUnits=1"
+	out1, err := svc.CreateTable(&dynamodb.CreateTableInput{
+		AttributeDefinitions: []*dynamodb.AttributeDefinition{
+			{
+				AttributeName: aws.String(keyName),
+				AttributeType: aws.String(dynamodb.ScalarAttributeTypeS),
+			},
+		},
+		BillingMode:            nil,
+		GlobalSecondaryIndexes: nil,
+		KeySchema: []*dynamodb.KeySchemaElement{
+			{
+				AttributeName: aws.String(keyName),
+				KeyType:       aws.String(dynamodb.KeyTypeHash),
+			},
+		},
+		LocalSecondaryIndexes: nil,
+		ProvisionedThroughput: &dynamodb.ProvisionedThroughput{
+			ReadCapacityUnits:  aws.Int64(1),
+			WriteCapacityUnits: aws.Int64(1),
+		},
+		SSESpecification:    nil,
+		StreamSpecification: nil,
+		TableName:           aws.String(table),
+		Tags:                nil,
+	})
+
+	if err != nil {
+		log.Fatal().Msg(err.Error())
+		return
+	}
+
+	if out1 != nil {
+		log.Debug().Msgf("Creating table, output: %#v", out1)
+	}
+
+	log.Debug().Msg("Created table - OK!")
+
+	// aws dynamodb update-time-to-live --table-name fred --time-to-live-specification "Enabled=true, AttributeName=Expiry"
+	out2, err := svc.UpdateTimeToLive(&dynamodb.UpdateTimeToLiveInput{
+		TableName: aws.String(table),
+		TimeToLiveSpecification: &dynamodb.TimeToLiveSpecification{
+			AttributeName: aws.String(expiryKey),
+			Enabled:       aws.Bool(true),
+		},
+	})
+
+	if err != nil {
+		log.Fatal().Msg(err.Error())
+		return
+	}
+
+	if out2 != nil {
+		log.Debug().Msgf("Updating TTL on table, output: %#v", out2)
+	}
+
+	log.Debug().Msg("Configured TTL - OK!")
+
+	db, err = NewFromExisting(table, svc)
+
+	if err != nil {
+		log.Fatal().Msg(err.Error())
+		return
+	}
+
+	log.Debug().Msg("Created DB - OK!")
+
+	os.Exit(m.Run())
+}
+
+func TestCreateKeygroup(t *testing.T) {
+	kg := "test-kg"
+	err := db.CreateKeygroup(kg)
+
+	assert.NoError(t, err)
 }
 
 func TestKeygroups(t *testing.T) {
@@ -324,11 +419,17 @@ func TestExpiry(t *testing.T) {
 
 	assert.Equal(t, value, retr)
 
-	time.Sleep(10 * time.Second)
+	exists := db.Exists(kg, id)
+	assert.True(t, exists)
+
+	time.Sleep(11 * time.Second)
 
 	_, err = db.Read(kg, id)
 
 	assert.Error(t, err)
+
+	exists = db.Exists(kg, id)
+	assert.False(t, exists)
 }
 
 func TestAppend(t *testing.T) {
@@ -497,8 +598,5 @@ func TestClose(t *testing.T) {
 	err = db.Close()
 
 	assert.NoError(t, err)
-
-	_, err = db.Read(kg, id)
-	assert.Error(t, err)
-
+	// currently close is not implemented in DynamoDB
 }
