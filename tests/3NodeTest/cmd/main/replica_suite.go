@@ -106,6 +106,25 @@ func (t *ReplicaSuite) RunTests() {
 	// NodeB is the only replica left
 	logNodeAction(t.c.nodeB, "Removing last member of a keygroup delete-test")
 	t.c.nodeB.DeleteKeygroupReplica("deletetest", t.c.nodeB.ID, true)
+
+	// checking "GetReplicas" and "GetKeygroupReplica"
+	logNodeAction(t.c.nodeB, "Testing GetReplica and GetKeygroupReplica")
+	_, host := t.c.nodeB.GetReplica(t.c.nodeA.ID, false)
+	if host != fmt.Sprintf("%s:%s", t.c.nodeA.Addr, t.c.nodeAhttpPort) {
+		logNodeFailure(t.c.nodeB, fmt.Sprintf("%s:%s", t.c.nodeA.Addr, t.c.nodeAhttpPort), host)
+	}
+	t.c.nodeB.CreateKeygroup("replicanodetest", true, 0, false)
+	t.c.nodeB.AddKeygroupReplica("replicanodetest", t.c.nodeA.ID, 10, false)
+	hosts := t.c.nodeA.GetKeygroupReplica("replicanodetest", false)
+	if len(hosts) != 2 {
+		logNodeFailure(t.c.nodeA, "2 hosts", fmt.Sprintf("%d host(s)", len(hosts)))
+	}
+	if expiry, ok := hosts[t.c.nodeA.ID]; !ok || expiry != 10 {
+		logNodeFailure(t.c.nodeA, "expiry of 10 for nodeA", "nodeA not in replica list or expiry wrong")
+	}
+	if expiry, ok := hosts[t.c.nodeB.ID]; !ok || expiry != 0 {
+		logNodeFailure(t.c.nodeA, "expiry of 0 for nodeB", "nodeB not in replica list or expiry wrong")
+	}
 }
 
 func NewReplicaSuite(c *Config) *ReplicaSuite {
