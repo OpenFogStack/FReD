@@ -21,13 +21,12 @@ import (
 const (
 	certBasePath = "../../tests/runner/certificates/"
 	etcdDir      = ".default.etcd"
+	nodeID       = fred.NodeID("X")
 )
 
 var f fred.Fred
 
 func TestMain(m *testing.M) {
-	nodeID := "X"
-
 	log.Logger = log.Output(
 		zerolog.ConsoleWriter{
 			Out:     os.Stderr,
@@ -74,7 +73,7 @@ func TestMain(m *testing.M) {
 
 	<-e.Server.ReadyNotify()
 
-	n, err := etcdnase.NewNameService(nodeID, []string{"127.0.0.1:6000"}, certBasePath+"nodeA.crt", certBasePath+"nodeA.key", certBasePath+"ca.crt", true)
+	n, err := etcdnase.NewNameService(string(nodeID), []string{"127.0.0.1:6000"}, certBasePath+"nodeA.crt", certBasePath+"nodeA.key", certBasePath+"ca.crt", true)
 
 	if err != nil {
 		panic(err)
@@ -88,7 +87,7 @@ func TestMain(m *testing.M) {
 		PeeringHostProxy:  "",
 		ExternalHost:      "127.0.0.1:9000",
 		ExternalHostProxy: "",
-		NodeID:            nodeID,
+		NodeID:            string(nodeID),
 		TriggerCert:       certBasePath + "nodeA.crt",
 		TriggerKey:        certBasePath + "nodeA.key",
 		TriggerCA:         []string{certBasePath + "ca.crt"},
@@ -424,6 +423,50 @@ func TestPermissions(t *testing.T) {
 	})
 
 	assert.Error(t, err)
+}
+
+func TestAllReplicas(t *testing.T) {
+	nodes, err := f.E.HandleGetAllReplica("user")
+
+	assert.NoError(t, err)
+
+	assert.Len(t, nodes, 1)
+	assert.Equal(t, nodeID, nodes[0].ID)
+	assert.Equal(t, "127.0.0.1:9000", nodes[0].Host)
+}
+
+func TestSingleReplica(t *testing.T) {
+	node, err := f.E.HandleGetReplica("user", fred.Node{ID: nodeID})
+
+	assert.NoError(t, err)
+	assert.Equal(t, nodeID, node.ID)
+	assert.Equal(t, "127.0.0.1:9000", node.Host)
+
+	_, err = f.E.HandleGetReplica("user", fred.Node{ID: "Y"})
+
+	assert.Error(t, err)
+}
+
+func TestKeygroupReplicas(t *testing.T) {
+	user := "user1"
+	var kg fred.KeygroupName = "replicakeygroup"
+
+	err := f.E.HandleCreateKeygroup(user, fred.Keygroup{
+		Name:    kg,
+		Mutable: true,
+		Expiry:  0,
+	})
+
+	assert.NoError(t, err)
+
+	nodes, expiries, err := f.E.HandleGetKeygroupReplica(user, fred.Keygroup{Name: kg})
+
+	assert.NoError(t, err)
+	assert.Len(t, nodes, 1)
+	assert.Equal(t, nodeID, nodes[0].ID)
+	assert.Equal(t, "127.0.0.1:9000", nodes[0].Host)
+	assert.Len(t, expiries, 1)
+	assert.Equal(t, expiries[nodes[0].ID], 0)
 }
 
 func BenchmarkPut(b *testing.B) {

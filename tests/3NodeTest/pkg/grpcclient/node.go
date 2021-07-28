@@ -299,7 +299,7 @@ func (n *Node) GetAllReplica(expectError bool) map[string]string {
 }
 
 // GetReplica calls the GetReplica endpoint of the GRPC interface.
-func (n *Node) GetReplica(nodeID string, expectError bool) string {
+func (n *Node) GetReplica(nodeID string, expectError bool) (string, string) {
 	res, err := n.Client.GetReplica(context.Background(), &client.GetReplicaRequest{NodeId: nodeID})
 
 	if err != nil && !expectError {
@@ -313,10 +313,10 @@ func (n *Node) GetReplica(nodeID string, expectError bool) string {
 	}
 
 	if res == nil {
-		return ""
+		return "", ""
 	}
 
-	return res.NodeId
+	return res.NodeId, res.Host
 }
 
 // PutItem calls the PutItem endpoint of the GRPC interface.
