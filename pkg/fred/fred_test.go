@@ -34,7 +34,7 @@ func TestMain(m *testing.M) {
 		},
 	)
 
-	zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+	zerolog.SetGlobalLevel(zerolog.FatalLevel)
 
 	fInfo, err := os.Stat(etcdDir)
 
@@ -467,6 +467,203 @@ func TestKeygroupReplicas(t *testing.T) {
 	assert.Equal(t, "127.0.0.1:9000", nodes[0].Host)
 	assert.Len(t, expiries, 1)
 	assert.Equal(t, expiries[nodes[0].ID], 0)
+}
+
+func TestTriggers(t *testing.T) {
+	user := "user1"
+	var kg fred.KeygroupName = "triggerkeygroup"
+	tid := "trigger1"
+	thost := "5.5.5.5:9000"
+
+	err := f.E.HandleAddTrigger(user, fred.Keygroup{
+		Name: kg,
+	}, fred.Trigger{
+		ID:   tid,
+		Host: thost,
+	})
+
+	assert.Error(t, err)
+
+	err = f.E.HandleCreateKeygroup(user, fred.Keygroup{
+		Name:    kg,
+		Mutable: true,
+		Expiry:  0,
+	})
+
+	assert.NoError(t, err)
+
+	err = f.E.HandleAddTrigger(user, fred.Keygroup{
+		Name: kg,
+	}, fred.Trigger{
+		ID:   tid,
+		Host: thost,
+	})
+
+	assert.NoError(t, err)
+
+	triggers, err := f.E.HandleGetKeygroupTriggers(user, fred.Keygroup{
+		Name: kg,
+	})
+
+	assert.NoError(t, err)
+	assert.Len(t, triggers, 1)
+	assert.Equal(t, triggers[0].ID, tid)
+	assert.Equal(t, triggers[0].Host, thost)
+
+	err = f.E.HandleRemoveTrigger(user, fred.Keygroup{
+		Name: kg,
+	}, fred.Trigger{
+		ID: tid,
+	})
+
+	assert.NoError(t, err)
+
+	triggers, err = f.E.HandleGetKeygroupTriggers(user, fred.Keygroup{
+		Name: kg,
+	})
+
+	assert.NoError(t, err)
+	assert.Len(t, triggers, 0)
+
+}
+
+func TestInternalPut(t *testing.T) {
+	kg := fred.KeygroupName("kginternalput")
+	id := "item1"
+	val := "value1"
+
+	err := f.E.HandleCreateKeygroup("user", fred.Keygroup{
+		Name:    kg,
+		Mutable: true,
+		Expiry:  0,
+	})
+
+	assert.NoError(t, err)
+
+	err = f.I.HandleUpdate(fred.Item{
+		Keygroup: kg,
+		ID:       id,
+		Val:      val,
+	})
+
+	assert.NoError(t, err)
+
+	i, err := f.I.HandleGet(fred.Item{
+		Keygroup: kg,
+		ID:       id,
+	})
+
+	assert.NoError(t, err)
+
+	assert.Equal(t, kg, i.Keygroup)
+	assert.Equal(t, id, i.ID)
+	assert.Equal(t, val, i.Val)
+
+	items, err := f.I.HandleGetAllItems(fred.Keygroup{
+		Name: kg,
+	})
+
+	assert.NoError(t, err)
+	assert.Len(t, items, 1)
+	assert.Equal(t, kg, items[0].Keygroup)
+	assert.Equal(t, id, items[0].ID)
+	assert.Equal(t, val, items[0].Val)
+}
+
+func TestInternalDelete(t *testing.T) {
+	kg := fred.KeygroupName("kginternaldelete")
+	id := "item1"
+	val := "value1"
+
+	err := f.E.HandleCreateKeygroup("user", fred.Keygroup{
+		Name:    kg,
+		Mutable: true,
+		Expiry:  0,
+	})
+
+	assert.NoError(t, err)
+
+	err = f.E.HandleUpdate("user", fred.Item{
+		Keygroup: kg,
+		ID:       id,
+		Val:      val,
+	})
+
+	assert.NoError(t, err)
+
+	items, err := f.I.HandleGetAllItems(fred.Keygroup{
+		Name: kg,
+	})
+
+	assert.NoError(t, err)
+	assert.Len(t, items, 1)
+
+	err = f.I.HandleDelete(fred.Item{
+		Keygroup: kg,
+		ID:       id,
+	})
+
+	assert.NoError(t, err)
+
+	items, err = f.I.HandleGetAllItems(fred.Keygroup{
+		Name: kg,
+	})
+
+	assert.NoError(t, err)
+	assert.Len(t, items, 0)
+}
+
+func TestInternalAppend(t *testing.T) {
+	kg := fred.KeygroupName("kginternappend")
+	id := "0"
+	val := "value1"
+
+	err := f.E.HandleCreateKeygroup("user", fred.Keygroup{
+		Name:    kg,
+		Mutable: false,
+		Expiry:  0,
+	})
+
+	assert.NoError(t, err)
+
+	err = f.I.HandleAppend(fred.Item{
+		Keygroup: kg,
+		ID:       id,
+		Val:      val,
+	})
+
+	assert.NoError(t, err)
+
+	i, err := f.I.HandleGet(fred.Item{
+		Keygroup: kg,
+		ID:       id,
+	})
+
+	assert.NoError(t, err)
+
+	assert.Equal(t, kg, i.Keygroup)
+	assert.Equal(t, id, i.ID)
+	assert.Equal(t, val, i.Val)
+
+	items, err := f.I.HandleGetAllItems(fred.Keygroup{
+		Name: kg,
+	})
+
+	assert.NoError(t, err)
+	assert.Len(t, items, 1)
+	assert.Equal(t, kg, items[0].Keygroup)
+	assert.Equal(t, id, items[0].ID)
+	assert.Equal(t, val, items[0].Val)
+
+	i, err = f.E.HandleAppend("user", fred.Item{
+		Keygroup: kg,
+		Val:      "value2",
+	})
+
+	assert.NoError(t, err)
+	assert.Equal(t, kg, i.Keygroup)
+	assert.Equal(t, "1", i.ID)
+	assert.Equal(t, "value2", i.Val)
 }
 
 func BenchmarkPut(b *testing.B) {
