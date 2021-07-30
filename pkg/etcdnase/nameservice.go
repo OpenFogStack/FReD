@@ -38,9 +38,21 @@ type NameService struct {
 }
 
 // NewNameService creates a new NameService
-func NewNameService(nodeID string, endpoints []string, certfFile string, keyFile string, caFile string, cached bool) (*NameService, error) {
+func NewNameService(nodeID string, endpoints []string, certFile string, keyFile string, caFile string, cached bool) (*NameService, error) {
+	if certFile == "" {
+		log.Fatal().Msg("etcd NaSe: no certificate file given")
+	}
+
+	if keyFile == "" {
+		log.Fatal().Msg("etcd NaSe: no key file given")
+	}
+
+	if caFile == "" {
+		log.Fatal().Msg("etcd NaSe: no root certificate file given")
+	}
+
 	tlsInfo := transport.TLSInfo{
-		CertFile:      certfFile,
+		CertFile:      certFile,
 		KeyFile:       keyFile,
 		TrustedCAFile: caFile,
 	}

@@ -22,10 +22,22 @@ type Client struct {
 
 // NewClient Client creates a new Client to communicate with a GRpc server
 func NewClient(host, certFile string, keyFile string, caFiles []string) *Client {
+	if certFile == "" {
+		log.Fatal().Msg("Remote storage client: no certificate file given")
+	}
+
+	if keyFile == "" {
+		log.Fatal().Msg("Remote storage client: no key file given")
+	}
+
+	if len(caFiles) == 0 {
+		log.Fatal().Msg("Remote storage client: no root certificate files given")
+	}
+
 	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 
 	if err != nil {
-		log.Fatal().Err(err).Msg("Cannot load certificates")
+		log.Fatal().Err(err).Msg("Remote storage client: cannot load certificates")
 
 		return nil
 	}
@@ -34,7 +46,7 @@ func NewClient(host, certFile string, keyFile string, caFiles []string) *Client 
 	rootCAs, err := x509.SystemCertPool()
 
 	if err != nil {
-		log.Fatal().Err(err).Msg("Cannot load root certificates")
+		log.Fatal().Err(err).Msg("Remote storage client: cannot load root certificates")
 		return nil
 	}
 
@@ -42,7 +54,7 @@ func NewClient(host, certFile string, keyFile string, caFiles []string) *Client 
 		loaded, err := ioutil.ReadFile(f)
 
 		if err != nil {
-			log.Fatal().Msgf("unexpected missing certfile: %v", err)
+			log.Fatal().Msgf("Remote storage client: unexpected missing certfile: %v", err)
 		}
 
 		rootCAs.AppendCertsFromPEM(loaded)
@@ -59,11 +71,11 @@ func NewClient(host, certFile string, keyFile string, caFiles []string) *Client 
 	conn, err := grpc.Dial(host, grpc.WithTransportCredentials(tc))
 
 	if err != nil {
-		log.Fatal().Err(err).Msg("Cannot create Grpc connection")
+		log.Fatal().Err(err).Msg("Remote storage client: cannot create Grpc connection")
 
 		return &Client{dbClient: storage.NewDatabaseClient(conn)}
 	}
-	log.Info().Msgf("Creating a connection to remote storage: %s", host)
+	log.Info().Msgf("Remote storage client: creating a connection to remote storage: %s", host)
 
 	return &Client{dbClient: storage.NewDatabaseClient(conn), con: conn}
 }

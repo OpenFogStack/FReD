@@ -29,7 +29,7 @@ type Server struct {
 	*grpc.Server
 }
 
-// the Roles map the internal grpc representation of rbac Roles to the representation within fred
+// Roles map the internal grpc representation of rbac Roles to the representation within fred
 var (
 	Roles = map[client.UserRole]fred.Role{
 		client.UserRole_ReadKeygroup:       fred.ReadKeygroup,
@@ -133,22 +133,34 @@ func (s *Server) CheckCert(ctx context.Context) (string, error) {
 }
 
 // NewServer creates a new Server for requests from Fred Clients
-func NewServer(host string, handler fred.ExtHandler, cert string, key string, caCert string, isProxied bool, proxy string) *Server {
+func NewServer(host string, handler fred.ExtHandler, certFile string, keyFile string, caFile string, isProxied bool, proxy string) *Server {
+	if certFile == "" {
+		log.Fatal().Msg("API server: no certificate file given")
+	}
+
+	if keyFile == "" {
+		log.Fatal().Msg("API server: no key file given")
+	}
+
+	if caFile == "" {
+		log.Fatal().Msg("API server: no root certificate file given")
+	}
+
 	// Load server's certificate and private key
-	serverCert, err := tls.LoadX509KeyPair(cert, key)
+	serverCert, err := tls.LoadX509KeyPair(certFile, keyFile)
 
 	if err != nil {
-		log.Fatal().Msgf("could not load key pair: %v", err)
+		log.Fatal().Msgf("API server: could not load key pair: %v", err)
 		return nil
 	}
 
 	// Create a new cert pool and add our own CA certificate
 	rootCAs := x509.NewCertPool()
 
-	loaded, err := ioutil.ReadFile(caCert)
+	loaded, err := ioutil.ReadFile(caFile)
 
 	if err != nil {
-		log.Fatal().Msgf("unexpected missing certfile: %v", err)
+		log.Fatal().Msgf("API server: unexpected missing certfile: %v", err)
 	}
 
 	rootCAs.AppendCertsFromPEM(loaded)
@@ -163,7 +175,7 @@ func NewServer(host string, handler fred.ExtHandler, cert string, key string, ca
 	proxyHost, proxyPort, err := net.SplitHostPort(proxy)
 
 	if isProxied && err != nil {
-		log.Fatal().Err(err).Msg("Failed to parse proxy host and port")
+		log.Fatal().Err(err).Msg("API server: Failed to parse proxy host and port")
 		return nil
 	}
 
@@ -181,20 +193,20 @@ func NewServer(host string, handler fred.ExtHandler, cert string, key string, ca
 	lis, err := net.Listen("tcp", host)
 
 	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to listen")
+		log.Fatal().Err(err).Msg("API server: Failed to listen")
 		return nil
 	}
 
 	client.RegisterClientServer(s.Server, s)
 
-	log.Debug().Msgf("Externalconnection Server is listening on %s", host)
+	log.Debug().Msgf("API Server is listening on %s", host)
 
 	go func() {
 		err := s.Server.Serve(lis)
 
 		// if Serve returns without an error, we probably intentionally closed it
 		if err != nil {
-			log.Fatal().Msgf("Externalconnection Server exited: %s", err.Error())
+			log.Fatal().Msgf("API Server exited: %s", err.Error())
 		}
 	}()
 
@@ -212,7 +224,7 @@ func statusResponseFromError(err error) (*client.StatusResponse, error) {
 		return &client.StatusResponse{Status: client.EnumStatus_OK}, nil
 	}
 
-	log.Debug().Msgf("ExtServer is returning error: %#v", err)
+	log.Debug().Msgf("API Server is returning error: %#v", err)
 
 	return &client.StatusResponse{Status: client.EnumStatus_ERROR, ErrorMessage: err.Error()}, err
 
@@ -221,7 +233,7 @@ func statusResponseFromError(err error) (*client.StatusResponse, error) {
 // CreateKeygroup calls this method on the exthandler
 func (s *Server) CreateKeygroup(ctx context.Context, request *client.CreateKeygroupRequest) (*client.StatusResponse, error) {
 
-	log.Info().Msgf("ExtServer has rcvd CreateKeygroup. In: %#v", request)
+	log.Info().Msgf("API Server has rcvd CreateKeygroup. In: %#v", request)
 
 	user, err := s.CheckCert(ctx)
 
@@ -237,7 +249,7 @@ func (s *Server) CreateKeygroup(ctx context.Context, request *client.CreateKeygr
 // DeleteKeygroup calls this method on the exthandler
 func (s *Server) DeleteKeygroup(ctx context.Context, request *client.DeleteKeygroupRequest) (*client.StatusResponse, error) {
 
-	log.Info().Msgf("ExtServer has rcvd DeleteKeygroup. In: %#v", request)
+	log.Info().Msgf("API Server has rcvd DeleteKeygroup. In: %#v", request)
 
 	user, err := s.CheckCert(ctx)
 
@@ -252,7 +264,7 @@ func (s *Server) DeleteKeygroup(ctx context.Context, request *client.DeleteKeygr
 
 // Read calls this method on the exthandler
 func (s *Server) Read(ctx context.Context, request *client.ReadRequest) (*client.ReadResponse, error) {
-	log.Info().Msgf("ExtServer has rcvd Read. In: %#v", request)
+	log.Info().Msgf("API Server has rcvd Read. In: %#v", request)
 
 	user, err := s.CheckCert(ctx)
 
@@ -264,7 +276,7 @@ func (s *Server) Read(ctx context.Context, request *client.ReadRequest) (*client
 	res, err := s.e.HandleRead(user, fred.Item{Keygroup: fred.KeygroupName(request.Keygroup), ID: request.Id})
 
 	if err != nil {
-		log.Debug().Msgf("ExtServer is returning error: %#v", err)
+		log.Debug().Msgf("API Server is returning error: %#v", err)
 		return &client.ReadResponse{}, err
 
 	}
@@ -274,7 +286,7 @@ func (s *Server) Read(ctx context.Context, request *client.ReadRequest) (*client
 
 // Scan calls this method on the exthandler
 func (s *Server) Scan(ctx context.Context, request *client.ScanRequest) (*client.ScanResponse, error) {
-	log.Info().Msgf("ExtServer has rcvd Read. In: %#v", request)
+	log.Info().Msgf("API Server has rcvd Read. In: %#v", request)
 
 	user, err := s.CheckCert(ctx)
 
@@ -286,7 +298,7 @@ func (s *Server) Scan(ctx context.Context, request *client.ScanRequest) (*client
 	res, err := s.e.HandleScan(user, fred.Item{Keygroup: fred.KeygroupName(request.Keygroup), ID: request.Id}, request.Count)
 
 	if err != nil {
-		log.Debug().Msgf("ExtServer is returning error: %#v", err)
+		log.Debug().Msgf("API Server is returning error: %#v", err)
 		return &client.ScanResponse{}, err
 
 	}
@@ -308,7 +320,7 @@ func (s *Server) Scan(ctx context.Context, request *client.ScanRequest) (*client
 
 // Append calls this method on the exthandler
 func (s *Server) Append(ctx context.Context, request *client.AppendRequest) (*client.AppendResponse, error) {
-	log.Info().Msgf("ExtServer has rcvd Append. In: %#v", request)
+	log.Info().Msgf("API Server has rcvd Append. In: %#v", request)
 
 	user, err := s.CheckCert(ctx)
 
@@ -331,7 +343,7 @@ func (s *Server) Append(ctx context.Context, request *client.AppendRequest) (*cl
 // Update calls this method on the exthandler
 func (s *Server) Update(ctx context.Context, request *client.UpdateRequest) (*client.StatusResponse, error) {
 
-	log.Info().Msgf("ExtServer has rcvd Update. In: %#v", request)
+	log.Info().Msgf("API Server has rcvd Update. In: %#v", request)
 
 	user, err := s.CheckCert(ctx)
 
@@ -347,7 +359,7 @@ func (s *Server) Update(ctx context.Context, request *client.UpdateRequest) (*cl
 
 // Delete calls this method on the exthandler
 func (s *Server) Delete(ctx context.Context, request *client.DeleteRequest) (*client.StatusResponse, error) {
-	log.Info().Msgf("ExtServer has rcvd Delete. In: %#v", request)
+	log.Info().Msgf("API Server has rcvd Delete. In: %#v", request)
 
 	user, err := s.CheckCert(ctx)
 
@@ -363,7 +375,7 @@ func (s *Server) Delete(ctx context.Context, request *client.DeleteRequest) (*cl
 
 // AddReplica calls this method on the exthandler
 func (s *Server) AddReplica(ctx context.Context, request *client.AddReplicaRequest) (*client.StatusResponse, error) {
-	log.Info().Msgf("ExtServer has rcvd AddReplica. In: %#v", request)
+	log.Info().Msgf("API Server has rcvd AddReplica. In: %#v", request)
 
 	user, err := s.CheckCert(ctx)
 
@@ -379,13 +391,13 @@ func (s *Server) AddReplica(ctx context.Context, request *client.AddReplicaReque
 
 // GetKeygroupReplica calls this method on the exthandler
 func (s *Server) GetKeygroupReplica(ctx context.Context, request *client.GetKeygroupReplicaRequest) (*client.GetKeygroupReplicaResponse, error) {
-	log.Info().Msgf("ExtServer has rcvd GetKeygroupReplica. In: %#v", request)
+	log.Info().Msgf("API Server has rcvd GetKeygroupReplica. In: %#v", request)
 
 	user, err := s.CheckCert(ctx)
 
 	if err != nil {
 		_, err = statusResponseFromError(err)
-		log.Debug().Msgf("ExtServer is returning error: %#v", err)
+		log.Debug().Msgf("API Server is returning error: %#v", err)
 		return nil, err
 	}
 
@@ -400,12 +412,12 @@ func (s *Server) GetKeygroupReplica(ctx context.Context, request *client.GetKeyg
 		replicas[i] = &client.KeygroupReplica{
 			NodeId: string(n[i].ID),
 			Expiry: int64(e[n[i].ID]),
-			Host: n[i].Host,
+			Host:   n[i].Host,
 		}
 	}
 
 	if err != nil {
-		log.Debug().Msgf("ExtServer is returning error: %#v", err)
+		log.Debug().Msgf("API Server is returning error: %#v", err)
 		return &client.GetKeygroupReplicaResponse{}, err
 	}
 
@@ -419,7 +431,7 @@ func (s *Server) GetKeygroupReplica(ctx context.Context, request *client.GetKeyg
 
 // RemoveReplica calls this method on the exthandler
 func (s *Server) RemoveReplica(ctx context.Context, request *client.RemoveReplicaRequest) (*client.StatusResponse, error) {
-	log.Info().Msgf("ExtServer has rcvd RemoveReplica. In: %#v", request)
+	log.Info().Msgf("API Server has rcvd RemoveReplica. In: %#v", request)
 
 	user, err := s.CheckCert(ctx)
 
@@ -439,7 +451,7 @@ func replicaResponseFromNode(n fred.Node) *client.GetReplicaResponse {
 
 // GetReplica calls this method on the exthandler
 func (s *Server) GetReplica(ctx context.Context, request *client.GetReplicaRequest) (*client.GetReplicaResponse, error) {
-	log.Info().Msgf("ExtServer has rcvd GetReplica. In: %#v", request)
+	log.Info().Msgf("API Server has rcvd GetReplica. In: %#v", request)
 
 	user, err := s.CheckCert(ctx)
 
@@ -455,7 +467,7 @@ func (s *Server) GetReplica(ctx context.Context, request *client.GetReplicaReque
 
 // GetAllReplica calls this method on the exthandler
 func (s *Server) GetAllReplica(ctx context.Context, request *client.GetAllReplicaRequest) (*client.GetAllReplicaResponse, error) {
-	log.Info().Msgf("ExtServer has rcvd GetAllReplica. In: %#v", request)
+	log.Info().Msgf("API Server has rcvd GetAllReplica. In: %#v", request)
 
 	user, err := s.CheckCert(ctx)
 
@@ -467,7 +479,7 @@ func (s *Server) GetAllReplica(ctx context.Context, request *client.GetAllReplic
 	res, err := s.e.HandleGetAllReplica(user)
 
 	if err != nil {
-		log.Debug().Msgf("ExtServer is returning error: %#v", err)
+		log.Debug().Msgf("API Server is returning error: %#v", err)
 		return &client.GetAllReplicaResponse{}, err
 	}
 
@@ -482,7 +494,7 @@ func (s *Server) GetAllReplica(ctx context.Context, request *client.GetAllReplic
 
 // GetKeygroupTriggers calls this method on the exthandler
 func (s *Server) GetKeygroupTriggers(ctx context.Context, request *client.GetKeygroupTriggerRequest) (*client.GetKeygroupTriggerResponse, error) {
-	log.Info().Msgf("ExtServer has rcvd GetKeygroupTriggers. In: %#v", request)
+	log.Info().Msgf("API Server has rcvd GetKeygroupTriggers. In: %#v", request)
 
 	user, err := s.CheckCert(ctx)
 
@@ -493,7 +505,7 @@ func (s *Server) GetKeygroupTriggers(ctx context.Context, request *client.GetKey
 
 	res, err := s.e.HandleGetKeygroupTriggers(user, fred.Keygroup{Name: fred.KeygroupName(request.Keygroup)})
 	if err != nil {
-		log.Debug().Msgf("ExtServer is returning error: %#v", err)
+		log.Debug().Msgf("API Server is returning error: %#v", err)
 		return &client.GetKeygroupTriggerResponse{}, err
 	}
 	triggers := make([]*client.Trigger, len(res))
@@ -508,7 +520,7 @@ func (s *Server) GetKeygroupTriggers(ctx context.Context, request *client.GetKey
 
 // AddTrigger calls this method on the exthandler
 func (s *Server) AddTrigger(ctx context.Context, request *client.AddTriggerRequest) (*client.StatusResponse, error) {
-	log.Info().Msgf("ExtServer has rcvd AddTrigger. In: %#v", request)
+	log.Info().Msgf("API Server has rcvd AddTrigger. In: %#v", request)
 
 	user, err := s.CheckCert(ctx)
 
@@ -524,7 +536,7 @@ func (s *Server) AddTrigger(ctx context.Context, request *client.AddTriggerReque
 
 // RemoveTrigger calls this method on the exthandler
 func (s *Server) RemoveTrigger(ctx context.Context, request *client.RemoveTriggerRequest) (*client.StatusResponse, error) {
-	log.Info().Msgf("ExtServer has rcvd RemoveTrigger. In: %#v", request)
+	log.Info().Msgf("API Server has rcvd RemoveTrigger. In: %#v", request)
 
 	user, err := s.CheckCert(ctx)
 
@@ -540,7 +552,7 @@ func (s *Server) RemoveTrigger(ctx context.Context, request *client.RemoveTrigge
 
 // AddUser calls this method on the exthandler
 func (s *Server) AddUser(ctx context.Context, request *client.UserRequest) (*client.StatusResponse, error) {
-	log.Info().Msgf("ExtServer has rcvd AddUser. In: %#v", request)
+	log.Info().Msgf("API Server has rcvd AddUser. In: %#v", request)
 
 	user, err := s.CheckCert(ctx)
 
@@ -556,7 +568,7 @@ func (s *Server) AddUser(ctx context.Context, request *client.UserRequest) (*cli
 
 // RemoveUser calls this method on the exthandler
 func (s *Server) RemoveUser(ctx context.Context, request *client.UserRequest) (*client.StatusResponse, error) {
-	log.Info().Msgf("ExtServer has rcvd RemoveUser. In: %#v", request)
+	log.Info().Msgf("API Server has rcvd RemoveUser. In: %#v", request)
 
 	user, err := s.CheckCert(ctx)
 

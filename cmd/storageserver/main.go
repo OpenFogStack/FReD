@@ -69,6 +69,18 @@ func main() {
 		log.Info().Msg("No Loglevel specified, using 'debug'")
 	}
 
+	if *cert == "" {
+		log.Fatal().Msg("no certificate file given")
+	}
+
+	if *key == "" {
+		log.Fatal().Msg("no key file given")
+	}
+
+	if *ca == "" {
+		log.Fatal().Msg("no root certificate file given")
+	}
+
 	// Load server's certificate and private key
 	serverCert, err := tls.LoadX509KeyPair(*cert, *key)
 
