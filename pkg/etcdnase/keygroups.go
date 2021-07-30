@@ -33,7 +33,16 @@ func (n *NameService) ExitOtherNodeFromKeygroup(kg fred.KeygroupName, nodeID fre
 // DeleteKeygroup marks the keygroup as "deleted" in the NaSe
 func (n *NameService) DeleteKeygroup(kg fred.KeygroupName) error {
 	// Save the status of the keygroup
-	err := n.addKgStatusEntry(string(kg), "deleted")
+	exists, err := n.ExistsKeygroup(kg)
+	if err != nil {
+		return err
+	}
+
+	if !exists {
+		return errors.Errorf("keygroup does not exist")
+	}
+
+	err = n.addKgStatusEntry(string(kg), "deleted")
 
 	return err
 }
@@ -49,6 +58,15 @@ func (n *NameService) ExistsKeygroup(kg fred.KeygroupName) (bool, error) {
 
 // IsMutable checks whether a Keygroup is mutable.
 func (n *NameService) IsMutable(kg fred.KeygroupName) (bool, error) {
+	exists, err := n.ExistsKeygroup(kg)
+	if err != nil {
+		return false, err
+	}
+
+	if !exists {
+		return false, errors.Errorf("keygroup does not exist")
+	}
+
 	status, err := n.getKeygroupMutable(string(kg))
 	if err != nil {
 		return false, err
@@ -58,6 +76,15 @@ func (n *NameService) IsMutable(kg fred.KeygroupName) (bool, error) {
 
 // GetExpiry checks the expiration time for items of the keygroup on a replica.
 func (n *NameService) GetExpiry(kg fred.KeygroupName) (int, error) {
+	exists, err := n.ExistsKeygroup(kg)
+	if err != nil {
+		return 0, err
+	}
+
+	if !exists {
+		return 0, errors.Errorf("keygroup does not exist")
+	}
+
 	expiry, err := n.getKeygroupExpiry(string(kg), n.NodeID)
 	if err != nil {
 		return 0, err
@@ -115,6 +142,15 @@ func (n *NameService) CreateKeygroup(kg fred.KeygroupName, mutable bool, expiry 
 // GetKeygroupMembers returns all IDs of the Members of a Keygroup by iterating over all saved keys that start with the keygroup name.
 // The value of the map is the expiry in seconds.
 func (n *NameService) GetKeygroupMembers(kg fred.KeygroupName, excludeSelf bool) (ids map[fred.NodeID]int, err error) {
+	exists, err := n.ExistsKeygroup(kg)
+	if err != nil {
+		return nil, err
+	}
+
+	if !exists {
+		return nil, errors.Errorf("keygroup does not exist")
+	}
+
 	nodes, err := n.getPrefix(fmt.Sprintf(fmtKgNodeStringPrefix, string(kg)))
 
 	if err != nil {

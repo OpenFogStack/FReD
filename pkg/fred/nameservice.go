@@ -23,7 +23,7 @@ type NameService interface {
 
 	// manage keygroups
 	ExistsKeygroup(kg KeygroupName) (bool, error)
-	JoinNodeIntoKeygroup(key KeygroupName, nodeID NodeID, expiry int) error
+	JoinNodeIntoKeygroup(kg KeygroupName, nodeID NodeID, expiry int) error
 	ExitOtherNodeFromKeygroup(kg KeygroupName, nodeID NodeID) error
 	CreateKeygroup(kg KeygroupName, mutable bool, expiry int) error
 	DeleteKeygroup(kg KeygroupName) error
