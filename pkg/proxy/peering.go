@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 
 	"git.tu-berlin.de/mcc-fred/fred/proto/peering"
+	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
@@ -19,9 +20,21 @@ type PeeringProxy struct {
 	opts grpc.DialOption
 }
 
-func StartPeeringProxy(p *Proxy, port int, cert string, key string, caCert string) (*grpc.Server, error) {
+func StartPeeringProxy(p *Proxy, port int, certFile string, keyFile string, caFile string) (*grpc.Server, error) {
+	if certFile == "" {
+		log.Fatal().Msg("peering proxy: no certificate file given")
+	}
+
+	if keyFile == "" {
+		log.Fatal().Msg("peering proxy: no key file given")
+	}
+
+	if caFile == "" {
+		log.Fatal().Msg("peering proxy: no root certificate file given")
+	}
+
 	// Load server's certificate and private key
-	serverCert, err := tls.LoadX509KeyPair(cert, key)
+	serverCert, err := tls.LoadX509KeyPair(certFile, keyFile)
 
 	if err != nil {
 		return nil, err
@@ -30,7 +43,7 @@ func StartPeeringProxy(p *Proxy, port int, cert string, key string, caCert strin
 	// Create a new cert pool and add our own CA certificate
 	rootCAs := x509.NewCertPool()
 
-	loaded, err := ioutil.ReadFile(caCert)
+	loaded, err := ioutil.ReadFile(caFile)
 
 	if err != nil {
 		return nil, err

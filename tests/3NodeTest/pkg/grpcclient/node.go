@@ -25,10 +25,22 @@ type Node struct {
 // NewNode creates a new Node that represents a connection to a single fred instance
 func NewNode(addr string, port int, id string, certFile string, keyFile string, caFile string) *Node {
 
+	if certFile == "" {
+		log.Fatal().Msg("node: no certificate file given")
+	}
+
+	if keyFile == "" {
+		log.Fatal().Msg("node: no key file given")
+	}
+
+	if caFile == "" {
+		log.Fatal().Msg("node: no root certificate file given")
+	}
+
 	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 
 	if err != nil {
-		log.Fatal().Err(err).Msg("Cannot load certificates")
+		log.Fatal().Err(err).Msg("node: Cannot load certificates")
 		return nil
 	}
 
@@ -42,12 +54,12 @@ func NewNode(addr string, port int, id string, certFile string, keyFile string, 
 	// Read in the cert file
 	certs, err := ioutil.ReadFile(caFile)
 	if err != nil {
-		log.Fatal().Err(err).Msgf("Failed to append %q to RootCAs: %v", caFile, err)
+		log.Fatal().Err(err).Msgf("node: Failed to append %q to RootCAs: %v", caFile, err)
 	}
 
 	// Append our cert to the system pool
 	if ok := rootCAs.AppendCertsFromPEM(certs); !ok {
-		log.Fatal().Err(err).Msgf("No certs appended, using system certs only")
+		log.Fatal().Err(err).Msgf("node: No certs appended, using system certs only")
 	}
 
 	tlsConfig := &tls.Config{
@@ -61,7 +73,7 @@ func NewNode(addr string, port int, id string, certFile string, keyFile string, 
 	conn, err := grpc.Dial(fmt.Sprintf("%s:%d", addr, port), grpc.WithTransportCredentials(tc))
 
 	if err != nil {
-		log.Fatal().Err(err).Msg("Cannot create Grpc connection")
+		log.Fatal().Err(err).Msg("node: Cannot create Grpc connection")
 		return nil
 	}
 

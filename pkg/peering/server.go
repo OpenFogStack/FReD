@@ -23,11 +23,23 @@ type Server struct {
 
 // NewServer creates a new Server for communication to the inthandler from other nodes
 func NewServer(host string, handler fred.IntHandler, certFile string, keyFile string, caFile string) *Server {
+	if certFile == "" {
+		log.Fatal().Msg("peering server: no certificate file given")
+	}
+
+	if keyFile == "" {
+		log.Fatal().Msg("peering server: no key file given")
+	}
+
+	if caFile == "" {
+		log.Fatal().Msg("peering server: no root certificate file given")
+	}
+
 	// Load server's certificate and private key
 	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 
 	if err != nil {
-		log.Fatal().Msgf("could not load key pair: %v", err)
+		log.Fatal().Msgf("peering server: could not load key pair: %v", err)
 	}
 
 	// Create a new cert pool and add our own CA certificate
@@ -36,7 +48,7 @@ func NewServer(host string, handler fred.IntHandler, certFile string, keyFile st
 	loaded, err := ioutil.ReadFile(caFile)
 
 	if err != nil {
-		log.Fatal().Msgf("unexpected missing certfile: %v", err)
+		log.Fatal().Msgf("peering server: unexpected missing certfile: %v", err)
 	}
 
 	rootCAs.AppendCertsFromPEM(loaded)
@@ -59,14 +71,14 @@ func NewServer(host string, handler fred.IntHandler, certFile string, keyFile st
 
 	peering.RegisterNodeServer(s.Server, s)
 
-	log.Debug().Msgf("Interconnection Server is listening on %s", host)
+	log.Debug().Msgf("Peering Server is listening on %s", host)
 
 	go func() {
 		err := s.Server.Serve(lis)
 
 		// if Serve returns without an error, we probably intentionally closed it
 		if err != nil {
-			log.Fatal().Msgf("Interconnection Server exited: %s", err.Error())
+			log.Fatal().Msgf("Peering Server exited: %s", err.Error())
 		}
 	}()
 
@@ -81,7 +93,7 @@ func (s *Server) Close() error {
 
 // CreateKeygroup calls this Method on the Inthandler
 func (s *Server) CreateKeygroup(_ context.Context, request *peering.CreateKeygroupRequest) (*peering.Empty, error) {
-	log.Info().Msgf("InterServer has rcvd CreateKeygroup. In: %#v", request)
+	log.Info().Msgf("Peering server has rcvd CreateKeygroup. In: %#v", request)
 	err := s.i.HandleCreateKeygroup(fred.Keygroup{Name: fred.KeygroupName(request.Keygroup)})
 	if err != nil {
 		return nil, err
@@ -91,7 +103,7 @@ func (s *Server) CreateKeygroup(_ context.Context, request *peering.CreateKeygro
 
 // DeleteKeygroup calls this Method on the Inthandler
 func (s *Server) DeleteKeygroup(_ context.Context, request *peering.DeleteKeygroupRequest) (*peering.Empty, error) {
-	log.Info().Msgf("InterServer has rcvd DeleteKeygroup. In: %#v", request)
+	log.Info().Msgf("Peering server has rcvd DeleteKeygroup. In: %#v", request)
 	err := s.i.HandleDeleteKeygroup(fred.Keygroup{Name: fred.KeygroupName(request.Keygroup)})
 	if err != nil {
 		return nil, err
@@ -101,7 +113,7 @@ func (s *Server) DeleteKeygroup(_ context.Context, request *peering.DeleteKeygro
 
 // PutItem calls HandleUpdate on the Inthandler
 func (s *Server) PutItem(_ context.Context, request *peering.PutItemRequest) (*peering.Empty, error) {
-	log.Info().Msgf("InterServer has rcvd PutItem. In: %#v", request)
+	log.Info().Msgf("Peering server has rcvd PutItem. In: %#v", request)
 	err := s.i.HandleUpdate(fred.Item{
 		Keygroup: fred.KeygroupName(request.Keygroup),
 		ID:       request.Id,
@@ -115,7 +127,7 @@ func (s *Server) PutItem(_ context.Context, request *peering.PutItemRequest) (*p
 
 // AppendItem calls HandleAppend on the Inthandler
 func (s *Server) AppendItem(_ context.Context, request *peering.AppendItemRequest) (*peering.Empty, error) {
-	log.Info().Msgf("InterServer has rcvd AppendItem. In: %#v", request)
+	log.Info().Msgf("Peering server has rcvd AppendItem. In: %#v", request)
 
 	err := s.i.HandleAppend(fred.Item{
 		Keygroup: fred.KeygroupName(request.Keygroup),
@@ -132,7 +144,7 @@ func (s *Server) AppendItem(_ context.Context, request *peering.AppendItemReques
 
 // GetItem has no implementation
 func (s *Server) GetItem(_ context.Context, request *peering.GetItemRequest) (*peering.GetItemResponse, error) {
-	log.Info().Msgf("InterServer has rcvd GetItem. In: %#v", request)
+	log.Info().Msgf("Peering server has rcvd GetItem. In: %#v", request)
 	data, err := s.i.HandleGet(fred.Item{
 		Keygroup: fred.KeygroupName(request.Keygroup),
 		ID:       request.Id,
@@ -148,7 +160,7 @@ func (s *Server) GetItem(_ context.Context, request *peering.GetItemRequest) (*p
 
 // GetAllItems has no implementation
 func (s *Server) GetAllItems(_ context.Context, request *peering.GetAllItemsRequest) (*peering.GetAllItemsResponse, error) {
-	log.Info().Msgf("InterServer has rcvd GetItem. In: %#v", request)
+	log.Info().Msgf("Peering server has rcvd GetItem. In: %#v", request)
 	data, err := s.i.HandleGetAllItems(fred.Keygroup{
 		Name: fred.KeygroupName(request.Keygroup),
 	})
@@ -172,7 +184,7 @@ func (s *Server) GetAllItems(_ context.Context, request *peering.GetAllItemsRequ
 
 // DeleteItem calls this Method on the Inthandler
 func (s *Server) DeleteItem(_ context.Context, request *peering.DeleteItemRequest) (*peering.Empty, error) {
-	log.Info().Msgf("InterServer has rcvd DeleteItem. In: %#v", request)
+	log.Info().Msgf("Peering server has rcvd DeleteItem. In: %#v", request)
 	err := s.i.HandleDelete(fred.Item{
 		Keygroup: fred.KeygroupName(request.Keygroup),
 		ID:       request.Id,
@@ -185,7 +197,7 @@ func (s *Server) DeleteItem(_ context.Context, request *peering.DeleteItemReques
 
 // AddReplica calls this Method on the Inthandler
 func (s *Server) AddReplica(_ context.Context, request *peering.AddReplicaRequest) (*peering.Empty, error) {
-	log.Info().Msgf("InterServer has rcvd AddReplica. In: %#v", request)
+	log.Info().Msgf("Peering server has rcvd AddReplica. In: %#v", request)
 	err := s.i.HandleAddReplica(fred.Keygroup{Name: fred.KeygroupName(request.Keygroup), Expiry: int(request.Expiry)}, fred.Node{ID: fred.NodeID(request.NodeId)})
 	if err != nil {
 		return nil, err
@@ -195,7 +207,7 @@ func (s *Server) AddReplica(_ context.Context, request *peering.AddReplicaReques
 
 // RemoveReplica calls this Method on the Inthandler
 func (s *Server) RemoveReplica(_ context.Context, request *peering.RemoveReplicaRequest) (*peering.Empty, error) {
-	log.Info().Msgf("InterServer has rcvd RemoveReplica. In: %#v", request)
+	log.Info().Msgf("Peering server has rcvd RemoveReplica. In: %#v", request)
 	err := s.i.HandleRemoveReplica(fred.Keygroup{Name: fred.KeygroupName(request.Keygroup)}, fred.Node{ID: fred.NodeID(request.NodeId)})
 	if err != nil {
 		return nil, err

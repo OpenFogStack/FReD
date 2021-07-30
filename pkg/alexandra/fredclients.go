@@ -23,6 +23,15 @@ type Client struct {
 }
 
 func NewClient(host, certFile, keyFile string) *Client {
+
+	if certFile == "" {
+		log.Fatal().Msg("fredclient: no certificate file given")
+	}
+
+	if keyFile == "" {
+		log.Fatal().Msg("fredclient: no key file given")
+	}
+
 	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 
 	if err != nil {

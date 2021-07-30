@@ -116,14 +116,14 @@ docker network create fredwork --gateway 172.26.0.1 --subnet 172.26.0.0/16
 To start a simple `etcd` instance in Docker with our certificates mounted as volumes, you can use this command:
 
 ```bash
-docker pull quay.io/coreos/etcd:v3.4.10
+docker pull gcr.io/etcd-development/etcd:v3.5.0
 docker run -d \
 -v $(pwd)/etcdnase.crt:/cert/etcdnase.crt \
 -v $(pwd)/etcdnase.key:/cert/etcdnase.key \
 -v $(pwd)/ca.crt:/cert/ca.crt \
 --network=fredwork \
 --ip=172.26.1.1 \
-quay.io/coreos/etcd:v3.4.10 \
+gcr.io/etcd-development/etcd:v3.5.0 \
 etcd --name s-1 \
 --data-dir /tmp/etcd/s-1 \
 --listen-client-urls https://172.26.1.1:2379 \
@@ -167,7 +167,10 @@ fred --log-level info \
 --nase-ca /cert/ca.crt \
 --trigger-cert /cert/frednode.crt \
 --trigger-key /cert/frednode.key \
---trigger-ca /cert/ca.crt
+--trigger-ca /cert/ca.crt \
+--peer-cert /cert/frednode.crt \
+--peer-key /cert/frednode.key \
+--peer-ca /cert/ca.crt \
 --cert /cert/frednode.crt \
 --key /cert/frednode.key \
 --ca-file /cert/ca.crt

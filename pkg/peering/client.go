@@ -22,10 +22,22 @@ type Client struct {
 
 // NewClient creates a new empty client to communicate with peers.
 func NewClient(certFile string, keyFile string, caFile string) *Client {
+	if certFile == "" {
+		log.Fatal().Msg("peering client: no certificate file given")
+	}
+
+	if keyFile == "" {
+		log.Fatal().Msg("peering client: no key file given")
+	}
+
+	if caFile == "" {
+		log.Fatal().Msg("peering client: no root certificate file given")
+	}
+
 	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 
 	if err != nil {
-		log.Fatal().Err(err).Msg("Cannot load certificates")
+		log.Fatal().Err(err).Msg("peering client: Cannot load certificates")
 
 		return nil
 	}
@@ -34,14 +46,14 @@ func NewClient(certFile string, keyFile string, caFile string) *Client {
 	rootCAs, err := x509.SystemCertPool()
 
 	if err != nil {
-		log.Fatal().Err(err).Msg("Cannot load root certificates")
+		log.Fatal().Err(err).Msg("peering client: Cannot load root certificates")
 		return nil
 	}
 
 	loaded, err := ioutil.ReadFile(caFile)
 
 	if err != nil {
-		log.Fatal().Msgf("unexpected missing certfile: %v", err)
+		log.Fatal().Msgf("peering client: unexpected missing certfile: %v", err)
 	}
 
 	rootCAs.AppendCertsFromPEM(loaded)
@@ -67,11 +79,11 @@ func (c *Client) getClient(host string) (peering.NodeClient, error) {
 	conn, err := grpc.Dial(host, grpc.WithTransportCredentials(c.credentials))
 
 	if err != nil {
-		log.Error().Err(err).Msg("Cannot create Grpc connection")
+		log.Error().Err(err).Msg("peering client: Cannot create Grpc connection")
 		return nil, errors.New(err)
 	}
 
-	log.Debug().Msgf("Interclient: Created Connection to %s", host)
+	log.Debug().Msgf("peering client: Created Connection to %s", host)
 
 	client := peering.NewNodeClient(conn)
 	c.conn[host] = client

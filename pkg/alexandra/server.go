@@ -26,11 +26,23 @@ type Server struct {
 
 // NewServer creates a new Server for requests from Alexandra Clients
 func NewServer(host string, caCert string, serverCert string, serverKey string, nodesCert string, nodesKey string, lighthouse string, isProxied bool, proxyHost string) *Server {
+	if serverCert == "" {
+		log.Fatal().Msg("alexandra server: no certificate file given")
+	}
+
+	if serverCert == "" {
+		log.Fatal().Msg("alexandra server: no key file given")
+	}
+
+	if caCert == "" {
+		log.Fatal().Msg("alexandra server: no root certificate file given")
+	}
+
 	// Load server's certificate and private key
 	loadedServerCert, err := tls.LoadX509KeyPair(serverCert, serverKey)
 
 	if err != nil {
-		log.Fatal().Msgf("could not load key pair: %v", err)
+		log.Fatal().Msgf("alexandra server: could not load key pair: %v", err)
 		return nil
 	}
 
@@ -40,7 +52,7 @@ func NewServer(host string, caCert string, serverCert string, serverKey string, 
 	loaded, err := ioutil.ReadFile(caCert)
 
 	if err != nil {
-		log.Fatal().Msgf("unexpected missing certfile: %v", err)
+		log.Fatal().Msgf("alexandra server: unexpected missing certfile: %v", err)
 	}
 
 	rootCAs.AppendCertsFromPEM(loaded)
