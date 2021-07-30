@@ -4,6 +4,7 @@ import (
 	"net/url"
 	"os"
 	"testing"
+	"time"
 
 	"git.tu-berlin.de/mcc-fred/fred/pkg/fred"
 	"github.com/go-errors/errors"
@@ -32,7 +33,8 @@ func TestMain(m *testing.M) {
 		},
 	)
 
-	zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+	//  zerolog.SetGlobalLevel(zerolog.FatalLevel)
+	zerolog.SetGlobalLevel(zerolog.DebugLevel)
 
 	fInfo, err := os.Stat(etcdDir)
 
@@ -315,6 +317,8 @@ func TestCache(t *testing.T) {
 
 	assert.NoError(t, err)
 
+	time.Sleep(1 * time.Millisecond)
+
 	perm, err = n.GetUserPermissions(user, kg)
 
 	assert.NoError(t, err)
@@ -323,7 +327,7 @@ func TestCache(t *testing.T) {
 }
 
 func BenchmarkGet(b *testing.B) {
-	key := "key"
+	key := "key-get"
 	val := "val"
 	err := n.put(key, val)
 	assert.NoError(b, err)
@@ -333,17 +337,18 @@ func BenchmarkGet(b *testing.B) {
 }
 
 func BenchmarkGetPrefix(b *testing.B) {
-	key := "key"
+	key := "key-get-nocache|prefix"
+	prefix := "key-get-nocache|"
 	val := "val"
-	err := n.put(key, val)
+	err := n.put(key, val, prefix)
 	assert.NoError(b, err)
 	for i := 0; i < b.N; i++ {
-		_, _ = n.getPrefix(key)
+		_, _ = n.getPrefix(prefix)
 	}
 }
 
 func BenchmarkPut(b *testing.B) {
-	key := "key"
+	key := "key-put"
 	val := "val"
 	for i := 0; i < b.N; i++ {
 		_ = n.put(key, val)
@@ -355,7 +360,7 @@ func BenchmarkGetNoCache(b *testing.B) {
 	assert.NoError(b, err)
 	b.ResetTimer()
 
-	key := "key"
+	key := "key-get-nocache"
 	val := "val"
 	err = n.put(key, val)
 	assert.NoError(b, err)
@@ -369,12 +374,13 @@ func BenchmarkGetPrefixNoCache(b *testing.B) {
 	assert.NoError(b, err)
 	b.ResetTimer()
 
-	key := "key"
+	key := "key-get-nocache|prefix"
+	prefix := "key-get-nocache|"
 	val := "val"
-	err = n.put(key, val)
+	err = n.put(key, val, prefix)
 	assert.NoError(b, err)
 	for i := 0; i < b.N; i++ {
-		_, _ = n.getPrefix(key)
+		_, _ = n.getPrefix(prefix)
 	}
 }
 
@@ -383,7 +389,7 @@ func BenchmarkPutNoCache(b *testing.B) {
 	assert.NoError(b, err)
 	b.ResetTimer()
 
-	key := "key"
+	key := "key-put-nocache"
 	val := "val"
 	for i := 0; i < b.N; i++ {
 		_ = n.put(key, val)
