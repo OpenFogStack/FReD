@@ -51,9 +51,12 @@ func TestMain(m *testing.M) {
 
 	cfg := embed.NewConfig()
 	cfg.Dir = etcdDir
-	u, _ := url.Parse("https://127.0.0.1:6000")
-	cfg.LCUrls = []url.URL{*u}
-	cfg.ACUrls = []url.URL{*u}
+	cURL, _ := url.Parse("https://127.0.0.1:7000")
+	pURL, _ := url.Parse("http://127.0.0.1:7001")
+	cfg.LCUrls = []url.URL{*cURL}
+	cfg.ACUrls = []url.URL{*cURL}
+	cfg.LPUrls = []url.URL{*pURL}
+	cfg.APUrls = []url.URL{*pURL}
 	cfg.ForceNewCluster = true
 
 	cfg.ClientTLSInfo = transport.TLSInfo{
@@ -65,6 +68,8 @@ func TestMain(m *testing.M) {
 
 	cfg.LogLevel = "error"
 
+	cfg.InitialCluster = cfg.InitialClusterFromName(cfg.Name)
+
 	e, err := embed.StartEtcd(cfg)
 
 	if err != nil {
@@ -73,7 +78,7 @@ func TestMain(m *testing.M) {
 
 	<-e.Server.ReadyNotify()
 
-	n, err := etcdnase.NewNameService(string(nodeID), []string{"127.0.0.1:6000"}, certBasePath+"nodeA.crt", certBasePath+"nodeA.key", certBasePath+"ca.crt", true)
+	n, err := etcdnase.NewNameService(string(nodeID), []string{"127.0.0.1:7000"}, certBasePath+"nodeA.crt", certBasePath+"nodeA.key", certBasePath+"ca.crt", true)
 
 	if err != nil {
 		panic(err)
@@ -96,6 +101,8 @@ func TestMain(m *testing.M) {
 	f = fred.New(&config)
 
 	stat := m.Run()
+
+	e.Close()
 
 	fInfo, err = os.Stat(etcdDir)
 

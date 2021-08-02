@@ -23,12 +23,24 @@ func (n *NameService) getPrefix(prefix string) (kv map[string]string, err error)
 	if n.cached {
 		// let's check the local cache first
 		// store prefix directly in cache
+		// currently this approach can lead to data races
+		// will be fixed in a future release
 		val, ok := n.local.Get(prefix)
 
 		// found something!
 		if ok {
 			log.Debug().Msgf("prefix: %s cache hit", prefix)
-			return val.(map[string]string), nil
+
+			_, ok = val.(map[string]string)
+			if ok {
+				m := make(map[string]string)
+
+				for k, v := range val.(map[string]string) {
+					m[k] = v
+				}
+
+				return m, nil
+			}
 		}
 
 		log.Debug().Msgf("prefix: %s cache miss", prefix)
@@ -66,33 +78,27 @@ func (n *NameService) getPrefix(prefix string) (kv map[string]string, err error)
 					log.Err(err).Msgf("nase cache: error getting changes to prefix %s", prefix)
 				}
 				log.Debug().Msgf("nase cache: got %d changes to prefix %s", len(r.Events), prefix)
-				val, ok := n.local.Get(prefix)
-
-				if !ok {
-					n.local.Del(prefix)
-					return
-				}
-
-				prefixMap, ok := val.(map[string]string)
-
-				if !ok {
-					n.local.Del(prefix)
-					return
-				}
 
 				for _, ev := range r.Events {
 
 					if ev.Type == clientv3.EventTypeDelete {
-						delete(prefixMap, string(ev.Kv.Key))
+						delete(kv, string(ev.Kv.Key))
 						log.Debug().Msgf("prefix: %s remote cache invalidation for key %s", prefix, string(ev.Kv.Key))
 					}
 
 					if ev.Type == clientv3.EventTypePut {
-						prefixMap[string(ev.Kv.Key)] = string(ev.Kv.Value)
+						kv[string(ev.Kv.Key)] = string(ev.Kv.Value)
 						log.Debug().Msgf("prefix: %s remote cache update for key %s", prefix, string(ev.Kv.Key))
 					}
 				}
-				n.local.Set(prefix, prefixMap, 1)
+
+				prefixMap := make(map[string]string)
+
+				for k, v := range kv {
+					prefixMap[k] = v
+				}
+
+				n.local.Set(prefix, prefixMap, int64(len(prefixMap)))
 			}
 		}()
 	}
@@ -202,16 +208,22 @@ func (n *NameService) put(key, value string, prefix ...string) (err error) {
 				continue
 			}
 
-			prefixMap, ok := val.(map[string]string)
+			m, ok := val.(map[string]string)
 
 			if !ok {
 				n.local.Del(p)
 				continue
 			}
 
+			prefixMap := make(map[string]string)
+
+			for k, v := range m {
+				prefixMap[k] = v
+			}
+
 			prefixMap[key] = value
 
-			n.local.Set(p, prefixMap, 1)
+			n.local.Set(p, prefixMap, int64(len(prefixMap)))
 			log.Debug().Msgf("prefix: %s local cache update for key %s", p, key)
 		}
 		n.local.Set(key, value, 1)
@@ -242,16 +254,22 @@ func (n *NameService) delete(key string, prefix ...string) (err error) {
 				continue
 			}
 
-			prefixMap, ok := val.(map[string]string)
+			m, ok := val.(map[string]string)
 
 			if !ok {
 				n.local.Del(p)
 				continue
 			}
 
+			prefixMap := make(map[string]string)
+
+			for k, v := range m {
+				prefixMap[k] = v
+			}
+
 			delete(prefixMap, key)
 
-			n.local.Set(p, prefixMap, 1)
+			n.local.Set(p, prefixMap, int64(len(prefixMap)))
 			log.Debug().Msgf("prefix: %s local cache invalidation for key %s", p, key)
 
 		}
