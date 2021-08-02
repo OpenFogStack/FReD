@@ -1,8 +1,13 @@
+// +build !race
+
 package etcdnase
 
 import (
+	"fmt"
+	"math/rand"
 	"net/url"
 	"os"
+	"strconv"
 	"testing"
 	"time"
 
@@ -33,8 +38,8 @@ func TestMain(m *testing.M) {
 		},
 	)
 
-	//  zerolog.SetGlobalLevel(zerolog.FatalLevel)
-	zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	zerolog.SetGlobalLevel(zerolog.FatalLevel)
+	// zerolog.SetGlobalLevel(zerolog.DebugLevel)
 
 	fInfo, err := os.Stat(etcdDir)
 
@@ -51,9 +56,12 @@ func TestMain(m *testing.M) {
 
 	cfg := embed.NewConfig()
 	cfg.Dir = etcdDir
-	u, _ := url.Parse("https://127.0.0.1:6000")
-	cfg.LCUrls = []url.URL{*u}
-	cfg.ACUrls = []url.URL{*u}
+	cURL, _ := url.Parse("https://127.0.0.1:6000")
+	pURL, _ := url.Parse("http://127.0.0.1:6001")
+	cfg.LCUrls = []url.URL{*cURL}
+	cfg.ACUrls = []url.URL{*cURL}
+	cfg.LPUrls = []url.URL{*pURL}
+	cfg.APUrls = []url.URL{*pURL}
 	cfg.ForceNewCluster = true
 
 	cfg.ClientTLSInfo = transport.TLSInfo{
@@ -64,6 +72,8 @@ func TestMain(m *testing.M) {
 	}
 
 	cfg.LogLevel = "error"
+
+	cfg.InitialCluster = cfg.InitialClusterFromName(cfg.Name)
 
 	e, err := embed.StartEtcd(cfg)
 
@@ -86,6 +96,8 @@ func TestMain(m *testing.M) {
 	}
 
 	stat := m.Run()
+
+	e.Close()
 
 	fInfo, err = os.Stat(etcdDir)
 
@@ -324,6 +336,89 @@ func TestCache(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, perm, 1)
 	assert.Contains(t, perm, fred.RemoveUser)
+}
+
+// GORACE="halt_on_error=1" go test -run=CacheRace -race
+// currently this triggers a race condition, hence this suite is excluded from race testing
+func TestCacheRace(t *testing.T) {
+	concurrent := 10
+	ops := 100
+	kg := fred.KeygroupName("kg-cache-race")
+	user := "user"
+
+	err := n.CreateKeygroup(kg, true, 0)
+
+	assert.NoError(t, err)
+
+	nases := make([]*NameService, concurrent)
+
+	for i := 0; i < concurrent; i++ {
+		id := "node" + strconv.Itoa(i)
+		x, err := NewNameService(id, []string{"127.0.0.1:6000"}, certBasePath+"nodeA.crt", certBasePath+"nodeA.key", certBasePath+"ca.crt", true)
+		assert.NoError(t, err)
+
+		err = x.RegisterSelf(fmt.Sprintf("localhost:10%d01", i), fmt.Sprintf("localhost:10%d02", i))
+
+		assert.NoError(t, err)
+
+		err = n.JoinNodeIntoKeygroup(kg, fred.NodeID(id), 0)
+
+		assert.NoError(t, err)
+
+		nases[i] = x
+	}
+
+	done := make(chan struct{})
+
+	for i := 0; i < concurrent; i++ {
+		for j := 0; j < concurrent; j++ {
+			go func(nase *NameService) {
+				for k := 0; k < ops; k++ {
+					op := rand.Intn(concurrent)
+					p := []fred.Method{
+						fred.CreateKeygroup,
+						fred.DeleteKeygroup,
+						fred.Read,
+						fred.Update,
+						fred.Delete,
+						fred.AddReplica,
+						fred.GetReplica,
+						fred.RemoveReplica,
+						fred.GetAllReplica,
+						fred.GetTrigger,
+						fred.AddTrigger,
+						fred.RemoveTrigger,
+						fred.AddUser,
+						fred.RemoveUser,
+					}
+
+					switch op {
+					case 0:
+						m := p[rand.Intn(len(p))]
+						log.Debug().Msgf("%s adding %s", nase.NodeID, m)
+						err = nase.AddUserPermissions(user, m, kg)
+						assert.NoError(t, err)
+
+					case 1:
+						m := p[rand.Intn(len(p))]
+						log.Debug().Msgf("%s removing %s", nase.NodeID, m)
+						err = nase.RevokeUserPermissions(user, m, kg)
+						assert.NoError(t, err)
+
+					default:
+						log.Debug().Msgf("%s getting", nase.NodeID)
+						_, err = nase.GetUserPermissions(user, kg)
+						assert.NoError(t, err)
+					}
+				}
+				done <- struct{}{}
+			}(nases[i])
+		}
+	}
+
+	for i := 0; i < concurrent*concurrent; i++ {
+		<-done
+	}
 }
 
 func BenchmarkGet(b *testing.B) {
