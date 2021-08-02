@@ -6,25 +6,15 @@ ENV GOPATH /go
 ENV PATH ${GOPATH}/bin:$PATH
 RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.41.1
 
-# Add apt key for LLVM repository
-RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
-
-# Add LLVM apt repository
-RUN echo "deb http://apt.llvm.org/stretch/ llvm-toolchain-stretch-5.0 main" | tee -a /etc/apt/sources.list
-
 # Install clang from LLVM repository
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    clang \
+    gcc \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Set Clang as default CC
-ENV set_clang /etc/profile.d/set-clang-cc.sh
-RUN echo "export CC=clang-7.0" | tee -a ${set_clang} && chmod a+x ${set_clang}
-
 # Install Docker (to build images)
 ENV DOCKER_CHANNEL stable
-ENV DOCKER_VERSION 19.03.5
+ENV DOCKER_VERSION 20.10.7
 
 RUN set -eux; \
     \
@@ -52,5 +42,5 @@ RUN set -eux; \
     docker --version
 
 # Install Docker Compose
-RUN curl -L "https://github.com/docker/compose/releases/download/1.26.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+RUN curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 RUN chmod +x /usr/local/bin/docker-compose
