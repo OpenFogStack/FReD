@@ -6,33 +6,45 @@ stages:
   - build
   - release
 
-before_script:
+.dependencies: &dependencies
   - make dep
 
 golint:
   stage: analysis
+  before_script:
+    *dependencies
   script:
     - make lint
 
 unit_tests:
   stage: test
   retry: 2
+  before_script:
+    *dependencies
   script:
     - make test
 
 race_detector:
   stage: test
   retry: 2
+  before_script:
+    *dependencies
   script:
     - make race
 
 code_coverage:
   stage: test
+  retry: 2
+  before_script:
+    *dependencies
   script:
     - make coverage
 
 code_coverage_report:
   stage: test
+  retry: 2
+  before_script:
+    *dependencies
   script:
     - make coverhtml
   only:
@@ -40,14 +52,16 @@ code_coverage_report:
 
 build:
   stage: build
+  before_script:
+    *dependencies
   script:
     - make
 
 release:
   stage: release
-  image: docker:stable
-  services:
-    - docker:dind
+  image:
+    name: goreleaser/goreleaser
+    entrypoint: [ '' ]
 
   variables:
     DOCKER_REGISTRY: $CI_REGISTRY
@@ -63,13 +77,5 @@ release:
     refs:
       - tags
 
-  script: |
-    # GITLAB_TOKEN is needed to create GitLab releases.
-    # DOCKER_* are needed to push Docker images.
-    docker run --rm --privileged \
-      -v $PWD:/go/src/gitlab.com/YourGitLabUser/YourGitLabRepo \
-      -w /go/src/gitlab.com/YourGitLabUser/YourGitLabRepo \
-      -v /var/run/docker.sock:/var/run/docker.sock \
-      -e DOCKER_USERNAME -e DOCKER_PASSWORD -e DOCKER_REGISTRY  \
-      -e GITLAB_TOKEN \
-      goreleaser/goreleaser release --rm-dist
+  script:
+    - goreleaser release --rm-dist

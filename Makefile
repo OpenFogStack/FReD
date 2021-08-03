@@ -33,7 +33,7 @@ coverhtml: ## Generate global code coverage report in HTML
 	@sh ./ci/tools/coverage.sh html;
 
 dep: ## Get the dependencies
-	@go get -d ./...
+	@go mod download
 
 build: dep ## Build the binary file
 	@go build -v $(PKG)/cmd/frednode
@@ -45,7 +45,7 @@ container: ## Create a Docker container
 	@docker build . -t git.tu-berlin.de:5000/mcc-fred/fred/fred
 
 docs: ## Build the FogStore documentation
-	@mdpdf docs/doc.md 
+	@mdpdf docs/doc.md
 
 help: ## Display this help screen
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
