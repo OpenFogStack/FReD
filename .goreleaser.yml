@@ -1,0 +1,34 @@
+builds:
+  -
+    id: "FReD"
+    main: ./cmd/frednode
+    binary: fred
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+
+  - id: "FReD Proxy"
+    main: ./cmd/fredproxy
+    binary: fredproxy
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+
+  - id: "ALExANDRA"
+    main: ./cmd/alexandra
+    binary: alexandra
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
