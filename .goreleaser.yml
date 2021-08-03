@@ -1,3 +1,7 @@
+gitlab_urls:
+  api: https://git.tu-berlin.de/api/v4/
+  download: https://git.tu-berlin.de
+
 builds:
   -
     id: "FReD"
