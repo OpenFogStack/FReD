@@ -1,0 +1,89 @@
+gitlab_urls:
+  api: https://git.tu-berlin.de/api/v4/
+  download: https://git.tu-berlin.de
+
+builds:
+  -
+    id: "FReD"
+    main: ./cmd/frednode
+    binary: fred
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+
+  - id: "FReD Proxy"
+    main: ./cmd/fredproxy
+    binary: fredproxy
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+
+  - id: "ALExANDRA"
+    main: ./cmd/alexandra
+    binary: alexandra
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+
+dockers:
+  -
+    ids:
+      - FReD
+    goos: linux
+    goarch: amd64
+    dockerfile: Dockerfile
+    image_templates:
+      - "git.tu-berlin.de:5000/mcc-fred/fred/fred:{{ .Tag }}"
+      - "git.tu-berlin.de:5000/mcc-fred/fred/fred:v{{ .Major }}"
+      - "git.tu-berlin.de:5000/mcc-fred/fred/fred:v{{ .Major }}.{{ .Minor }}"
+      - "git.tu-berlin.de:5000/mcc-fred/fred/fred:latest"
+    extra_files:
+      - pkg/
+      - cmd/
+      - proto/
+      - go.mod
+      - go.sum
+  - ids:
+      - FReD Proxy
+    goos: linux
+    goarch: amd64
+    dockerfile: proxy.Dockerfile
+    image_templates:
+      - "git.tu-berlin.de:5000/mcc-fred/fred/fredproxy:{{ .Tag }}"
+      - "git.tu-berlin.de:5000/mcc-fred/fred/fredproxy:v{{ .Major }}"
+      - "git.tu-berlin.de:5000/mcc-fred/fred/fredproxy:v{{ .Major }}.{{ .Minor }}"
+      - "git.tu-berlin.de:5000/mcc-fred/fred/fredproxy:latest"
+    extra_files:
+      - pkg/
+      - cmd/
+      - proto/
+      - go.mod
+      - go.sum
+  - ids:
+      - ALeXANDRA
+    goos: linux
+    goarch: amd64
+    dockerfile: alexandra.Dockerfile
+    image_templates:
+      - "git.tu-berlin.de:5000/mcc-fred/fred/alexandra:{{ .Tag }}"
+      - "git.tu-berlin.de:5000/mcc-fred/fred/alexandra:v{{ .Major }}"
+      - "git.tu-berlin.de:5000/mcc-fred/fred/alexandra:v{{ .Major }}.{{ .Minor }}"
+      - "git.tu-berlin.de:5000/mcc-fred/fred/alexandra:latest"
+    extra_files:
+      - pkg/
+      - cmd/
+      - proto/
+      - go.mod
+      - go.sum
