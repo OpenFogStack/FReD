@@ -16,11 +16,13 @@ golint:
 
 unit_tests:
   stage: test
+  retry: 2
   script:
     - make test
 
 race_detector:
   stage: test
+  retry: 2
   script:
     - make race
 
