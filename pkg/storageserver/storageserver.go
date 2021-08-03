@@ -5,6 +5,7 @@ import (
 
 	"git.tu-berlin.de/mcc-fred/fred/pkg/fred"
 	"git.tu-berlin.de/mcc-fred/fred/proto/storage"
+	"github.com/DistributedClocks/GoVector/govec/vclock"
 	"github.com/rs/zerolog/log"
 )
 
@@ -20,194 +21,235 @@ func NewStorageServer(store *fred.Store) *Server {
 }
 
 // Update calls specific method of the storage interface
-func (s *Server) Update(_ context.Context, item *storage.UpdateItem) (*storage.Response, error) {
-	log.Debug().Msgf("GRPCServer: Update in=%#v", item)
+func (s *Server) Update(_ context.Context, req *storage.UpdateRequest) (*storage.UpdateResponse, error) {
+	log.Debug().Msgf("GRPCServer: Update in=%#v", req)
 
-	err := s.store.Update(item.Keygroup, item.Id, item.Val, item.Append, int(item.Expiry))
+	err := s.store.Update(req.Keygroup, req.Id, req.Val, req.Append, int(req.Expiry), vclock.VClock{}.CopyFromMap(req.Version))
+
 	if err != nil {
-		log.Err(err).Msgf("GRPCServer has encountered an error while updating item %#v", item)
-		return &storage.Response{Success: false}, err
+		log.Err(err).Msgf("GRPCServer has encountered an error while updating item %#v", req)
+		return nil, err
 	}
-	return &storage.Response{Success: true}, nil
+	return &storage.UpdateResponse{}, nil
 }
 
 // Append calls specific method of the storage interface
-func (s *Server) Append(_ context.Context, item *storage.AppendItem) (*storage.Key, error) {
-	log.Debug().Msgf("GRPCServer: Append in=%#v", item)
+func (s *Server) Append(_ context.Context, req *storage.AppendRequest) (*storage.AppendResponse, error) {
+	log.Debug().Msgf("GRPCServer: Append in=%#v", req)
 
-	res, err := s.store.Append(item.Keygroup, item.Val, int(item.Expiry))
+	key, err := s.store.Append(req.Keygroup, req.Val, int(req.Expiry))
 
 	if err != nil {
-		log.Err(err).Msgf("GRPCServer has encountered an error while appending item %#v", item)
-		return &storage.Key{}, err
+		log.Err(err).Msgf("GRPCServer has encountered an error while appending item %#v", req)
+		return nil, err
 	}
 
-	return &storage.Key{
-		Keygroup: item.Keygroup,
-		Id:       res,
+	return &storage.AppendResponse{
+		Key: key,
 	}, nil
 }
 
 // Delete calls specific method of the storage interface
-func (s Server) Delete(_ context.Context, key *storage.Key) (*storage.Response, error) {
-	log.Debug().Msgf("GRPCServer: Delete in=%#v", key)
-	err := s.store.Delete(key.Keygroup, key.Id)
+func (s Server) Delete(_ context.Context, req *storage.DeleteRequest) (*storage.DeleteResponse, error) {
+	log.Debug().Msgf("GRPCServer: Delete in=%#v", req)
+
+	err := s.store.Delete(req.Keygroup, req.Id, vclock.VClock{}.CopyFromMap(req.Version))
 	if err != nil {
-		log.Err(err).Msgf("GRPCServer has encountered an error while deleting item %#v", key)
-		return &storage.Response{Success: false, Message: "Server has encountered an error while deleting an item"}, err
+		log.Err(err).Msgf("GRPCServer has encountered an error while deleting item %#v", req)
+		return nil, err
 	}
-	return &storage.Response{Success: true}, nil
+	return &storage.DeleteResponse{}, nil
 }
 
 // Read calls specific method of the storage interface
-func (s Server) Read(_ context.Context, key *storage.Key) (*storage.Val, error) {
-	log.Debug().Msgf("GRPCServer: Read in=%#v", key)
-	res, err := s.store.Read(key.Keygroup, key.Id)
+func (s Server) Read(_ context.Context, req *storage.ReadRequest) (*storage.ReadResponse, error) {
+	log.Debug().Msgf("GRPCServer: Read in=%#v", req)
+	vals, vvectors, found, err := s.store.Read(req.Keygroup, req.Id)
+
 	if err != nil {
-		log.Err(err).Msgf("GRPCServer has encountered an error while reading item %#v", key)
-		return &storage.Val{}, err
+		log.Err(err).Msgf("GRPCServer has encountered an error while reading item %#v", req)
+		return nil, err
 	}
-	return &storage.Val{Val: res}, nil
+
+	if !found {
+		return &storage.ReadResponse{
+			Items: []*storage.Item{},
+		}, nil
+	}
+
+	items := make([]*storage.Item, len(vals))
+
+	for i := range vals {
+		items[i] = &storage.Item{
+			Keygroup: req.Keygroup,
+			Id:       req.Id,
+			Val:      vals[i],
+			Version:  vvectors[i],
+		}
+	}
+
+	return &storage.ReadResponse{
+		Items: items,
+	}, nil
 }
 
 // Scan calls specific method of the storage interface
-func (s Server) Scan(req *storage.ScanRequest, server storage.Database_ScanServer) error {
+func (s Server) Scan(_ context.Context, req *storage.ScanRequest) (*storage.ScanResponse, error) {
 	// Stream: call server.send for every item, return if none left.
 	log.Debug().Msgf("GRPCServer: Scan in=%#v", req)
-	res, err := s.store.ReadSome(req.Key.Keygroup, req.Key.Id, req.Count)
+
+	vals, vvectors, err := s.store.ReadSome(req.Keygroup, req.Start, req.Count)
+
 	if err != nil {
-		log.Err(err).Msgf("GRPCServer has encountered an error while scanning %d items from keygroup %#v", req.Count, req.Key.Keygroup)
-		return err
+		log.Err(err).Msgf("GRPCServer has encountered an error while scanning %d items from keygroup %#v", req.Count, req.Keygroup)
+		return nil, err
 	}
-	for id, elem := range res {
-		err := server.Send(&storage.Item{
-			Id:  id,
-			Val: elem,
-		})
-		if err != nil {
-			return err
+	items := make([]*storage.Item, 0)
+
+	for key, data := range vals {
+		for i := range data {
+			items = append(items, &storage.Item{
+				Keygroup: req.Keygroup,
+				Id:       key,
+				Val:      vals[key][i],
+				Version:  vvectors[key][i],
+			})
 		}
 	}
-	// Return nil == successful transfer
-	return nil
+
+	return &storage.ScanResponse{
+		Items: items,
+	}, nil
 }
 
 // ReadAll calls specific method of the storage interface
-func (s Server) ReadAll(kg *storage.Keygroup, server storage.Database_ReadAllServer) error {
+func (s Server) ReadAll(_ context.Context, req *storage.ReadAllRequest) (*storage.ReadAllResponse, error) {
 	// Stream: call server.send for every item, return if none left.
-	log.Debug().Msgf("GRPCServer: ReadAll in=%#v", kg)
-	res, err := s.store.ReadAll(kg.Keygroup)
+	log.Debug().Msgf("GRPCServer: ReadAll in=%#v", req)
+	vals, vvectors, err := s.store.ReadAll(req.Keygroup)
 	if err != nil {
-		log.Err(err).Msgf("GRPCServer has encountered an error while reading whole keygroup %#v", kg)
-		return err
+		log.Err(err).Msgf("GRPCServer has encountered an error while reading whole keygroup %#v", req)
+		return nil, err
 	}
-	for id, elem := range res {
-		err := server.Send(&storage.Item{
-			Id:  id,
-			Val: elem,
-		})
-		if err != nil {
-			return err
+	items := make([]*storage.Item, 0)
+
+	for key, data := range vals {
+		for i := range data {
+			items = append(items, &storage.Item{
+				Keygroup: req.Keygroup,
+				Id:       key,
+				Val:      vals[key][i],
+				Version:  vvectors[key][i],
+			})
 		}
 	}
-	// Return nil == successful transfer
-	return nil
+
+	return &storage.ReadAllResponse{
+		Items: items,
+	}, nil
 }
 
 // IDs calls specific method of the storage interface
-func (s Server) IDs(kg *storage.Keygroup, server storage.Database_IDsServer) error {
-	log.Debug().Msgf("GRPCServer: IDs in=%#v", kg)
-	res, err := s.store.IDs(kg.Keygroup)
+func (s Server) IDs(_ context.Context, req *storage.IDsRequest) (*storage.IDsResponse, error) {
+	log.Debug().Msgf("GRPCServer: IDs in=%#v", req)
+	ids, err := s.store.IDs(req.Keygroup)
 	if err != nil {
-		log.Err(err).Msgf("GRPCServer has encountered an error while reading IDs %#v", kg)
-		return err
+		log.Err(err).Msgf("GRPCServer has encountered an error while reading IDs %#v", req)
+		return nil, err
 	}
-	for _, elem := range res {
-		err := server.Send(&storage.Key{Id: elem})
-		if err != nil {
-			return err
-		}
-	}
-	// Return nil == successful transfer
-	return nil
+
+	return &storage.IDsResponse{
+		Ids: ids,
+	}, nil
 }
 
 // Exists calls specific method of the storage interface
-func (s Server) Exists(_ context.Context, key *storage.Key) (*storage.Response, error) {
-	log.Debug().Msgf("GRPCServer: Exists in=%#v", key)
-	exists := s.store.Exists(key.Keygroup, key.Id)
-	return &storage.Response{Success: exists}, nil
+func (s Server) Exists(_ context.Context, req *storage.ExistsRequest) (*storage.ExistsResponse, error) {
+	log.Debug().Msgf("GRPCServer: Exists in=%#v", req)
+
+	exists := s.store.Exists(req.Keygroup, req.Id)
+
+	return &storage.ExistsResponse{Exists: exists}, nil
 }
 
 // CreateKeygroup calls specific method of the storage interface
-func (s Server) CreateKeygroup(_ context.Context, kg *storage.Keygroup) (*storage.Response, error) {
-	log.Debug().Msgf("GRPCServer: CreateKeygroup in=%#v", kg)
-	err := s.store.CreateKeygroup(kg.Keygroup)
+func (s Server) CreateKeygroup(_ context.Context, req *storage.CreateKeygroupRequest) (*storage.CreateKeygroupResponse, error) {
+	log.Debug().Msgf("GRPCServer: CreateKeygroup in=%#v", req)
+	err := s.store.CreateKeygroup(req.Keygroup)
+
 	if err != nil {
-		log.Err(err).Msgf("GRPCServer has encountered an error while creating keygroup %#v", kg)
-		return &storage.Response{Success: false}, err
+		log.Err(err).Msgf("GRPCServer has encountered an error while creating keygroup %#v", req)
+		return nil, err
 	}
-	return &storage.Response{Success: true}, nil
+
+	return &storage.CreateKeygroupResponse{}, nil
 }
 
 // DeleteKeygroup calls specific method of the storage interface
-func (s Server) DeleteKeygroup(_ context.Context, kg *storage.Keygroup) (*storage.Response, error) {
-	log.Debug().Msgf("GRPCServer: DeleteKeygroup in=%#v", kg)
-	err := s.store.DeleteKeygroup(kg.Keygroup)
+func (s Server) DeleteKeygroup(_ context.Context, req *storage.DeleteKeygroupRequest) (*storage.DeleteKeygroupResponse, error) {
+	log.Debug().Msgf("GRPCServer: DeleteKeygroup in=%#v", req)
+	err := s.store.DeleteKeygroup(req.Keygroup)
 	if err != nil {
-		log.Err(err).Msgf("GRPCServer has encountered an error while deleting keygroup %#v", kg)
-		return &storage.Response{Success: false}, err
+		log.Err(err).Msgf("GRPCServer has encountered an error while deleting keygroup %#v", req)
+		return nil, err
 	}
-	return &storage.Response{Success: true}, nil
+	return &storage.DeleteKeygroupResponse{}, nil
 }
 
 // ExistsKeygroup calls specific method of the storage interface
-func (s Server) ExistsKeygroup(ctx context.Context, kg *storage.Keygroup) (*storage.Response, error) {
-	log.Debug().Msgf("GRPCServer: ExistsKeygroup in=%#v", kg)
-	exists := s.store.ExistsKeygroup(kg.Keygroup)
-	return &storage.Response{Success: exists}, nil
+func (s Server) ExistsKeygroup(_ context.Context, req *storage.ExistsKeygroupRequest) (*storage.ExistsKeygroupResponse, error) {
+	log.Debug().Msgf("GRPCServer: ExistsKeygroup in=%#v", req)
+
+	exists := s.store.ExistsKeygroup(req.Keygroup)
+
+	return &storage.ExistsKeygroupResponse{Exists: exists}, nil
 }
 
 // AddKeygroupTrigger calls specific method of the storage interface.
-func (s *Server) AddKeygroupTrigger(ctx context.Context, t *storage.KeygroupTrigger) (*storage.Response, error) {
-	log.Debug().Msgf("GRPCServer: AddKeygroupTrigger in=%#v", t)
-	err := s.store.AddKeygroupTrigger(t.Keygroup, t.Trigger.Id, t.Trigger.Host)
+func (s *Server) AddKeygroupTrigger(_ context.Context, req *storage.AddKeygroupTriggerRequest) (*storage.AddKeygroupTriggerResponse, error) {
+	log.Debug().Msgf("GRPCServer: AddKeygroupTrigger in=%#v", req)
+	err := s.store.AddKeygroupTrigger(req.Keygroup, req.Id, req.Host)
+
 	if err != nil {
-		log.Err(err).Msgf("GRPCServer has encountered an error while adding trigger %#v", t)
-		return &storage.Response{Success: false}, err
+		log.Err(err).Msgf("GRPCServer has encountered an error while adding trigger %#v", req)
+		return nil, err
 	}
-	return &storage.Response{Success: true}, nil
+
+	return &storage.AddKeygroupTriggerResponse{}, nil
 }
 
 // DeleteKeygroupTrigger calls specific method of the storage interface.
-func (s *Server) DeleteKeygroupTrigger(ctx context.Context, t *storage.KeygroupTrigger) (*storage.Response, error) {
-	log.Debug().Msgf("GRPCServer: DeleteKeygroupTrigger in=%#v", t)
-	err := s.store.DeleteKeygroupTrigger(t.Keygroup, t.Trigger.Id)
+func (s *Server) DeleteKeygroupTrigger(_ context.Context, req *storage.DeleteKeygroupTriggerRequest) (*storage.DeleteKeygroupTriggerResponse, error) {
+	log.Debug().Msgf("GRPCServer: DeleteKeygroupTrigger in=%#v", req)
+
+	err := s.store.DeleteKeygroupTrigger(req.Keygroup, req.Id)
+
 	if err != nil {
-		log.Err(err).Msgf("GRPCServer has encountered an error while deleting trigger %#v", t)
-		return &storage.Response{Success: false}, err
+		log.Err(err).Msgf("GRPCServer has encountered an error while deleting trigger %#v", req)
+		return nil, err
 	}
-	return &storage.Response{Success: true}, nil
+
+	return &storage.DeleteKeygroupTriggerResponse{}, nil
 }
 
 // GetKeygroupTrigger calls specific method of the storage interface.
-func (s *Server) GetKeygroupTrigger(kg *storage.Keygroup, server storage.Database_GetKeygroupTriggerServer) error {
+func (s *Server) GetKeygroupTrigger(_ context.Context, req *storage.GetKeygroupTriggerRequest) (*storage.GetKeygroupTriggerResponse, error) {
 	// Steam: call server.send for every trigger, return if none left.
-	log.Debug().Msgf("GRPCServer: GetKeygroupTrigger in=%#v", kg)
-	res, err := s.store.GetKeygroupTrigger(kg.Keygroup)
+	log.Debug().Msgf("GRPCServer: GetKeygroupTrigger in=%#v", req)
+	res, err := s.store.GetKeygroupTrigger(req.Keygroup)
 	if err != nil {
-		log.Err(err).Msgf("GRPCServer has encountered an error while reading all triggers for keygroup %#v", kg)
-		return err
+		log.Err(err).Msgf("GRPCServer has encountered an error while reading all triggers for keygroup %#v", req)
+		return nil, err
 	}
+
+	triggers := make([]*storage.Trigger, 0, len(res))
+
 	for id, host := range res {
-		err := server.Send(&storage.Trigger{
+		triggers = append(triggers, &storage.Trigger{
 			Id:   id,
 			Host: host,
 		})
-		if err != nil {
-			return err
-		}
 	}
-	// Return nil == successful transfer
-	return nil
+
+	return &storage.GetKeygroupTriggerResponse{Triggers: triggers}, nil
 }

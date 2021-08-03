@@ -24,7 +24,6 @@ type NodeClient interface {
 	AppendItem(ctx context.Context, in *AppendItemRequest, opts ...grpc.CallOption) (*Empty, error)
 	GetItem(ctx context.Context, in *GetItemRequest, opts ...grpc.CallOption) (*GetItemResponse, error)
 	GetAllItems(ctx context.Context, in *GetAllItemsRequest, opts ...grpc.CallOption) (*GetAllItemsResponse, error)
-	DeleteItem(ctx context.Context, in *DeleteItemRequest, opts ...grpc.CallOption) (*Empty, error)
 	AddReplica(ctx context.Context, in *AddReplicaRequest, opts ...grpc.CallOption) (*Empty, error)
 	RemoveReplica(ctx context.Context, in *RemoveReplicaRequest, opts ...grpc.CallOption) (*Empty, error)
 }
@@ -91,15 +90,6 @@ func (c *nodeClient) GetAllItems(ctx context.Context, in *GetAllItemsRequest, op
 	return out, nil
 }
 
-func (c *nodeClient) DeleteItem(ctx context.Context, in *DeleteItemRequest, opts ...grpc.CallOption) (*Empty, error) {
-	out := new(Empty)
-	err := c.cc.Invoke(ctx, "/mcc.fred.peering.Node/DeleteItem", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *nodeClient) AddReplica(ctx context.Context, in *AddReplicaRequest, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/mcc.fred.peering.Node/AddReplica", in, out, opts...)
@@ -128,7 +118,6 @@ type NodeServer interface {
 	AppendItem(context.Context, *AppendItemRequest) (*Empty, error)
 	GetItem(context.Context, *GetItemRequest) (*GetItemResponse, error)
 	GetAllItems(context.Context, *GetAllItemsRequest) (*GetAllItemsResponse, error)
-	DeleteItem(context.Context, *DeleteItemRequest) (*Empty, error)
 	AddReplica(context.Context, *AddReplicaRequest) (*Empty, error)
 	RemoveReplica(context.Context, *RemoveReplicaRequest) (*Empty, error)
 }
@@ -154,9 +143,6 @@ func (UnimplementedNodeServer) GetItem(context.Context, *GetItemRequest) (*GetIt
 }
 func (UnimplementedNodeServer) GetAllItems(context.Context, *GetAllItemsRequest) (*GetAllItemsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAllItems not implemented")
-}
-func (UnimplementedNodeServer) DeleteItem(context.Context, *DeleteItemRequest) (*Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteItem not implemented")
 }
 func (UnimplementedNodeServer) AddReplica(context.Context, *AddReplicaRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddReplica not implemented")
@@ -284,24 +270,6 @@ func _Node_GetAllItems_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Node_DeleteItem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteItemRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(NodeServer).DeleteItem(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/mcc.fred.peering.Node/DeleteItem",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NodeServer).DeleteItem(ctx, req.(*DeleteItemRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Node_AddReplica_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AddReplicaRequest)
 	if err := dec(in); err != nil {
@@ -368,10 +336,6 @@ var Node_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetAllItems",
 			Handler:    _Node_GetAllItems_Handler,
-		},
-		{
-			MethodName: "DeleteItem",
-			Handler:    _Node_DeleteItem_Handler,
 		},
 		{
 			MethodName: "AddReplica",

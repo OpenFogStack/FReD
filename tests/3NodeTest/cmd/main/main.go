@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"flag"
+	"math/rand"
 	"os"
 	"strconv"
 	"strings"
@@ -22,6 +23,18 @@ var (
 	currSuite int
 	failures  map[int]int
 )
+
+// https://stackoverflow.com/questions/22892120/how-to-generate-a-random-string-of-a-fixed-length-in-go#31832326
+// removing capital letters so we can get more conflicts
+const letterBytes = "abcdefghijklmnopqrstuvwxyz"
+
+func randStringBytes(n int) string {
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+	return string(b)
+}
 
 func main() {
 	// Logging Setup
@@ -104,7 +117,7 @@ func main() {
 	}
 
 	// to add a test suite, increase the size by one and add the instance of the suite to the slice
-	testSuites := make([]TestSuite, 8)
+	testSuites := make([]TestSuite, 10)
 
 	// initiate test suites
 	testSuites[0] = NewStandardSuite(config)
@@ -115,6 +128,8 @@ func main() {
 	testSuites[5] = NewSelfReplicaSuite(config)
 	testSuites[6] = NewAuthenticationSuite(config)
 	testSuites[7] = NewConcurrencySuite(config)
+	testSuites[8] = NewConcurrencyImmutableSuite(config)
+	testSuites[9] = NewVersioningSuite(config)
 
 	// parse testRange, starts at 1
 	minTest := 1
@@ -176,7 +191,7 @@ func logNodeAction(node *grpcclient.Node, format string, a ...interface{}) {
 
 func logNodeFailure(node *grpcclient.Node, expected, result string) {
 	wait()
-	log.Warn().Str("node", node.ID).Msgf("expected: %s, but got: %#v", expected, result)
+	log.Error().Str("node", node.ID).Msgf("expected: %s, but got: %#v", expected, result)
 	node.Errors++
 	failures[currSuite]++
 

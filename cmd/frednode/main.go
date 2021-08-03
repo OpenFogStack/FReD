@@ -9,6 +9,8 @@ import (
 	"strings"
 	"syscall"
 
+	"git.tu-berlin.de/mcc-fred/fred/pkg/dynamo"
+	"git.tu-berlin.de/mcc-fred/fred/pkg/storageclient"
 	"github.com/caarlos0/env/v6"
 	"github.com/go-errors/errors"
 	"github.com/mmcloughlin/geohash"
@@ -17,11 +19,9 @@ import (
 
 	"git.tu-berlin.de/mcc-fred/fred/pkg/api"
 	"git.tu-berlin.de/mcc-fred/fred/pkg/badgerdb"
-	"git.tu-berlin.de/mcc-fred/fred/pkg/dynamo"
 	"git.tu-berlin.de/mcc-fred/fred/pkg/etcdnase"
 	"git.tu-berlin.de/mcc-fred/fred/pkg/fred"
 	"git.tu-berlin.de/mcc-fred/fred/pkg/peering"
-	"git.tu-berlin.de/mcc-fred/fred/pkg/storageclient"
 )
 
 type fredConfig struct {

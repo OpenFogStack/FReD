@@ -1,11 +1,12 @@
 package fred
 
 import (
+	"github.com/DistributedClocks/GoVector/govec/vclock"
 	"github.com/go-errors/errors"
 	"github.com/rs/zerolog/log"
 )
 
-type exthandler struct {
+type ExtHandler struct {
 	s *storeService
 	r *replicationService
 	t *triggerService
@@ -14,8 +15,8 @@ type exthandler struct {
 }
 
 // newExthandler creates a new handler for client request (i.e. from clients).
-func newExthandler(s *storeService, r *replicationService, t *triggerService, a *authService, n NameService) *exthandler {
-	return &exthandler{
+func newExthandler(s *storeService, r *replicationService, t *triggerService, a *authService, n NameService) *ExtHandler {
+	return &ExtHandler{
 		s: s,
 		r: r,
 		t: t,
@@ -25,7 +26,7 @@ func newExthandler(s *storeService, r *replicationService, t *triggerService, a 
 }
 
 // HandleCreateKeygroup handles requests to the CreateKeygroup endpoint of the client interface.
-func (h *exthandler) HandleCreateKeygroup(user string, k Keygroup) error {
+func (h *ExtHandler) HandleCreateKeygroup(user string, k Keygroup) error {
 
 	if err := h.r.createKeygroup(k); err != nil {
 		log.Debug().Msg(err.(*errors.Error).ErrorStack())
@@ -50,7 +51,7 @@ func (h *exthandler) HandleCreateKeygroup(user string, k Keygroup) error {
 }
 
 // HandleDeleteKeygroup handles requests to the DeleteKeygroup endpoint of the client interface.
-func (h *exthandler) HandleDeleteKeygroup(user string, k Keygroup) error {
+func (h *ExtHandler) HandleDeleteKeygroup(user string, k Keygroup) error {
 	allowed, err := h.a.isAllowed(user, DeleteKeygroup, k.Name)
 
 	if err != nil || !allowed {
@@ -75,29 +76,45 @@ func (h *exthandler) HandleDeleteKeygroup(user string, k Keygroup) error {
 }
 
 // HandleRead handles requests to the Read endpoint of the client interface.
-func (h *exthandler) HandleRead(user string, i Item) (Item, error) {
+func (h *ExtHandler) HandleRead(user string, i Item, version vclock.VClock) ([]Item, error) {
 	allowed, err := h.a.isAllowed(user, Read, i.Keygroup)
 
 	if err != nil || !allowed {
-		return Item{}, errors.Errorf("user %s cannot read from keygroup %s", user, i.Keygroup)
+		return nil, errors.Errorf("user %s cannot read from keygroup %s", user, i.Keygroup)
 	}
 
-	result, err := h.s.read(i.Keygroup, i.ID)
+	// if read request has a version, return all items newer than this version
+	// if read request does not have a version, return all items with all versions
+	// TODO: decide what to do with tombstoned items? right now we just don't show them
+
+	var r []Item
+	if version == nil {
+		r, err = h.s.read(i.Keygroup, i.ID)
+	} else {
+		r, err = h.s.readVersion(i.Keygroup, i.ID, version)
+	}
+
+	result := make([]Item, 0, len(r))
+	for _, it := range r {
+		if !it.Tombstoned {
+			result = append(result, it)
+		}
+	}
 
 	if err != nil {
-		log.Error().Msgf("Error in Read is: %#v", err)
-		// This prints the error stack whenever a item is not found, nobody cares about this...
-		// log.Err(err).Msg(err.(*errors.Error).ErrorStack())
-		return i, errors.Errorf("error reading item %s from keygroup %s", i.ID, i.Keygroup)
+		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+		return nil, errors.Errorf("error reading item %s from keygroup %s", i.ID, i.Keygroup)
 	}
 
-	// KeygroupStore result in passed object to return an Item and not only the result string
-	i.Val = result
-	return i, nil
+	if len(result) == 0 {
+		return nil, errors.Errorf("item %s not found in keygroup %s", i.ID, i.Keygroup)
+	}
+
+	return result, nil
 }
 
 // HandleScan handles requests to the Scan endpoint of the client interface.
-func (h *exthandler) HandleScan(user string, i Item, count uint64) ([]Item, error) {
+func (h *ExtHandler) HandleScan(user string, i Item, count uint64) ([]Item, error) {
 	allowed, err := h.a.isAllowed(user, Read, i.Keygroup)
 
 	if err != nil || !allowed {
@@ -108,6 +125,7 @@ func (h *exthandler) HandleScan(user string, i Item, count uint64) ([]Item, erro
 		return nil, errors.Errorf("count must be at least 1, got %d", count)
 	}
 
+	// always return all versions
 	result, err := h.s.scan(i.Keygroup, i.ID, count)
 
 	if err != nil {
@@ -121,7 +139,7 @@ func (h *exthandler) HandleScan(user string, i Item, count uint64) ([]Item, erro
 }
 
 // HandleAppend handles requests to the Append endpoint of the client interface.
-func (h *exthandler) HandleAppend(user string, i Item) (Item, error) {
+func (h *ExtHandler) HandleAppend(user string, i Item) (Item, error) {
 	allowed, err := h.a.isAllowed(user, Update, i.Keygroup)
 
 	if err != nil || !allowed {
@@ -169,22 +187,22 @@ func (h *exthandler) HandleAppend(user string, i Item) (Item, error) {
 }
 
 // HandleUpdate handles requests to the Update endpoint of the client interface.
-func (h *exthandler) HandleUpdate(user string, i Item) error {
+func (h *ExtHandler) HandleUpdate(user string, i Item, versions []vclock.VClock) (Item, error) {
 	allowed, err := h.a.isAllowed(user, Update, i.Keygroup)
 
 	if err != nil || !allowed {
-		return errors.Errorf("user %s cannot update in keygroup %s", user, i.Keygroup)
+		return i, errors.Errorf("user %s cannot update in keygroup %s", user, i.Keygroup)
 	}
 
 	log.Debug().Msgf("checking if keygroup %s is mutable...", i.Keygroup)
 	m, err := h.n.IsMutable(i.Keygroup)
 
 	if err != nil {
-		return err
+		return i, err
 	}
 
 	if !m {
-		return errors.Errorf("cannot update item %s because keygroup is immutable", i.ID)
+		return i, errors.Errorf("cannot update item %s because keygroup is immutable", i.ID)
 	}
 
 	log.Debug().Msgf("...keygroup %s is mutable", i.Keygroup)
@@ -192,70 +210,101 @@ func (h *exthandler) HandleUpdate(user string, i Item) error {
 	expiry, err := h.n.GetExpiry(i.Keygroup)
 
 	if err != nil {
-		return err
+		return i, err
+	}
+
+	// if update request has a list of versions, all versions that are equal or less than those versions will be overwritten
+	// else only the local counter will be incremented
+	if versions == nil {
+		i.Version, err = h.s.update(i, expiry)
+
+		if err != nil {
+			log.Printf("%#v", err)
+			log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+			return i, errors.Errorf("error updating item")
+		}
+	} else {
+		i.Version, err = h.s.updateVersions(i, versions, expiry)
+
+		if err != nil {
+			log.Printf("%#v", err)
+			log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+			return i, errors.Errorf("error updating item")
+		}
 	}
 
 	if err := h.r.relayUpdate(i); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
-		return errors.Errorf("error updating item")
-	}
-
-	if err := h.s.update(i, false, expiry); err != nil {
-		log.Printf("%#v", err)
-		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
-		return errors.Errorf("error updating item")
+		return i, errors.Errorf("error updating item")
 	}
 
 	if err := h.t.triggerUpdate(i); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
-		return errors.Errorf("error updating item")
+		return i, errors.Errorf("error updating item")
 	}
 
-	return nil
+	return i, nil
 }
 
 // HandleDelete handles requests to the Delete endpoint of the client interface.
-func (h *exthandler) HandleDelete(user string, i Item) error {
+func (h *ExtHandler) HandleDelete(user string, i Item, versions []vclock.VClock) (Item, error) {
 	allowed, err := h.a.isAllowed(user, Delete, i.Keygroup)
 
 	if err != nil || !allowed {
-		return errors.Errorf("user %s cannot delete keygroup %s", user, i.Keygroup)
+		return i, errors.Errorf("user %s cannot delete keygroup %s", user, i.Keygroup)
 	}
 
 	m, err := h.n.IsMutable(i.Keygroup)
 
 	if err != nil {
-		return err
+		return i, err
 	}
 
 	if !m {
-		return errors.Errorf("cannot update item %s because keygroup is immutable", i.ID)
+		return i, errors.Errorf("cannot update item %s because keygroup is immutable", i.ID)
 	}
 
 	if !h.s.exists(i) {
-		return errors.Errorf("item does not exist so it cannot be deleted.")
+		return i, errors.Errorf("item does not exist so it cannot be deleted.")
 	}
 
-	if err := h.s.delete(i.Keygroup, i.ID); err != nil {
-		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
-		return errors.Errorf("error deleting item")
+	i.Tombstoned = true
+
+	// if delete request has a list of versions, all versions that are equal or less than those versions will be overwritten with tombstone
+	// else only the local counter will be incremented
+	if versions == nil {
+		i.Version, err = h.s.tombstone(i)
+
+		if err != nil {
+			log.Printf("%#v", err)
+			log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+			return i, errors.Errorf("error updating item")
+		}
+	} else {
+		i.Version, err = h.s.tombstoneVersions(i, versions)
+
+		if err != nil {
+			log.Printf("%#v", err)
+			log.Err(err).Msg(err.(*errors.Error).ErrorStack())
+			return i, errors.Errorf("error updating item")
+		}
 	}
 
-	if err := h.r.relayDelete(i); err != nil {
+	if err := h.r.relayUpdate(i); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
-		return errors.Errorf("error deleting item")
+		return i, errors.Errorf("error deleting item")
 	}
 
 	if err := h.t.triggerDelete(i); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
-		return errors.Errorf("error deleting item")
+		return i, errors.Errorf("error deleting item")
 	}
 
-	return nil
+	return i, nil
 }
 
 // HandleAddReplica handles requests to the AddKeygroupReplica endpoint of the client interface.
-func (h *exthandler) HandleAddReplica(user string, k Keygroup, n Node) error {
+func (h *ExtHandler) HandleAddReplica(user string, k Keygroup, n Node) error {
 	allowed, err := h.a.isAllowed(user, AddReplica, k.Name)
 
 	if err != nil || !allowed {
@@ -272,7 +321,7 @@ func (h *exthandler) HandleAddReplica(user string, k Keygroup, n Node) error {
 }
 
 // HandleGetKeygroupReplica handles requests to the GetKeygroupReplica endpoint of the client interface.
-func (h *exthandler) HandleGetKeygroupReplica(user string, k Keygroup) ([]Node, map[NodeID]int, error) {
+func (h *ExtHandler) HandleGetKeygroupReplica(user string, k Keygroup) ([]Node, map[NodeID]int, error) {
 	allowed, err := h.a.isAllowed(user, GetReplica, k.Name)
 
 	if err != nil || !allowed {
@@ -284,7 +333,7 @@ func (h *exthandler) HandleGetKeygroupReplica(user string, k Keygroup) ([]Node, 
 }
 
 // HandleRemoveReplica handles requests to the RemoveKeygroupReplica endpoint of the client interface.
-func (h *exthandler) HandleRemoveReplica(user string, k Keygroup, n Node) error {
+func (h *ExtHandler) HandleRemoveReplica(user string, k Keygroup, n Node) error {
 	allowed, err := h.a.isAllowed(user, RemoveReplica, k.Name)
 
 	if err != nil || !allowed {
@@ -300,7 +349,7 @@ func (h *exthandler) HandleRemoveReplica(user string, k Keygroup, n Node) error 
 }
 
 // HandleAddTrigger handles requests to the AddKeygroupTrigger endpoint of the client interface.
-func (h *exthandler) HandleAddTrigger(user string, k Keygroup, t Trigger) error {
+func (h *ExtHandler) HandleAddTrigger(user string, k Keygroup, t Trigger) error {
 	allowed, err := h.a.isAllowed(user, AddTrigger, k.Name)
 
 	if err != nil || !allowed {
@@ -316,7 +365,7 @@ func (h *exthandler) HandleAddTrigger(user string, k Keygroup, t Trigger) error 
 }
 
 // HandleGetKeygroupTriggers handles requests to the GetKeygroupTrigger endpoint of the client interface.
-func (h *exthandler) HandleGetKeygroupTriggers(user string, k Keygroup) ([]Trigger, error) {
+func (h *ExtHandler) HandleGetKeygroupTriggers(user string, k Keygroup) ([]Trigger, error) {
 	allowed, err := h.a.isAllowed(user, GetTrigger, k.Name)
 
 	if err != nil || !allowed {
@@ -327,7 +376,7 @@ func (h *exthandler) HandleGetKeygroupTriggers(user string, k Keygroup) ([]Trigg
 }
 
 // HandleRemoveTrigger handles requests to the RemoveKeygroupTrigger endpoint of the client interface.
-func (h *exthandler) HandleRemoveTrigger(user string, k Keygroup, t Trigger) error {
+func (h *ExtHandler) HandleRemoveTrigger(user string, k Keygroup, t Trigger) error {
 	allowed, err := h.a.isAllowed(user, RemoveTrigger, k.Name)
 
 	if err != nil || !allowed {
@@ -343,19 +392,19 @@ func (h *exthandler) HandleRemoveTrigger(user string, k Keygroup, t Trigger) err
 }
 
 // HandleGetReplica handles requests to the GetReplica endpoint of the client interface.
-func (h *exthandler) HandleGetReplica(user string, n Node) (Node, error) {
+func (h *ExtHandler) HandleGetReplica(user string, n Node) (Node, error) {
 
 	return h.r.getNodeExternal(n)
 }
 
 // HandleGetAllReplica handles requests to the GetAllReplica endpoint of the client interface.
-func (h *exthandler) HandleGetAllReplica(user string) ([]Node, error) {
+func (h *ExtHandler) HandleGetAllReplica(user string) ([]Node, error) {
 
 	return h.r.getNodesExternalAdress()
 }
 
-// AddUser adds permissions to a keygroup to a new user.
-func (h *exthandler) HandleAddUser(user string, newuser string, k Keygroup, r Role) error {
+// HandleAddUser adds permissions to a keygroup to a new user.
+func (h *ExtHandler) HandleAddUser(user string, newuser string, k Keygroup, r Role) error {
 	allowed, err := h.a.isAllowed(user, AddUser, k.Name)
 
 	if err != nil || !allowed {
@@ -365,8 +414,8 @@ func (h *exthandler) HandleAddUser(user string, newuser string, k Keygroup, r Ro
 	return h.a.addRoles(newuser, []Role{r}, k.Name)
 }
 
-// RemoveUser removes permissions to a keygroup to a user.
-func (h *exthandler) HandleRemoveUser(user string, newuser string, k Keygroup, r Role) error {
+// HandleRemoveUser removes permissions to a keygroup to a user.
+func (h *ExtHandler) HandleRemoveUser(user string, newuser string, k Keygroup, r Role) error {
 	allowed, err := h.a.isAllowed(user, RemoveUser, k.Name)
 
 	if err != nil || !allowed {

@@ -44,7 +44,7 @@ func (s *Server) GetReplica(ctx context.Context, request *alexandraProto.GetRepl
 }
 
 func (s *Server) GetAllReplica(ctx context.Context, request *alexandraProto.GetAllReplicaRequest) (*alexandraProto.GetAllReplicaResponse, error) {
-	res, err := s.clientsMgr.GetFastestClient().Client.GetAllReplica(ctx, &fredClients.GetAllReplicaRequest{})
+	res, err := s.clientsMgr.GetFastestClient().Client.GetAllReplica(ctx, &fredClients.Empty{})
 
 	if err != nil {
 		return nil, err

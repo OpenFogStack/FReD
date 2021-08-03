@@ -11,7 +11,6 @@ service Node {
     rpc AppendItem (AppendItemRequest) returns (Empty);
     rpc GetItem (GetItemRequest) returns (GetItemResponse);
     rpc GetAllItems (GetAllItemsRequest) returns (GetAllItemsResponse);
-    rpc DeleteItem (DeleteItemRequest) returns (Empty);
     rpc AddReplica (AddReplicaRequest) returns (Empty);
     rpc RemoveReplica (RemoveReplicaRequest) returns (Empty);
 }
@@ -30,7 +29,9 @@ message DeleteKeygroupRequest {
 message PutItemRequest {
     string keygroup = 1;
     string id = 2;
-    string data = 3;
+    string val = 3;
+    bool tombstoned = 4;
+    bytes version = 5;
 }
 
 message GetItemRequest {
@@ -39,7 +40,7 @@ message GetItemRequest {
 }
 
 message GetItemResponse {
-    string data = 1;
+    repeated Data data = 1;
 }
 
 message GetAllItemsRequest {
@@ -52,24 +53,21 @@ message GetAllItemsResponse {
 
 message Data {
     string id = 1;
-    string data = 2;
+    string val = 2;
+    bytes version = 3;
 }
 
 message UpdateItemRequest {
     string keygroup = 1;
     string id = 2;
-    string data = 3;
+    string val = 3;
+    bytes version = 4;
 }
 
 message AppendItemRequest {
     string keygroup = 1;
     string id = 2;
     string data = 3;
-}
-
-message DeleteItemRequest {
-    string keygroup = 1;
-    string id = 2;
 }
 
 message AddReplicaRequest {

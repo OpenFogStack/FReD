@@ -18,23 +18,23 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ClientClient interface {
-	CreateKeygroup(ctx context.Context, in *CreateKeygroupRequest, opts ...grpc.CallOption) (*StatusResponse, error)
-	DeleteKeygroup(ctx context.Context, in *DeleteKeygroupRequest, opts ...grpc.CallOption) (*StatusResponse, error)
+	CreateKeygroup(ctx context.Context, in *CreateKeygroupRequest, opts ...grpc.CallOption) (*Empty, error)
+	DeleteKeygroup(ctx context.Context, in *DeleteKeygroupRequest, opts ...grpc.CallOption) (*Empty, error)
 	Read(ctx context.Context, in *ReadRequest, opts ...grpc.CallOption) (*ReadResponse, error)
 	Scan(ctx context.Context, in *ScanRequest, opts ...grpc.CallOption) (*ScanResponse, error)
-	Update(ctx context.Context, in *UpdateRequest, opts ...grpc.CallOption) (*StatusResponse, error)
-	Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*StatusResponse, error)
+	Update(ctx context.Context, in *UpdateRequest, opts ...grpc.CallOption) (*UpdateResponse, error)
+	Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*DeleteResponse, error)
 	Append(ctx context.Context, in *AppendRequest, opts ...grpc.CallOption) (*AppendResponse, error)
-	AddReplica(ctx context.Context, in *AddReplicaRequest, opts ...grpc.CallOption) (*StatusResponse, error)
+	AddReplica(ctx context.Context, in *AddReplicaRequest, opts ...grpc.CallOption) (*Empty, error)
 	GetKeygroupReplica(ctx context.Context, in *GetKeygroupReplicaRequest, opts ...grpc.CallOption) (*GetKeygroupReplicaResponse, error)
-	RemoveReplica(ctx context.Context, in *RemoveReplicaRequest, opts ...grpc.CallOption) (*StatusResponse, error)
+	RemoveReplica(ctx context.Context, in *RemoveReplicaRequest, opts ...grpc.CallOption) (*Empty, error)
 	GetReplica(ctx context.Context, in *GetReplicaRequest, opts ...grpc.CallOption) (*GetReplicaResponse, error)
-	GetAllReplica(ctx context.Context, in *GetAllReplicaRequest, opts ...grpc.CallOption) (*GetAllReplicaResponse, error)
+	GetAllReplica(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*GetAllReplicaResponse, error)
 	GetKeygroupTriggers(ctx context.Context, in *GetKeygroupTriggerRequest, opts ...grpc.CallOption) (*GetKeygroupTriggerResponse, error)
-	AddTrigger(ctx context.Context, in *AddTriggerRequest, opts ...grpc.CallOption) (*StatusResponse, error)
-	RemoveTrigger(ctx context.Context, in *RemoveTriggerRequest, opts ...grpc.CallOption) (*StatusResponse, error)
-	AddUser(ctx context.Context, in *UserRequest, opts ...grpc.CallOption) (*StatusResponse, error)
-	RemoveUser(ctx context.Context, in *UserRequest, opts ...grpc.CallOption) (*StatusResponse, error)
+	AddTrigger(ctx context.Context, in *AddTriggerRequest, opts ...grpc.CallOption) (*Empty, error)
+	RemoveTrigger(ctx context.Context, in *RemoveTriggerRequest, opts ...grpc.CallOption) (*Empty, error)
+	AddUser(ctx context.Context, in *AddUserRequest, opts ...grpc.CallOption) (*Empty, error)
+	RemoveUser(ctx context.Context, in *RemoveUserRequest, opts ...grpc.CallOption) (*Empty, error)
 }
 
 type clientClient struct {
@@ -45,8 +45,8 @@ func NewClientClient(cc grpc.ClientConnInterface) ClientClient {
 	return &clientClient{cc}
 }
 
-func (c *clientClient) CreateKeygroup(ctx context.Context, in *CreateKeygroupRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
-	out := new(StatusResponse)
+func (c *clientClient) CreateKeygroup(ctx context.Context, in *CreateKeygroupRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/mcc.fred.client.Client/CreateKeygroup", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -54,8 +54,8 @@ func (c *clientClient) CreateKeygroup(ctx context.Context, in *CreateKeygroupReq
 	return out, nil
 }
 
-func (c *clientClient) DeleteKeygroup(ctx context.Context, in *DeleteKeygroupRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
-	out := new(StatusResponse)
+func (c *clientClient) DeleteKeygroup(ctx context.Context, in *DeleteKeygroupRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/mcc.fred.client.Client/DeleteKeygroup", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -81,8 +81,8 @@ func (c *clientClient) Scan(ctx context.Context, in *ScanRequest, opts ...grpc.C
 	return out, nil
 }
 
-func (c *clientClient) Update(ctx context.Context, in *UpdateRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
-	out := new(StatusResponse)
+func (c *clientClient) Update(ctx context.Context, in *UpdateRequest, opts ...grpc.CallOption) (*UpdateResponse, error) {
+	out := new(UpdateResponse)
 	err := c.cc.Invoke(ctx, "/mcc.fred.client.Client/Update", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -90,8 +90,8 @@ func (c *clientClient) Update(ctx context.Context, in *UpdateRequest, opts ...gr
 	return out, nil
 }
 
-func (c *clientClient) Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
-	out := new(StatusResponse)
+func (c *clientClient) Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*DeleteResponse, error) {
+	out := new(DeleteResponse)
 	err := c.cc.Invoke(ctx, "/mcc.fred.client.Client/Delete", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -108,8 +108,8 @@ func (c *clientClient) Append(ctx context.Context, in *AppendRequest, opts ...gr
 	return out, nil
 }
 
-func (c *clientClient) AddReplica(ctx context.Context, in *AddReplicaRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
-	out := new(StatusResponse)
+func (c *clientClient) AddReplica(ctx context.Context, in *AddReplicaRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/mcc.fred.client.Client/AddReplica", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -126,8 +126,8 @@ func (c *clientClient) GetKeygroupReplica(ctx context.Context, in *GetKeygroupRe
 	return out, nil
 }
 
-func (c *clientClient) RemoveReplica(ctx context.Context, in *RemoveReplicaRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
-	out := new(StatusResponse)
+func (c *clientClient) RemoveReplica(ctx context.Context, in *RemoveReplicaRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/mcc.fred.client.Client/RemoveReplica", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -144,7 +144,7 @@ func (c *clientClient) GetReplica(ctx context.Context, in *GetReplicaRequest, op
 	return out, nil
 }
 
-func (c *clientClient) GetAllReplica(ctx context.Context, in *GetAllReplicaRequest, opts ...grpc.CallOption) (*GetAllReplicaResponse, error) {
+func (c *clientClient) GetAllReplica(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*GetAllReplicaResponse, error) {
 	out := new(GetAllReplicaResponse)
 	err := c.cc.Invoke(ctx, "/mcc.fred.client.Client/GetAllReplica", in, out, opts...)
 	if err != nil {
@@ -162,8 +162,8 @@ func (c *clientClient) GetKeygroupTriggers(ctx context.Context, in *GetKeygroupT
 	return out, nil
 }
 
-func (c *clientClient) AddTrigger(ctx context.Context, in *AddTriggerRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
-	out := new(StatusResponse)
+func (c *clientClient) AddTrigger(ctx context.Context, in *AddTriggerRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/mcc.fred.client.Client/AddTrigger", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -171,8 +171,8 @@ func (c *clientClient) AddTrigger(ctx context.Context, in *AddTriggerRequest, op
 	return out, nil
 }
 
-func (c *clientClient) RemoveTrigger(ctx context.Context, in *RemoveTriggerRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
-	out := new(StatusResponse)
+func (c *clientClient) RemoveTrigger(ctx context.Context, in *RemoveTriggerRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/mcc.fred.client.Client/RemoveTrigger", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -180,8 +180,8 @@ func (c *clientClient) RemoveTrigger(ctx context.Context, in *RemoveTriggerReque
 	return out, nil
 }
 
-func (c *clientClient) AddUser(ctx context.Context, in *UserRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
-	out := new(StatusResponse)
+func (c *clientClient) AddUser(ctx context.Context, in *AddUserRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/mcc.fred.client.Client/AddUser", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -189,8 +189,8 @@ func (c *clientClient) AddUser(ctx context.Context, in *UserRequest, opts ...grp
 	return out, nil
 }
 
-func (c *clientClient) RemoveUser(ctx context.Context, in *UserRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
-	out := new(StatusResponse)
+func (c *clientClient) RemoveUser(ctx context.Context, in *RemoveUserRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/mcc.fred.client.Client/RemoveUser", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -202,33 +202,33 @@ func (c *clientClient) RemoveUser(ctx context.Context, in *UserRequest, opts ...
 // All implementations should embed UnimplementedClientServer
 // for forward compatibility
 type ClientServer interface {
-	CreateKeygroup(context.Context, *CreateKeygroupRequest) (*StatusResponse, error)
-	DeleteKeygroup(context.Context, *DeleteKeygroupRequest) (*StatusResponse, error)
+	CreateKeygroup(context.Context, *CreateKeygroupRequest) (*Empty, error)
+	DeleteKeygroup(context.Context, *DeleteKeygroupRequest) (*Empty, error)
 	Read(context.Context, *ReadRequest) (*ReadResponse, error)
 	Scan(context.Context, *ScanRequest) (*ScanResponse, error)
-	Update(context.Context, *UpdateRequest) (*StatusResponse, error)
-	Delete(context.Context, *DeleteRequest) (*StatusResponse, error)
+	Update(context.Context, *UpdateRequest) (*UpdateResponse, error)
+	Delete(context.Context, *DeleteRequest) (*DeleteResponse, error)
 	Append(context.Context, *AppendRequest) (*AppendResponse, error)
-	AddReplica(context.Context, *AddReplicaRequest) (*StatusResponse, error)
+	AddReplica(context.Context, *AddReplicaRequest) (*Empty, error)
 	GetKeygroupReplica(context.Context, *GetKeygroupReplicaRequest) (*GetKeygroupReplicaResponse, error)
-	RemoveReplica(context.Context, *RemoveReplicaRequest) (*StatusResponse, error)
+	RemoveReplica(context.Context, *RemoveReplicaRequest) (*Empty, error)
 	GetReplica(context.Context, *GetReplicaRequest) (*GetReplicaResponse, error)
-	GetAllReplica(context.Context, *GetAllReplicaRequest) (*GetAllReplicaResponse, error)
+	GetAllReplica(context.Context, *Empty) (*GetAllReplicaResponse, error)
 	GetKeygroupTriggers(context.Context, *GetKeygroupTriggerRequest) (*GetKeygroupTriggerResponse, error)
-	AddTrigger(context.Context, *AddTriggerRequest) (*StatusResponse, error)
-	RemoveTrigger(context.Context, *RemoveTriggerRequest) (*StatusResponse, error)
-	AddUser(context.Context, *UserRequest) (*StatusResponse, error)
-	RemoveUser(context.Context, *UserRequest) (*StatusResponse, error)
+	AddTrigger(context.Context, *AddTriggerRequest) (*Empty, error)
+	RemoveTrigger(context.Context, *RemoveTriggerRequest) (*Empty, error)
+	AddUser(context.Context, *AddUserRequest) (*Empty, error)
+	RemoveUser(context.Context, *RemoveUserRequest) (*Empty, error)
 }
 
 // UnimplementedClientServer should be embedded to have forward compatible implementations.
 type UnimplementedClientServer struct {
 }
 
-func (UnimplementedClientServer) CreateKeygroup(context.Context, *CreateKeygroupRequest) (*StatusResponse, error) {
+func (UnimplementedClientServer) CreateKeygroup(context.Context, *CreateKeygroupRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateKeygroup not implemented")
 }
-func (UnimplementedClientServer) DeleteKeygroup(context.Context, *DeleteKeygroupRequest) (*StatusResponse, error) {
+func (UnimplementedClientServer) DeleteKeygroup(context.Context, *DeleteKeygroupRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteKeygroup not implemented")
 }
 func (UnimplementedClientServer) Read(context.Context, *ReadRequest) (*ReadResponse, error) {
@@ -237,43 +237,43 @@ func (UnimplementedClientServer) Read(context.Context, *ReadRequest) (*ReadRespo
 func (UnimplementedClientServer) Scan(context.Context, *ScanRequest) (*ScanResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Scan not implemented")
 }
-func (UnimplementedClientServer) Update(context.Context, *UpdateRequest) (*StatusResponse, error) {
+func (UnimplementedClientServer) Update(context.Context, *UpdateRequest) (*UpdateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
 }
-func (UnimplementedClientServer) Delete(context.Context, *DeleteRequest) (*StatusResponse, error) {
+func (UnimplementedClientServer) Delete(context.Context, *DeleteRequest) (*DeleteResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
 }
 func (UnimplementedClientServer) Append(context.Context, *AppendRequest) (*AppendResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Append not implemented")
 }
-func (UnimplementedClientServer) AddReplica(context.Context, *AddReplicaRequest) (*StatusResponse, error) {
+func (UnimplementedClientServer) AddReplica(context.Context, *AddReplicaRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddReplica not implemented")
 }
 func (UnimplementedClientServer) GetKeygroupReplica(context.Context, *GetKeygroupReplicaRequest) (*GetKeygroupReplicaResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetKeygroupReplica not implemented")
 }
-func (UnimplementedClientServer) RemoveReplica(context.Context, *RemoveReplicaRequest) (*StatusResponse, error) {
+func (UnimplementedClientServer) RemoveReplica(context.Context, *RemoveReplicaRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveReplica not implemented")
 }
 func (UnimplementedClientServer) GetReplica(context.Context, *GetReplicaRequest) (*GetReplicaResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetReplica not implemented")
 }
-func (UnimplementedClientServer) GetAllReplica(context.Context, *GetAllReplicaRequest) (*GetAllReplicaResponse, error) {
+func (UnimplementedClientServer) GetAllReplica(context.Context, *Empty) (*GetAllReplicaResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAllReplica not implemented")
 }
 func (UnimplementedClientServer) GetKeygroupTriggers(context.Context, *GetKeygroupTriggerRequest) (*GetKeygroupTriggerResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetKeygroupTriggers not implemented")
 }
-func (UnimplementedClientServer) AddTrigger(context.Context, *AddTriggerRequest) (*StatusResponse, error) {
+func (UnimplementedClientServer) AddTrigger(context.Context, *AddTriggerRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddTrigger not implemented")
 }
-func (UnimplementedClientServer) RemoveTrigger(context.Context, *RemoveTriggerRequest) (*StatusResponse, error) {
+func (UnimplementedClientServer) RemoveTrigger(context.Context, *RemoveTriggerRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveTrigger not implemented")
 }
-func (UnimplementedClientServer) AddUser(context.Context, *UserRequest) (*StatusResponse, error) {
+func (UnimplementedClientServer) AddUser(context.Context, *AddUserRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddUser not implemented")
 }
-func (UnimplementedClientServer) RemoveUser(context.Context, *UserRequest) (*StatusResponse, error) {
+func (UnimplementedClientServer) RemoveUser(context.Context, *RemoveUserRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveUser not implemented")
 }
 
@@ -487,7 +487,7 @@ func _Client_GetReplica_Handler(srv interface{}, ctx context.Context, dec func(i
 }
 
 func _Client_GetAllReplica_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetAllReplicaRequest)
+	in := new(Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -499,7 +499,7 @@ func _Client_GetAllReplica_Handler(srv interface{}, ctx context.Context, dec fun
 		FullMethod: "/mcc.fred.client.Client/GetAllReplica",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServer).GetAllReplica(ctx, req.(*GetAllReplicaRequest))
+		return srv.(ClientServer).GetAllReplica(ctx, req.(*Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -559,7 +559,7 @@ func _Client_RemoveTrigger_Handler(srv interface{}, ctx context.Context, dec fun
 }
 
 func _Client_AddUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UserRequest)
+	in := new(AddUserRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -571,13 +571,13 @@ func _Client_AddUser_Handler(srv interface{}, ctx context.Context, dec func(inte
 		FullMethod: "/mcc.fred.client.Client/AddUser",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServer).AddUser(ctx, req.(*UserRequest))
+		return srv.(ClientServer).AddUser(ctx, req.(*AddUserRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Client_RemoveUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UserRequest)
+	in := new(RemoveUserRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -589,7 +589,7 @@ func _Client_RemoveUser_Handler(srv interface{}, ctx context.Context, dec func(i
 		FullMethod: "/mcc.fred.client.Client/RemoveUser",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServer).RemoveUser(ctx, req.(*UserRequest))
+		return srv.(ClientServer).RemoveUser(ctx, req.(*RemoveUserRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

@@ -1,6 +1,7 @@
 package fred
 
 import (
+	"github.com/DistributedClocks/GoVector/govec/vclock"
 	"github.com/go-errors/errors"
 	"github.com/rs/zerolog/log"
 )
@@ -9,12 +10,11 @@ import (
 type Client interface {
 	SendCreateKeygroup(host string, kgname KeygroupName, expiry int) error
 	SendDeleteKeygroup(host string, kgname KeygroupName) error
-	SendUpdate(host string, kgname KeygroupName, id string, value string) error
+	SendUpdate(host string, kgname KeygroupName, id string, value string, tombstoned bool, vvector vclock.VClock) error
 	SendAppend(host string, kgname KeygroupName, id string, value string) error
-	SendDelete(host string, kgname KeygroupName, id string) error
 	SendAddReplica(host string, kgname KeygroupName, node Node, expiry int) error
 	SendRemoveReplica(host string, kgname KeygroupName, node Node) error
-	SendGetItem(host string, kgname KeygroupName, id string) (Item, error)
+	SendGetItem(host string, kgname KeygroupName, id string) ([]Item, error)
 	SendGetAllItems(host string, kgname KeygroupName) ([]Item, error)
 }
 
@@ -172,7 +172,7 @@ func (s *replicationService) relayUpdate(i Item) error {
 		}
 
 		log.Debug().Msgf("RelayUpdate from replservice: sending %#v to %#v", i, addr)
-		if err := s.c.SendUpdate(addr, i.Keygroup, i.ID, i.Val); err != nil {
+		if err := s.c.SendUpdate(addr, i.Keygroup, i.ID, i.Val, i.Tombstoned, i.Version); err != nil {
 			err = s.reportNodeFail(id, i.Keygroup, i.ID)
 
 			if err != nil {
@@ -224,43 +224,6 @@ func (s *replicationService) relayAppend(i Item) error {
 	}
 
 	return nil
-}
-
-// relayDelete handles replication after requests to the Delete endpoint of the client interface.
-func (s *replicationService) relayDelete(i Item) error {
-	log.Debug().Msgf("RelayDelete from replservice: in %#v", i)
-
-	exists, err := s.n.ExistsKeygroup(i.Keygroup)
-	if err != nil {
-		return err
-	}
-	if !exists {
-		err = errors.Errorf("no such keygroup according to NaSe: %#v", i.Keygroup)
-		return err
-	}
-
-	ids, err := s.n.GetKeygroupMembers(i.Keygroup, true)
-
-	for id := range ids {
-		addr, err := s.n.GetNodeAddress(id)
-
-		if err != nil {
-			log.Err(err).Msg("Cannot Get node address from NaSe")
-			return err
-		}
-
-		log.Debug().Msgf("RelayDelete from replservice: sending %#v to %#v", i, addr)
-		if err := s.c.SendDelete(addr, i.Keygroup, i.ID); err != nil {
-
-			err = s.reportNodeFail(id, i.Keygroup, i.ID)
-
-			if err != nil {
-				log.Debug().Msg(err.Error())
-			}
-		}
-	}
-
-	return err
 }
 
 // addReplica handles replication after requests to the AddReplica endpoint. It relays this command if "relay" is set to "true".
@@ -365,10 +328,6 @@ func (s *replicationService) addReplica(k Keygroup, n Node, relay bool) error {
 				return nil
 			}
 
-			if err != nil {
-				return err
-			}
-
 			i, err = s.c.SendGetAllItems(addr, k.Name)
 
 			if err != nil {
@@ -389,7 +348,7 @@ func (s *replicationService) addReplica(k Keygroup, n Node, relay bool) error {
 			// a batch might be better here
 			if mutable {
 				log.Debug().Msgf("AddReplica from replservice: sending %#v to %#v (update)", item, n)
-				if err := s.c.SendUpdate(newNodeAddr, k.Name, item.ID, item.Val); err != nil {
+				if err := s.c.SendUpdate(newNodeAddr, k.Name, item.ID, item.Val, item.Tombstoned, item.Version); err != nil {
 					err = s.reportNodeFail(n.ID, k.Name, item.ID)
 					if err != nil {
 						log.Debug().Msg(err.Error())

@@ -82,7 +82,7 @@ func (c *Client) updateItemSpeed(elapsed time.Duration) {
 	}
 }
 
-func (c *Client) CreateKeygroup(ctx context.Context, keygroup string, mutable bool, expiry int64) (*fredClients.StatusResponse, error) {
+func (c *Client) CreateKeygroup(ctx context.Context, keygroup string, mutable bool, expiry int64) (*fredClients.Empty, error) {
 	res, err := c.Client.CreateKeygroup(ctx, &fredClients.CreateKeygroupRequest{
 		Keygroup: keygroup,
 		Mutable:  mutable,
@@ -91,7 +91,7 @@ func (c *Client) CreateKeygroup(ctx context.Context, keygroup string, mutable bo
 	return res, err
 }
 
-func (c *Client) DeleteKeygroup(ctx context.Context, keygroup string) (*fredClients.StatusResponse, error) {
+func (c *Client) DeleteKeygroup(ctx context.Context, keygroup string) (*fredClients.Empty, error) {
 	res, err := c.Client.DeleteKeygroup(ctx, &fredClients.DeleteKeygroupRequest{Keygroup: keygroup})
 	return res, err
 }
@@ -111,9 +111,9 @@ func (c *Client) Read(ctx context.Context, keygroup string, id string) (*fredCli
 }
 
 // Update also updates the moving average item speed
-func (c *Client) Update(ctx context.Context, keygroup string, id string, data string) (*fredClients.StatusResponse, error) {
+func (c *Client) Update(ctx context.Context, keygroup string, id string, data string) (*fredClients.Empty, error) {
 	start := time.Now()
-	res, err := c.Client.Update(ctx, &fredClients.UpdateRequest{
+	_, err := c.Client.Update(ctx, &fredClients.UpdateRequest{
 		Keygroup: keygroup,
 		Id:       id,
 		Data:     data,
@@ -122,13 +122,13 @@ func (c *Client) Update(ctx context.Context, keygroup string, id string, data st
 		elapsed := time.Since(start)
 		c.updateItemSpeed(elapsed)
 	}
-	return res, err
+	return &fredClients.Empty{}, err
 }
 
 // Delete also updates the moving average item speed
-func (c *Client) Delete(ctx context.Context, keygroup string, id string) (*fredClients.StatusResponse, error) {
+func (c *Client) Delete(ctx context.Context, keygroup string, id string) (*fredClients.Empty, error) {
 	start := time.Now()
-	res, err := c.Client.Delete(ctx, &fredClients.DeleteRequest{
+	_, err := c.Client.Delete(ctx, &fredClients.DeleteRequest{
 		Keygroup: keygroup,
 		Id:       id,
 	})
@@ -136,7 +136,7 @@ func (c *Client) Delete(ctx context.Context, keygroup string, id string) (*fredC
 		elapsed := time.Since(start)
 		c.updateItemSpeed(elapsed)
 	}
-	return res, err
+	return &fredClients.Empty{}, err
 }
 
 // Append also updates the moving average item speed
@@ -153,7 +153,7 @@ func (c *Client) Append(ctx context.Context, keygroup string, data string) (*fre
 	return res, err
 }
 
-func (c *Client) AddReplica(ctx context.Context, keygroup string, nodeID string, expiry int64) (*fredClients.StatusResponse, error) {
+func (c *Client) AddReplica(ctx context.Context, keygroup string, nodeID string, expiry int64) (*fredClients.Empty, error) {
 	res, err := c.Client.AddReplica(ctx, &fredClients.AddReplicaRequest{
 		Keygroup: keygroup,
 		NodeId:   nodeID,
@@ -167,7 +167,7 @@ func (c *Client) GetKeygroupReplica(ctx context.Context, keygroup string) (*fred
 	return res, err
 }
 
-func (c *Client) RemoveReplica(ctx context.Context, keygroup string, nodeID string) (*fredClients.StatusResponse, error) {
+func (c *Client) RemoveReplica(ctx context.Context, keygroup string, nodeID string) (*fredClients.Empty, error) {
 	return c.Client.RemoveReplica(ctx, &fredClients.RemoveReplicaRequest{
 		Keygroup: keygroup,
 		NodeId:   nodeID,
@@ -179,14 +179,14 @@ func (c *Client) GetReplica(ctx context.Context, nodeID string) (*fredClients.Ge
 }
 
 func (c *Client) GetAllReplica(ctx context.Context) (*fredClients.GetAllReplicaResponse, error) {
-	return c.Client.GetAllReplica(ctx, &fredClients.GetAllReplicaRequest{})
+	return c.Client.GetAllReplica(ctx, &fredClients.Empty{})
 }
 
 func (c *Client) GetKeygroupTriggers(ctx context.Context, keygroup string) (*fredClients.GetKeygroupTriggerResponse, error) {
 	return c.Client.GetKeygroupTriggers(ctx, &fredClients.GetKeygroupTriggerRequest{Keygroup: keygroup})
 }
 
-func (c *Client) AddTrigger(ctx context.Context, keygroup string, triggerID string, triggerHost string) (*fredClients.StatusResponse, error) {
+func (c *Client) AddTrigger(ctx context.Context, keygroup string, triggerID string, triggerHost string) (*fredClients.Empty, error) {
 	return c.Client.AddTrigger(ctx, &fredClients.AddTriggerRequest{
 		Keygroup:    keygroup,
 		TriggerId:   triggerID,
@@ -194,23 +194,23 @@ func (c *Client) AddTrigger(ctx context.Context, keygroup string, triggerID stri
 	})
 }
 
-func (c *Client) RemoveTrigger(ctx context.Context, keygroup, triggerID string) (*fredClients.StatusResponse, error) {
+func (c *Client) RemoveTrigger(ctx context.Context, keygroup, triggerID string) (*fredClients.Empty, error) {
 	return c.Client.RemoveTrigger(ctx, &fredClients.RemoveTriggerRequest{
 		Keygroup:  keygroup,
 		TriggerId: triggerID,
 	})
 }
 
-func (c *Client) AddUser(ctx context.Context, user, keygroup string, role fredClients.UserRole) (*fredClients.StatusResponse, error) {
-	return c.Client.AddUser(ctx, &fredClients.UserRequest{
+func (c *Client) AddUser(ctx context.Context, user, keygroup string, role fredClients.UserRole) (*fredClients.Empty, error) {
+	return c.Client.AddUser(ctx, &fredClients.AddUserRequest{
 		User:     user,
 		Keygroup: keygroup,
 		Role:     role,
 	})
 }
 
-func (c *Client) RemoveUser(ctx context.Context, user, keygroup string, role fredClients.UserRole) (*fredClients.StatusResponse, error) {
-	return c.Client.RemoveUser(ctx, &fredClients.UserRequest{
+func (c *Client) RemoveUser(ctx context.Context, user, keygroup string, role fredClients.UserRole) (*fredClients.Empty, error) {
+	return c.Client.RemoveUser(ctx, &fredClients.RemoveUserRequest{
 		User:     user,
 		Keygroup: keygroup,
 		Role:     role,

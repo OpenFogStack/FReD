@@ -1,5 +1,9 @@
 package main
 
+import (
+	"fmt"
+)
+
 type ImmutableSuite struct {
 	c *Config
 }
@@ -24,10 +28,10 @@ func (t *ImmutableSuite) RunTests() {
 	t.c.nodeB.PutItem("log", res, "value-2", true)
 
 	logNodeAction(t.c.nodeB, "Getting updated item from immutable keygroup")
-	respB := t.c.nodeB.GetItem("log", res, false)
+	respB, _ := t.c.nodeB.GetItem("log", res, false)
 
-	if respB != "value1" {
-		logNodeFailure(t.c.nodeB, "resp is value1", respB)
+	if len(respB) != 1 || respB[0] != "value1" {
+		logNodeFailure(t.c.nodeB, "resp is []{\"value1\"}", fmt.Sprintf("%#v", respB))
 	}
 
 	logNodeAction(t.c.nodeB, "Deleting an item in immutable keygroup")

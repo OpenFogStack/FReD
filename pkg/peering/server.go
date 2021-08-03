@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net"
 
+	"git.tu-berlin.de/mcc-fred/fred/pkg/vector"
 	"git.tu-berlin.de/mcc-fred/fred/proto/peering"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
@@ -17,12 +18,12 @@ import (
 
 // Server is a grpc server that let's peers access the internal handler.
 type Server struct {
-	i fred.IntHandler
+	i *fred.IntHandler
 	*grpc.Server
 }
 
 // NewServer creates a new Server for communication to the inthandler from other nodes
-func NewServer(host string, handler fred.IntHandler, certFile string, keyFile string, caFile string) *Server {
+func NewServer(host string, handler *fred.IntHandler, certFile string, keyFile string, caFile string) *Server {
 	if certFile == "" {
 		log.Fatal().Msg("peering server: no certificate file given")
 	}
@@ -114,10 +115,17 @@ func (s *Server) DeleteKeygroup(_ context.Context, request *peering.DeleteKeygro
 // PutItem calls HandleUpdate on the Inthandler
 func (s *Server) PutItem(_ context.Context, request *peering.PutItemRequest) (*peering.Empty, error) {
 	log.Info().Msgf("Peering server has rcvd PutItem. In: %#v", request)
-	err := s.i.HandleUpdate(fred.Item{
+
+	v, err := vector.FromBytes(request.Version)
+
+	if err != nil {
+		return nil, err
+	}
+	err = s.i.HandleUpdate(fred.Item{
 		Keygroup: fred.KeygroupName(request.Keygroup),
 		ID:       request.Id,
-		Val:      request.Data,
+		Val:      request.Val,
+		Version:  v,
 	})
 	if err != nil {
 		return nil, err
@@ -145,7 +153,7 @@ func (s *Server) AppendItem(_ context.Context, request *peering.AppendItemReques
 // GetItem has no implementation
 func (s *Server) GetItem(_ context.Context, request *peering.GetItemRequest) (*peering.GetItemResponse, error) {
 	log.Info().Msgf("Peering server has rcvd GetItem. In: %#v", request)
-	data, err := s.i.HandleGet(fred.Item{
+	items, err := s.i.HandleGet(fred.Item{
 		Keygroup: fred.KeygroupName(request.Keygroup),
 		ID:       request.Id,
 	})
@@ -153,8 +161,19 @@ func (s *Server) GetItem(_ context.Context, request *peering.GetItemRequest) (*p
 	if err != nil {
 		return nil, err
 	}
+
+	data := make([]*peering.Data, len(items))
+
+	for i, item := range items {
+		data[i] = &peering.Data{
+			Id:      item.ID,
+			Val:     item.Val,
+			Version: vector.Bytes(item.Version),
+		}
+	}
+
 	return &peering.GetItemResponse{
-		Data: data.Val,
+		Data: data,
 	}, nil
 }
 
@@ -172,27 +191,15 @@ func (s *Server) GetAllItems(_ context.Context, request *peering.GetAllItemsRequ
 
 	for i, item := range data {
 		d[i] = &peering.Data{
-			Id:   item.ID,
-			Data: item.Val,
+			Id:      item.ID,
+			Val:     item.Val,
+			Version: vector.Bytes(item.Version),
 		}
 	}
 
 	return &peering.GetAllItemsResponse{
 		Data: d,
 	}, nil
-}
-
-// DeleteItem calls this Method on the Inthandler
-func (s *Server) DeleteItem(_ context.Context, request *peering.DeleteItemRequest) (*peering.Empty, error) {
-	log.Info().Msgf("Peering server has rcvd DeleteItem. In: %#v", request)
-	err := s.i.HandleDelete(fred.Item{
-		Keygroup: fred.KeygroupName(request.Keygroup),
-		ID:       request.Id,
-	})
-	if err != nil {
-		return nil, err
-	}
-	return &peering.Empty{}, nil
 }
 
 // AddReplica calls this Method on the Inthandler

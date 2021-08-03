@@ -19,7 +19,7 @@ import (
 //)
 
 func (s *Server) AddUser(ctx context.Context, request *alexandraProto.UserRequest) (*alexandraProto.Empty, error) {
-	_, err := s.clientsMgr.GetClientTo(s.lighthouse).Client.AddUser(ctx, &fredClients.UserRequest{
+	_, err := s.clientsMgr.GetClientTo(s.lighthouse).Client.AddUser(ctx, &fredClients.AddUserRequest{
 		User:     request.User,
 		Keygroup: request.Keygroup,
 		Role:     fredClients.UserRole(request.Role),
@@ -33,7 +33,7 @@ func (s *Server) AddUser(ctx context.Context, request *alexandraProto.UserReques
 }
 
 func (s *Server) RemoveUser(ctx context.Context, request *alexandraProto.UserRequest) (*alexandraProto.Empty, error) {
-	_, err := s.clientsMgr.GetClientTo(s.lighthouse).Client.RemoveUser(ctx, &fredClients.UserRequest{
+	_, err := s.clientsMgr.GetClientTo(s.lighthouse).Client.RemoveUser(ctx, &fredClients.RemoveUserRequest{
 		User:     request.User,
 		Keygroup: request.Keygroup,
 		Role:     fredClients.UserRole(request.Role),

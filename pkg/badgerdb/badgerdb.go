@@ -5,6 +5,8 @@ import (
 	"strings"
 	"time"
 
+	"git.tu-berlin.de/mcc-fred/fred/pkg/vector"
+	"github.com/DistributedClocks/GoVector/govec/vclock"
 	"github.com/dgraph-io/badger/v3"
 	"github.com/go-errors/errors"
 	"github.com/rs/zerolog/log"
@@ -20,9 +22,14 @@ type Storage struct {
 	seq map[string]*badger.Sequence
 }
 
-// makeKeyName creates the internal BadgerDB key given a keygroup name and an id.
-func makeKeyName(kgname string, id string) []byte {
-	return []byte(kgname + sep + id)
+// makeKeyNamePrefix creates the internal BadgerDB key given a keygroup name and an id but without a version vector
+func makeKeyNamePrefix(kgname string, id string) []byte {
+	return []byte(kgname + sep + id + sep)
+}
+
+// makeKeyName creates the internal BadgerDB key given a keygroup name, an id, and a version vector.
+func makeKeyName(kgname string, id string, vvector vclock.VClock) []byte {
+	return append([]byte(kgname+sep+id+sep), vector.Bytes(vvector)...)
 }
 
 // makeKeygroupKeyName creates the internal BadgerDB key given a keygroup name.
@@ -55,12 +62,13 @@ func getTriggerConfigKey(key string) (kg, tid string) {
 }
 
 // getKey returns the keygroup and id of a key.
-func getKey(key string) (kg, id string) {
-	s := strings.Split(key, sep)
+func getKey(key string) (kg, id string, vvector vclock.VClock) {
+	s := strings.SplitN(key, sep, 3)
 	kg = s[0]
 
-	if len(s) == len([]string{"keygroup", "identifier"}) {
+	if len(s) == len([]string{"keygroup", "identifier", "version vector"}) {
 		id = s[1]
+		vvector, _ = vector.FromBytes([]byte(s[2]))
 	}
 
 	return
@@ -81,7 +89,7 @@ func garbageCollection(db *badger.DB) {
 
 // New creates a new BadgerDB Storage on disk.
 func New(dbPath string) (s *Storage) {
-	db, err := badger.Open(badger.DefaultOptions(dbPath))
+	db, err := badger.Open(badger.DefaultOptions(dbPath).WithLoggingLevel(badger.ERROR))
 	if err != nil {
 		panic(err)
 	}
@@ -98,7 +106,7 @@ func New(dbPath string) (s *Storage) {
 
 // NewMemory create a new BadgerDB Storage in memory.
 func NewMemory() (s *Storage) {
-	db, err := badger.Open(badger.DefaultOptions("").WithInMemory(true))
+	db, err := badger.Open(badger.DefaultOptions("").WithInMemory(true).WithLoggingLevel(badger.ERROR))
 	if err != nil {
 		panic(err)
 	}
@@ -119,27 +127,32 @@ func (s *Storage) Close() error {
 }
 
 // Read returns an item with the specified id from the specified keygroup.
-func (s *Storage) Read(kg string, id string) (string, error) {
-	var value string
+func (s *Storage) Read(kg string, id string) ([]string, []vclock.VClock, bool, error) {
+	values := make([]string, 0)
+	vvectors := make([]vclock.VClock, 0)
 
 	err := s.db.View(func(txn *badger.Txn) error {
-		key := makeKeyName(kg, id)
+		prefix := makeKeyNamePrefix(kg, id)
 
-		log.Debug().Msgf("our key is %s (%#v)", string(key), key)
+		opts := badger.DefaultIteratorOptions
+		opts.Prefix = prefix
 
-		item, err := txn.Get(key)
+		it := txn.NewIterator(opts)
+		defer it.Close()
 
-		if err != nil {
-			return err
+		for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
+			item := it.Item()
+			_, _, vvector := getKey(string(item.Key()))
+
+			v, err := item.ValueCopy(nil)
+
+			if err != nil {
+				return err
+			}
+
+			values = append(values, string(v))
+			vvectors = append(vvectors, vvector)
 		}
-
-		val, err := item.ValueCopy(nil)
-
-		if err != nil {
-			return err
-		}
-
-		value = string(val)
 
 		return nil
 	})
@@ -147,23 +160,28 @@ func (s *Storage) Read(kg string, id string) (string, error) {
 	if err != nil {
 		// if the error is a "KeyNotFound", there is no need to add a stacktrace
 		if errors.Is(err, badger.ErrKeyNotFound) {
-			return "", errors.Errorf("key not found in database: %s in keygroup %s", id, kg)
+			return nil, nil, false, nil
 		}
 		// if we have a different error, debug with full stacktrace
-		return "", errors.New(err)
+		return nil, nil, false, errors.New(err)
 	}
 
-	return value, nil
+	if len(values) == 0 {
+		return nil, nil, false, nil
+	}
+
+	return values, vvectors, true, nil
 
 }
 
 // ReadSome returns count number of items in the specified keygroup starting at id.
-func (s *Storage) ReadSome(kg, id string, count uint64) (map[string]string, error) {
-	items := make(map[string]string)
+func (s *Storage) ReadSome(kg, id string, count uint64) (map[string][]string, map[string][]vclock.VClock, error) {
+	items := make(map[string][]string)
+	vvectors := make(map[string][]vclock.VClock)
 
 	err := s.db.View(func(txn *badger.Txn) error {
 		prefix := makeKeygroupKeyName(kg)
-		start := makeKeyName(kg, id)
+		start := makeKeyNamePrefix(kg, id)
 
 		opts := badger.DefaultIteratorOptions
 		opts.Prefix = prefix
@@ -174,7 +192,7 @@ func (s *Storage) ReadSome(kg, id string, count uint64) (map[string]string, erro
 		var i uint64
 		for it.Seek(start); it.ValidForPrefix(prefix) && i < count; it.Next() {
 			item := it.Item()
-			_, key := getKey(string(item.Key()))
+			_, key, vvector := getKey(string(item.Key()))
 
 			v, err := item.ValueCopy(nil)
 
@@ -182,7 +200,13 @@ func (s *Storage) ReadSome(kg, id string, count uint64) (map[string]string, erro
 				return err
 			}
 
-			items[key] = string(v)
+			if _, ok := items[key]; ok {
+				items[key] = append(items[key], string(v))
+				continue
+			}
+
+			items[key] = []string{string(v)}
+			vvectors[key] = []vclock.VClock{vvector}
 			i++
 		}
 
@@ -190,15 +214,16 @@ func (s *Storage) ReadSome(kg, id string, count uint64) (map[string]string, erro
 	})
 
 	if err != nil {
-		return nil, errors.New(err)
+		return nil, nil, errors.New(err)
 	}
 
-	return items, nil
+	return items, vvectors, nil
 }
 
 // ReadAll returns all items in the specified keygroup.
-func (s *Storage) ReadAll(kg string) (map[string]string, error) {
-	items := make(map[string]string)
+func (s *Storage) ReadAll(kg string) (map[string][]string, map[string][]vclock.VClock, error) {
+	items := make(map[string][]string)
+	vvectors := make(map[string][]vclock.VClock)
 
 	err := s.db.View(func(txn *badger.Txn) error {
 		prefix := makeKeygroupKeyName(kg)
@@ -211,7 +236,7 @@ func (s *Storage) ReadAll(kg string) (map[string]string, error) {
 
 		for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
 			item := it.Item()
-			_, key := getKey(string(item.Key()))
+			_, key, vvector := getKey(string(item.Key()))
 
 			v, err := item.ValueCopy(nil)
 
@@ -219,17 +244,23 @@ func (s *Storage) ReadAll(kg string) (map[string]string, error) {
 				return err
 			}
 
-			items[key] = string(v)
+			if _, ok := items[key]; ok {
+				items[key] = append(items[key], string(v))
+				continue
+			}
+
+			items[key] = []string{string(v)}
+			vvectors[key] = []vclock.VClock{vvector}
 		}
 
 		return nil
 	})
 
 	if err != nil {
-		return nil, errors.New(err)
+		return nil, nil, errors.New(err)
 	}
 
-	return items, nil
+	return items, vvectors, nil
 }
 
 // IDs returns the keys of all items in the specified keygroup.
@@ -248,7 +279,11 @@ func (s *Storage) IDs(kg string) ([]string, error) {
 
 		for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
 			item := it.Item()
-			_, key := getKey(string(item.Key()))
+			_, key, _ := getKey(string(item.Key()))
+
+			if len(items) > 0 && key == items[len(items)-1] {
+				continue
+			}
 
 			items = append(items, key)
 		}
@@ -263,7 +298,7 @@ func (s *Storage) IDs(kg string) ([]string, error) {
 }
 
 // Update updates the item with the specified id in the specified keygroup.
-func (s *Storage) Update(kg, id, val string, append bool, expiry int) error {
+func (s *Storage) Update(kg, id, val string, append bool, expiry int, vvector vclock.VClock) error {
 
 	if append {
 		// make sure that we have our local sequence on point
@@ -279,7 +314,7 @@ func (s *Storage) Update(kg, id, val string, append bool, expiry int) error {
 	}
 
 	err := s.db.Update(func(txn *badger.Txn) error {
-		key := makeKeyName(kg, id)
+		key := makeKeyName(kg, id, vvector)
 
 		if expiry > 0 {
 			err := txn.SetEntry(&badger.Entry{
@@ -308,22 +343,64 @@ func (s *Storage) Update(kg, id, val string, append bool, expiry int) error {
 	return nil
 }
 
-// Delete deletes the item with the specified id from the specified keygroup.
-func (s *Storage) Delete(kg string, id string) error {
-	err := s.db.Update(func(txn *badger.Txn) error {
-		err := txn.Delete(makeKeyName(kg, id))
+// Delete deletes the item with the specified id from the specified keygroup. Will delete a specific version or all versions if vvector is nil.
+func (s *Storage) Delete(kg string, id string, vvector vclock.VClock) error {
+	if vvector != nil {
+		err := s.db.Update(func(txn *badger.Txn) error {
+			err := txn.Delete(makeKeyName(kg, id, vvector))
+			if err != nil {
+				return err
+			}
+			return nil
+
+		})
+
 		if err != nil {
-			return err
+			// if the error is a "KeyNotFound", there is no need to add a stacktrace
+			if errors.Is(err, badger.ErrKeyNotFound) {
+				return errors.Errorf("key not found in database: %s in keygroup %s", id, kg)
+			}
+			// if we have a different error, debug with full stacktrace
+			return errors.New(err)
+		}
+
+		return nil
+	}
+
+	var ids []string
+
+	err := s.db.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.PrefetchValues = false
+		it := txn.NewIterator(opts)
+		defer it.Close()
+
+		prefix := makeKeyNamePrefix(kg, id)
+
+		for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
+			ids = append(ids, string(it.Item().Key()))
 		}
 		return nil
 	})
 
 	if err != nil {
-		// if the error is a "KeyNotFound", there is no need to add a stacktrace
-		if errors.Is(err, badger.ErrKeyNotFound) {
-			return errors.Errorf("key not found in database: %s in keygroup %s", id, kg)
+		return errors.New(err)
+	}
+
+	// then, delete all the keys
+	wb := s.db.NewWriteBatch()
+	defer wb.Cancel()
+
+	for _, d := range ids {
+		err := wb.Delete([]byte(d)) // Will create txns as needed.
+
+		if err != nil {
+			return errors.New(err)
 		}
-		// if we have a different error, debug with full stacktrace
+	}
+	err = wb.Flush() // Wait for all txns to finish.
+
+	if err != nil {
 		return errors.New(err)
 	}
 
@@ -346,7 +423,7 @@ func (s *Storage) Append(kg, val string, expiry int) (string, error) {
 	log.Debug().Msgf("append got next ID: %s", id)
 
 	err = s.db.Update(func(txn *badger.Txn) error {
-		key := makeKeyName(kg, id)
+		key := makeKeyName(kg, id, vclock.VClock{})
 
 		if expiry > 0 {
 			err := txn.SetEntry(&badger.Entry{
@@ -374,7 +451,6 @@ func (s *Storage) Append(kg, val string, expiry int) (string, error) {
 
 	return id, nil
 }
-
 func (s *Storage) incrementSequence(kg string) (uint64, error) {
 	seq, ok := s.seq[kg]
 
@@ -401,9 +477,19 @@ func (s *Storage) incrementSequence(kg string) (uint64, error) {
 // Exists checks if the given data item exists in the badgerdb database.
 func (s *Storage) Exists(kg string, id string) bool {
 	err := s.db.View(func(txn *badger.Txn) error {
-		_, err := txn.Get(makeKeyName(kg, id))
+		prefix := makeKeyNamePrefix(kg, id)
 
-		return err
+		opts := badger.DefaultIteratorOptions
+		opts.Prefix = prefix
+
+		it := txn.NewIterator(opts)
+		defer it.Close()
+		it.Seek(prefix)
+		if it.ValidForPrefix(prefix) {
+			return nil
+		}
+
+		return badger.ErrKeyNotFound
 	})
 
 	if err == nil {
@@ -482,7 +568,7 @@ func (s *Storage) DeleteKeygroup(kg string) error {
 	// first, get all the ids in this keygroup (including the marker that the keygroup exists)
 	// why is this a string? well, it was a [][]byte before, but for some reason the underlying byte array would be
 	// overwritten with older keys in the unit tests, that was really strange
-	// so not it's an array of strings, which are immutable
+	// so now it's an array of strings, which are immutable
 	var ids []string
 
 	err = s.db.View(func(txn *badger.Txn) error {
@@ -620,9 +706,9 @@ func (s *Storage) GetKeygroupTrigger(kg string) (map[string]string, error) {
 
 		for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
 			item := it.Item()
-			_, key := getTriggerConfigKey(string(item.Key()))
+			_, tid := getTriggerConfigKey(string(item.Key()))
 
-			if key == "" {
+			if tid == "" {
 				continue
 			}
 
@@ -632,7 +718,7 @@ func (s *Storage) GetKeygroupTrigger(kg string) (map[string]string, error) {
 				return err
 			}
 
-			items[key] = string(v)
+			items[tid] = string(v)
 		}
 
 		return nil

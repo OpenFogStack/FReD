@@ -18,6 +18,10 @@ func checkItem(params ...Item) error {
 		if !reg.MatchString(p.ID) {
 			return errors.Errorf("checkItem failed for item %#v because the ID does not match %s", p, expr)
 		}
+
+		if !p.Tombstoned && len(p.Val) == 0 {
+			return errors.Errorf("checkItem failed for item %#v because it is empty", p)
+		}
 	}
 
 	return nil
