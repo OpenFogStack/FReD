@@ -33,7 +33,7 @@ func TestMain(m *testing.M) {
 
 	ctx := context.Background()
 	req := testcontainers.ContainerRequest{
-		Image:        "amazon/dynamodb-local:latest",
+		Image:        "amazon/dynamodb-local@sha256:bdd26570dc0e0ae49e1ea9d49ff662a6a1afe9121dd25793dc40d02802e7e806",
 		Cmd:          []string{"-jar", "DynamoDBLocal.jar", "-inMemory"},
 		ExposedPorts: []string{"8000/tcp"},
 		//BindMounts:   map[string]string{"8000": "8000"},
@@ -70,10 +70,12 @@ func TestMain(m *testing.M) {
 		log.Fatal().Msg(err.Error())
 	}
 
-	sess := session.Must(session.NewSession(&aws.Config{
-		Endpoint: aws.String(fmt.Sprintf("http://%s:%s", ip, port)),
-		Region:   aws.String("eu-central-1"),
-	}))
+	sess := session.Must(
+		session.NewSession(
+			aws.NewConfig().
+				WithEndpoint(fmt.Sprintf("http://%s:%s", ip, port)).
+				WithRegion("eu-central-1").
+				WithCredentialsChainVerboseErrors(true)))
 
 	svc := dynamodb.New(sess)
 
