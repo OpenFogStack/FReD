@@ -11,6 +11,7 @@ import (
 	"github.com/DistributedClocks/GoVector/govec/vclock"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	dynamoDBTypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/rs/zerolog"
@@ -35,7 +36,7 @@ func TestMain(m *testing.M) {
 
 	ctx := context.Background()
 	req := testcontainers.ContainerRequest{
-		Image:        "amazon/dynamodb-local:latest",
+		Image:        "amazon/dynamodb-local@sha256:bdd26570dc0e0ae49e1ea9d49ff662a6a1afe9121dd25793dc40d02802e7e806",
 		Cmd:          []string{"-jar", "DynamoDBLocal.jar", "-inMemory"},
 		ExposedPorts: []string{"8000/tcp"},
 		//BindMounts:   map[string]string{"8000": "8000"},
@@ -79,6 +80,8 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatal().Msg(err.Error())
 	}
+
+	cfg.Credentials = credentials.NewStaticCredentialsProvider("TEST_KEY", "TEST_SECRET", "")
 
 	svc := dynamodb.New(dynamodb.Options{
 		Region:           cfg.Region,

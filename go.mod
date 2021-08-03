@@ -6,6 +6,7 @@ require (
 	github.com/DistributedClocks/GoVector v0.0.0-20210402100930-db949c81a0af
 	github.com/aws/aws-sdk-go-v2 v1.7.1
 	github.com/aws/aws-sdk-go-v2/config v1.5.0
+	github.com/aws/aws-sdk-go-v2/credentials v1.3.1
 	github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression v1.1.3
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.4.1
 	github.com/aws/smithy-go v1.6.0
