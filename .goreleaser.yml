@@ -43,32 +43,47 @@ dockers:
       - FReD
     goos: linux
     goarch: amd64
+    dockerfile: Dockerfile
     image_templates:
       - "git.tu-berlin.de:5000/mcc-fred/fred:{{ .Tag }}"
       - "git.tu-berlin.de:5000/mcc-fred/fred:v{{ .Major }}"
       - "git.tu-berlin.de:5000/mcc-fred/fred:v{{ .Major }}.{{ .Minor }}"
       - "git.tu-berlin.de:5000/mcc-fred/fred:latest"
     extra_files:
-      - .
+      - pkg/
+      - cmd/
+      - proto/
+      - go.mod
+      - go.sum
   - ids:
       - FReD Proxy
     goos: linux
     goarch: amd64
+    dockerfile: proxy.Dockerfile
     image_templates:
       - "git.tu-berlin.de:5000/mcc-fred/fredproxy:{{ .Tag }}"
       - "git.tu-berlin.de:5000/mcc-fred/fredproxy:v{{ .Major }}"
       - "git.tu-berlin.de:5000/mcc-fred/fredproxy:v{{ .Major }}.{{ .Minor }}"
       - "git.tu-berlin.de:5000/mcc-fred/fredproxy:latest"
     extra_files:
-      - .
+      - pkg/
+      - cmd/
+      - proto/
+      - go.mod
+      - go.sum
   - ids:
       - ALeXANDRA
     goos: linux
     goarch: amd64
+    dockerfile: alexandra.Dockerfile
     image_templates:
       - "git.tu-berlin.de:5000/mcc-fred/alexandra:{{ .Tag }}"
       - "git.tu-berlin.de:5000/mcc-fred/alexandra:v{{ .Major }}"
       - "git.tu-berlin.de:5000/mcc-fred/alexandra:v{{ .Major }}.{{ .Minor }}"
       - "git.tu-berlin.de:5000/mcc-fred/alexandra:latest"
     extra_files:
-      - .
+      - pkg/
+      - cmd/
+      - proto/
+      - go.mod
+      - go.sum
