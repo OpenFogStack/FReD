@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/rs/zerolog"
@@ -75,6 +76,7 @@ func TestMain(m *testing.M) {
 			aws.NewConfig().
 				WithEndpoint(fmt.Sprintf("http://%s:%s", ip, port)).
 				WithRegion("eu-central-1").
+				WithCredentials(credentials.NewStaticCredentials("AKID", "SECRET_KEY", "TOKEN")).
 				WithCredentialsChainVerboseErrors(true)))
 
 	svc := dynamodb.New(sess)
