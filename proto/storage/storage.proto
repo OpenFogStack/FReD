@@ -4,72 +4,146 @@ package mcc.fred.storage;
 option go_package = ".;storage";
 
 service Database {
-	  rpc Update (UpdateItem) returns (Response) {}
-    rpc Delete (Key) returns (Response) {}
-    rpc Append (AppendItem) returns (Key) {}
-    rpc Read (Key) returns (Val) {}
-    rpc Scan (ScanRequest) returns (stream Item) {}
-    rpc ReadAll (Keygroup) returns (stream Item) {}
-    rpc IDs (Keygroup) returns (stream Key) {}
-    rpc Exists (Key) returns (Response) {}
-    rpc CreateKeygroup (Keygroup) returns (Response) {}
-    rpc DeleteKeygroup (Keygroup) returns (Response) {}
-    rpc ExistsKeygroup (Keygroup) returns (Response) {}
-    rpc AddKeygroupTrigger (KeygroupTrigger) returns (Response) {}
-    rpc DeleteKeygroupTrigger (KeygroupTrigger) returns (Response) {}
-    rpc GetKeygroupTrigger (Keygroup) returns (stream Trigger) {}
+    rpc Update (UpdateRequest) returns (UpdateResponse) {}
+    rpc Delete (DeleteRequest) returns (DeleteResponse) {}
+    rpc Append (AppendRequest) returns (AppendResponse) {}
+    rpc Read (ReadRequest) returns (ReadResponse) {}
+    rpc Scan (ScanRequest) returns (ScanResponse) {}
+    rpc ReadAll (ReadAllRequest) returns (ReadAllResponse) {}
+    rpc IDs (IDsRequest) returns (IDsResponse) {}
+    rpc Exists (ExistsRequest) returns (ExistsResponse) {}
+    rpc CreateKeygroup (CreateKeygroupRequest) returns (CreateKeygroupResponse) {}
+    rpc DeleteKeygroup (DeleteKeygroupRequest) returns (DeleteKeygroupResponse) {}
+    rpc ExistsKeygroup (ExistsKeygroupRequest) returns (ExistsKeygroupResponse) {}
+    rpc AddKeygroupTrigger (AddKeygroupTriggerRequest) returns (AddKeygroupTriggerResponse) {}
+    rpc DeleteKeygroupTrigger (DeleteKeygroupTriggerRequest) returns (DeleteKeygroupTriggerResponse) {}
+    rpc GetKeygroupTrigger (GetKeygroupTriggerRequest) returns (GetKeygroupTriggerResponse) {}
 }
 
 message Item {
     string keygroup = 1;
     string id = 2;
     string val = 3;
+    map<string, uint64> version = 4;
 }
 
-message ScanRequest {
-    Key key = 1;
-    uint64 count = 2;
-}
-
-message UpdateItem {
+message UpdateRequest {
     string keygroup = 1;
     string id = 2;
     string val = 3;
     bool append = 4;
     int64 expiry = 5;
+    map<string, uint64> version = 6;
 }
 
-message AppendItem {
+message UpdateResponse{}
+
+message DeleteRequest{
+    string keygroup = 1;
+    string id = 2;
+    map<string, uint64> version = 5;
+}
+
+message DeleteResponse{}
+
+message AppendRequest{
     string keygroup = 1;
     string val = 2;
     int64 expiry = 3;
 }
 
-message Trigger {
-    string id = 1;
-    string host = 2;
+message AppendResponse{
+    string key = 1;
 }
 
-// A Key uniquely identifies data. In our case it contains a keygroup and the id
-message Key {
+message ReadRequest {
     string keygroup = 1;
     string id = 2;
 }
 
-message Val {
-    string val = 1;
+message ReadResponse{
+    repeated Item items = 1;
 }
 
-message Keygroup {
+message ScanRequest {
+    string keygroup = 1;
+    string start = 2;
+    uint64 count = 3;
+}
+
+message ScanResponse{
+    repeated Item items = 1;
+}
+
+message ReadAllRequest{
     string keygroup = 1;
 }
 
-message KeygroupTrigger {
-    string keygroup = 1;
-    Trigger trigger = 2;
+message ReadAllResponse{
+    repeated Item items = 1;
 }
 
-message Response {
-    bool success = 1;
-    string message = 2;
+message IDsRequest{
+    string keygroup = 1;
+}
+
+message IDsResponse{
+    repeated string ids = 1;
+}
+
+message ExistsRequest{
+    string keygroup = 1;
+    string id = 2;
+}
+
+message ExistsResponse{
+    bool exists = 1;
+}
+
+message CreateKeygroupRequest{
+    string keygroup = 1;
+}
+
+message CreateKeygroupResponse{}
+
+message DeleteKeygroupRequest{
+    string keygroup = 1;
+}
+
+message DeleteKeygroupResponse{}
+
+message ExistsKeygroupRequest{
+    string keygroup = 1;
+}
+
+message ExistsKeygroupResponse{
+    bool exists = 1;
+}
+
+message AddKeygroupTriggerRequest{
+    string keygroup = 1;
+    string id = 2;
+    string host = 3;
+}
+
+message AddKeygroupTriggerResponse{}
+
+message DeleteKeygroupTriggerRequest{
+    string keygroup = 1;
+    string id = 2;
+}
+
+message DeleteKeygroupTriggerResponse{}
+
+message GetKeygroupTriggerRequest{
+    string keygroup = 1;
+}
+
+message GetKeygroupTriggerResponse{
+    repeated Trigger triggers = 1;
+}
+
+message Trigger {
+    string id = 1;
+    string host = 2;
 }

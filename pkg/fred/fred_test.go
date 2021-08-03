@@ -10,6 +10,7 @@ import (
 	"git.tu-berlin.de/mcc-fred/fred/pkg/etcdnase"
 	"git.tu-berlin.de/mcc-fred/fred/pkg/fred"
 	"git.tu-berlin.de/mcc-fred/fred/pkg/peering"
+	"github.com/DistributedClocks/GoVector/govec/vclock"
 	"github.com/go-errors/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -34,7 +35,8 @@ func TestMain(m *testing.M) {
 		},
 	)
 
-	zerolog.SetGlobalLevel(zerolog.FatalLevel)
+	zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+	//zerolog.SetGlobalLevel(zerolog.DebugLevel)
 
 	fInfo, err := os.Stat(etcdDir)
 
@@ -120,33 +122,34 @@ func TestMain(m *testing.M) {
 	os.Exit(stat)
 }
 
-func testPut(t *testing.T, user, kg, id, value string) {
+func testPut(t *testing.T, user string, kg fred.KeygroupName, id string, value string) {
 	err := f.E.HandleCreateKeygroup(user, fred.Keygroup{
-		Name:    fred.KeygroupName(kg),
+		Name:    kg,
 		Mutable: true,
 		Expiry:  0,
 	})
 
 	assert.NoError(t, err)
 
-	err = f.E.HandleUpdate(user, fred.Item{
-		Keygroup: fred.KeygroupName(kg),
+	_, err = f.E.HandleUpdate(user, fred.Item{
+		Keygroup: kg,
 		ID:       id,
 		Val:      value,
-	})
+	}, nil)
 
 	assert.NoError(t, err)
 
-	i, err := f.E.HandleRead(user, fred.Item{
-		Keygroup: fred.KeygroupName(kg),
+	items, err := f.E.HandleRead(user, fred.Item{
+		Keygroup: kg,
 		ID:       id,
-	})
+	}, nil)
 
 	assert.NoError(t, err)
 
-	assert.Equal(t, kg, string(i.Keygroup))
-	assert.Equal(t, id, i.ID)
-	assert.Equal(t, value, i.Val)
+	assert.Len(t, items, 1)
+	assert.Equal(t, kg, items[0].Keygroup)
+	assert.Equal(t, id, items[0].ID)
+	assert.Equal(t, value, items[0].Val)
 }
 
 func TestPut(t *testing.T) {
@@ -157,34 +160,34 @@ func TestPut(t *testing.T) {
 	testPut(t, "user", "testkg5", "id", "value")
 }
 
-func testDelete(t *testing.T, user, kg, id, value string) {
+func testDelete(t *testing.T, user string, kg fred.KeygroupName, id string, value string) {
 	err := f.E.HandleCreateKeygroup(user, fred.Keygroup{
-		Name:    fred.KeygroupName(kg),
+		Name:    kg,
 		Mutable: true,
 		Expiry:  0,
 	})
 
 	assert.NoError(t, err)
 
-	err = f.E.HandleUpdate(user, fred.Item{
-		Keygroup: fred.KeygroupName(kg),
+	_, err = f.E.HandleUpdate(user, fred.Item{
+		Keygroup: kg,
 		ID:       id,
 		Val:      value,
-	})
+	}, nil)
 
 	assert.NoError(t, err)
 
-	err = f.E.HandleDelete(user, fred.Item{
-		Keygroup: fred.KeygroupName(kg),
+	_, err = f.E.HandleDelete(user, fred.Item{
+		Keygroup: kg,
 		ID:       id,
-	})
+	}, nil)
 
 	assert.NoError(t, err)
 
 	_, err = f.E.HandleRead(user, fred.Item{
-		Keygroup: fred.KeygroupName(kg),
+		Keygroup: kg,
 		ID:       id,
-	})
+	}, nil)
 
 	assert.Error(t, err)
 }
@@ -197,32 +200,33 @@ func TestDelete(t *testing.T) {
 	testDelete(t, "user", "testdelete5", "id", "value")
 }
 
-func testMisformedKVInput(t *testing.T, user, kg, id, value string) {
+func testMisformedKVInput(t *testing.T, user string, kg fred.KeygroupName, id string, value string) {
 	err := f.E.HandleCreateKeygroup(user, fred.Keygroup{
-		Name:    fred.KeygroupName(kg),
+		Name:    kg,
 		Mutable: true,
 		Expiry:  0,
 	})
 
 	assert.NoError(t, err)
 
-	err = f.E.HandleUpdate(user, fred.Item{
-		Keygroup: fred.KeygroupName(kg),
+	_, err = f.E.HandleUpdate(user, fred.Item{
+		Keygroup: kg,
 		ID:       id,
 		Val:      value,
-	})
+	}, nil)
 
 	assert.Error(t, err)
 }
 
 func TestMisformedKVInput(t *testing.T) {
-	testMisformedKVInput(t, "user", "misformed", "id(", "value")
-	testMisformedKVInput(t, "user", "misformed2", "id(", "value=")
+	testMisformedKVInput(t, "user", "misformed0", "id(", "value")
+	testMisformedKVInput(t, "user", "misformed1", "id(", "value=")
+	testMisformedKVInput(t, "user", "misformed2", "id", "")
 }
 
-func testMisformedKeygroupInput(t *testing.T, user, kg, id, value string) {
+func testMisformedKeygroupInput(t *testing.T, user string, kg fred.KeygroupName, id string, value string) {
 	err := f.E.HandleCreateKeygroup(user, fred.Keygroup{
-		Name:    fred.KeygroupName(kg),
+		Name:    kg,
 		Mutable: true,
 		Expiry:  0,
 	})
@@ -237,11 +241,11 @@ func TestMisformedKeygroupInput(t *testing.T) {
 	testMisformedKeygroupInput(t, "use|r", "misf|ormed", "id|", "val|ue")
 }
 
-func testScan(t *testing.T, user string, kg string, mutable bool, updates int, scanStart int, scanRange int) {
+func testScan(t *testing.T, user string, kg fred.KeygroupName, mutable bool, updates int, scanStart int, scanRange int) {
 
 	// 1. create a keygroup
 	err := f.E.HandleCreateKeygroup(user, fred.Keygroup{
-		Name:    fred.KeygroupName(kg),
+		Name:    kg,
 		Mutable: mutable,
 		Expiry:  0,
 	})
@@ -250,7 +254,7 @@ func testScan(t *testing.T, user string, kg string, mutable bool, updates int, s
 
 	defer func() {
 		err := f.E.HandleDeleteKeygroup(user, fred.Keygroup{
-			Name: fred.KeygroupName(kg),
+			Name: kg,
 		})
 
 		assert.NoError(t, err)
@@ -264,15 +268,15 @@ func testScan(t *testing.T, user string, kg string, mutable bool, updates int, s
 		vals[i] = "val" + strconv.Itoa(i)
 		if mutable {
 			ids[i] = "id" + strconv.Itoa(i)
-			err := f.E.HandleUpdate(user, fred.Item{
-				Keygroup: fred.KeygroupName(kg),
+			_, err = f.E.HandleUpdate(user, fred.Item{
+				Keygroup: kg,
 				ID:       ids[i],
 				Val:      vals[i],
-			})
+			}, nil)
 			assert.NoError(t, err)
 		} else {
 			item, err := f.E.HandleAppend(user, fred.Item{
-				Keygroup: fred.KeygroupName(kg),
+				Keygroup: kg,
 				Val:      vals[i],
 			})
 
@@ -294,7 +298,7 @@ func testScan(t *testing.T, user string, kg string, mutable bool, updates int, s
 	}
 
 	items, err := f.E.HandleScan(user, fred.Item{
-		Keygroup: fred.KeygroupName(kg),
+		Keygroup: kg,
 		ID:       startKey,
 	}, uint64(scanRange))
 
@@ -353,83 +357,206 @@ func TestScan(t *testing.T) {
 func TestPermissions(t *testing.T) {
 	user1 := "user1"
 	user2 := "user2"
-	kg := "permissiontest"
+	var kg fred.KeygroupName = "permissiontest"
 
 	err := f.E.HandleCreateKeygroup(user1, fred.Keygroup{
-		Name:    fred.KeygroupName(kg),
+		Name:    kg,
 		Mutable: true,
 		Expiry:  0,
 	})
 
 	assert.NoError(t, err)
 
-	err = f.E.HandleUpdate(user1, fred.Item{
-		Keygroup: fred.KeygroupName(kg),
+	_, err = f.E.HandleUpdate(user1, fred.Item{
+		Keygroup: kg,
 		ID:       "id",
 		Val:      "value",
-	})
+	}, nil)
 
 	assert.NoError(t, err)
 
-	err = f.E.HandleUpdate(user2, fred.Item{
-		Keygroup: fred.KeygroupName(kg),
+	_, err = f.E.HandleUpdate(user2, fred.Item{
+		Keygroup: kg,
 		ID:       "id2",
 		Val:      "value2",
-	})
+	}, nil)
 
 	assert.Error(t, err)
 
 	_, err = f.E.HandleRead(user2, fred.Item{
-		Keygroup: fred.KeygroupName(kg),
+		Keygroup: kg,
 		ID:       "id",
-	})
+	}, nil)
 
 	assert.Error(t, err)
 
-	err = f.E.HandleAddUser(user1, user2, fred.Keygroup{Name: fred.KeygroupName(kg)}, fred.ConfigureKeygroups)
+	err = f.E.HandleAddUser(user1, user2, fred.Keygroup{Name: kg}, fred.ConfigureKeygroups)
 
 	assert.NoError(t, err)
 
 	_, err = f.E.HandleRead(user2, fred.Item{
-		Keygroup: fred.KeygroupName(kg),
+		Keygroup: kg,
 		ID:       "id",
-	})
+	}, nil)
 
 	assert.Error(t, err)
 
-	err = f.E.HandleAddUser(user1, user2, fred.Keygroup{Name: fred.KeygroupName(kg)}, fred.ReadKeygroup)
+	err = f.E.HandleAddUser(user1, user2, fred.Keygroup{Name: kg}, fred.ReadKeygroup)
 
 	assert.NoError(t, err)
 
 	i, err := f.E.HandleRead(user2, fred.Item{
-		Keygroup: fred.KeygroupName(kg),
+		Keygroup: kg,
 		ID:       "id",
-	})
+	}, nil)
 
 	assert.NoError(t, err)
 
-	assert.Equal(t, kg, string(i.Keygroup))
-	assert.Equal(t, "id", i.ID)
-	assert.Equal(t, "value", i.Val)
+	assert.Len(t, i, 1)
+	assert.Equal(t, kg, i[0].Keygroup)
+	assert.Equal(t, "id", i[0].ID)
+	assert.Equal(t, "value", i[0].Val)
 
-	err = f.E.HandleUpdate(user2, fred.Item{
-		Keygroup: fred.KeygroupName(kg),
+	_, err = f.E.HandleUpdate(user2, fred.Item{
+		Keygroup: kg,
 		ID:       "id2",
 		Val:      "value2",
-	})
+	}, nil)
 
 	assert.Error(t, err)
 
-	err = f.E.HandleRemoveUser(user2, user1, fred.Keygroup{Name: fred.KeygroupName(kg)}, fred.ReadKeygroup)
+	err = f.E.HandleRemoveUser(user2, user1, fred.Keygroup{Name: kg}, fred.ReadKeygroup)
 
 	assert.NoError(t, err)
 
-	i, err = f.E.HandleRead(user1, fred.Item{
-		Keygroup: fred.KeygroupName(kg),
+	_, err = f.E.HandleRead(user1, fred.Item{
+		Keygroup: kg,
 		ID:       "id",
-	})
+	}, nil)
 
 	assert.Error(t, err)
+}
+
+func TestVersioning(t *testing.T) {
+	user := "user"
+	var kg fred.KeygroupName = "versioningtest"
+
+	err := f.E.HandleCreateKeygroup(user, fred.Keygroup{
+		Name:    kg,
+		Mutable: true,
+		Expiry:  0,
+	})
+
+	assert.NoError(t, err)
+	for i := 0; i < 10; i++ {
+		_, err = f.E.HandleUpdate(user, fred.Item{
+			Keygroup: kg,
+			ID:       "item",
+			Val:      "val" + strconv.Itoa(i),
+		}, nil)
+
+		assert.NoError(t, err)
+	}
+
+	items, err := f.E.HandleRead(user, fred.Item{
+		Keygroup: kg,
+		ID:       "item",
+	}, nil)
+
+	assert.NoError(t, err)
+
+	// we now expect version of item to be 10 for this node
+	assert.Len(t, items, 1)
+	assert.Equal(t, uint64(10), items[0].Version[string(nodeID)])
+
+	// now update this version with a given vector clock
+	v, err := f.E.HandleUpdate(user, fred.Item{
+		Keygroup: kg,
+		ID:       "item",
+		Val:      "val10",
+	}, []vclock.VClock{items[0].Version})
+
+	assert.NoError(t, err)
+	assert.Equal(t, uint64(11), v.Version[string(nodeID)])
+
+	// try to update an old version
+	old := items[0].Version
+	old.Set(string(nodeID), 1)
+	_, err = f.E.HandleUpdate(user, fred.Item{
+		Keygroup: kg,
+		ID:       "item",
+		Val:      "val10",
+	}, []vclock.VClock{old})
+
+	assert.Error(t, err)
+
+	// try to delete the current version
+	// now update this version with a given vector clock
+	v, err = f.E.HandleDelete(user, fred.Item{
+		Keygroup: kg,
+		ID:       "item",
+		Val:      "val10",
+	}, []vclock.VClock{v.Version})
+
+	assert.NoError(t, err)
+	assert.Equal(t, uint64(12), v.Version[string(nodeID)])
+}
+
+func testConcurrentVersioning(t *testing.T, user string, kg fred.KeygroupName, numProc int, numUpdates int) {
+	err := f.E.HandleCreateKeygroup(user, fred.Keygroup{
+		Name:    kg,
+		Mutable: true,
+		Expiry:  0,
+	})
+
+	assert.NoError(t, err)
+
+	vals := make(chan string, numProc*numUpdates)
+
+	for i := 0; i < numProc; i++ {
+		x := i
+		go func() {
+			for j := 0; j < numUpdates; j++ {
+				val := "val" + strconv.Itoa(x) + "-" + strconv.Itoa(j)
+				_, err := f.E.HandleUpdate(user, fred.Item{
+					Keygroup: kg,
+					ID:       "item",
+					Val:      val,
+				}, nil)
+
+				vals <- val
+
+				assert.NoError(t, err)
+			}
+		}()
+	}
+
+	for i := 0; i < (numProc*numUpdates)-1; i++ {
+		<-vals
+	}
+
+	lastVal := <-vals
+
+	items, err := f.E.HandleRead(user, fred.Item{
+		Keygroup: kg,
+		ID:       "item",
+	}, nil)
+
+	assert.NoError(t, err)
+
+	assert.Len(t, items, 1)
+	assert.Equal(t, lastVal, items[0].Val)
+	assert.Equal(t, uint64(numUpdates*numProc), items[0].Version[string(nodeID)])
+}
+
+func TestConcurrentVersioning(t *testing.T) {
+	testConcurrentVersioning(t, "user", "concurrentversioningtest0", 2, 10)
+	testConcurrentVersioning(t, "user", "concurrentversioningtest1", 1, 10)
+	testConcurrentVersioning(t, "user", "concurrentversioningtest2", 10, 10)
+	testConcurrentVersioning(t, "user", "concurrentversioningtest3", 10, 100)
+	// these tests essentially do the same thing but they're a bit too much for our CI
+	//testConcurrentVersioning(t, "user", "concurrentversioningtest4", 100, 100)
+	//testConcurrentVersioning(t, "user", "concurrentversioningtest5", 10000, 10)
 }
 
 func TestAllReplicas(t *testing.T) {
@@ -476,6 +603,110 @@ func TestKeygroupReplicas(t *testing.T) {
 	assert.Equal(t, expiries[nodes[0].ID], 0)
 }
 
+func TestDistributedVersioning(t *testing.T) {
+	user := "user"
+	var kg fred.KeygroupName = "distributedversioning1"
+	othernode := "Y"
+
+	// create a keygroup
+	err := f.E.HandleCreateKeygroup(user, fred.Keygroup{
+		Name:    kg,
+		Mutable: true,
+		Expiry:  0,
+	})
+
+	assert.NoError(t, err)
+
+	// create an item
+
+	vX, err := f.E.HandleUpdate(user, fred.Item{
+		Keygroup: kg,
+		ID:       "Item1",
+		Val:      "val1",
+	}, nil)
+
+	assert.NoError(t, err)
+	expectedVX := vclock.VClock{}
+	expectedVX.Tick(string(nodeID))
+
+	assert.True(t, vX.Version.Compare(expectedVX, vclock.Equal))
+
+	// addVersion from different "node"
+
+	vY := vclock.VClock{}
+	vY.Tick(othernode)
+
+	err = f.I.HandleUpdate(fred.Item{
+		Keygroup: kg,
+		ID:       "Item1",
+		Val:      "val2",
+		Version:  vY.Copy(),
+	})
+
+	assert.NoError(t, err)
+
+	// read -> expect both versions
+
+	items, err := f.E.HandleRead(user, fred.Item{
+		Keygroup: kg,
+		ID:       "Item1",
+	}, nil)
+
+	assert.NoError(t, err)
+	assert.Len(t, items, 2)
+	assert.True(t, (items[0].Version.Compare(expectedVX, vclock.Equal) && items[1].Version.Compare(vY, vclock.Equal)) || (items[1].Version.Compare(expectedVX, vclock.Equal) && items[0].Version.Compare(vY, vclock.Equal)))
+
+	// addVersion from different node but with descendant version
+
+	vY.Merge(expectedVX)
+	vY.Tick(othernode)
+
+	err = f.I.HandleUpdate(fred.Item{
+		Keygroup: kg,
+		ID:       "Item1",
+		Val:      "val3",
+		Version:  vY.Copy(),
+	})
+
+	assert.NoError(t, err)
+
+	// read -> expect one version
+
+	items, err = f.E.HandleRead(user, fred.Item{
+		Keygroup: kg,
+		ID:       "Item1",
+	}, nil)
+
+	assert.NoError(t, err)
+	assert.Len(t, items, 1)
+	assert.True(t, items[0].Version.Compare(vY, vclock.Equal))
+	assert.Equal(t, "val3", items[0].Val)
+
+	// delete item with old version -> shouldn't work
+
+	_, err = f.E.HandleDelete(user, fred.Item{
+		Keygroup: kg,
+		ID:       "Item1",
+	}, []vclock.VClock{expectedVX.Copy()})
+
+	assert.Error(t, err)
+
+	// delete item with new descendant version
+
+	vY.Tick(othernode)
+
+	item, err := f.E.HandleDelete(user, fred.Item{
+		Keygroup: kg,
+		ID:       "Item1",
+	}, []vclock.VClock{vY.Copy()})
+
+	expectedVX = vY.Copy()
+	expectedVX.Tick(string(nodeID))
+
+	assert.NoError(t, err)
+	assert.True(t, item.Version.Compare(expectedVX, vclock.Equal))
+}
+
 func TestTriggers(t *testing.T) {
 	user := "user1"
 	var kg fred.KeygroupName = "triggerkeygroup"
@@ -498,7 +729,6 @@ func TestTriggers(t *testing.T) {
 	})
 
 	assert.NoError(t, err)
-
 	err = f.E.HandleAddTrigger(user, fred.Keygroup{
 		Name: kg,
 	}, fred.Trigger{
@@ -554,17 +784,16 @@ func TestInternalPut(t *testing.T) {
 	})
 
 	assert.NoError(t, err)
-
 	i, err := f.I.HandleGet(fred.Item{
 		Keygroup: kg,
 		ID:       id,
 	})
 
 	assert.NoError(t, err)
-
-	assert.Equal(t, kg, i.Keygroup)
-	assert.Equal(t, id, i.ID)
-	assert.Equal(t, val, i.Val)
+	assert.Len(t, i, 1)
+	assert.Equal(t, kg, i[0].Keygroup)
+	assert.Equal(t, id, i[0].ID)
+	assert.Equal(t, val, i[0].Val)
 
 	items, err := f.I.HandleGetAllItems(fred.Keygroup{
 		Name: kg,
@@ -590,11 +819,11 @@ func TestInternalDelete(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	err = f.E.HandleUpdate("user", fred.Item{
+	i, err := f.E.HandleUpdate("user", fred.Item{
 		Keygroup: kg,
 		ID:       id,
 		Val:      val,
-	})
+	}, nil)
 
 	assert.NoError(t, err)
 
@@ -602,12 +831,16 @@ func TestInternalDelete(t *testing.T) {
 		Name: kg,
 	})
 
+	version := i.Version.Copy()
+	version.Tick("Y")
 	assert.NoError(t, err)
 	assert.Len(t, items, 1)
 
-	err = f.I.HandleDelete(fred.Item{
-		Keygroup: kg,
-		ID:       id,
+	err = f.I.HandleUpdate(fred.Item{
+		Keygroup:   kg,
+		ID:         id,
+		Version:    version,
+		Tombstoned: true,
 	})
 
 	assert.NoError(t, err)
@@ -617,7 +850,10 @@ func TestInternalDelete(t *testing.T) {
 	})
 
 	assert.NoError(t, err)
-	assert.Len(t, items, 0)
+	assert.Len(t, items, 1)
+	assert.Equal(t, kg, items[0].Keygroup)
+	assert.Equal(t, id, items[0].ID)
+	assert.True(t, items[0].Tombstoned)
 }
 
 func TestInternalAppend(t *testing.T) {
@@ -641,18 +877,18 @@ func TestInternalAppend(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	i, err := f.I.HandleGet(fred.Item{
+	items, err := f.I.HandleGet(fred.Item{
 		Keygroup: kg,
 		ID:       id,
 	})
 
 	assert.NoError(t, err)
+	assert.Len(t, items, 1)
+	assert.Equal(t, kg, items[0].Keygroup)
+	assert.Equal(t, id, items[0].ID)
+	assert.Equal(t, val, items[0].Val)
 
-	assert.Equal(t, kg, i.Keygroup)
-	assert.Equal(t, id, i.ID)
-	assert.Equal(t, val, i.Val)
-
-	items, err := f.I.HandleGetAllItems(fred.Keygroup{
+	items, err = f.I.HandleGetAllItems(fred.Keygroup{
 		Name: kg,
 	})
 
@@ -662,7 +898,7 @@ func TestInternalAppend(t *testing.T) {
 	assert.Equal(t, id, items[0].ID)
 	assert.Equal(t, val, items[0].Val)
 
-	i, err = f.E.HandleAppend("user", fred.Item{
+	i, err := f.E.HandleAppend("user", fred.Item{
 		Keygroup: kg,
 		Val:      "value2",
 	})
@@ -675,12 +911,12 @@ func TestInternalAppend(t *testing.T) {
 
 func BenchmarkPut(b *testing.B) {
 	user := "user"
-	kg := "benchmarkPut"
+	var kg fred.KeygroupName = "benchmarkPut"
 	id := "benchmarkItem"
 	value := "benchmarkVal"
 
 	err := f.E.HandleCreateKeygroup(user, fred.Keygroup{
-		Name:    fred.KeygroupName(kg),
+		Name:    kg,
 		Mutable: true,
 		Expiry:  0,
 	})
@@ -688,17 +924,17 @@ func BenchmarkPut(b *testing.B) {
 	assert.NoError(b, err)
 
 	for i := 0; i < b.N; i++ {
-		err = f.E.HandleUpdate(user, fred.Item{
-			Keygroup: fred.KeygroupName(kg),
+		_, err = f.E.HandleUpdate(user, fred.Item{
+			Keygroup: kg,
 			ID:       id,
 			Val:      value,
-		})
+		}, nil)
 
 		assert.NoError(b, err)
 	}
 
 	err = f.E.HandleDeleteKeygroup(user, fred.Keygroup{
-		Name: fred.KeygroupName(kg),
+		Name: kg,
 	})
 
 	assert.NoError(b, err)
@@ -706,37 +942,37 @@ func BenchmarkPut(b *testing.B) {
 
 func BenchmarkGet(b *testing.B) {
 	user := "user"
-	kg := "benchmarkGet"
+	var kg fred.KeygroupName = "benchmarkGet"
 	id := "benchmarkItem"
 	value := "benchmarkVal"
 
 	err := f.E.HandleCreateKeygroup(user, fred.Keygroup{
-		Name:    fred.KeygroupName(kg),
+		Name:    kg,
 		Mutable: true,
 		Expiry:  0,
 	})
 
 	assert.NoError(b, err)
 
-	err = f.E.HandleUpdate(user, fred.Item{
-		Keygroup: fred.KeygroupName(kg),
+	_, err = f.E.HandleUpdate(user, fred.Item{
+		Keygroup: kg,
 		ID:       id,
 		Val:      value,
-	})
+	}, nil)
 
 	assert.NoError(b, err)
 
 	for i := 0; i < b.N; i++ {
 		_, err := f.E.HandleRead(user, fred.Item{
-			Keygroup: fred.KeygroupName(kg),
+			Keygroup: kg,
 			ID:       id,
-		})
+		}, nil)
 
 		assert.NoError(b, err)
 	}
 
 	err = f.E.HandleDeleteKeygroup(user, fred.Keygroup{
-		Name: fred.KeygroupName(kg),
+		Name: kg,
 	})
 
 	assert.NoError(b, err)
@@ -744,11 +980,11 @@ func BenchmarkGet(b *testing.B) {
 
 func BenchmarkAppend(b *testing.B) {
 	user := "user"
-	kg := "benchmarkAppend"
+	var kg fred.KeygroupName = "benchmarkAppend"
 	value := "benchmarkVal"
 
 	err := f.E.HandleCreateKeygroup(user, fred.Keygroup{
-		Name:    fred.KeygroupName(kg),
+		Name:    kg,
 		Mutable: false,
 		Expiry:  0,
 	})
@@ -757,7 +993,7 @@ func BenchmarkAppend(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		_, err = f.E.HandleAppend(user, fred.Item{
-			Keygroup: fred.KeygroupName(kg),
+			Keygroup: kg,
 			Val:      value,
 		})
 
@@ -765,7 +1001,7 @@ func BenchmarkAppend(b *testing.B) {
 	}
 
 	err = f.E.HandleDeleteKeygroup(user, fred.Keygroup{
-		Name: fred.KeygroupName(kg),
+		Name: kg,
 	})
 
 	assert.NoError(b, err)

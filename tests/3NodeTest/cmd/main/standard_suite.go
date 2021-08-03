@@ -21,8 +21,8 @@ func (t *StandardSuite) RunTests() {
 	logNodeAction(t.c.nodeA, "Deleting keygroup testing")
 	t.c.nodeA.DeleteKeygroup("testing", false)
 
-	logNodeAction(t.c.nodeA, "Deleting nonexistent keygroup")
-	t.c.nodeA.DeleteKeygroup("trololololo", true)
+	logNodeAction(t.c.nodeB, "Deleting nonexistent keygroup")
+	t.c.nodeB.DeleteKeygroup("trololololo", true)
 
 	logNodeAction(t.c.nodeA, "Creating Keygroup KG1")
 	t.c.nodeA.CreateKeygroup("KG1", true, 0, false)
@@ -33,10 +33,10 @@ func (t *StandardSuite) RunTests() {
 
 	logNodeAction(t.c.nodeA, "Getting the value in KG1")
 
-	resp := t.c.nodeA.GetItem("KG1", "KG1Item", false)
+	vals, _ := t.c.nodeA.GetItem("KG1", "KG1Item", false)
 
-	if resp != "KG1Value" {
-		logNodeFailure(t.c.nodeA, "resp is \"KG1Value\"", resp)
+	if len(vals) != 1 || vals[0] != "KG1Value" {
+		logNodeFailure(t.c.nodeA, "resp is \"KG1Value\"", vals[0])
 	}
 
 	logNodeAction(t.c.nodeA, "Getting a Value from a nonexistent keygroup")
@@ -49,9 +49,9 @@ func (t *StandardSuite) RunTests() {
 	t.c.nodeA.PutItem("KG1", "KG1Item", "KG1Value2", false)
 
 	logNodeAction(t.c.nodeA, "Getting the value in KG1")
-	resp = t.c.nodeA.GetItem("KG1", "KG1Item", false)
-	if resp != "KG1Value2" {
-		logNodeFailure(t.c.nodeA, "resp is \"KG1Value2\"", resp)
+	vals, _ = t.c.nodeA.GetItem("KG1", "KG1Item", false)
+	if len(vals) != 1 || vals[0] != "KG1Value2" {
+		logNodeFailure(t.c.nodeA, "resp is \"KG1Value2\"", vals[0])
 	}
 
 	// test scanning
@@ -62,12 +62,12 @@ func (t *StandardSuite) RunTests() {
 	scanRange := 10
 	// 2. put in a bunch of items
 	ids := make([]string, numItems)
-	vals := make([]string, numItems)
+	data := make([]string, numItems)
 
 	for i := 0; i < 20; i++ {
-		vals[i] = "val" + strconv.Itoa(i)
+		data[i] = "val" + strconv.Itoa(i)
 		ids[i] = "id" + strconv.Itoa(i)
-		t.c.nodeA.PutItem("scantest", ids[i], vals[i], false)
+		t.c.nodeA.PutItem("scantest", ids[i], data[i], false)
 	}
 
 	// 3. do a scan read
@@ -91,8 +91,8 @@ func (t *StandardSuite) RunTests() {
 			logNodeFailure(t.c.nodeA, fmt.Sprintf("%s is in returned items", ids[i]), fmt.Sprintf("%s is not in returned items", ids[i]))
 			continue
 		}
-		if val != vals[i] {
-			logNodeFailure(t.c.nodeA, fmt.Sprintf("item %s is %s", ids[i], vals[i]), fmt.Sprintf("item %s is %s", ids[i], items[ids[i]]))
+		if val != data[i] {
+			logNodeFailure(t.c.nodeA, fmt.Sprintf("item %s is %s", ids[i], data[i]), fmt.Sprintf("item %s is %s", ids[i], items[ids[i]]))
 			continue
 		}
 	}

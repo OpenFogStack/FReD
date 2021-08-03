@@ -22,37 +22,25 @@ type Trigger struct {
 type triggerService struct {
 	tc *credentials.TransportCredentials
 	s  *storeService
+	c  map[string]trigger.TriggerNodeClient
 }
 
-func (t *triggerService) getConnAndClient(host string) (client trigger.TriggerNodeClient, conn *grpc.ClientConn) {
+func (t *triggerService) getClient(host string) (trigger.TriggerNodeClient, error) {
+	if client, ok := t.c[host]; ok {
+		return client, nil
+	}
+
 	conn, err := grpc.Dial(host, grpc.WithTransportCredentials(*t.tc))
+
 	if err != nil {
-		log.Fatal().Err(err).Msg("Cannot create Grpc connection")
-		return nil, nil
+		log.Error().Err(err).Msg("Cannot create Grpc connection")
+		return nil, err
 	}
+
 	log.Debug().Msgf("Interclient: Created Connection to %s", host)
-	client = trigger.NewTriggerNodeClient(conn)
-	return
-}
 
-// logs the response and returns the correct error message
-func dealWithStatusResponse(res *trigger.TriggerResponse, err error, from string) error {
-	if res != nil {
-		log.Debug().Msgf("Interclient got Response from %s, Status %s with Message %s and Error %s", from, res.Status, res.ErrorMessage, err)
-	} else {
-		log.Debug().Msgf("Interclient got empty Response from %s", from)
-	}
-
-	if err != nil || res == nil {
-		return err
-	}
-
-	if res.Status == trigger.EnumTriggerStatus_TRIGGER_ERROR {
-		return errors.New(res.ErrorMessage)
-	}
-
-	return nil
-
+	t.c[host] = trigger.NewTriggerNodeClient(conn)
+	return t.c[host], nil
 }
 
 func newTriggerService(s *storeService, certFile string, keyFile string, caFiles []string) *triggerService {
@@ -92,6 +80,7 @@ func newTriggerService(s *storeService, certFile string, keyFile string, caFiles
 	return &triggerService{
 		tc: &tc,
 		s:  s,
+		c:  make(map[string]trigger.TriggerNodeClient),
 	}
 }
 
@@ -105,19 +94,15 @@ func (t *triggerService) triggerDelete(i Item) (e error) {
 	}
 
 	for _, node := range nodes {
-		client, conn := t.getConnAndClient(node.Host)
-		res, err := client.DeleteItemTrigger(context.Background(), &trigger.DeleteItemTriggerRequest{
+		client, err := t.getClient(node.Host)
+		if err != nil {
+			e = errors.Errorf("%#v %#v", e, err)
+			continue
+		}
+		_, err = client.DeleteItemTrigger(context.Background(), &trigger.DeleteItemTriggerRequest{
 			Keygroup: string(i.Keygroup),
 			Id:       i.ID,
 		})
-
-		err = dealWithStatusResponse(res, err, "TriggerDelete")
-
-		if err != nil {
-			e = errors.Errorf("%#v %#v", e, err)
-		}
-
-		err = conn.Close()
 
 		if err != nil {
 			e = errors.Errorf("%#v %#v", e, err)
@@ -133,28 +118,32 @@ func (t *triggerService) triggerUpdate(i Item) (e error) {
 	nodes, err := t.s.getKeygroupTrigger(i.Keygroup)
 
 	if err != nil {
+		log.Error().Msgf("error in triggerUpdate: %s", err.Error())
 		return err
 	}
 
 	for _, node := range nodes {
-		client, conn := t.getConnAndClient(node.Host)
-		res, err := client.PutItemTrigger(context.Background(), &trigger.PutItemTriggerRequest{
+		log.Debug().Msgf("triggerUpdate: updating %s %s", node.ID, node.Host)
+		client, err := t.getClient(node.Host)
+		if err != nil {
+			log.Error().Msgf("error in triggerUpdate: %s", err.Error())
+			e = errors.Errorf("%#v\n%s", e, err.Error())
+			continue
+		}
+		_, err = client.PutItemTrigger(context.Background(), &trigger.PutItemTriggerRequest{
 			Keygroup: string(i.Keygroup),
 			Id:       i.ID,
 			Val:      i.Val,
 		})
 
-		err = dealWithStatusResponse(res, err, "TriggerUpdate")
-
 		if err != nil {
-			e = errors.Errorf("%#v %#v", e, err)
+			log.Error().Msgf("error in triggerUpdate: %s", err.Error())
+			e = errors.Errorf("%#v\n%s", e, err.Error())
 		}
+	}
 
-		err = conn.Close()
-
-		if err != nil {
-			e = errors.Errorf("%#v %#v", e, err)
-		}
+	if e != nil {
+		log.Error().Msgf("error in triggerUpdate: %s", e.Error())
 	}
 
 	return e

@@ -91,7 +91,7 @@ func (m *ClientsMgr) ReadFromAnywhere(ctx context.Context, request *alexandraPro
 		} else {
 			log.Debug().Msgf("Reading from client returned data: %#v", res)
 			if !responsesClosed {
-				responses <- readResponse{error: false, data: res.Data}
+				responses <- readResponse{error: false, data: res.Data[0].Val}
 			}
 		}
 	}
@@ -156,5 +156,5 @@ func (m *ClientsMgr) ReadFromAnywhere(ctx context.Context, request *alexandraPro
 		return nil, fmt.Errorf("ReadFromAnywhere: cannot read from fastest client. err=%v", err)
 	}
 
-	return &alexandraProto.ReadResponse{Data: result.Data}, nil
+	return &alexandraProto.ReadResponse{Data: result.Data[0].Val}, nil
 }

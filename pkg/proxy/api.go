@@ -173,7 +173,7 @@ func (a *APIProxy) addUserHeader(ctx context.Context) (context.Context, error) {
 }
 
 // CreateKeygroup calls this method on the exthandler
-func (a *APIProxy) CreateKeygroup(ctx context.Context, req *client.CreateKeygroupRequest) (*client.StatusResponse, error) {
+func (a *APIProxy) CreateKeygroup(ctx context.Context, req *client.CreateKeygroupRequest) (*client.Empty, error) {
 
 	c, err := a.getConn(req.Keygroup)
 
@@ -190,7 +190,7 @@ func (a *APIProxy) CreateKeygroup(ctx context.Context, req *client.CreateKeygrou
 }
 
 // DeleteKeygroup calls this method on the exthandler
-func (a *APIProxy) DeleteKeygroup(ctx context.Context, req *client.DeleteKeygroupRequest) (*client.StatusResponse, error) {
+func (a *APIProxy) DeleteKeygroup(ctx context.Context, req *client.DeleteKeygroupRequest) (*client.Empty, error) {
 
 	c, err := a.getConn(req.Keygroup)
 
@@ -258,7 +258,7 @@ func (a *APIProxy) Append(ctx context.Context, req *client.AppendRequest) (*clie
 }
 
 // Update calls this method on the exthandler
-func (a *APIProxy) Update(ctx context.Context, req *client.UpdateRequest) (*client.StatusResponse, error) {
+func (a *APIProxy) Update(ctx context.Context, req *client.UpdateRequest) (*client.UpdateResponse, error) {
 
 	c, err := a.getConn(req.Keygroup)
 
@@ -275,7 +275,7 @@ func (a *APIProxy) Update(ctx context.Context, req *client.UpdateRequest) (*clie
 }
 
 // Delete calls this method on the exthandler
-func (a *APIProxy) Delete(ctx context.Context, req *client.DeleteRequest) (*client.StatusResponse, error) {
+func (a *APIProxy) Delete(ctx context.Context, req *client.DeleteRequest) (*client.DeleteResponse, error) {
 
 	c, err := a.getConn(req.Keygroup)
 
@@ -292,7 +292,7 @@ func (a *APIProxy) Delete(ctx context.Context, req *client.DeleteRequest) (*clie
 }
 
 // AddReplica calls this method on the exthandler
-func (a *APIProxy) AddReplica(ctx context.Context, req *client.AddReplicaRequest) (*client.StatusResponse, error) {
+func (a *APIProxy) AddReplica(ctx context.Context, req *client.AddReplicaRequest) (*client.Empty, error) {
 
 	c, err := a.getConn(req.Keygroup)
 
@@ -325,7 +325,7 @@ func (a *APIProxy) GetKeygroupReplica(ctx context.Context, req *client.GetKeygro
 }
 
 // RemoveReplica calls this method on the exthandler
-func (a *APIProxy) RemoveReplica(ctx context.Context, req *client.RemoveReplicaRequest) (*client.StatusResponse, error) {
+func (a *APIProxy) RemoveReplica(ctx context.Context, req *client.RemoveReplicaRequest) (*client.Empty, error) {
 	c, err := a.getConn(req.Keygroup)
 
 	if err != nil {
@@ -357,7 +357,7 @@ func (a *APIProxy) GetReplica(ctx context.Context, req *client.GetReplicaRequest
 }
 
 // GetAllReplica calls this method on the exthandler
-func (a *APIProxy) GetAllReplica(ctx context.Context, req *client.GetAllReplicaRequest) (*client.GetAllReplicaResponse, error) {
+func (a *APIProxy) GetAllReplica(ctx context.Context, req *client.Empty) (*client.GetAllReplicaResponse, error) {
 	c, err := a.getAny()
 
 	if err != nil {
@@ -389,7 +389,7 @@ func (a *APIProxy) GetKeygroupTriggers(ctx context.Context, req *client.GetKeygr
 }
 
 // AddTrigger calls this method on the exthandler
-func (a *APIProxy) AddTrigger(ctx context.Context, req *client.AddTriggerRequest) (*client.StatusResponse, error) {
+func (a *APIProxy) AddTrigger(ctx context.Context, req *client.AddTriggerRequest) (*client.Empty, error) {
 	c, err := a.getConn(req.Keygroup)
 
 	if err != nil {
@@ -405,7 +405,7 @@ func (a *APIProxy) AddTrigger(ctx context.Context, req *client.AddTriggerRequest
 }
 
 // RemoveTrigger calls this method on the exthandler
-func (a *APIProxy) RemoveTrigger(ctx context.Context, req *client.RemoveTriggerRequest) (*client.StatusResponse, error) {
+func (a *APIProxy) RemoveTrigger(ctx context.Context, req *client.RemoveTriggerRequest) (*client.Empty, error) {
 	c, err := a.getConn(req.Keygroup)
 
 	if err != nil {
@@ -421,7 +421,7 @@ func (a *APIProxy) RemoveTrigger(ctx context.Context, req *client.RemoveTriggerR
 }
 
 // AddUser calls this method on the exthandler
-func (a *APIProxy) AddUser(ctx context.Context, req *client.UserRequest) (*client.StatusResponse, error) {
+func (a *APIProxy) AddUser(ctx context.Context, req *client.AddUserRequest) (*client.Empty, error) {
 	c, err := a.getConn(req.Keygroup)
 
 	if err != nil {
@@ -437,7 +437,7 @@ func (a *APIProxy) AddUser(ctx context.Context, req *client.UserRequest) (*clien
 }
 
 // RemoveUser calls this method on the exthandler
-func (a *APIProxy) RemoveUser(ctx context.Context, req *client.UserRequest) (*client.StatusResponse, error) {
+func (a *APIProxy) RemoveUser(ctx context.Context, req *client.RemoveUserRequest) (*client.Empty, error) {
 	c, err := a.getConn(req.Keygroup)
 
 	if err != nil {

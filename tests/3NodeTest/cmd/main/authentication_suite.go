@@ -1,5 +1,9 @@
 package main
 
+import (
+	"strconv"
+)
+
 type AuthenticationSuite struct {
 	c *Config
 }
@@ -21,8 +25,12 @@ func (t *AuthenticationSuite) RunTests() {
 
 	logNodeAction(t.c.nodeA, "try to read with little client -> should work")
 
-	if val := t.c.littleClient.GetItem("rbactest", "item1", false); val != "value1" {
-		logNodeFailure(t.c.nodeA, "value1", val)
+	if val, _ := t.c.littleClient.GetItem("rbactest", "item1", false); len(val) == 0 || val[0] != "value1" {
+		if len(val) == 0 {
+			logNodeFailure(t.c.nodeA, "1 return value", "0 return values")
+		} else {
+			logNodeFailure(t.c.nodeA, "value1", val[0])
+		}
 	}
 
 	logNodeAction(t.c.nodeA, "try to write with little client -> should not work")
@@ -40,9 +48,11 @@ func (t *AuthenticationSuite) RunTests() {
 	// TODO: delay is caused by etcd taking some time to inform watcher to invalidate cache
 	// time.Sleep(100 * time.Second)
 	logNodeAction(t.c.nodeA, "try to read from keygroup with little client -> should not work")
-	if val := t.c.littleClient.GetItem("rbactest", "item1", true); val != "" {
-		logNodeFailure(t.c.nodeA, "", val)
+
+	if val, _ := t.c.littleClient.GetItem("rbactest", "item1", true); len(val) != 0 {
+		logNodeFailure(t.c.nodeA, "0 return values", strconv.Itoa(len(val))+" return values")
 	}
+
 }
 
 func NewAuthenticationSuite(c *Config) *AuthenticationSuite {

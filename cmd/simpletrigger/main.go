@@ -34,7 +34,7 @@ type Server struct {
 }
 
 // PutItemTrigger calls HandleUpdate on the Inthandler
-func (s *Server) PutItemTrigger(_ context.Context, request *trigger.PutItemTriggerRequest) (*trigger.TriggerResponse, error) {
+func (s *Server) PutItemTrigger(_ context.Context, request *trigger.PutItemTriggerRequest) (*trigger.Empty, error) {
 	log.Debug().Msgf("Trigger Node has rcvd PutItem. In: %#v", request)
 
 	s.log = append(s.log, LogEntry{
@@ -44,11 +44,11 @@ func (s *Server) PutItemTrigger(_ context.Context, request *trigger.PutItemTrigg
 		Val: request.Val,
 	})
 
-	return &trigger.TriggerResponse{Status: trigger.EnumTriggerStatus_TRIGGER_OK}, nil
+	return &trigger.Empty{}, nil
 }
 
 // DeleteItemTrigger calls this Method on the Inthandler
-func (s *Server) DeleteItemTrigger(_ context.Context, request *trigger.DeleteItemTriggerRequest) (*trigger.TriggerResponse, error) {
+func (s *Server) DeleteItemTrigger(_ context.Context, request *trigger.DeleteItemTriggerRequest) (*trigger.Empty, error) {
 	log.Debug().Msgf("Trigger Node has rcvd DeleteItem. In: %#v", request)
 
 	s.log = append(s.log, LogEntry{
@@ -57,7 +57,7 @@ func (s *Server) DeleteItemTrigger(_ context.Context, request *trigger.DeleteIte
 		ID: request.Id,
 	})
 
-	return &trigger.TriggerResponse{Status: trigger.EnumTriggerStatus_TRIGGER_OK}, nil
+	return &trigger.Empty{}, nil
 }
 
 func startServer(cert string, key string, ca string, host string, wsHost string) {
@@ -129,7 +129,7 @@ func main() {
 
 	host := flag.String("host", ":3333", "Host for the server to listen to")
 	wsHost := flag.String("wshost", ":80", "Host for the server to listen to")
-	loglevel := flag.String("loglevel", "dev", "dev=>pretty, prod=>json")
+	loghandler := flag.String("log-handler", "dev", "dev=>pretty, prod=>json")
 	cert := flag.String("cert", "", "certificate file for grpc server")
 	key := flag.String("key", "", "key file for grpc server")
 	ca := flag.String("ca-file", "", "CA root for grpc server")
@@ -139,14 +139,14 @@ func main() {
 	// Setup Logging
 	// In Dev the ConsoleWriter has nice colored output, but is not very fast.
 	// In Prod the default handler is used. It writes json to stdout and is very fast.
-	if *loglevel == "dev" {
+	if *loghandler == "dev" {
 		log.Logger = log.Output(
 			zerolog.ConsoleWriter{
 				Out:     os.Stderr,
 				NoColor: false,
 			},
 		)
-	} else if *loglevel != "prod" {
+	} else if *loghandler != "prod" {
 		log.Fatal().Msg("Log Handler has to be either dev or prod")
 	}
 

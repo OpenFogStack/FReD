@@ -7,7 +7,9 @@ import (
 	"io/ioutil"
 
 	"git.tu-berlin.de/mcc-fred/fred/pkg/fred"
+	"git.tu-berlin.de/mcc-fred/fred/pkg/vector"
 	"git.tu-berlin.de/mcc-fred/fred/proto/peering"
+	"github.com/DistributedClocks/GoVector/govec/vclock"
 	"github.com/go-errors/errors"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
@@ -86,7 +88,9 @@ func (c *Client) getClient(host string) (peering.NodeClient, error) {
 	log.Debug().Msgf("peering client: Created Connection to %s", host)
 
 	client := peering.NewNodeClient(conn)
+
 	c.conn[host] = client
+
 	return client, nil
 }
 
@@ -127,7 +131,7 @@ func (c *Client) SendDeleteKeygroup(host string, kgname fred.KeygroupName) error
 }
 
 // SendUpdate sends this command to the server at this address
-func (c *Client) SendUpdate(host string, kgname fred.KeygroupName, id string, value string) error {
+func (c *Client) SendUpdate(host string, kgname fred.KeygroupName, id string, value string, tombstoned bool, vvector vclock.VClock) error {
 	client, err := c.getClient(host)
 
 	if err != nil {
@@ -135,9 +139,11 @@ func (c *Client) SendUpdate(host string, kgname fred.KeygroupName, id string, va
 	}
 
 	_, err = client.PutItem(context.Background(), &peering.PutItemRequest{
-		Keygroup: string(kgname),
-		Id:       id,
-		Data:     value,
+		Keygroup:   string(kgname),
+		Id:         id,
+		Val:        value,
+		Tombstoned: tombstoned,
+		Version:    vector.Bytes(vvector),
 	})
 
 	if err != nil {
@@ -158,25 +164,6 @@ func (c *Client) SendAppend(host string, kgname fred.KeygroupName, id string, va
 		Keygroup: string(kgname),
 		Id:       id,
 		Data:     value,
-	})
-
-	if err != nil {
-		return errors.New(err)
-	}
-	return nil
-}
-
-// SendDelete sends this command to the server at this address
-func (c *Client) SendDelete(host string, kgname fred.KeygroupName, id string) error {
-	client, err := c.getClient(host)
-
-	if err != nil {
-		return errors.New(err)
-	}
-
-	_, err = client.DeleteItem(context.Background(), &peering.DeleteItemRequest{
-		Keygroup: string(kgname),
-		Id:       id,
 	})
 
 	if err != nil {
@@ -225,11 +212,11 @@ func (c *Client) SendRemoveReplica(host string, kgname fred.KeygroupName, node f
 }
 
 // SendGetItem sends this command to the server at this address
-func (c *Client) SendGetItem(host string, kgname fred.KeygroupName, id string) (fred.Item, error) {
+func (c *Client) SendGetItem(host string, kgname fred.KeygroupName, id string) ([]fred.Item, error) {
 	client, err := c.getClient(host)
 
 	if err != nil {
-		return fred.Item{}, errors.New(err)
+		return nil, errors.New(err)
 	}
 
 	res, err := client.GetItem(context.Background(), &peering.GetItemRequest{
@@ -238,14 +225,27 @@ func (c *Client) SendGetItem(host string, kgname fred.KeygroupName, id string) (
 	})
 
 	if err != nil {
-		return fred.Item{}, errors.New(err)
+		return nil, errors.New(err)
 	}
 
-	return fred.Item{
-		Keygroup: kgname,
-		ID:       id,
-		Val:      res.Data,
-	}, nil
+	items := make([]fred.Item, len(res.Data))
+
+	for i, item := range res.Data {
+		v, err := vector.FromBytes(item.Version)
+
+		if err != nil {
+			return nil, errors.New(err)
+		}
+
+		items[i] = fred.Item{
+			Keygroup: kgname,
+			ID:       id,
+			Val:      item.Val,
+			Version:  v,
+		}
+	}
+
+	return items, nil
 }
 
 // SendGetAllItems sends this command to the server at this address
@@ -267,10 +267,17 @@ func (c *Client) SendGetAllItems(host string, kgname fred.KeygroupName) ([]fred.
 	d := make([]fred.Item, len(res.Data))
 
 	for i, item := range res.Data {
+		v, err := vector.FromBytes(item.Version)
+
+		if err != nil {
+			return nil, errors.New(err)
+		}
+
 		d[i] = fred.Item{
 			Keygroup: kgname,
 			ID:       item.Id,
-			Val:      item.Data,
+			Val:      item.Val,
+			Version:  v,
 		}
 	}
 

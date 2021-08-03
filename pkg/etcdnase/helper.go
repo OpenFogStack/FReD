@@ -8,7 +8,7 @@ import (
 
 	"github.com/go-errors/errors"
 	"github.com/rs/zerolog/log"
-	"go.etcd.io/etcd/client/v3"
+	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
 // getPrefix gets every key that starts(!) with the specified string

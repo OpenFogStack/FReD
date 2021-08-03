@@ -5,7 +5,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type inthandler struct {
+type IntHandler struct {
 	s *storeService
 	r *replicationService
 	t *triggerService
@@ -13,8 +13,8 @@ type inthandler struct {
 }
 
 // newInthandler creates a new handler for internal request (i.e. from peer nodes or the naming service).
-func newInthandler(s *storeService, r *replicationService, t *triggerService, n NameService) *inthandler {
-	return &inthandler{
+func newInthandler(s *storeService, r *replicationService, t *triggerService, n NameService) *IntHandler {
+	return &IntHandler{
 		s: s,
 		r: r,
 		t: t,
@@ -23,23 +23,19 @@ func newInthandler(s *storeService, r *replicationService, t *triggerService, n 
 }
 
 // HandleGet handles requests to the Get endpoint of the internal interface.
-func (h *inthandler) HandleGet(i Item) (Item, error) {
+func (h *IntHandler) HandleGet(i Item) ([]Item, error) {
 	data, err := h.s.read(i.Keygroup, i.ID)
 
 	if err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
-		return Item{}, errors.Errorf("error reading item")
+		return nil, errors.Errorf("error reading item")
 	}
 
-	return Item{
-		Keygroup: i.Keygroup,
-		ID:       i.ID,
-		Val:      data,
-	}, nil
+	return data, nil
 }
 
 // HandleGetAllItems handles requests to the Get endpoint of the internal interface.
-func (h *inthandler) HandleGetAllItems(k Keygroup) ([]Item, error) {
+func (h *IntHandler) HandleGetAllItems(k Keygroup) ([]Item, error) {
 	data, err := h.s.readAll(k.Name)
 
 	if err != nil {
@@ -51,7 +47,7 @@ func (h *inthandler) HandleGetAllItems(k Keygroup) ([]Item, error) {
 }
 
 // HandleCreateKeygroup handles requests to the CreateKeygroup endpoint of the internal interface.
-func (h *inthandler) HandleCreateKeygroup(k Keygroup) error {
+func (h *IntHandler) HandleCreateKeygroup(k Keygroup) error {
 	if err := h.s.createKeygroup(k.Name); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error creating keygroup")
@@ -61,7 +57,7 @@ func (h *inthandler) HandleCreateKeygroup(k Keygroup) error {
 }
 
 // HandleDeleteKeygroup handles requests to the DeleteKeygroup endpoint of the internal interface.
-func (h *inthandler) HandleDeleteKeygroup(k Keygroup) error {
+func (h *IntHandler) HandleDeleteKeygroup(k Keygroup) error {
 	if err := h.s.deleteKeygroup(k.Name); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error deleting keygroup")
@@ -78,7 +74,7 @@ func (h *inthandler) HandleDeleteKeygroup(k Keygroup) error {
 }
 
 // HandleUpdate handles requests to the Update endpoint of the internal interface.
-func (h *inthandler) HandleUpdate(i Item) error {
+func (h *IntHandler) HandleUpdate(i Item) error {
 
 	expiry, err := h.n.GetExpiry(i.Keygroup)
 
@@ -86,7 +82,7 @@ func (h *inthandler) HandleUpdate(i Item) error {
 		return err
 	}
 
-	if err := h.s.update(i, false, expiry); err != nil {
+	if err := h.s.addVersion(i, i.Version, expiry); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error updating item")
 	}
@@ -100,7 +96,7 @@ func (h *inthandler) HandleUpdate(i Item) error {
 }
 
 // HandleAppend handles requests to the Append endpoint of the internal interface.
-func (h *inthandler) HandleAppend(i Item) error {
+func (h *IntHandler) HandleAppend(i Item) error {
 
 	expiry, err := h.n.GetExpiry(i.Keygroup)
 
@@ -108,7 +104,7 @@ func (h *inthandler) HandleAppend(i Item) error {
 		return err
 	}
 
-	if err := h.s.update(i, true, expiry); err != nil {
+	if err := h.s.appendWithID(i, expiry); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error updating item")
 	}
@@ -121,25 +117,10 @@ func (h *inthandler) HandleAppend(i Item) error {
 	return nil
 }
 
-// HandleDelete handles requests to the Delete endpoint of the internal interface.
-func (h *inthandler) HandleDelete(i Item) error {
-	if err := h.s.delete(i.Keygroup, i.ID); err != nil {
-		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
-		return errors.Errorf("error deleting item")
-	}
-
-	if err := h.t.triggerDelete(i); err != nil {
-		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
-		return errors.Errorf("error deleting item")
-	}
-
-	return nil
-}
-
-func (h *inthandler) HandleAddReplica(k Keygroup, n Node) error {
+func (h *IntHandler) HandleAddReplica(k Keygroup, n Node) error {
 	return h.r.addReplica(k, n, false)
 }
 
-func (h *inthandler) HandleRemoveReplica(k Keygroup, n Node) error {
+func (h *IntHandler) HandleRemoveReplica(k Keygroup, n Node) error {
 	return h.r.removeReplica(k, n, false)
 }

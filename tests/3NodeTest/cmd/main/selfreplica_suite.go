@@ -23,18 +23,18 @@ func (t *SelfReplicaSuite) RunTests() {
 	t.c.nodeA.AddKeygroupReplica("pulltest", t.c.nodeA.ID, 0, false)
 	time.Sleep(3 * time.Second)
 	// check if the items exist
-	if res := t.c.nodeA.GetItem("pulltest", "item1", false); res != "val1" {
-		logNodeFailure(t.c.nodeA, "val1", res)
+	if res, _ := t.c.nodeA.GetItem("pulltest", "item1", false); len(res) != 1 || res[0] != "val1" {
+		logNodeFailure(t.c.nodeA, "val1", res[0])
 	}
-	if res := t.c.nodeA.GetItem("pulltest", "item2", false); res != "val2" {
-		logNodeFailure(t.c.nodeA, "val2", res)
+	if res, _ := t.c.nodeA.GetItem("pulltest", "item2", false); len(res) != 1 || res[0] != "val2" {
+		logNodeFailure(t.c.nodeA, "val2", res[0])
 	}
 
 	logNodeAction(t.c.nodeA, "Add an item on nodeA, check wheter it populates to nodeB")
 	t.c.nodeA.PutItem("pulltest", "item3", "val3", false)
 	// check if nodeB also gets that item
-	if res := t.c.nodeB.GetItem("pulltest", "item3", false); res != "val3" {
-		logNodeFailure(t.c.nodeB, "val3", res)
+	if res, _ := t.c.nodeB.GetItem("pulltest", "item3", false); res[0] != "val3" {
+		logNodeFailure(t.c.nodeB, "val3", res[0])
 	}
 }
 

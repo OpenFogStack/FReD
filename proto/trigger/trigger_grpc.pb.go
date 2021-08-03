@@ -18,8 +18,8 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type TriggerNodeClient interface {
-	PutItemTrigger(ctx context.Context, in *PutItemTriggerRequest, opts ...grpc.CallOption) (*TriggerResponse, error)
-	DeleteItemTrigger(ctx context.Context, in *DeleteItemTriggerRequest, opts ...grpc.CallOption) (*TriggerResponse, error)
+	PutItemTrigger(ctx context.Context, in *PutItemTriggerRequest, opts ...grpc.CallOption) (*Empty, error)
+	DeleteItemTrigger(ctx context.Context, in *DeleteItemTriggerRequest, opts ...grpc.CallOption) (*Empty, error)
 }
 
 type triggerNodeClient struct {
@@ -30,8 +30,8 @@ func NewTriggerNodeClient(cc grpc.ClientConnInterface) TriggerNodeClient {
 	return &triggerNodeClient{cc}
 }
 
-func (c *triggerNodeClient) PutItemTrigger(ctx context.Context, in *PutItemTriggerRequest, opts ...grpc.CallOption) (*TriggerResponse, error) {
-	out := new(TriggerResponse)
+func (c *triggerNodeClient) PutItemTrigger(ctx context.Context, in *PutItemTriggerRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/mcc.fred.trigger.TriggerNode/PutItemTrigger", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -39,8 +39,8 @@ func (c *triggerNodeClient) PutItemTrigger(ctx context.Context, in *PutItemTrigg
 	return out, nil
 }
 
-func (c *triggerNodeClient) DeleteItemTrigger(ctx context.Context, in *DeleteItemTriggerRequest, opts ...grpc.CallOption) (*TriggerResponse, error) {
-	out := new(TriggerResponse)
+func (c *triggerNodeClient) DeleteItemTrigger(ctx context.Context, in *DeleteItemTriggerRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/mcc.fred.trigger.TriggerNode/DeleteItemTrigger", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -52,18 +52,18 @@ func (c *triggerNodeClient) DeleteItemTrigger(ctx context.Context, in *DeleteIte
 // All implementations should embed UnimplementedTriggerNodeServer
 // for forward compatibility
 type TriggerNodeServer interface {
-	PutItemTrigger(context.Context, *PutItemTriggerRequest) (*TriggerResponse, error)
-	DeleteItemTrigger(context.Context, *DeleteItemTriggerRequest) (*TriggerResponse, error)
+	PutItemTrigger(context.Context, *PutItemTriggerRequest) (*Empty, error)
+	DeleteItemTrigger(context.Context, *DeleteItemTriggerRequest) (*Empty, error)
 }
 
 // UnimplementedTriggerNodeServer should be embedded to have forward compatible implementations.
 type UnimplementedTriggerNodeServer struct {
 }
 
-func (UnimplementedTriggerNodeServer) PutItemTrigger(context.Context, *PutItemTriggerRequest) (*TriggerResponse, error) {
+func (UnimplementedTriggerNodeServer) PutItemTrigger(context.Context, *PutItemTriggerRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PutItemTrigger not implemented")
 }
-func (UnimplementedTriggerNodeServer) DeleteItemTrigger(context.Context, *DeleteItemTriggerRequest) (*TriggerResponse, error) {
+func (UnimplementedTriggerNodeServer) DeleteItemTrigger(context.Context, *DeleteItemTriggerRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteItemTrigger not implemented")
 }
 

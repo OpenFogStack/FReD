@@ -148,17 +148,6 @@ func (p *PeeringProxy) GetItem(ctx context.Context, req *peering.GetItemRequest)
 	return c.GetItem(ctx, req)
 }
 
-// DeleteItem has no implementation
-func (p *PeeringProxy) DeleteItem(ctx context.Context, req *peering.DeleteItemRequest) (*peering.Empty, error) {
-	c, err := p.getConn(req.Keygroup)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return c.DeleteItem(ctx, req)
-}
-
 // GetAllItems has no implementation
 func (p *PeeringProxy) GetAllItems(ctx context.Context, req *peering.GetAllItemsRequest) (*peering.GetAllItemsResponse, error) {
 	c, err := p.getConn(req.Keygroup)

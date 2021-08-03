@@ -236,7 +236,7 @@ Furthermore, the `fred` process that talks to DynamoDB should have IAM keys conf
 To create a table named `fred` (this must be passed in as command-line parameter `--dynamo-table=fred`) using the AWS CLI:
 
 ```bash
-AWS_PAGER="" aws dynamodb create-table --table-name fred --attribute-definitions "AttributeName=Key,AttributeType=S AttributeName=Value,AttributeType=S AttributeName=Expiry,AttributeType=N" --key-schema "AttributeName=Key,KeyType=HASH" --provisioned-throughput "ReadCapacityUnits=1,WriteCapacityUnits=1"
+AWS_PAGER="" aws dynamodb create-table --table-name fred --attribute-definitions "AttributeName=Key,AttributeType=S" --key-schema "AttributeName=Key,KeyType=HASH" --provisioned-throughput "ReadCapacityUnits=1,WriteCapacityUnits=1"
 AWS_PAGER="" aws dynamodb update-time-to-live --table-name fred --time-to-live-specification "Enabled=true, AttributeName=Expiry"
 ```
 
