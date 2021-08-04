@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"io/ioutil"
 	"net"
+	"strconv"
 	"time"
 
 	"git.tu-berlin.de/mcc-fred/fred/pkg/fred"
@@ -342,7 +343,7 @@ func (s *Server) Append(ctx context.Context, request *client.AppendRequest) (*cl
 		return nil, err
 	}
 
-	res, err := s.e.HandleAppend(user, fred.Item{Keygroup: fred.KeygroupName(request.Keygroup), Val: request.Data})
+	res, err := s.e.HandleAppend(user, fred.Item{Keygroup: fred.KeygroupName(request.Keygroup), ID: strconv.FormatUint(request.Id, 10), Val: request.Data})
 
 	if err != nil {
 		return nil, err

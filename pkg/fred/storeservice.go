@@ -12,11 +12,11 @@ import (
 // Store is an interface for the storage medium that the key-value val items are persisted on.
 type Store interface {
 	// Update Needs: keygroup, id, val
-	Update(kg string, id string, val string, append bool, expiry int, vvector vclock.VClock) error
+	Update(kg string, id string, val string, expiry int, vvector vclock.VClock) error
 	// Delete Needs: keygroup, id
 	Delete(kg string, id string, vvector vclock.VClock) error
 	// Append Needs: keygroup, val, Returns: key
-	Append(kg string, val string, expiry int) (string, error)
+	Append(kg string, id string, val string, expiry int) error
 	// Read Needs: keygroup, id; Returns: val, version vector, found
 	Read(kg string, id string) ([]string, []vclock.VClock, bool, error)
 	// ReadSome Needs: keygroup, id, range; Returns: ids, values, versions
@@ -375,7 +375,7 @@ func (s *storeService) update(i Item, expiry int) (vclock.VClock, error) {
 
 	s.vCache[i.Keygroup].clocks[i.ID].clocks = []vclock.VClock{newVersion}
 
-	err = s.iS.Update(string(i.Keygroup), i.ID, i.Val, false, expiry, newVersion.GetMap())
+	err = s.iS.Update(string(i.Keygroup), i.ID, i.Val, expiry, newVersion.GetMap())
 
 	if err != nil {
 		return nil, err
@@ -472,7 +472,7 @@ func (s *storeService) updateVersions(i Item, versions []vclock.VClock, expiry i
 
 	newVersion.Tick(s.id)
 
-	err = s.iS.Update(string(i.Keygroup), i.ID, i.Val, false, expiry, newVersion.GetMap())
+	err = s.iS.Update(string(i.Keygroup), i.ID, i.Val, expiry, newVersion.GetMap())
 
 	if err != nil {
 		return nil, err
@@ -566,7 +566,7 @@ func (s *storeService) addVersion(i Item, remoteVersion vclock.VClock, expiry in
 			if !discard && !stored {
 				log.Debug().Msgf("storing version %s", vector.SortedVCString(remoteVersion))
 				newClocks = append(newClocks, remoteVersion.Copy())
-				err = s.iS.Update(string(i.Keygroup), i.ID, i.Val, false, expiry, remoteVersion.GetMap())
+				err = s.iS.Update(string(i.Keygroup), i.ID, i.Val, expiry, remoteVersion.GetMap())
 
 				if err != nil {
 					return err
@@ -592,7 +592,7 @@ func (s *storeService) addVersion(i Item, remoteVersion vclock.VClock, expiry in
 
 	// so apparently localVersion and remoteVersion are concurrent - what do we do?
 	// well we will store the remote version with its version number
-	err = s.iS.Update(string(i.Keygroup), i.ID, i.Val, false, expiry, remoteVersion.GetMap())
+	err = s.iS.Update(string(i.Keygroup), i.ID, i.Val, expiry, remoteVersion.GetMap())
 
 	if err != nil {
 		return err
@@ -724,7 +724,7 @@ func (s *storeService) tombstone(i Item) (vclock.VClock, error) {
 
 	s.vCache[i.Keygroup].clocks[i.ID].clocks = []vclock.VClock{newVersion}
 
-	err = s.iS.Update(string(i.Keygroup), i.ID, i.Val, false, 0, newVersion.GetMap())
+	err = s.iS.Update(string(i.Keygroup), i.ID, i.Val, 0, newVersion.GetMap())
 
 	if err != nil {
 		return nil, err
@@ -793,7 +793,7 @@ func (s *storeService) tombstoneVersions(i Item, versions []vclock.VClock) (vclo
 
 	newVersion.Tick(s.id)
 
-	err = s.iS.Update(string(i.Keygroup), i.ID, i.Val, false, 0, newVersion.GetMap())
+	err = s.iS.Update(string(i.Keygroup), i.ID, i.Val, 0, newVersion.GetMap())
 
 	if err != nil {
 		return nil, err
@@ -814,52 +814,7 @@ func (s *storeService) tombstoneVersions(i Item, versions []vclock.VClock) (vclo
 }
 
 // append appends an item in the key-value store.
-func (s *storeService) append(i Item, expiry int) (Item, error) {
-	if !s.iS.ExistsKeygroup(string(i.Keygroup)) {
-		return i, errors.Errorf("no such keygroup in store: %#v", i.Keygroup)
-	}
-
-	s.vCacheLock.RLock()
-	defer s.vCacheLock.RUnlock()
-
-	s.vCache[i.Keygroup].RLock()
-	defer s.vCache[i.Keygroup].RUnlock()
-
-	if _, ok := s.vCache[i.Keygroup].clocks[i.ID]; !ok {
-		s.vCache[i.Keygroup].RUnlock()
-		s.vCache[i.Keygroup].Lock()
-		if _, ok := s.vCache[i.Keygroup].clocks[i.ID]; !ok {
-			s.vCache[i.Keygroup].clocks[i.ID] = &cachedClock{
-				clocks: []vclock.VClock{},
-				Mutex:  &sync.Mutex{},
-			}
-		}
-		s.vCache[i.Keygroup].Unlock()
-		s.vCache[i.Keygroup].RLock()
-	}
-
-	s.vCache[i.Keygroup].clocks[i.ID].Lock()
-	defer s.vCache[i.Keygroup].clocks[i.ID].Unlock()
-
-	k, err := s.iS.Append(string(i.Keygroup), i.Val, expiry)
-
-	if err != nil {
-		return i, err
-	}
-
-	i.ID = k
-
-	return i, nil
-}
-
-func (s *storeService) appendWithID(i Item, expiry int) error {
-	// TODO
-	err := checkItem(i)
-
-	if err != nil {
-		return err
-	}
-
+func (s *storeService) append(i Item, expiry int) error {
 	if !s.iS.ExistsKeygroup(string(i.Keygroup)) {
 		return errors.Errorf("no such keygroup in store: %#v", i.Keygroup)
 	}
@@ -886,7 +841,7 @@ func (s *storeService) appendWithID(i Item, expiry int) error {
 	s.vCache[i.Keygroup].clocks[i.ID].Lock()
 	defer s.vCache[i.Keygroup].clocks[i.ID].Unlock()
 
-	err = s.iS.Update(string(i.Keygroup), i.ID, i.Val, true, expiry, nil)
+	err := s.iS.Append(string(i.Keygroup), i.ID, i.Val, expiry)
 
 	if err != nil {
 		return err

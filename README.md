@@ -280,7 +280,7 @@ Data in FReD keygroups can be read, updated/appended and deleted.
 
 Keygroups can be configured to be either mutable or immutable.
 Data in immutable keygroups can only be appended, existing keys cannot be updated or deleted.
-When you append a new value to an immutable keygroup, a unique and incremental identifier is returned to you so you can later read that data.
+You need to specifiy a key in the form of a 64-bit unsigned integer, e.g., a timestamp.
 
 Data in mutable keygroups cannot be appended as there is no concept of key incrementation, but you can insert and update data at specified keys with the update operation.
 If you update a key that does not exist yet it will be created.

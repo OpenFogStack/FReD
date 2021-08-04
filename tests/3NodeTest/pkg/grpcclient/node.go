@@ -365,9 +365,10 @@ func (n *Node) PutItemVersion(kgname, item string, data string, version vclock.V
 }
 
 // AppendItem calls the AppendItem endpoint of the GRPC interface.
-func (n *Node) AppendItem(kgname string, data string, expectError bool) string {
+func (n *Node) AppendItem(kgname string, id uint64, data string, expectError bool) string {
 	res, err := n.Client.Append(context.Background(), &client.AppendRequest{
 		Keygroup: kgname,
+		Id:       id,
 		Data:     data,
 	})
 

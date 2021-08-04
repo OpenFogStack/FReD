@@ -167,12 +167,11 @@ func (c *Client) ReadAll(kg string) (map[string][]string, map[string][]vclock.VC
 
 // Update calls the same method on the remote server
 
-func (c *Client) Update(kg string, id string, val string, append bool, expiry int, vvector vclock.VClock) error {
+func (c *Client) Update(kg string, id string, val string, expiry int, vvector vclock.VClock) error {
 	response, err := c.dbClient.Update(context.Background(), &storage.UpdateRequest{
 		Keygroup: kg,
 		Val:      val,
 		Id:       id,
-		Append:   append,
 		Expiry:   int64(expiry),
 		Version:  vvector.GetMap(),
 	})
@@ -187,19 +186,20 @@ func (c *Client) Update(kg string, id string, val string, append bool, expiry in
 }
 
 // Append calls the same method on the remote server
-func (c *Client) Append(kg string, val string, expiry int) (string, error) {
+func (c *Client) Append(kg string, id string, val string, expiry int) error {
 	response, err := c.dbClient.Append(context.Background(), &storage.AppendRequest{
 		Keygroup: kg,
+		Id:       id,
 		Val:      val,
 		Expiry:   int64(expiry)},
 	)
 	log.Debug().Err(err).Msgf("StorageClient: Append in: %#v,%#v out: %#v", kg, val, response)
 
 	if err != nil {
-		return "", errors.New(err)
+		return errors.New(err)
 	}
 
-	return response.Key, nil
+	return nil
 }
 
 // Delete calls the same method on the remote server

@@ -31,7 +31,6 @@ message UpdateRequest {
     string keygroup = 1;
     string id = 2;
     string val = 3;
-    bool append = 4;
     int64 expiry = 5;
     map<string, uint64> version = 6;
 }
@@ -48,13 +47,12 @@ message DeleteResponse{}
 
 message AppendRequest{
     string keygroup = 1;
-    string val = 2;
-    int64 expiry = 3;
+    string id = 2;
+    string val = 3;
+    int64 expiry = 4;
 }
 
-message AppendResponse{
-    string key = 1;
-}
+message AppendResponse{}
 
 message ReadRequest {
     string keygroup = 1;

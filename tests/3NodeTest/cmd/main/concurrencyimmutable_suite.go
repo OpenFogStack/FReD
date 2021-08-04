@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	"git.tu-berlin.de/mcc-fred/fred/tests/3NodeTest/pkg/grpcclient"
 )
@@ -29,18 +30,19 @@ func concurrentUpdatesImmutable(nodes []*grpcclient.Node, concurrent int, update
 		nodes[0].AddKeygroupReplica(keygroup, n.ID, 0, false)
 	}
 
-	expected := make([]map[string]string, concurrent)
+	expected := make([]map[uint64]string, concurrent)
 	done := make(chan struct{})
 	for i := 0; i < concurrent; i++ {
-		expected[i] = make(map[string]string)
-		go func(node *grpcclient.Node, keygroup string, expected *map[string]string) {
+		expected[i] = make(map[uint64]string)
+		go func(i int, node *grpcclient.Node, keygroup string, expected *map[uint64]string) {
 			for j := 0; j < updates; j++ {
 				val := randStringBytes(10)
-				key := node.AppendItem(keygroup, val, false)
-				(*expected)[key] = val
+				id := uint64(time.Now().UnixNano()) + uint64(i)
+				_ = node.AppendItem(keygroup, id, val, false)
+				(*expected)[id] = val
 			}
 			done <- struct{}{}
-		}(nodes[i%len(nodes)], keygroup, &expected[i])
+		}(i, nodes[i%len(nodes)], keygroup, &expected[i])
 	}
 
 	// block until all goroutines have finished
@@ -49,36 +51,32 @@ func concurrentUpdatesImmutable(nodes []*grpcclient.Node, concurrent int, update
 	}
 
 	// let's check if everything worked
-	// in this case we expect the keys to be in the range [0,updates[ and no same key to be in different maps
+	// in this case no same key should be in in different maps
+	keys := make(map[uint64]string)
 
-	for k := 0; k < updates; k++ {
-		// got to convert to string first
-		key := strconv.Itoa(k)
-		v, _ := nodes[0].GetItem(keygroup, key, false)
-		found := 0
-
-		for i := 0; i < concurrent; i++ {
-			val, ok := expected[i][key]
-
-			if !ok {
+	for i := 0; i < concurrent; i++ {
+		for key, val := range expected[i] {
+			if _, ok := keys[key]; ok {
+				logNodeFailure(nodes[0], fmt.Sprintf("only one client can write to key %d", key), fmt.Sprintf("several clients were able to write to same id for %d", key))
 				continue
 			}
 
-			found++
-
-			if val != v[0] {
-				logNodeFailure(nodes[0], fmt.Sprintf("value for %s", key), fmt.Sprintf("got wrong value %s", v))
-			}
+			keys[key] = val
 		}
+	}
 
-		if found == 0 {
-			logNodeFailure(nodes[0], fmt.Sprintf("expected value for %s", key), "got no return value")
+	for key, val := range keys {
+		k := strconv.FormatUint(key, 10)
+
+		v, _ := nodes[0].GetItem(keygroup, k, false)
+
+		if len(v) != 1 {
+			logNodeFailure(nodes[0], fmt.Sprintf("expected one value for %d", key), fmt.Sprintf("got no %d return values", len(v)))
 			continue
 		}
 
-		if found > 1 {
-			logNodeFailure(nodes[0], fmt.Sprintf("only one client can write to key %s", key), fmt.Sprintf("%d clients were able to write to same id for %s", found, key))
-			continue
+		if v[0] != val {
+			logNodeFailure(nodes[0], fmt.Sprintf("value %s for %d", val, key), fmt.Sprintf("got wrong value %s", v[0]))
 		}
 	}
 }

@@ -104,7 +104,7 @@ func (h *IntHandler) HandleAppend(i Item) error {
 		return err
 	}
 
-	if err := h.s.appendWithID(i, expiry); err != nil {
+	if err := h.s.append(i, expiry); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error updating item")
 	}

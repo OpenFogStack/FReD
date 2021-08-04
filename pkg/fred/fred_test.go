@@ -274,8 +274,10 @@ func testScan(t *testing.T, user string, kg fred.KeygroupName, mutable bool, upd
 			}, nil)
 			assert.NoError(t, err)
 		} else {
+			ids[i] = strconv.Itoa(i)
 			item, err := f.E.HandleAppend(user, fred.Item{
 				Keygroup: kg,
+				ID:       ids[i],
 				Val:      vals[i],
 			})
 
@@ -856,7 +858,7 @@ func TestInternalDelete(t *testing.T) {
 }
 
 func TestInternalAppend(t *testing.T) {
-	kg := fred.KeygroupName("kginternappend")
+	kg := fred.KeygroupName("kginternalappend")
 	id := "0"
 	val := "value1"
 
@@ -899,6 +901,7 @@ func TestInternalAppend(t *testing.T) {
 
 	i, err := f.E.HandleAppend("user", fred.Item{
 		Keygroup: kg,
+		ID:       "1",
 		Val:      "value2",
 	})
 

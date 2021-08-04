@@ -18,7 +18,7 @@ func (t *ImmutableSuite) RunTests() {
 	t.c.nodeB.CreateKeygroup("log", false, 0, false)
 
 	logNodeAction(t.c.nodeB, "Creating an item in this keygroup")
-	res := t.c.nodeB.AppendItem("log", "value1", false)
+	res := t.c.nodeB.AppendItem("log", 0, "value1", false)
 
 	if res != "0" {
 		logNodeFailure(t.c.nodeB, "0", res)
@@ -44,11 +44,14 @@ func (t *ImmutableSuite) RunTests() {
 	t.c.nodeC.PutItem("log", "0", "value-3", true)
 
 	logNodeAction(t.c.nodeC, "Appending another item to readonly log.")
-	res = t.c.nodeC.AppendItem("log", "value-4", false)
+	res = t.c.nodeC.AppendItem("log", 1, "value-4", false)
 
 	if res != "1" {
 		logNodeFailure(t.c.nodeC, "1", res)
 	}
+
+	logNodeAction(t.c.nodeC, "Appending another item to readonly log with a previous ID.")
+	_ = t.c.nodeC.AppendItem("log", 1, "value-5", true)
 }
 
 func NewImmutableSuite(c *Config) *ImmutableSuite {

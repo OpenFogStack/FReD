@@ -87,7 +87,8 @@ message UpdateResponse {
 
 message AppendRequest {
   string keygroup = 1;
-  string data = 2;
+  uint64 id = 2;
+  string data = 3;
 }
 
 message AppendResponse {

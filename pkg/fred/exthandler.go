@@ -165,7 +165,7 @@ func (h *ExtHandler) HandleAppend(user string, i Item) (Item, error) {
 		return i, err
 	}
 
-	result, err := h.s.append(i, expiry)
+	err = h.s.append(i, expiry)
 
 	if err != nil {
 		log.Printf("%#v", err)
@@ -173,17 +173,17 @@ func (h *ExtHandler) HandleAppend(user string, i Item) (Item, error) {
 		return i, errors.Errorf("error updating item")
 	}
 
-	if err := h.r.relayAppend(result); err != nil {
+	if err := h.r.relayAppend(i); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
-		return result, errors.Errorf("error updating item")
+		return i, errors.Errorf("error updating item")
 	}
 
-	if err := h.t.triggerUpdate(result); err != nil {
+	if err := h.t.triggerUpdate(i); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
-		return result, errors.Errorf("error updating item")
+		return i, errors.Errorf("error updating item")
 	}
 
-	return result, nil
+	return i, nil
 }
 
 // HandleUpdate handles requests to the Update endpoint of the client interface.

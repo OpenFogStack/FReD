@@ -27,13 +27,12 @@ const (
 	valName      = "Value"
 	triggerName  = "Trigger"
 	expiryKey    = "Expiry"
-	counterName  = "Counter"
 	NULLValue    = "%NULL%"
 )
 
 // Storage is a struct that saves all necessary information to access the database, in this case the session for
 // DynamoDB and the table name. The DynamoDB table is set up with the following attributes:
-// Keygroup (S) | Key (S) | Value (Document) | Expiry (N) | Trigger (Document) | Counter (N)
+// Keygroup (S) | Key (S) | Value (Document) | Expiry (N) | Trigger (Document)
 // where "Keygroup" is the partition key and "Key" is the sort key (both together form the primary key).
 // Set this up with the following aws-cli command (table name in this case is "fred"):
 //
@@ -48,8 +47,8 @@ const (
 //			--time-to-live-specification "Enabled=true, AttributeName=Expiry"
 //
 // Two types of items are stored here:
-// 	* Keygroup configuration is stored with the NULL "Key" and the keygroup name: this has the "Counter" attribute
-//	for append-only keygroups and the "Trigger" attribute that stores a map of trigger nodes for that keygroup
+// 	* Keygroup configuration is stored with the NULL "Key" and the keygroup name: this has  the "Trigger" attribute that
+//	stores a map of trigger nodes for that keygroup
 //	* Keys are stored with a "Keygroup" and unique "Key", where the Value is a list of version vectors and values - the
 //	additional "Expiry" attribute can be set to let the keys expire, and it is updated with each update to the data item
 //	(note that this means that in DynamoDB, all versions of an item expire at the same time, not necessarily in the
@@ -478,46 +477,14 @@ func (s *Storage) ReadAll(kg string) (map[string][]string, map[string][]vclock.V
 }
 
 // Append appends the item to the specified keygroup by incrementing the latest key by one.
-func (s *Storage) Append(kg, val string, expiry int) (string, error) {
-	input := &dynamodb.UpdateItemInput{
-		TableName: aws.String(s.dynamotable),
-		Key: map[string]dynamoDBTypes.AttributeValue{
-			keygroupName: &dynamoDBTypes.AttributeValueMemberS{
-				Value: kg,
-			},
-			keyName: &dynamoDBTypes.AttributeValueMemberS{
-				Value: NULLValue,
-			},
-		},
-		ExpressionAttributeNames: map[string]string{
-			"#counter": counterName,
-		},
-		ExpressionAttributeValues: map[string]dynamoDBTypes.AttributeValue{
-			":increase": &dynamoDBTypes.AttributeValueMemberN{
-				Value: "1",
-			},
-		},
-		UpdateExpression: aws.String("SET #counter = #counter + :increase"),
-		ReturnValues:     "UPDATED_NEW",
-	}
+func (s *Storage) Append(kg string, id string, val string, expiry int) error {
+	cond := expression.AttributeNotExists(expression.Name(keygroupName))
 
-	out, err := s.svc.UpdateItem(context.TODO(), input)
+	expr, err := expression.NewBuilder().WithCondition(cond).Build()
 
 	if err != nil {
-		log.Debug().Msgf("Append: could not update keygroup counter %s: %s", kg, errors.New(err).ErrorStack())
-		return "", errors.New(err)
-	}
-
-	c, ok := out.Attributes[counterName]
-
-	if !ok {
-		return "", errors.Errorf("could not increase counter")
-	}
-
-	newID, ok := c.(*dynamoDBTypes.AttributeValueMemberN)
-
-	if !ok {
-		return "", errors.Errorf("could not increase counter: malformed counter type")
+		log.Error().Msg(errors.New(err).ErrorStack())
+		return errors.New(err)
 	}
 
 	in := &dynamodb.PutItemInput{
@@ -526,7 +493,7 @@ func (s *Storage) Append(kg, val string, expiry int) (string, error) {
 				Value: kg,
 			},
 			keyName: &dynamoDBTypes.AttributeValueMemberS{
-				Value: newID.Value,
+				Value: id,
 			},
 			valName: &dynamoDBTypes.AttributeValueMemberM{
 				Value: map[string]dynamoDBTypes.AttributeValue{
@@ -536,7 +503,10 @@ func (s *Storage) Append(kg, val string, expiry int) (string, error) {
 				},
 			},
 		},
-		TableName: aws.String(s.dynamotable),
+		TableName:                 aws.String(s.dynamotable),
+		ConditionExpression:       expr.Condition(),
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
 	}
 
 	if expiry > 0 {
@@ -548,10 +518,10 @@ func (s *Storage) Append(kg, val string, expiry int) (string, error) {
 	_, err = s.svc.PutItem(context.TODO(), in)
 	if err != nil {
 		log.Error().Msg(errors.New(err).ErrorStack())
-		return "", errors.New(err)
+		return errors.New(err)
 	}
 
-	return newID.Value, nil
+	return nil
 }
 
 // IDs returns the keys of all items in the specified keygroup.
@@ -634,35 +604,7 @@ func (s *Storage) IDs(kg string) ([]string, error) {
 }
 
 // Update updates the item with the specified id in the specified keygroup.
-func (s *Storage) Update(kg string, id string, val string, append bool, expiry int, vvector vclock.VClock) error {
-	if append {
-		input := &dynamodb.UpdateItemInput{
-			TableName: aws.String(s.dynamotable),
-			Key: map[string]dynamoDBTypes.AttributeValue{
-				keygroupName: &dynamoDBTypes.AttributeValueMemberS{
-					Value: kg,
-				},
-			},
-			ExpressionAttributeNames: map[string]string{
-				"#counter": counterName,
-			},
-			ExpressionAttributeValues: map[string]dynamoDBTypes.AttributeValue{
-				":increase": &dynamoDBTypes.AttributeValueMemberN{
-					Value: "-1",
-				},
-			},
-			UpdateExpression: aws.String("SET #counter = #counter + :increase"),
-			ReturnValues:     "UPDATED_NEW",
-		}
-
-		_, err := s.svc.UpdateItem(context.TODO(), input)
-
-		if err != nil {
-			log.Debug().Msgf("Update: could not update keygroup counter %s: %s", kg, err.Error())
-			return errors.New(err)
-		}
-	}
-
+func (s *Storage) Update(kg string, id string, val string, expiry int, vvector vclock.VClock) error {
 	version := vectorToString(vvector)
 
 	input := &dynamodb.UpdateItemInput{
@@ -904,9 +846,6 @@ func (s *Storage) CreateKeygroup(kg string) error {
 			},
 			keyName: &dynamoDBTypes.AttributeValueMemberS{
 				Value: NULLValue,
-			},
-			counterName: &dynamoDBTypes.AttributeValueMemberN{
-				Value: "-1",
 			},
 		},
 		TableName: aws.String(s.dynamotable),

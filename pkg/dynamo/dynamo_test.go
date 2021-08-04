@@ -79,6 +79,7 @@ func TestMain(m *testing.M) {
 
 	if err != nil {
 		log.Fatal().Msg(err.Error())
+		return
 	}
 
 	cfg.Credentials = credentials.NewStaticCredentialsProvider("TEST_KEY", "TEST_SECRET", "")
@@ -197,7 +198,7 @@ func TestItemExists(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	err = db.Update(kg, id, value, false, 0, vclock.VClock{})
+	err = db.Update(kg, id, value, 0, vclock.VClock{})
 
 	assert.NoError(t, err)
 	ex := db.Exists(kg, id)
@@ -218,7 +219,7 @@ func TestItemGet(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	err = db.Update(kg, id, value, false, 0, vclock.VClock{})
+	err = db.Update(kg, id, value, 0, vclock.VClock{})
 
 	assert.NoError(t, err)
 
@@ -238,7 +239,7 @@ func TestItemDelete(t *testing.T) {
 	err := db.CreateKeygroup(kg)
 
 	assert.NoError(t, err)
-	err = db.Update(kg, id, value, false, 0, vclock.VClock{})
+	err = db.Update(kg, id, value, 0, vclock.VClock{})
 
 	assert.NoError(t, err)
 
@@ -281,7 +282,7 @@ func TestReadSome(t *testing.T) {
 		ids[i] = "id" + strconv.Itoa(i)
 		vals[i] = "val" + strconv.Itoa(i)
 
-		err = db.Update(kg, ids[i], vals[i], false, 0, vclock.VClock{})
+		err = db.Update(kg, ids[i], vals[i], 0, vclock.VClock{})
 
 		assert.NoError(t, err)
 
@@ -306,15 +307,15 @@ func TestReadAll(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	err = db.Update(kg, "id-1", "data-1", false, 0, vclock.VClock{})
+	err = db.Update(kg, "id-1", "data-1", 0, vclock.VClock{})
 
 	assert.NoError(t, err)
 
-	err = db.Update(kg, "id-2", "data-2", false, 0, vclock.VClock{})
+	err = db.Update(kg, "id-2", "data-2", 0, vclock.VClock{})
 
 	assert.NoError(t, err)
 
-	err = db.Update(kg, "id-3", "data-3", false, 0, vclock.VClock{})
+	err = db.Update(kg, "id-3", "data-3", 0, vclock.VClock{})
 
 	assert.NoError(t, err)
 
@@ -324,15 +325,15 @@ func TestReadAll(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	err = db.Update(kg2, "id-4", "data-4", false, 0, vclock.VClock{})
+	err = db.Update(kg2, "id-4", "data-4", 0, vclock.VClock{})
 
 	assert.NoError(t, err)
 
-	err = db.Update(kg2, "id-5", "data-5", false, 0, vclock.VClock{})
+	err = db.Update(kg2, "id-5", "data-5", 0, vclock.VClock{})
 
 	assert.NoError(t, err)
 
-	err = db.Update(kg2, "id-6", "data-6", false, 0, vclock.VClock{})
+	err = db.Update(kg2, "id-6", "data-6", 0, vclock.VClock{})
 
 	assert.NoError(t, err)
 
@@ -356,15 +357,15 @@ func TestIDs(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	err = db.Update(kg, "id-1", "data-1", false, 0, vclock.VClock{})
+	err = db.Update(kg, "id-1", "data-1", 0, vclock.VClock{})
 
 	assert.NoError(t, err)
 
-	err = db.Update(kg, "id-2", "data-2", false, 0, vclock.VClock{})
+	err = db.Update(kg, "id-2", "data-2", 0, vclock.VClock{})
 
 	assert.NoError(t, err)
 
-	err = db.Update(kg, "id-3", "data-3", false, 0, vclock.VClock{})
+	err = db.Update(kg, "id-3", "data-3", 0, vclock.VClock{})
 
 	assert.NoError(t, err)
 
@@ -374,15 +375,15 @@ func TestIDs(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	err = db.Update(kg2, "id-1", "data-1", false, 0, vclock.VClock{})
+	err = db.Update(kg2, "id-1", "data-1", 0, vclock.VClock{})
 
 	assert.NoError(t, err)
 
-	err = db.Update(kg2, "id-2", "data-2", false, 0, vclock.VClock{})
+	err = db.Update(kg2, "id-2", "data-2", 0, vclock.VClock{})
 
 	assert.NoError(t, err)
 
-	err = db.Update(kg2, "id-3", "data-3", false, 0, vclock.VClock{})
+	err = db.Update(kg2, "id-3", "data-3", 0, vclock.VClock{})
 
 	assert.NoError(t, err)
 
@@ -405,7 +406,7 @@ func TestItemAfterDeleteKeygroup(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	err = db.Update(kg, id, value, false, 0, vclock.VClock{})
+	err = db.Update(kg, id, value, 0, vclock.VClock{})
 
 	assert.NoError(t, err)
 
@@ -428,7 +429,7 @@ func TestExpiry(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	err = db.Update(kg, id, value, false, 10, vclock.VClock{})
+	err = db.Update(kg, id, value, 10, vclock.VClock{})
 
 	assert.NoError(t, err)
 
@@ -462,25 +463,20 @@ func TestAppend(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	key1, err := db.Append(kg, v1, 0)
+	err = db.Append(kg, "0", v1, 0)
 
 	assert.NoError(t, err)
 
-	assert.Equal(t, "0", key1)
-
-	key2, err := db.Append(kg, v2, 0)
+	err = db.Append(kg, "1", v2, 0)
 
 	assert.NoError(t, err)
-
-	assert.Equal(t, "1", key2)
 
 	for i := 2; i < 100; i++ {
 		v := "value-" + strconv.Itoa(i)
-		key, err := db.Append(kg, v, 0)
+		id := strconv.Itoa(i)
+		err := db.Append(kg, id, v, 0)
 
 		assert.NoError(t, err)
-
-		assert.Equal(t, strconv.Itoa(i), key)
 	}
 }
 
@@ -501,7 +497,8 @@ func TestConcurrentAppend(t *testing.T) {
 		go func(id int, keys *map[string]struct{}) {
 			for j := 2; j < items; j++ {
 				v := fmt.Sprintf("value-%d-%d", id, j)
-				key, err := db.Append(kg, v, 0)
+				key := strconv.Itoa(items*id + j)
+				err := db.Append(kg, key, v, 0)
 
 				assert.NoError(t, err)
 
@@ -525,7 +522,24 @@ func TestConcurrentAppend(t *testing.T) {
 			assert.False(t, found, "key given out multiple times")
 		}
 	}
+}
 
+func TestDualAppend(t *testing.T) {
+	kg := "logdual"
+	v1 := "value-1"
+	v2 := "value-2"
+
+	err := db.CreateKeygroup(kg)
+
+	assert.NoError(t, err)
+
+	err = db.Append(kg, "0", v1, 0)
+
+	assert.NoError(t, err)
+
+	err = db.Append(kg, "0", v2, 0)
+
+	assert.Error(t, err)
 }
 
 func TestTriggerNodes(t *testing.T) {
@@ -617,7 +631,7 @@ func TestPutItemVersion(t *testing.T) {
 	v1.Set("X", 10)
 	v1.Set("Y", 3)
 	v1.Set("Z", 7)
-	err = db.Update(kg, id, value, false, 0, v1)
+	err = db.Update(kg, id, value, 0, v1)
 
 	assert.NoError(t, err)
 
@@ -646,7 +660,7 @@ func TestDeleteVersion(t *testing.T) {
 	v1.Set("X", 10)
 	v1.Set("Y", 3)
 	v1.Set("Z", 7)
-	err = db.Update(kg, id, value, false, 0, v1)
+	err = db.Update(kg, id, value, 0, v1)
 
 	assert.NoError(t, err)
 
@@ -673,7 +687,7 @@ func TestClose(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	err = db.Update(kg, id, value, false, 0, vclock.VClock{})
+	err = db.Update(kg, id, value, 0, vclock.VClock{})
 
 	assert.NoError(t, err)
 

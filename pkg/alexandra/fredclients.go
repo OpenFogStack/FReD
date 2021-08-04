@@ -142,8 +142,10 @@ func (c *Client) Delete(ctx context.Context, keygroup string, id string) (*fredC
 // Append also updates the moving average item speed
 func (c *Client) Append(ctx context.Context, keygroup string, data string) (*fredClients.AppendResponse, error) {
 	start := time.Now()
+	id := uint64(time.Now().UnixNano())
 	res, err := c.Client.Append(ctx, &fredClients.AppendRequest{
 		Keygroup: keygroup,
+		Id:       id,
 		Data:     data,
 	})
 	if err == nil {

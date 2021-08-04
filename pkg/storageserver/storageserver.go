@@ -24,7 +24,7 @@ func NewStorageServer(store *fred.Store) *Server {
 func (s *Server) Update(_ context.Context, req *storage.UpdateRequest) (*storage.UpdateResponse, error) {
 	log.Debug().Msgf("GRPCServer: Update in=%#v", req)
 
-	err := s.store.Update(req.Keygroup, req.Id, req.Val, req.Append, int(req.Expiry), vclock.VClock{}.CopyFromMap(req.Version))
+	err := s.store.Update(req.Keygroup, req.Id, req.Val, int(req.Expiry), vclock.VClock{}.CopyFromMap(req.Version))
 
 	if err != nil {
 		log.Err(err).Msgf("GRPCServer has encountered an error while updating item %#v", req)
@@ -37,16 +37,14 @@ func (s *Server) Update(_ context.Context, req *storage.UpdateRequest) (*storage
 func (s *Server) Append(_ context.Context, req *storage.AppendRequest) (*storage.AppendResponse, error) {
 	log.Debug().Msgf("GRPCServer: Append in=%#v", req)
 
-	key, err := s.store.Append(req.Keygroup, req.Val, int(req.Expiry))
+	err := s.store.Append(req.Keygroup, req.Id, req.Val, int(req.Expiry))
 
 	if err != nil {
 		log.Err(err).Msgf("GRPCServer has encountered an error while appending item %#v", req)
 		return nil, err
 	}
 
-	return &storage.AppendResponse{
-		Key: key,
-	}, nil
+	return &storage.AppendResponse{}, nil
 }
 
 // Delete calls specific method of the storage interface
