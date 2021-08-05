@@ -103,12 +103,15 @@ In this example case, the following commands are required:
 ./gen-cert.sh fredclient 172.26.1.3
 ```
 
+If you want to add additional IP addresses (e.g., a server listens on several interfaces), modify the script for additional `IP.X` entries in the `[alt_names]` section of the CSR.
+If you want the certificate to be valid for a hostname, add `DNS.1`, etc.
+
 #### Network
 
 If you run this example in Docker, you must first create a simple network for the individual services to talk to each other:
 
 ```bash
-docker network create fredwork --gateway 172.26.0.1 --subnet 172.26.0.0/16
+docker network create examplenetwork --gateway 172.26.0.1 --subnet 172.26.0.0/16
 ```
 
 #### NaSe
@@ -121,7 +124,7 @@ docker run -d \
 -v $(pwd)/etcdnase.crt:/cert/etcdnase.crt \
 -v $(pwd)/etcdnase.key:/cert/etcdnase.key \
 -v $(pwd)/ca.crt:/cert/ca.crt \
---network=fredwork \
+--network=examplenetwork \
 --ip=172.26.1.1 \
 gcr.io/etcd-development/etcd:v3.5.0 \
 etcd --name s-1 \
@@ -151,7 +154,7 @@ docker run -d \
 -v $(pwd)/frednode.crt:/cert/frednode.crt \
 -v $(pwd)/frednode.key:/cert/frednode.key \
 -v $(pwd)/ca.crt:/cert/ca.crt \
---network=fredwork \
+--network=examplenetwork \
 --ip=172.26.1.2 \
 fred \
 fred --log-level info \
@@ -191,7 +194,7 @@ docker run \
 -v $(pwd)/fredclient.key:/cert/fredclient.key \
 -v $(pwd)/ca.crt:/cert/ca.crt \
 -v $(pwd)/proto/client/client.proto:/client.proto \
---network=fredwork \
+--network=examplenetwork \
 --ip=172.26.1.3 \
 -it \
 grpcc \
@@ -502,6 +505,7 @@ Some last words, keep pull requests small (not 100 files changed etc :D), so the
 ### Code Quality and Testing
 
 In order to keep our code clean and working, we provide a number of test suites and support a number of code quality tools.
+Please keep in mind that most tests require a working Docker installation.
 
 #### Static Analysis
 
@@ -545,13 +549,13 @@ This is part of a TDD approach where tests can be defined first and the software
 
 The "3 node test" starts a FReD deployment of three FReD nodes and runs a client against the FReD cluster that validates different functionalities.
 It can be found in `./tests/3NodeTest`.
-It uses Docker compose and can thus easily be started with `make 3n-all`.
+It uses Docker compose and can thus easily be started with `go test .`.
 
 The deployment comprises a single `etcd` Docker container as a NaSe, a simple trigger node, two FReD nodes that each comprise only a single machine (node _B_ and _C_) with a storage server, and a distributed FReD node _A_ that comprises three individual FReD machines behind a `fredproxy` sharing a single storage server.
 All machines are connected over a Docker network.
 
 The test client runs a number of operations against the FReD deployment and outputs a list of errors.
-The complete code for the test client can be found in `./tests/3NodeTest/cmd/main/main.go`.
+The complete code for the test client can be found in `./tests/3NodeTest/3node_test.go`.
 
 When the debug log output of the individual nodes is not enough to debug an issue, it is also possible to connect a `dlv` debugger directly to FReD node _B_ to set breakpoints or step through code.
 This is currently configured to use the included debugger in the GoLang IDE.
@@ -582,5 +586,4 @@ $ ./frednode --cpuprofile fredcpu.pprof --memprof fredmem.pprof [ALL_YOUR_OTHER_
 # you also need to provide the path to your frednode binary
 $ go tool pprof --pdf ./frednode fredcpu.pprof > cpu.pdf
 $ go tool pprof --pdf ./frednode fredmem.pprof > mem.pdf
-
 ```

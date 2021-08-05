@@ -20,16 +20,7 @@ COPY proto proto
 
 RUN CGO_ENABLED=0 go install ./cmd/alexandra/
 
-# actual Docker image
-FROM scratch
-
-WORKDIR /
-
-COPY --from=golang /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=golang /go/bin/alexandra alexandra
-
 EXPOSE 443
 EXPOSE 10000
 
-ENV PATH=.
-ENTRYPOINT ["alexandra"]
+ENTRYPOINT ["/go/bin/alexandra"]

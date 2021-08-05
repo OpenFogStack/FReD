@@ -11,7 +11,6 @@ services:
       context: ../../
       dockerfile: alexandra.Dockerfile
     image: fred/alexandra:local
-    container_name: alexandra
     command: "--lighthouse 172.26.2.1:9001 \
       --ca-cert /cert/ca.crt \
       --alexandra-key /cert/alexandra.key \
@@ -27,7 +26,3 @@ services:
     networks:
       fredwork:
         ipv4_address: 172.26.4.1
-
-networks:
-  fredwork:
-    external: true

@@ -1,4 +1,0 @@
-**/*
-!/pkg/*
-!/cmd/*
-!nodeA-haproxy.cfg

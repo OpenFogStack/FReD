@@ -13,7 +13,6 @@ services:
       - seccomp:unconfined
     cap_add:
       - SYS_PTRACE
-    container_name: nodeB
     command: "--remote-storage-host 172.26.2.2:1337 \
     --peer-host 172.26.2.1:5555 \
     --nodeID nodeB \
@@ -55,7 +54,6 @@ services:
       context: ../../
       dockerfile: storage.Dockerfile
     image: fred/store:local
-    container_name: storeB
     command: "--cert /cert/cert.crt \
     --key /cert/key.key \
     --ca-file /cert/ca.crt"
@@ -66,7 +64,3 @@ services:
     networks:
       fredwork:
         ipv4_address: 172.26.2.2
-
-networks:
-  fredwork:
-    external: true

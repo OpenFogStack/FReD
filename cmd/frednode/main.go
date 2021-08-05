@@ -313,6 +313,8 @@ func main() {
 	isProxied := fc.Server.Proxy != "" && fc.Server.Host != fc.Server.Proxy
 	es := api.NewServer(fc.Server.Host, f.E, fc.Server.Cert, fc.Server.Key, fc.Server.CA, isProxied, fc.Server.Proxy)
 
+	log.Info().Msg("FReD Node is operational!")
+
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit,
 		os.Interrupt,

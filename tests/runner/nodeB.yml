@@ -7,7 +7,6 @@ services:
       - etcd
       - storeB
     image: fred/fred:local
-    container_name: nodeB
     command: "--remote-storage-host 172.26.2.2:1337 \
     --peer-host 172.26.2.1:5555 \
     --nodeID nodeB \
@@ -39,7 +38,7 @@ services:
       - ./certificates/nodeB.key:/cert/nodeB.key
       - ./certificates/ca.crt:/cert/ca.crt
     ports:
-      - 9003:9001
+      - 9002:9001
     networks:
       fredwork:
         ipv4_address: 172.26.2.1
@@ -49,7 +48,6 @@ services:
       context: ../../
       dockerfile: storage.Dockerfile
     image: fred/store:local
-    container_name: storeB
     command: "--log-level '${LOG_LEVEL_STORE}' \
     --cert /cert/cert.crt \
     --key /cert/key.key \
@@ -61,7 +59,3 @@ services:
     networks:
       fredwork:
         ipv4_address: 172.26.2.2
-
-networks:
-  fredwork:
-    external: true

@@ -30,7 +30,7 @@ func NewServer(host string, caCert string, serverCert string, serverKey string, 
 		log.Fatal().Msg("alexandra server: no certificate file given")
 	}
 
-	if serverCert == "" {
+	if serverKey == "" {
 		log.Fatal().Msg("alexandra server: no key file given")
 	}
 
