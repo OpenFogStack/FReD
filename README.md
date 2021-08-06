@@ -566,6 +566,11 @@ It uses the Docker API to destroy and start the corresponding containers.
 
 The code can be found in `./tests/FailingNodeTest` but can be started with `make failtest` in `./tests/3NodeTest/` after a deployment has been created with `make fred`.
 
+#### Cluster
+
+You can easily set up a cluster of FReD nodes by using the `run-cluster.sh` script in the `cluster/` folder.
+Simply run `bash run-cluster.sh [NUM_NODES]` to spawn up to 263 FReD nodes.
+
 #### Profiling
 
 FReD supports CPU and memory profiling for the main `frednode` binary.
