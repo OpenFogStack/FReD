@@ -12,6 +12,7 @@ service Middleware {
   rpc Update (UpdateRequest) returns (Empty);
   rpc Delete (DeleteRequest) returns (Empty);
   rpc Append (AppendRequest) returns (AppendResponse);
+  rpc Notify (NotifyRequest) returns (NotifyResponse);
   rpc AddReplica (AddReplicaRequest) returns (Empty);
   rpc GetKeygroupReplica (GetKeygroupReplicaRequest) returns (GetKeygroupReplicaResponse);
   rpc RemoveReplica (RemoveReplicaRequest) returns (Empty);
@@ -45,6 +46,12 @@ message DeleteKeygroupRequest {
   string keygroup = 1;
 }
 
+message Item  {
+  string id = 1;
+  string val = 2;
+  map<string, uint64> version = 3;
+}
+
 message ReadRequest {
   string keygroup = 1;
   string id = 2;
@@ -52,7 +59,7 @@ message ReadRequest {
 }
 
 message ReadResponse {
-  string data = 1;
+  repeated Item items = 1;
 }
 
 message ScanRequest {
@@ -84,6 +91,14 @@ message AppendRequest {
 message AppendResponse {
   string id = 1;
 }
+
+message NotifyRequest{
+  string keygroup = 1;
+  string id = 2;
+  map<string, uint64> version = 3;
+}
+
+message NotifyResponse{}
 
 message DeleteRequest {
   string keygroup = 1;

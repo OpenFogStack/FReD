@@ -73,7 +73,7 @@ func vectorFromString(s string) (vclock.VClock, error) {
 		return nil, err
 	}
 
-	return vclock.VClock{}.CopyFromMap(b), nil
+	return b, nil
 }
 
 func vectorToString(v vclock.VClock) string {

@@ -332,7 +332,7 @@ func (n *Node) PutItem(kgname, item string, data string, expectError bool) vcloc
 		return nil
 	}
 
-	return vclock.VClock{}.CopyFromMap(res.Version.Version)
+	return res.Version.Version
 }
 
 // PutItemVersion calls the PutItem endpoint of the GRPC interface with a version.
@@ -361,7 +361,7 @@ func (n *Node) PutItemVersion(kgname, item string, data string, version vclock.V
 		return nil
 	}
 
-	return vclock.VClock{}.CopyFromMap(res.Version.Version)
+	return res.Version.Version
 }
 
 // AppendItem calls the AppendItem endpoint of the GRPC interface.
@@ -415,7 +415,7 @@ func (n *Node) GetItem(kgname, item string, expectError bool) ([]string, []vcloc
 
 	for i, it := range res.Data {
 		vals[i] = it.Val
-		vvectors[i] = vclock.VClock{}.CopyFromMap(it.Version)
+		vvectors[i] = it.Version
 	}
 
 	return vals, vvectors

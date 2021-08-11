@@ -31,8 +31,9 @@ func main() {
 	// Read this value from anywhere
 	log.Info().Msg("Reading Value from alexandraTest")
 	read := c.Read("alexandraTest", "id", 500, false)
-	if read != "data" {
-		log.Fatal().Msgf("Read alexandraTest/id: expected 'data' but got '%s'", read)
+
+	if len(read) != 1 || read[0] != "data" {
+		log.Fatal().Msgf("Read alexandraTest/id: expected 'data' but got '%v'", read)
 	}
 
 	// Add the other nodes to the keygroup
@@ -42,9 +43,9 @@ func main() {
 
 	log.Info().Msg("Reading Value from alexandraTest again")
 	read = c.Read("alexandraTest", "id", 500, false)
-	if read != "data" {
-		log.Fatal().Msgf("Read alexandraTest/id: expected 'data' but got '%s'", read)
-	}
 
+	if len(read) != 1 || read[0] != "data" {
+		log.Fatal().Msgf("Read alexandraTest/id: expected 'data' but got '%v'", read)
+	}
 	log.Info().Msgf("Finished!")
 }

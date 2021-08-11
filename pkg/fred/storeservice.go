@@ -74,90 +74,6 @@ func newStoreService(iS Store, id NodeID) *storeService {
 	}
 }
 
-// TODO: bring this back if we need it again - currently older versions are pruned automatically when updated
-//func (s *storeService) cleanOlderVersions(items []Item) ([]Item, error) {
-//	if len(items) <= 1 {
-//		return items, nil
-//	}
-//	//fmt.Printf("%#v\n", items)
-//
-//	// for each key, we keep a list of the items
-//	known := make(map[string][]*Item)
-//	// we also keep a set of items we don't need anymore
-//	pruneset := make(map[*Item]struct{})
-//
-//	// we iterate over all items
-//	for i, item := range items {
-//		// check if we already have a version of this item
-//		_, ok := known[item.ID]
-//
-//		// no? add a new list for this id and go on to the next item
-//		if !ok {
-//			known[item.ID] = []*Item{&items[i]}
-//			continue
-//		}
-//
-//		// yes we have a list for this item already
-//		// let's check all of the existing items
-//		discard := false
-//		for j, ks := range known[item.ID] {
-//			if ks == nil {
-//				continue
-//			}
-//			//log.Debug().Msgf("cleanOlderVersions: comparing %#v and %#v", ks, item)
-//			// equal vclocks mean we have two of the same item - just ignore this item then
-//			if ks.Version.Compare(item.Version, vclock.Equal) {
-//				discard = true
-//				break
-//			}
-//
-//			// concurrent clocks we need to keep both versions
-//			if ks.Version.Compare(item.Version, vclock.Concurrent) {
-//				continue
-//			}
-//
-//			// currently saved clock is a descendant of clock of this item -> ignore current item (also delete that version)
-//			if ks.Version.Compare(item.Version, vclock.Ancestor) {
-//				discard = true
-//				continue
-//			}
-//
-//			// currently saved clock is an ancestor of clock of this item -> remove currently saved item (also from store) and save newer one
-//			if ks.Version.Compare(item.Version, vclock.Descendant) {
-//				log.Debug().Msgf("adding %#v to pruneset as ancestor", known[item.ID][j].Version)
-//				pruneset[known[item.ID][j]] = struct{}{}
-//				known[item.ID][j] = nil
-//				continue
-//			}
-//		}
-//		if !discard {
-//			known[item.ID] = append(known[item.ID], &items[i])
-//			continue
-//		}
-//
-//		log.Debug().Msgf("adding %#v to pruneset as discarded", item.Version)
-//		pruneset[&items[i]] = struct{}{}
-//	}
-//
-//	it := make([]Item, 0, len(items))
-//
-//	for _, k := range known {
-//		for _, l := range k {
-//			if l != nil {
-//				it = append(it, *l)
-//			}
-//		}
-//	}
-//
-//	for item := range pruneset {
-//		s.prune(string(item.Keygroup), item.ID, []vclock.VClock{item.Version})
-//	}
-//
-//	log.Debug().Msgf("cleanOlderVersions: reduced %#v to %#v", items, it)
-//
-//	return it, nil
-//}
-
 // Read returns an item from the key-value store.
 func (s *storeService) read(kg KeygroupName, id string) ([]Item, error) {
 	// TODO: make this part of the single writer thing?
@@ -632,48 +548,6 @@ func (s *storeService) prune(kg string, id string, versions []vclock.VClock) {
 
 	log.Debug().Msgf("pruning: versions %#v pruned, have versions %#v", versions, v)
 }
-
-//// Delete removes an item from the key-value store.
-//func (s *storeService) delete(kg KeygroupName, id string) error {
-//	err := checkKGandID(kg, id)
-//
-//	if err != nil {
-//		return err
-//	}
-//
-//	if !s.iS.ExistsKeygroup(string(kg)) {
-//		return errors.Errorf("no such keygroup in store: %#v", kg)
-//	}
-//
-//	err = s.iS.Delete(string(kg), id, nil)
-//
-//	if err != nil {
-//		return err
-//	}
-//
-//	return nil
-//}
-//
-//// DeleteVersion removes an item at a specific version from the key-value store.
-//func (s *storeService) deleteVersion(kg KeygroupName, id string, vvector vclock.VClock) error {
-//	err := checkKGandID(kg, id)
-//
-//	if err != nil {
-//		return err
-//	}
-//
-//	if !s.iS.ExistsKeygroup(string(kg)) {
-//		return errors.Errorf("no such keygroup in store: %#v", kg)
-//	}
-//
-//	err = s.iS.Delete(string(kg), id, vvector)
-//
-//	if err != nil {
-//		return err
-//	}
-//
-//	return nil
-//
 
 func (s *storeService) tombstone(i Item) (vclock.VClock, error) {
 	//TODO

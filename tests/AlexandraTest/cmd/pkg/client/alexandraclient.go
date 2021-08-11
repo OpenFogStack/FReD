@@ -38,7 +38,7 @@ func NewAlexandraClient(address string) AlexandraClient {
 	tlsConfig := &tls.Config{
 		Certificates: []tls.Certificate{cert},
 		MinVersion:   tls.VersionTLS12,
-		RootCAs: rootCAs,
+		RootCAs:      rootCAs,
 	}
 
 	tc := credentials.NewTLS(tlsConfig)
@@ -70,9 +70,9 @@ func (c *AlexandraClient) dealWithResponse(operation string, err error, expectEr
 func (c *AlexandraClient) CreateKeygroup(firstNodeID string, kgname string, mutable bool, expiry int64, expectError bool) {
 	log.Debug().Msgf("CreateKeygroup: %s, %s, %t, %d", firstNodeID, kgname, mutable, expiry)
 	_, err := c.client.CreateKeygroup(context.Background(), &alexandraProto.CreateKeygroupRequest{
-		Keygroup: kgname,
-		Mutable:  mutable,
-		Expiry:   expiry,
+		Keygroup:    kgname,
+		Mutable:     mutable,
+		Expiry:      expiry,
 		FirstNodeId: firstNodeID,
 	})
 	// res.status
@@ -89,15 +89,28 @@ func (c *AlexandraClient) Update(kgname, id, data string, expectError bool) {
 	c.dealWithResponse("Update", err, expectError)
 }
 
-func (c *AlexandraClient) Read(keygroup, id string, minExpiry int64, expectError bool) string {
+func (c *AlexandraClient) Read(keygroup, id string, minExpiry int64, expectError bool) []string {
 	log.Debug().Msgf("Read: %s, %s, %d", keygroup, id, minExpiry)
+
 	res, err := c.client.Read(context.Background(), &alexandraProto.ReadRequest{
 		Keygroup:  keygroup,
 		Id:        id,
 		MinExpiry: minExpiry,
 	})
+
 	c.dealWithResponse("Read", err, expectError)
-	return res.Data
+
+	if err != nil {
+		return nil
+	}
+
+	vals := make([]string, len(res.Items))
+
+	for i := range res.Items {
+		vals[i] = res.Items[i].Val
+	}
+
+	return vals
 }
 
 func (c *AlexandraClient) AddKeygroupReplica(keygroup, node string, expiry int64, expectError bool) {

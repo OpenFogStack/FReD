@@ -30,7 +30,7 @@ func (t *SelfReplicaSuite) RunTests() {
 		logNodeFailure(t.c.nodeA, "val2", res[0])
 	}
 
-	logNodeAction(t.c.nodeA, "Add an item on nodeA, check wheter it populates to nodeB")
+	logNodeAction(t.c.nodeA, "Add an item on nodeA, check whether it populates to nodeB")
 	t.c.nodeA.PutItem("pulltest", "item3", "val3", false)
 	// check if nodeB also gets that item
 	if res, _ := t.c.nodeB.GetItem("pulltest", "item3", false); res[0] != "val3" {

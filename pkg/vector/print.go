@@ -8,9 +8,10 @@ import (
 	"github.com/DistributedClocks/GoVector/govec/vclock"
 )
 
-//SortedVCString returns a deterministic string encoding of a vector clock
+// SortedVCString returns a deterministic string encoding of a vector clock
 func SortedVCString(v vclock.VClock) string {
 	//sort
+
 	ids := make([]string, len(v))
 	i := 0
 	for id := range v {

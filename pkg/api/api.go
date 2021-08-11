@@ -272,7 +272,7 @@ func (s *Server) Read(ctx context.Context, request *client.ReadRequest) (*client
 
 	var version vclock.VClock
 	if request.Version != nil {
-		version = vclock.VClock{}.CopyFromMap(request.Version.Version)
+		version = request.Version.Version
 	}
 
 	res, err := s.e.HandleRead(user, fred.Item{Keygroup: fred.KeygroupName(request.Keygroup), ID: request.Id}, version)
@@ -367,7 +367,7 @@ func (s *Server) Update(ctx context.Context, request *client.UpdateRequest) (*cl
 
 	var versions []vclock.VClock
 	for _, v := range request.Versions {
-		versions = append(versions, vclock.VClock{}.CopyFromMap(v.Version))
+		versions = append(versions, v.Version)
 	}
 
 	i, err := s.e.HandleUpdate(user, fred.Item{Keygroup: fred.KeygroupName(request.Keygroup), ID: request.Id, Val: request.Data}, versions)
@@ -393,7 +393,7 @@ func (s *Server) Delete(ctx context.Context, request *client.DeleteRequest) (*cl
 
 	var versions []vclock.VClock
 	for _, v := range request.Versions {
-		versions = append(versions, vclock.VClock{}.CopyFromMap(v.Version))
+		versions = append(versions, v.Version)
 	}
 
 	i, err := s.e.HandleDelete(user, fred.Item{Keygroup: fred.KeygroupName(request.Keygroup), ID: request.Id}, versions)

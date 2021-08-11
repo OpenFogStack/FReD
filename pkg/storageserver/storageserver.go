@@ -5,7 +5,6 @@ import (
 
 	"git.tu-berlin.de/mcc-fred/fred/pkg/fred"
 	"git.tu-berlin.de/mcc-fred/fred/proto/storage"
-	"github.com/DistributedClocks/GoVector/govec/vclock"
 	"github.com/rs/zerolog/log"
 )
 
@@ -24,7 +23,7 @@ func NewStorageServer(store *fred.Store) *Server {
 func (s *Server) Update(_ context.Context, req *storage.UpdateRequest) (*storage.UpdateResponse, error) {
 	log.Debug().Msgf("GRPCServer: Update in=%#v", req)
 
-	err := s.store.Update(req.Keygroup, req.Id, req.Val, int(req.Expiry), vclock.VClock{}.CopyFromMap(req.Version))
+	err := s.store.Update(req.Keygroup, req.Id, req.Val, int(req.Expiry), req.Version)
 
 	if err != nil {
 		log.Err(err).Msgf("GRPCServer has encountered an error while updating item %#v", req)
@@ -51,7 +50,7 @@ func (s *Server) Append(_ context.Context, req *storage.AppendRequest) (*storage
 func (s Server) Delete(_ context.Context, req *storage.DeleteRequest) (*storage.DeleteResponse, error) {
 	log.Debug().Msgf("GRPCServer: Delete in=%#v", req)
 
-	err := s.store.Delete(req.Keygroup, req.Id, vclock.VClock{}.CopyFromMap(req.Version))
+	err := s.store.Delete(req.Keygroup, req.Id, req.Version)
 	if err != nil {
 		log.Err(err).Msgf("GRPCServer has encountered an error while deleting item %#v", req)
 		return nil, err

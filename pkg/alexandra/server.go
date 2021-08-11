@@ -21,6 +21,7 @@ type Server struct {
 	clientsMgr *ClientsMgr
 	lighthouse string
 	lis        net.Listener
+	cache      *cache
 	*grpc.Server
 }
 
@@ -72,13 +73,14 @@ func NewServer(host string, caCert string, serverCert string, serverKey string, 
 	}
 
 	s := &Server{
-		rootCAs,
-		isProxied,
-		proxyHost,
-		NewClientsManager(nodesCert, nodesKey, lighthouse),
-		lighthouse,
-		lis,
-		grpc.NewServer(
+		roots:      rootCAs,
+		isProxied:  isProxied,
+		proxyHost:  proxyHost,
+		clientsMgr: newClientsManager(nodesCert, nodesKey, lighthouse),
+		lighthouse: lighthouse,
+		lis:        lis,
+		cache:      newCache(),
+		Server: grpc.NewServer(
 			grpc.Creds(credentials.NewTLS(config)),
 		),
 	}
@@ -92,5 +94,4 @@ func NewServer(host string, caCert string, serverCert string, serverKey string, 
 
 func (s *Server) ServeBlocking() {
 	log.Fatal().Err(s.Server.Serve(s.lis)).Msg("Alexandra Server")
-
 }

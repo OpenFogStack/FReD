@@ -7,7 +7,8 @@ import (
 	"io/ioutil"
 	"time"
 
-	fredClients "git.tu-berlin.de/mcc-fred/fred/proto/client"
+	api "git.tu-berlin.de/mcc-fred/fred/proto/client"
+	"github.com/DistributedClocks/GoVector/govec/vclock"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -17,12 +18,12 @@ import (
 const alphaItemSpeed = float32(0.8)
 
 type Client struct {
-	Client    fredClients.ClientClient
+	Client    api.ClientClient
 	conn      *grpc.ClientConn
 	ReadSpeed float32
 }
 
-func NewClient(host, certFile, keyFile string) *Client {
+func newClient(host, certFile, keyFile string) *Client {
 
 	if certFile == "" {
 		log.Fatal().Msg("fredclient: no certificate file given")
@@ -62,10 +63,10 @@ func NewClient(host, certFile, keyFile string) *Client {
 
 	if err != nil {
 		log.Fatal().Err(err).Msgf("Cannot create Grpc connection to client %s", host)
-		return &Client{Client: fredClients.NewClientClient(conn)}
+		return &Client{Client: api.NewClientClient(conn)}
 	}
 	log.Info().Msgf("Creating a connection to fred node: %s", host)
-	return &Client{Client: fredClients.NewClientClient(conn), conn: conn, ReadSpeed: -1}
+	return &Client{Client: api.NewClientClient(conn), conn: conn, ReadSpeed: -1}
 }
 
 // updateItemSpeed saves a moving average of how long it takes for a fred node to respond.
@@ -82,8 +83,8 @@ func (c *Client) updateItemSpeed(elapsed time.Duration) {
 	}
 }
 
-func (c *Client) CreateKeygroup(ctx context.Context, keygroup string, mutable bool, expiry int64) (*fredClients.Empty, error) {
-	res, err := c.Client.CreateKeygroup(ctx, &fredClients.CreateKeygroupRequest{
+func (c *Client) createKeygroup(ctx context.Context, keygroup string, mutable bool, expiry int64) (*api.Empty, error) {
+	res, err := c.Client.CreateKeygroup(ctx, &api.CreateKeygroupRequest{
 		Keygroup: keygroup,
 		Mutable:  mutable,
 		Expiry:   expiry,
@@ -91,15 +92,15 @@ func (c *Client) CreateKeygroup(ctx context.Context, keygroup string, mutable bo
 	return res, err
 }
 
-func (c *Client) DeleteKeygroup(ctx context.Context, keygroup string) (*fredClients.Empty, error) {
-	res, err := c.Client.DeleteKeygroup(ctx, &fredClients.DeleteKeygroupRequest{Keygroup: keygroup})
+func (c *Client) deleteKeygroup(ctx context.Context, keygroup string) (*api.Empty, error) {
+	res, err := c.Client.DeleteKeygroup(ctx, &api.DeleteKeygroupRequest{Keygroup: keygroup})
 	return res, err
 }
 
 // Read also updates the moving average item speed
-func (c *Client) Read(ctx context.Context, keygroup string, id string) (*fredClients.ReadResponse, error) {
+func (c *Client) read(ctx context.Context, keygroup string, id string) (*api.ReadResponse, error) {
 	start := time.Now()
-	res, err := c.Client.Read(ctx, &fredClients.ReadRequest{
+	res, err := c.Client.Read(ctx, &api.ReadRequest{
 		Keygroup: keygroup,
 		Id:       id,
 	})
@@ -110,40 +111,105 @@ func (c *Client) Read(ctx context.Context, keygroup string, id string) (*fredCli
 	return res, err
 }
 
+/*
 // Update also updates the moving average item speed
-func (c *Client) Update(ctx context.Context, keygroup string, id string, data string) (*fredClients.Empty, error) {
+func (c *Client) update(ctx context.Context, keygroup string, id string, data string) (vclock.VClock, error) {
 	start := time.Now()
-	_, err := c.Client.Update(ctx, &fredClients.UpdateRequest{
+	res, err := c.Client.Update(ctx, &api.UpdateRequest{
 		Keygroup: keygroup,
 		Id:       id,
 		Data:     data,
 	})
-	if err == nil {
-		elapsed := time.Since(start)
-		c.updateItemSpeed(elapsed)
+
+	if err != nil {
+		return nil, err
 	}
-	return &fredClients.Empty{}, err
+
+	elapsed := time.Since(start)
+	c.updateItemSpeed(elapsed)
+
+	return res.Version.Version, nil
+}*/
+
+// UpdateVersions also updates the moving average item speed
+func (c *Client) updateVersions(ctx context.Context, keygroup string, id string, data string, versions []vclock.VClock) (vclock.VClock, error) {
+	v := make([]*api.Version, len(versions))
+
+	for i, vvector := range versions {
+		v[i] = &api.Version{
+			Version: vvector.GetMap(),
+		}
+	}
+
+	start := time.Now()
+	res, err := c.Client.Update(ctx, &api.UpdateRequest{
+		Keygroup: keygroup,
+		Id:       id,
+		Data:     data,
+		Versions: v,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	elapsed := time.Since(start)
+	c.updateItemSpeed(elapsed)
+
+	return res.Version.Version, nil
 }
 
+/*
 // Delete also updates the moving average item speed
-func (c *Client) Delete(ctx context.Context, keygroup string, id string) (*fredClients.Empty, error) {
+func (c *Client) delete(ctx context.Context, keygroup string, id string) (vclock.VClock, error) {
 	start := time.Now()
-	_, err := c.Client.Delete(ctx, &fredClients.DeleteRequest{
+	res, err := c.Client.Delete(ctx, &api.DeleteRequest{
 		Keygroup: keygroup,
 		Id:       id,
 	})
-	if err == nil {
-		elapsed := time.Since(start)
-		c.updateItemSpeed(elapsed)
+
+	if err != nil {
+		return nil, err
 	}
-	return &fredClients.Empty{}, err
+
+	elapsed := time.Since(start)
+	c.updateItemSpeed(elapsed)
+
+	return res.Version.Version, nil
+}*/
+
+// DeleteVersions also updates the moving average item speed
+func (c *Client) deleteVersions(ctx context.Context, keygroup string, id string, versions []vclock.VClock) (vclock.VClock, error) {
+	v := make([]*api.Version, len(versions))
+
+	for i, vvector := range versions {
+		v[i] = &api.Version{
+			Version: vvector.GetMap(),
+		}
+	}
+
+	start := time.Now()
+	res, err := c.Client.Delete(ctx, &api.DeleteRequest{
+		Keygroup: keygroup,
+		Id:       id,
+		Versions: v,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	elapsed := time.Since(start)
+	c.updateItemSpeed(elapsed)
+
+	return res.Version.Version, nil
 }
 
 // Append also updates the moving average item speed
-func (c *Client) Append(ctx context.Context, keygroup string, data string) (*fredClients.AppendResponse, error) {
+func (c *Client) append(ctx context.Context, keygroup string, data string) (*api.AppendResponse, error) {
 	start := time.Now()
 	id := uint64(time.Now().UnixNano())
-	res, err := c.Client.Append(ctx, &fredClients.AppendRequest{
+	res, err := c.Client.Append(ctx, &api.AppendRequest{
 		Keygroup: keygroup,
 		Id:       id,
 		Data:     data,
@@ -155,66 +221,11 @@ func (c *Client) Append(ctx context.Context, keygroup string, data string) (*fre
 	return res, err
 }
 
-func (c *Client) AddReplica(ctx context.Context, keygroup string, nodeID string, expiry int64) (*fredClients.Empty, error) {
-	res, err := c.Client.AddReplica(ctx, &fredClients.AddReplicaRequest{
-		Keygroup: keygroup,
-		NodeId:   nodeID,
-		Expiry:   expiry,
-	})
+func (c *Client) getKeygroupReplica(ctx context.Context, keygroup string) (*api.GetKeygroupReplicaResponse, error) {
+	res, err := c.Client.GetKeygroupReplica(ctx, &api.GetKeygroupReplicaRequest{Keygroup: keygroup})
 	return res, err
 }
 
-func (c *Client) GetKeygroupReplica(ctx context.Context, keygroup string) (*fredClients.GetKeygroupReplicaResponse, error) {
-	res, err := c.Client.GetKeygroupReplica(ctx, &fredClients.GetKeygroupReplicaRequest{Keygroup: keygroup})
-	return res, err
-}
-
-func (c *Client) RemoveReplica(ctx context.Context, keygroup string, nodeID string) (*fredClients.Empty, error) {
-	return c.Client.RemoveReplica(ctx, &fredClients.RemoveReplicaRequest{
-		Keygroup: keygroup,
-		NodeId:   nodeID,
-	})
-}
-
-func (c *Client) GetReplica(ctx context.Context, nodeID string) (*fredClients.GetReplicaResponse, error) {
-	return c.Client.GetReplica(ctx, &fredClients.GetReplicaRequest{NodeId: nodeID})
-}
-
-func (c *Client) GetAllReplica(ctx context.Context) (*fredClients.GetAllReplicaResponse, error) {
-	return c.Client.GetAllReplica(ctx, &fredClients.Empty{})
-}
-
-func (c *Client) GetKeygroupTriggers(ctx context.Context, keygroup string) (*fredClients.GetKeygroupTriggerResponse, error) {
-	return c.Client.GetKeygroupTriggers(ctx, &fredClients.GetKeygroupTriggerRequest{Keygroup: keygroup})
-}
-
-func (c *Client) AddTrigger(ctx context.Context, keygroup string, triggerID string, triggerHost string) (*fredClients.Empty, error) {
-	return c.Client.AddTrigger(ctx, &fredClients.AddTriggerRequest{
-		Keygroup:    keygroup,
-		TriggerId:   triggerID,
-		TriggerHost: triggerHost,
-	})
-}
-
-func (c *Client) RemoveTrigger(ctx context.Context, keygroup, triggerID string) (*fredClients.Empty, error) {
-	return c.Client.RemoveTrigger(ctx, &fredClients.RemoveTriggerRequest{
-		Keygroup:  keygroup,
-		TriggerId: triggerID,
-	})
-}
-
-func (c *Client) AddUser(ctx context.Context, user, keygroup string, role fredClients.UserRole) (*fredClients.Empty, error) {
-	return c.Client.AddUser(ctx, &fredClients.AddUserRequest{
-		User:     user,
-		Keygroup: keygroup,
-		Role:     role,
-	})
-}
-
-func (c *Client) RemoveUser(ctx context.Context, user, keygroup string, role fredClients.UserRole) (*fredClients.Empty, error) {
-	return c.Client.RemoveUser(ctx, &fredClients.RemoveUserRequest{
-		User:     user,
-		Keygroup: keygroup,
-		Role:     role,
-	})
+func (c *Client) getReplica(ctx context.Context, nodeID string) (*api.GetReplicaResponse, error) {
+	return c.Client.GetReplica(ctx, &api.GetReplicaRequest{NodeId: nodeID})
 }
