@@ -415,7 +415,7 @@ func (n *Node) GetItem(kgname, item string, expectError bool) ([]string, []vcloc
 
 	for i, it := range res.Data {
 		vals[i] = it.Val
-		vvectors[i] = it.Version
+		vvectors[i] = it.Version.Version
 	}
 
 	return vals, vvectors

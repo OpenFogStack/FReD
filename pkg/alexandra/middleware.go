@@ -2,6 +2,7 @@ package alexandra
 
 import (
 	"context"
+	"fmt"
 
 	api "git.tu-berlin.de/mcc-fred/fred/proto/client"
 	alexandraProto "git.tu-berlin.de/mcc-fred/fred/proto/middleware"
@@ -31,14 +32,15 @@ func (s *Server) Scan(ctx context.Context, req *alexandraProto.ScanRequest) (*al
 			Data: datum.Val,
 		}
 
-		err = s.cache.add(req.Keygroup, req.Id, datum.Version)
+		err = s.cache.add(req.Keygroup, req.Id, datum.Version.Version)
 	}
 
 	return &alexandraProto.ScanResponse{Data: data}, err
 }
 
 // Read reads a datum from FReD. Read data are placed in cache (if not in there already). If multiple versions of a
-// datum exist, all versions will be returned to the client so that it can choose one.
+// datum exist, all versions will be returned to the client so that it can choose one. If the read data is outdated
+// compared to seen versions, an error is returned.
 func (s *Server) Read(ctx context.Context, req *alexandraProto.ReadRequest) (*alexandraProto.ReadResponse, error) {
 	log.Debug().Msgf("Alexandra has rcvd Read")
 
@@ -46,6 +48,20 @@ func (s *Server) Read(ctx context.Context, req *alexandraProto.ReadRequest) (*al
 
 	if err != nil {
 		return nil, err
+	}
+
+	known, err := s.cache.get(req.Keygroup, req.Id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, read := range versions {
+		for _, seen := range known {
+			if seen.Compare(read, vclock.Ancestor) {
+				return nil, fmt.Errorf("read version %v is older than seen version %v", read, seen)
+			}
+		}
 	}
 
 	for i := range versions {

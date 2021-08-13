@@ -270,12 +270,12 @@ func (s *Server) Read(ctx context.Context, request *client.ReadRequest) (*client
 		return nil, err
 	}
 
-	var version vclock.VClock
-	if request.Version != nil {
-		version = request.Version.Version
+	versions := make([]vclock.VClock, len(request.Versions))
+	for i, v := range request.Versions {
+		versions[i] = v.Version
 	}
 
-	res, err := s.e.HandleRead(user, fred.Item{Keygroup: fred.KeygroupName(request.Keygroup), ID: request.Id}, version)
+	res, err := s.e.HandleRead(user, fred.Item{Keygroup: fred.KeygroupName(request.Keygroup), ID: request.Id}, versions)
 
 	if err != nil {
 		log.Debug().Msgf("API Server is returning error: %#v", err)
@@ -287,9 +287,11 @@ func (s *Server) Read(ctx context.Context, request *client.ReadRequest) (*client
 
 	for i := 0; i < len(res); i++ {
 		data[i] = &client.Item{
-			Id:      res[i].ID,
-			Val:     res[i].Val,
-			Version: res[i].Version.GetMap(),
+			Id:  res[i].ID,
+			Val: res[i].Val,
+			Version: &client.Version{
+				Version: res[i].Version.GetMap(),
+			},
 		}
 	}
 
@@ -321,9 +323,11 @@ func (s *Server) Scan(ctx context.Context, request *client.ScanRequest) (*client
 
 	for i := 0; i < len(res); i++ {
 		data[i] = &client.Item{
-			Id:      res[i].ID,
-			Val:     res[i].Val,
-			Version: res[i].Version.GetMap(),
+			Id:  res[i].ID,
+			Val: res[i].Val,
+			Version: &client.Version{
+				Version: res[i].Version.GetMap(),
+			},
 		}
 	}
 

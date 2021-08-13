@@ -113,7 +113,10 @@ func (s *storeService) read(kg KeygroupName, id string) ([]Item, error) {
 	return items, nil
 }
 
-func (s *storeService) readVersion(kg KeygroupName, id string, version vclock.VClock) ([]Item, error) {
+// readVersion reads data from the data store but also accepts a list of version vectors.
+// TODO: what for? Currently it only returns values that are equal or newer than any of the given versions, i.e, it
+// TODO: filters out concurrent versions.
+func (s *storeService) readVersion(kg KeygroupName, id string, versions []vclock.VClock) ([]Item, error) {
 	//TODO: make this part of the single writer thing?
 	err := checkKGandID(kg, id)
 
@@ -138,14 +141,17 @@ func (s *storeService) readVersion(kg KeygroupName, id string, version vclock.VC
 	var items []Item
 
 	for i := range data {
-		if version.Compare(vvectors[i], vclock.Equal) || version.Compare(vvectors[i], vclock.Ancestor) {
-			items = append(items, Item{
-				Keygroup:   kg,
-				ID:         id,
-				Val:        data[i],
-				Version:    vvectors[i],
-				Tombstoned: data[i] == "",
-			})
+		for _, v := range versions {
+			if v.Compare(vvectors[i], vclock.Equal) || v.Compare(vvectors[i], vclock.Ancestor) {
+				items = append(items, Item{
+					Keygroup:   kg,
+					ID:         id,
+					Val:        data[i],
+					Version:    vvectors[i],
+					Tombstoned: data[i] == "",
+				})
+				continue
+			}
 		}
 	}
 

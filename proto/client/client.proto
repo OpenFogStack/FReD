@@ -51,13 +51,13 @@ message DeleteKeygroupRequest {
 message ReadRequest {
   string keygroup = 1;
   string id = 2;
-  Version version = 3;
+  repeated Version versions = 3;
 }
 
 message Item  {
   string id = 1;
   string val = 2;
-  map<string, uint64> version = 3;
+  Version version = 3;
 }
 
 message ReadResponse {

@@ -104,7 +104,7 @@ func (m *ClientsMgr) readFromAnywhere(ctx context.Context, request *alexandraPro
 				}
 				for i := range res.Data {
 					r.vals[i] = res.Data[i].Val
-					r.versions[i] = res.Data[i].Version
+					r.versions[i] = res.Data[i].Version.Version
 				}
 				responses <- r
 			}
@@ -179,7 +179,7 @@ func (m *ClientsMgr) readFromAnywhere(ctx context.Context, request *alexandraPro
 
 	for i := range result.Data {
 		vals[i] = result.Data[i].Val
-		versions[i] = result.Data[i].Version
+		versions[i] = result.Data[i].Version.Version
 	}
 
 	return vals, versions, nil

@@ -76,7 +76,7 @@ func (h *ExtHandler) HandleDeleteKeygroup(user string, k Keygroup) error {
 }
 
 // HandleRead handles requests to the Read endpoint of the client interface.
-func (h *ExtHandler) HandleRead(user string, i Item, version vclock.VClock) ([]Item, error) {
+func (h *ExtHandler) HandleRead(user string, i Item, versions []vclock.VClock) ([]Item, error) {
 	allowed, err := h.a.isAllowed(user, Read, i.Keygroup)
 
 	if err != nil || !allowed {
@@ -88,10 +88,10 @@ func (h *ExtHandler) HandleRead(user string, i Item, version vclock.VClock) ([]I
 	// TODO: decide what to do with tombstoned items? right now we just don't show them
 
 	var r []Item
-	if version == nil {
+	if len(versions) == 0 {
 		r, err = h.s.read(i.Keygroup, i.ID)
 	} else {
-		r, err = h.s.readVersion(i.Keygroup, i.ID, version)
+		r, err = h.s.readVersion(i.Keygroup, i.ID, versions)
 	}
 
 	result := make([]Item, 0, len(r))
