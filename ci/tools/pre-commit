@@ -77,7 +77,7 @@ fi
 
 echo -e "${GREEN}You're not trying to commit to main!${NC}"
 
-# ------------------------------------------- GO LINT --------------------------------------------------------------
+# ------------------------------------------- GO LINT -------------------------------------------------------------
 
 echo -e "${YELLOW}Linting your code...${NC}"
 
@@ -87,3 +87,7 @@ if ! make lint; then
 fi
 
 echo -e "${GREEN}Linter did not find mistakes!${NC}"
+
+# ------------------------------------ INFORM ABOUT 3NODETEST ------------------------------------------------------
+
+echo -e "${RED}Be sure to run the complete 3NodeTest before you open up a merge request!${NC}"
