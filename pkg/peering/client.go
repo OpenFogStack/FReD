@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 
 	"git.tu-berlin.de/mcc-fred/fred/pkg/fred"
-	"git.tu-berlin.de/mcc-fred/fred/pkg/vector"
 	"git.tu-berlin.de/mcc-fred/fred/proto/peering"
 	"github.com/DistributedClocks/GoVector/govec/vclock"
 	"github.com/go-errors/errors"
@@ -143,7 +142,7 @@ func (c *Client) SendUpdate(host string, kgname fred.KeygroupName, id string, va
 		Id:         id,
 		Val:        value,
 		Tombstoned: tombstoned,
-		Version:    vector.Bytes(vvector),
+		Version:    vvector,
 	})
 
 	if err != nil {
@@ -172,45 +171,6 @@ func (c *Client) SendAppend(host string, kgname fred.KeygroupName, id string, va
 	return nil
 }
 
-// SendAddReplica sends this command to the server at this address
-func (c *Client) SendAddReplica(host string, kgname fred.KeygroupName, node fred.Node, expiry int) error {
-	client, err := c.getClient(host)
-
-	if err != nil {
-		return errors.New(err)
-	}
-
-	_, err = client.AddReplica(context.Background(), &peering.AddReplicaRequest{
-		NodeId:   string(node.ID),
-		Keygroup: string(kgname),
-		Expiry:   int64(expiry),
-	})
-
-	if err != nil {
-		return errors.New(err)
-	}
-	return nil
-}
-
-// SendRemoveReplica sends this command to the server at this address
-func (c *Client) SendRemoveReplica(host string, kgname fred.KeygroupName, node fred.Node) error {
-	client, err := c.getClient(host)
-
-	if err != nil {
-		return errors.New(err)
-	}
-
-	_, err = client.RemoveReplica(context.Background(), &peering.RemoveReplicaRequest{
-		NodeId:   string(node.ID),
-		Keygroup: string(kgname),
-	})
-
-	if err != nil {
-		return errors.New(err)
-	}
-	return nil
-}
-
 // SendGetItem sends this command to the server at this address
 func (c *Client) SendGetItem(host string, kgname fred.KeygroupName, id string) ([]fred.Item, error) {
 	client, err := c.getClient(host)
@@ -231,17 +191,11 @@ func (c *Client) SendGetItem(host string, kgname fred.KeygroupName, id string) (
 	items := make([]fred.Item, len(res.Data))
 
 	for i, item := range res.Data {
-		v, err := vector.FromBytes(item.Version)
-
-		if err != nil {
-			return nil, errors.New(err)
-		}
-
 		items[i] = fred.Item{
 			Keygroup: kgname,
 			ID:       id,
 			Val:      item.Val,
-			Version:  v,
+			Version:  item.Version,
 		}
 	}
 
@@ -267,17 +221,11 @@ func (c *Client) SendGetAllItems(host string, kgname fred.KeygroupName) ([]fred.
 	d := make([]fred.Item, len(res.Data))
 
 	for i, item := range res.Data {
-		v, err := vector.FromBytes(item.Version)
-
-		if err != nil {
-			return nil, errors.New(err)
-		}
-
 		d[i] = fred.Item{
 			Keygroup: kgname,
 			ID:       item.Id,
 			Val:      item.Val,
-			Version:  v,
+			Version:  item.Version,
 		}
 	}
 

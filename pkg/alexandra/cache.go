@@ -1,9 +1,11 @@
 package alexandra
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/DistributedClocks/GoVector/govec/vclock"
+	"github.com/rs/zerolog/log"
 )
 
 type cache struct {
@@ -84,27 +86,60 @@ func (c *cache) add(kg string, id string, version vclock.VClock) error {
 
 	newClocks := make([]vclock.VClock, 0, len(c.keygroups[kg].items[id].clocks))
 
+	// let's first go to the existing versions
 	for _, v := range c.keygroups[kg].items[id].clocks {
+		// seems like we have that version in store already!
+		// just return, nothing to do here
+		if version.Compare(v, vclock.Equal) {
+			return nil
+		}
+		// if there is a concurrent version to our new version, we need to keep that
 		if version.Compare(v, vclock.Concurrent) {
 			newClocks = append(newClocks, v)
 			continue
 		}
+		// if by chance we come upon a newer version, this has all been pointless
+		// actually, this is a bad sign: we seem to have read outdated data!
 		if version.Compare(v, vclock.Descendant) {
-			return nil
+			return fmt.Errorf("add failed because your version %v is older than cached version %v", version, v)
 		}
 	}
 
+	// now actually add the new version
+	newClocks = append(newClocks, version.Copy())
+
+	log.Debug().Msgf("Cache Add: new: %+v old: %+v", newClocks, c.keygroups[kg].items[id].clocks)
+
+	// and store our new clocks
 	c.keygroups[kg].items[id].clocks = newClocks
 	return nil
 }
 
-func (c *cache) supersede(kg string, id string, version vclock.VClock) error {
+func (c *cache) supersede(kg string, id string, known []vclock.VClock, version vclock.VClock) error {
 	c.cLock(kg, id)
 	defer c.cUnlock(kg, id)
 
-	c.keygroups[kg].items[id].clocks = []vclock.VClock{
+	newClocks := []vclock.VClock{
 		version.Copy(),
 	}
+
+	// add all clocks from cache as well, unless they are in the "known" array
+	for _, v := range c.keygroups[kg].items[id].clocks {
+		discard := false
+		for _, k := range known {
+			if v.Compare(k, vclock.Equal) {
+				discard = true
+				break
+			}
+		}
+		if discard {
+			continue
+		}
+
+		newClocks = append(newClocks, v)
+	}
+
+	c.keygroups[kg].items[id].clocks = newClocks
 
 	return nil
 }

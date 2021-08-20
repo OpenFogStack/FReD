@@ -18,7 +18,7 @@ func newAuthService(n NameService) *authService {
 }
 
 func (a *authService) addRoles(u string, r []Role, k KeygroupName) error {
-	log.Debug().Msgf("adding roles %#v for user %s for keygroup %s", r, u, k)
+	log.Debug().Msgf("adding roles %+v for user %s for keygroup %s", r, u, k)
 	for _, role := range r {
 		for m := range permissions[role] {
 
@@ -34,7 +34,7 @@ func (a *authService) addRoles(u string, r []Role, k KeygroupName) error {
 }
 
 func (a *authService) revokeRoles(u string, r []Role, k KeygroupName) error {
-	log.Debug().Msgf("removing roles %#v from user %s for keygroup %s", r, u, k)
+	log.Debug().Msgf("removing roles %+v from user %s for keygroup %s", r, u, k)
 	for _, role := range r {
 		for m := range permissions[role] {
 			err := a.n.RevokeUserPermissions(u, m, k)

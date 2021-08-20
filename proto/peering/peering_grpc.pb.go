@@ -24,8 +24,6 @@ type NodeClient interface {
 	AppendItem(ctx context.Context, in *AppendItemRequest, opts ...grpc.CallOption) (*Empty, error)
 	GetItem(ctx context.Context, in *GetItemRequest, opts ...grpc.CallOption) (*GetItemResponse, error)
 	GetAllItems(ctx context.Context, in *GetAllItemsRequest, opts ...grpc.CallOption) (*GetAllItemsResponse, error)
-	AddReplica(ctx context.Context, in *AddReplicaRequest, opts ...grpc.CallOption) (*Empty, error)
-	RemoveReplica(ctx context.Context, in *RemoveReplicaRequest, opts ...grpc.CallOption) (*Empty, error)
 }
 
 type nodeClient struct {
@@ -90,24 +88,6 @@ func (c *nodeClient) GetAllItems(ctx context.Context, in *GetAllItemsRequest, op
 	return out, nil
 }
 
-func (c *nodeClient) AddReplica(ctx context.Context, in *AddReplicaRequest, opts ...grpc.CallOption) (*Empty, error) {
-	out := new(Empty)
-	err := c.cc.Invoke(ctx, "/mcc.fred.peering.Node/AddReplica", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *nodeClient) RemoveReplica(ctx context.Context, in *RemoveReplicaRequest, opts ...grpc.CallOption) (*Empty, error) {
-	out := new(Empty)
-	err := c.cc.Invoke(ctx, "/mcc.fred.peering.Node/RemoveReplica", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // NodeServer is the server API for Node service.
 // All implementations should embed UnimplementedNodeServer
 // for forward compatibility
@@ -118,8 +98,6 @@ type NodeServer interface {
 	AppendItem(context.Context, *AppendItemRequest) (*Empty, error)
 	GetItem(context.Context, *GetItemRequest) (*GetItemResponse, error)
 	GetAllItems(context.Context, *GetAllItemsRequest) (*GetAllItemsResponse, error)
-	AddReplica(context.Context, *AddReplicaRequest) (*Empty, error)
-	RemoveReplica(context.Context, *RemoveReplicaRequest) (*Empty, error)
 }
 
 // UnimplementedNodeServer should be embedded to have forward compatible implementations.
@@ -143,12 +121,6 @@ func (UnimplementedNodeServer) GetItem(context.Context, *GetItemRequest) (*GetIt
 }
 func (UnimplementedNodeServer) GetAllItems(context.Context, *GetAllItemsRequest) (*GetAllItemsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAllItems not implemented")
-}
-func (UnimplementedNodeServer) AddReplica(context.Context, *AddReplicaRequest) (*Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddReplica not implemented")
-}
-func (UnimplementedNodeServer) RemoveReplica(context.Context, *RemoveReplicaRequest) (*Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RemoveReplica not implemented")
 }
 
 // UnsafeNodeServer may be embedded to opt out of forward compatibility for this service.
@@ -270,42 +242,6 @@ func _Node_GetAllItems_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Node_AddReplica_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AddReplicaRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(NodeServer).AddReplica(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/mcc.fred.peering.Node/AddReplica",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NodeServer).AddReplica(ctx, req.(*AddReplicaRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Node_RemoveReplica_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RemoveReplicaRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(NodeServer).RemoveReplica(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/mcc.fred.peering.Node/RemoveReplica",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NodeServer).RemoveReplica(ctx, req.(*RemoveReplicaRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // Node_ServiceDesc is the grpc.ServiceDesc for Node service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -336,14 +272,6 @@ var Node_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetAllItems",
 			Handler:    _Node_GetAllItems_Handler,
-		},
-		{
-			MethodName: "AddReplica",
-			Handler:    _Node_AddReplica_Handler,
-		},
-		{
-			MethodName: "RemoveReplica",
-			Handler:    _Node_RemoveReplica_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

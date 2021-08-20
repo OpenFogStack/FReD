@@ -201,6 +201,8 @@ func main() {
 				NoColor: false,
 			},
 		)
+
+		zerolog.DisableSampling(true)
 	} else if fc.Log.Handler != "prod" {
 		log.Fatal().Msg("Log ExtHandler has to be either dev or prod")
 	}
@@ -240,8 +242,7 @@ func main() {
 	// 	is, _ := json.MarshalIndent(fc, "", "    ")
 	// 	return string(is)
 	// })())
-	log.Debug().Msg("Current configuration:")
-	log.Debug().Msgf("%#v", fc)
+	log.Info().Msgf("Current configuration:\n%+v", fc)
 
 	switch fc.Log.Level {
 	case "debug":
@@ -265,7 +266,7 @@ func main() {
 
 	switch fc.Storage.Adaptor {
 	case "badgerdb":
-		log.Debug().Msgf("badgerdb struct is: %#v", fc.Bdb)
+		log.Debug().Msgf("badgerdb struct is: %+v", fc.Bdb)
 		store = badgerdb.New(fc.Bdb.Path)
 	case "memory":
 		store = badgerdb.NewMemory()

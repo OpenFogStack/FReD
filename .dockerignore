@@ -6,4 +6,5 @@
 !tests/3NodeTest/cmd
 !tests/3NodeTest/pkg/
 !tests/AlexandraTest/
+!tests/consistency
 !proto

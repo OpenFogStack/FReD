@@ -36,7 +36,7 @@ func parseArgs() (c config) {
 	flag.StringVar(&(c.logHandler), "log-handler", "dev", "dev or prod")
 	flag.BoolVar(&(c.isProxied), "is-proxy", false, "Is this behind a proxy?")
 	flag.StringVar(&(c.proxyHost), "proxy-host", "", "Proxy host if this is proxied")
-	flag.StringVar(&(c.address), "address", "172.26.4.1:10000", "where to start the server")
+	flag.StringVar(&(c.address), "address", "", "where to start the server")
 	flag.Parse()
 	return
 }
@@ -53,7 +53,9 @@ func main() {
 			},
 		)
 
-		log.Info().Msgf("%#v", c)
+		zerolog.DisableSampling(true)
+
+		log.Info().Msgf("Current configuration:\n%+v", c)
 	} else if c.logHandler != "prod" {
 		log.Fatal().Msg("Log Handler has to be either dev or prod")
 	}

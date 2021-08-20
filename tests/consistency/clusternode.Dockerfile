@@ -18,17 +18,17 @@ COPY cmd/frednode cmd/frednode
 COPY pkg pkg
 COPY proto proto
 
-RUN CGO_ENABLED=0 go install ./cmd/frednode/
+RUN CGO_ENABLED=0 go build -o fred ./cmd/frednode/
 
 # actual Docker image
-FROM scratch
+FROM ubuntu:18.04
 
 WORKDIR /
 
-COPY --from=golang /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=golang /go/bin/frednode fred
+COPY --from=golang /go/src/git.tu-berlin.de/mcc-fred/fred/fred fred
 
-EXPOSE 443
-EXPOSE 5555
+RUN apt-get update && \
+    apt-get install iproute2 iputils-ping -y
 
 ENTRYPOINT [ "./fred" ]
+

@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"net"
 
-	alexandraProto "git.tu-berlin.de/mcc-fred/fred/proto/middleware"
+	"git.tu-berlin.de/mcc-fred/fred/proto/middleware"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -85,7 +85,7 @@ func NewServer(host string, caCert string, serverCert string, serverKey string, 
 		),
 	}
 
-	alexandraProto.RegisterMiddlewareServer(s.Server, s)
+	middleware.RegisterMiddlewareServer(s.Server, s)
 
 	log.Debug().Msgf("Alexandra Server is listening on %s", host)
 

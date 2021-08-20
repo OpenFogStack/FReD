@@ -757,7 +757,7 @@ func (s *Storage) Exists(kg string, id string) bool {
 
 	if err != nil {
 		log.Error().Msg(errors.New(err).ErrorStack())
-		log.Error().Msgf("Exists: %#v", err)
+		log.Error().Msgf("Exists: %+v", err)
 		return false
 	}
 

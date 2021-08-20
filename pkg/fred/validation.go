@@ -12,15 +12,15 @@ var reg = regexp.MustCompile(expr)
 func checkItem(params ...Item) error {
 	for _, p := range params {
 		if !reg.MatchString(string(p.Keygroup)) {
-			return errors.Errorf("checkItem failed for item %#v because the keygroup name does not match %s", p, expr)
+			return errors.Errorf("checkItem failed for item %+v because the keygroup name does not match %s", p, expr)
 		}
 
 		if !reg.MatchString(p.ID) {
-			return errors.Errorf("checkItem failed for item %#v because the ID does not match %s", p, expr)
+			return errors.Errorf("checkItem failed for item %+v because the ID does not match %s", p, expr)
 		}
 
 		if !p.Tombstoned && len(p.Val) == 0 {
-			return errors.Errorf("checkItem failed for item %#v because it is empty", p)
+			return errors.Errorf("checkItem failed for item %+v because it is empty", p)
 		}
 	}
 

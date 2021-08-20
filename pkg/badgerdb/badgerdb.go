@@ -201,6 +201,7 @@ func (s *Storage) ReadSome(kg, id string, count uint64) (map[string][]string, ma
 
 			if _, ok := items[key]; ok {
 				items[key] = append(items[key], string(v))
+				vvectors[key] = append(vvectors[key], vvector)
 				continue
 			}
 
@@ -245,6 +246,7 @@ func (s *Storage) ReadAll(kg string) (map[string][]string, map[string][]vclock.V
 
 			if _, ok := items[key]; ok {
 				items[key] = append(items[key], string(v))
+				vvectors[key] = append(vvectors[key], vvector)
 				continue
 			}
 

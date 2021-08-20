@@ -17,6 +17,9 @@ func main() {
 			NoColor: false,
 		},
 	)
+
+	zerolog.DisableSampling(true)
+
 	time.Sleep(20 * time.Second)
 	c := client.NewAlexandraClient("172.26.4.1:10000")
 

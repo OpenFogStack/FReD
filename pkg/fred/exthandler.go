@@ -129,7 +129,7 @@ func (h *ExtHandler) HandleScan(user string, i Item, count uint64) ([]Item, erro
 	result, err := h.s.scan(i.Keygroup, i.ID, count)
 
 	if err != nil {
-		log.Error().Msgf("Error in Scan is: %#v", err)
+		log.Error().Msgf("Error in Scan is: %+v", err)
 		// This prints the error stack whenever a item is not found, nobody cares about this...
 		// log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return nil, errors.Errorf("error scanning %d items starting at %s from keygroup %s", count, i.ID, i.Keygroup)
@@ -168,7 +168,7 @@ func (h *ExtHandler) HandleAppend(user string, i Item) (Item, error) {
 	err = h.s.append(i, expiry)
 
 	if err != nil {
-		log.Printf("%#v", err)
+		log.Printf("%+v", err)
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return i, errors.Errorf("error updating item")
 	}
@@ -219,7 +219,7 @@ func (h *ExtHandler) HandleUpdate(user string, i Item, versions []vclock.VClock)
 		i.Version, err = h.s.update(i, expiry)
 
 		if err != nil {
-			log.Printf("%#v", err)
+			log.Printf("%+v", err)
 			log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 			return i, errors.Errorf("error updating item")
 		}
@@ -227,7 +227,7 @@ func (h *ExtHandler) HandleUpdate(user string, i Item, versions []vclock.VClock)
 		i.Version, err = h.s.updateVersions(i, versions, expiry)
 
 		if err != nil {
-			log.Printf("%#v", err)
+			log.Printf("%+v", err)
 			log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 			return i, errors.Errorf("error updating item")
 		}
@@ -276,7 +276,7 @@ func (h *ExtHandler) HandleDelete(user string, i Item, versions []vclock.VClock)
 		i.Version, err = h.s.tombstone(i)
 
 		if err != nil {
-			log.Printf("%#v", err)
+			log.Printf("%+v", err)
 			log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 			return i, errors.Errorf("error updating item")
 		}
@@ -284,7 +284,7 @@ func (h *ExtHandler) HandleDelete(user string, i Item, versions []vclock.VClock)
 		i.Version, err = h.s.tombstoneVersions(i, versions)
 
 		if err != nil {
-			log.Printf("%#v", err)
+			log.Printf("%+v", err)
 			log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 			return i, errors.Errorf("error updating item")
 		}
@@ -311,8 +311,8 @@ func (h *ExtHandler) HandleAddReplica(user string, k Keygroup, n Node) error {
 		return errors.Errorf("user %s cannot add replica to keygroup %s", user, k.Name)
 	}
 
-	if err := h.r.addReplica(k, n, true); err != nil {
-		log.Error().Msgf("Error in AddReplica is: %#v", err)
+	if err := h.r.addReplica(k, n); err != nil {
+		log.Error().Msgf("Error in AddReplica is: %+v", err)
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error adding replica")
 	}
@@ -340,7 +340,7 @@ func (h *ExtHandler) HandleRemoveReplica(user string, k Keygroup, n Node) error 
 		return errors.Errorf("user %s cannot remove replica of keygroup %s", user, k.Name)
 	}
 
-	if err := h.r.removeReplica(k, n, true); err != nil {
+	if err := h.r.removeReplica(k, n); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error removing replica")
 	}
@@ -357,7 +357,7 @@ func (h *ExtHandler) HandleAddTrigger(user string, k Keygroup, t Trigger) error 
 	}
 
 	if err := h.t.addTrigger(k, t); err != nil {
-		log.Error().Msgf("Error in AddTrigger is: %#v", err)
+		log.Error().Msgf("Error in AddTrigger is: %+v", err)
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return errors.Errorf("error adding replica")
 	}

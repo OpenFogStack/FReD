@@ -60,7 +60,7 @@ func concurrentUpdates(nodes []*grpcclient.Node, concurrent int, updates int, ru
 			}
 
 			if len(v) > concurrent {
-				logNodeFailure(nodes[0], fmt.Sprintf("expected value %s for %s", val, key), fmt.Sprintf("got %d return values: %#v %#v", len(v), v, versions))
+				logNodeFailure(nodes[0], fmt.Sprintf("expected value %s for %s", val, key), fmt.Sprintf("got %d return values: %+v %+v", len(v), v, versions))
 				continue
 			}
 
@@ -89,7 +89,7 @@ func concurrentUpdates(nodes []*grpcclient.Node, concurrent int, updates int, ru
 				}
 
 				if !found {
-					logNodeFailure(nodes[0], fmt.Sprintf("one of values %#v for %s", possibleVals, key), fmt.Sprintf("got wrong value %#v", v))
+					logNodeFailure(nodes[0], fmt.Sprintf("one of values %+v for %s", possibleVals, key), fmt.Sprintf("got wrong value %+v", v))
 				}
 			}
 		}

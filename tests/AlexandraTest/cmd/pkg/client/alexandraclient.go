@@ -6,14 +6,14 @@ import (
 	"crypto/x509"
 	"io/ioutil"
 
-	alexandraProto "git.tu-berlin.de/mcc-fred/fred/proto/middleware"
+	"git.tu-berlin.de/mcc-fred/fred/proto/middleware"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
 
 type AlexandraClient struct {
-	client alexandraProto.MiddlewareClient
+	client middleware.MiddlewareClient
 }
 
 func NewAlexandraClient(address string) AlexandraClient {
@@ -43,14 +43,14 @@ func NewAlexandraClient(address string) AlexandraClient {
 
 	tc := credentials.NewTLS(tlsConfig)
 
-	// IP of alexandraProto in our test setup
+	// IP of middleware in our test setup
 	conn, err := grpc.Dial(address, grpc.WithTransportCredentials(tc))
 
 	if err != nil {
 		log.Fatal().Err(err).Msg("Cannot create Grpc connection")
 		return AlexandraClient{}
 	}
-	c := alexandraProto.NewMiddlewareClient(conn)
+	c := middleware.NewMiddlewareClient(conn)
 
 	return AlexandraClient{
 		client: c,
@@ -69,7 +69,7 @@ func (c *AlexandraClient) dealWithResponse(operation string, err error, expectEr
 
 func (c *AlexandraClient) CreateKeygroup(firstNodeID string, kgname string, mutable bool, expiry int64, expectError bool) {
 	log.Debug().Msgf("CreateKeygroup: %s, %s, %t, %d", firstNodeID, kgname, mutable, expiry)
-	_, err := c.client.CreateKeygroup(context.Background(), &alexandraProto.CreateKeygroupRequest{
+	_, err := c.client.CreateKeygroup(context.Background(), &middleware.CreateKeygroupRequest{
 		Keygroup:    kgname,
 		Mutable:     mutable,
 		Expiry:      expiry,
@@ -81,7 +81,7 @@ func (c *AlexandraClient) CreateKeygroup(firstNodeID string, kgname string, muta
 
 func (c *AlexandraClient) Update(kgname, id, data string, expectError bool) {
 	log.Debug().Msgf("Update: %s, %s, %s", kgname, id, data)
-	_, err := c.client.Update(context.Background(), &alexandraProto.UpdateRequest{
+	_, err := c.client.Update(context.Background(), &middleware.UpdateRequest{
 		Keygroup: kgname,
 		Id:       id,
 		Data:     data,
@@ -92,7 +92,7 @@ func (c *AlexandraClient) Update(kgname, id, data string, expectError bool) {
 func (c *AlexandraClient) Read(keygroup, id string, minExpiry int64, expectError bool) []string {
 	log.Debug().Msgf("Read: %s, %s, %d", keygroup, id, minExpiry)
 
-	res, err := c.client.Read(context.Background(), &alexandraProto.ReadRequest{
+	res, err := c.client.Read(context.Background(), &middleware.ReadRequest{
 		Keygroup:  keygroup,
 		Id:        id,
 		MinExpiry: minExpiry,
@@ -115,7 +115,7 @@ func (c *AlexandraClient) Read(keygroup, id string, minExpiry int64, expectError
 
 func (c *AlexandraClient) AddKeygroupReplica(keygroup, node string, expiry int64, expectError bool) {
 	log.Debug().Msgf("AddKeygroupReplica: %s, %s, %d", keygroup, node, expiry)
-	_, err := c.client.AddReplica(context.Background(), &alexandraProto.AddReplicaRequest{
+	_, err := c.client.AddReplica(context.Background(), &middleware.AddReplicaRequest{
 		Keygroup: keygroup,
 		NodeId:   node,
 		Expiry:   expiry,

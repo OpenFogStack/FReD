@@ -38,7 +38,7 @@ func Bytes(v vclock.VClock) []byte {
 	err := enc.Encode(entries)
 
 	if err != nil {
-		log.Fatal().Msgf("vector clock encode: %#v", err)
+		log.Fatal().Msgf("vector clock encode: %+v", err)
 	}
 
 	return b.Bytes()

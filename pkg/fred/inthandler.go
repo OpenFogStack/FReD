@@ -116,11 +116,3 @@ func (h *IntHandler) HandleAppend(i Item) error {
 
 	return nil
 }
-
-func (h *IntHandler) HandleAddReplica(k Keygroup, n Node) error {
-	return h.r.addReplica(k, n, false)
-}
-
-func (h *IntHandler) HandleRemoveReplica(k Keygroup, n Node) error {
-	return h.r.removeReplica(k, n, false)
-}

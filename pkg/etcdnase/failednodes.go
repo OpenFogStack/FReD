@@ -11,7 +11,7 @@ import (
 
 // ReportFailedNode saves that a node has missed an update to a keygroup that it will get another time
 func (n *NameService) ReportFailedNode(nodeID fred.NodeID, kg fred.KeygroupName, id string) error {
-	log.Warn().Msgf("Nase: ReportFailedNode: Reporting that nodeId %#v has missed kg %#v id %s", nodeID, kg, id)
+	log.Warn().Msgf("Nase: ReportFailedNode: Reporting that nodeId %+v has missed kg %+v id %s", nodeID, kg, id)
 	prefix := fmt.Sprintf(fmtFailedNodeKgStringPrefix, nodeID, kg)
 	log.Debug().Msgf("NaSe.ReportFailedNode: Putting %s into NaSe", prefix)
 	err := n.put(prefix+id, "1", prefix)

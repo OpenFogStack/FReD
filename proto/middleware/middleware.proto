@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package mcc.fred.middleware;
-option go_package = ".;alexandra";
+option go_package = ".;middleware";
 
 // This extends the Fred client for more convenient functions.
 service Middleware {

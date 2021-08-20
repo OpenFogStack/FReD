@@ -31,7 +31,7 @@ func (t *ImmutableSuite) RunTests() {
 	respB, _ := t.c.nodeB.GetItem("log", res, false)
 
 	if len(respB) != 1 || respB[0] != "value1" {
-		logNodeFailure(t.c.nodeB, "resp is []{\"value1\"}", fmt.Sprintf("%#v", respB))
+		logNodeFailure(t.c.nodeB, "resp is []{\"value1\"}", fmt.Sprintf("%+v", respB))
 	}
 
 	logNodeAction(t.c.nodeB, "Deleting an item in immutable keygroup")

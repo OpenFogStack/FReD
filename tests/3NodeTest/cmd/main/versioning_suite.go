@@ -70,7 +70,7 @@ func versioningUpdates(nodes []*grpcclient.Node, concurrent int, updates int, ru
 			}
 
 			if len(v) > concurrent {
-				logNodeFailure(nodes[0], fmt.Sprintf("expected value %s for %s", it.val, key), fmt.Sprintf("got %d return values: %#v %#v", len(v), v, versions))
+				logNodeFailure(nodes[0], fmt.Sprintf("expected value %s for %s", it.val, key), fmt.Sprintf("got %d return values: %+v %+v", len(v), v, versions))
 				continue
 			}
 
@@ -78,7 +78,7 @@ func versioningUpdates(nodes []*grpcclient.Node, concurrent int, updates int, ru
 				if v[j] == it.val {
 					// ok!
 					if !versions[j].Compare(it.version, vclock.Equal) {
-						logNodeFailure(nodes[0], fmt.Sprintf("expected version %s for %s", vector.SortedVCString(it.version), key), fmt.Sprintf("got %d return values: %#v %#v", len(v), v, versions))
+						logNodeFailure(nodes[0], fmt.Sprintf("expected version %s for %s", vector.SortedVCString(it.version), key), fmt.Sprintf("got %d return values: %+v %+v", len(v), v, versions))
 					}
 					continue
 				}
@@ -98,14 +98,14 @@ func versioningUpdates(nodes []*grpcclient.Node, concurrent int, updates int, ru
 					if jVal.val == v[j] {
 						found = true
 						if !versions[j].Compare(jVal.version, vclock.Equal) {
-							logNodeFailure(nodes[0], fmt.Sprintf("expected version %s for %s", vector.SortedVCString(jVal.version), key), fmt.Sprintf("got %d return values: %#v %#v", len(v), v, versions))
+							logNodeFailure(nodes[0], fmt.Sprintf("expected version %s for %s", vector.SortedVCString(jVal.version), key), fmt.Sprintf("got %d return values: %+v %+v", len(v), v, versions))
 						}
 						break
 					}
 				}
 
 				if !found {
-					logNodeFailure(nodes[0], fmt.Sprintf("one of values %#v for %s", possibleVals, key), fmt.Sprintf("got wrong value(s) %#v %#v", v, versions))
+					logNodeFailure(nodes[0], fmt.Sprintf("one of values %+v for %s", possibleVals, key), fmt.Sprintf("got wrong value(s) %+v %+v", v, versions))
 				}
 			}
 		}

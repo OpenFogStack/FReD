@@ -469,7 +469,7 @@ func TestTriggerNodes(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	log.Debug().Msgf("List of keygroup triggers: %#v", tList)
+	log.Debug().Msgf("List of keygroup triggers: %+v", tList)
 
 	assert.Len(t, tList, 2)
 
@@ -489,7 +489,7 @@ func TestTriggerNodes(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	log.Debug().Msgf("List of keygroup triggers: %#v", tList)
+	log.Debug().Msgf("List of keygroup triggers: %+v", tList)
 
 	assert.Len(t, tList, 1)
 
@@ -507,7 +507,7 @@ func TestTriggerNodes(t *testing.T) {
 
 	tList, _ = db.GetKeygroupTrigger(kg)
 
-	log.Debug().Msgf("List of keygroup triggers: %#v", tList)
+	log.Debug().Msgf("List of keygroup triggers: %+v", tList)
 
 	assert.Len(t, tList, 0, "got keygroup triggers for nonexistent keygroup")
 

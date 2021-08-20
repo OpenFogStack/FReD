@@ -47,6 +47,8 @@ func main() {
 				NoColor: false,
 			},
 		)
+
+		zerolog.DisableSampling(true)
 	} else if *loghandler != "prod" {
 		log.Fatal().Msg("Log Handler has to be either dev or prod")
 	}

@@ -46,6 +46,8 @@ func main() {
 		},
 	)
 
+	zerolog.DisableSampling(true)
+
 	// Parse Flags
 	waitUser = flag.Bool("wait-user", false, "wait for user input after each test")
 	waitTime = flag.Duration("wait-time", 1*time.Millisecond, "time to wait between commands")
@@ -191,7 +193,7 @@ func logNodeAction(node *grpcclient.Node, format string, a ...interface{}) {
 
 func logNodeFailure(node *grpcclient.Node, expected, result string) {
 	wait()
-	log.Error().Str("node", node.ID).Msgf("expected: %s, but got: %#v", expected, result)
+	log.Error().Str("node", node.ID).Msgf("expected: %s, but got: %+v", expected, result)
 	node.Errors++
 	failures[currSuite]++
 

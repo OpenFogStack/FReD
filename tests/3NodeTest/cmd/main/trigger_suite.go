@@ -112,7 +112,7 @@ func checkTriggerNode(triggerNodeID, triggerNodeWSHost string) {
 	resp, err := http.Get(fmt.Sprintf("http://%s/", triggerNodeWSHost))
 
 	if err != nil {
-		log.Warn().Str("trigger node", triggerNodeWSHost).Msgf("%#v", err)
+		log.Warn().Str("trigger node", triggerNodeWSHost).Msgf("%+v", err)
 		return
 	}
 
@@ -120,25 +120,25 @@ func checkTriggerNode(triggerNodeID, triggerNodeWSHost string) {
 	err = json.NewDecoder(resp.Body).Decode(&result)
 
 	if err != nil {
-		log.Warn().Str("trigger node", triggerNodeWSHost).Msgf("%#v", err)
+		log.Warn().Str("trigger node", triggerNodeWSHost).Msgf("%+v", err)
 		return
 	}
 
 	err = resp.Body.Close()
 
 	if err != nil {
-		log.Warn().Str("trigger node", triggerNodeWSHost).Msgf("%#v", err)
+		log.Warn().Str("trigger node", triggerNodeWSHost).Msgf("%+v", err)
 		return
 	}
 
 	if len(result) != len(expected) {
-		log.Warn().Str("trigger node", triggerNodeID).Msgf("expected: %s, but got: %#v", expected, result)
+		log.Warn().Str("trigger node", triggerNodeID).Msgf("expected: %s, but got: %+v", expected, result)
 		return
 	}
 
 	for i := range expected {
 		if expected[i] != result[i] {
-			log.Warn().Str("trigger node", triggerNodeID).Msgf("expected: %s, but got: %#v", expected[i], result[i])
+			log.Warn().Str("trigger node", triggerNodeID).Msgf("expected: %s, but got: %+v", expected[i], result[i])
 			return
 		}
 	}

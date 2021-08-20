@@ -10,7 +10,7 @@ import (
 	"time"
 
 	clientsProto "git.tu-berlin.de/mcc-fred/fred/proto/client"
-	alexandraProto "git.tu-berlin.de/mcc-fred/fred/proto/middleware"
+	"git.tu-berlin.de/mcc-fred/fred/proto/middleware"
 	"github.com/DistributedClocks/GoVector/govec/vclock"
 	"github.com/rs/zerolog/log"
 )
@@ -33,7 +33,7 @@ type clientExpiry struct {
 // keygroupSet represents a keygroups clients and the last time this information was updated from FreD
 type keygroupSet struct {
 	lastUpdated time.Time
-	clients     map[string]*clientExpiry
+	clients     []*clientExpiry
 }
 
 // ClientsMgr manages all Clients to Fred that Alexandra has. Is used to get fastest clients to keygroups etc. and to read from anywhere
@@ -60,103 +60,88 @@ func newClientsManager(clientsCert, clientsKey, lighthouse string) *ClientsMgr {
 	return mgr
 }
 
-func (m *ClientsMgr) readFromAnywhere(ctx context.Context, request *alexandraProto.ReadRequest) ([]string, []vclock.VClock, error) {
-	log.Debug().Msgf("ClientsManager is reading from anywhere. Req= %#v", request)
-	go m.maybeUpdateKeygroupClients(request.Keygroup)
-
-	type readResponse struct {
-		error    bool
-		vals     []string
-		versions []vclock.VClock
-	}
-
-	responses := make(chan readResponse)
-	responsesClosed := false
-	sentAsks := 0
+func (m *ClientsMgr) readFromAnywhere(request *middleware.ReadRequest) ([]string, []vclock.VClock, error) {
+	log.Debug().Msgf("ClientsManager is reading from anywhere. Req= %+v", request)
+	m.maybeUpdateKeygroupClients(request.Keygroup)
 
 	// Start a coroutine to every fastestClient we ask
 	m.Lock()
 	set, exists := m.keygroups[request.Keygroup]
 	m.Unlock()
-	clts := filterClientsToExpiry(set.clients, request.MinExpiry)
-	if !exists || len(clts) == 0 {
-		log.Error().Msgf("...found no clients with minimum expiry. Clients with longer expiry: %#v", set.clients)
-		return nil, nil, errors.New("there are no members of this keygroup")
-	}
-	askNode := func(client *Client) {
-		// TODO select channels?
-		// TODO buffered Channel
-		log.Debug().Msgf("...asking Client %#v for Keygroup %s", client, request.Keygroup)
-		res, err := client.Client.Read(context.Background(), &clientsProto.ReadRequest{Id: request.Id, Keygroup: request.Keygroup})
-		if err != nil {
-			log.Err(err).Msg("Reading from client returned error")
-			if !responsesClosed {
-				responses <- readResponse{
-					error: true,
-				}
-			}
-		} else {
-			log.Debug().Msgf("Reading from client returned data: %#v", res)
-			if !responsesClosed {
-				r := readResponse{
-					vals:     make([]string, len(res.Data)),
-					versions: make([]vclock.VClock, len(res.Data)),
-				}
-				for i := range res.Data {
-					r.vals[i] = res.Data[i].Val
-					r.versions[i] = res.Data[i].Version.Version
-				}
-				responses <- r
-			}
-		}
+
+	type readResponse struct {
+		vals     []string
+		versions []vclock.VClock
 	}
 
+	clientsToAsk := make(map[*Client]struct{})
+
+	clts := filterClientsToExpiry(set.clients, request.MinExpiry)
+
+	if !exists || len(clts) == 0 {
+		log.Error().Msgf("...found no clients with minimum expiry. Clients with longer expiry: %+v", set.clients)
+		return nil, nil, errors.New("there are no members of this keygroup")
+	}
+
+	// let's figure out who we want to ask
 	// Ask the fastest fastestClient
 	fastestClient, err := m.getFastestClientWithKeygroup(request.Keygroup, request.MinExpiry)
 	if err == nil {
-		go askNode(fastestClient)
-		sentAsks++
+		clientsToAsk[fastestClient] = struct{}{}
 	}
 
-	// Ask $otherNodesToAsk other Clients
-	if len(clts) > 2 { // If its only one element long the one node is also the fastest node
-		if otherNodesToAsk > len(clts) {
-			for _, client := range clts {
-				go askNode(client.client)
-				sentAsks++
-			}
-		} else {
-			i := 0
-			otherClientsNames := make([]string, len(clts))
-			for k := range clts {
-				otherClientsNames[i] = k
-				i++
-			}
-			for i := 0; i < otherNodesToAsk; i++ {
-				id := rand.Intn(len(otherClientsNames))
-				go askNode(clts[otherClientsNames[id]].client)
-				sentAsks++
-			}
-		}
+	// and add a maximum of otherNodeToAsk other clients
+	for i := 0; i < otherNodesToAsk; i++ {
+		clientsToAsk[clts[rand.Intn(len(clts))].client] = struct{}{}
 	}
 
-	// Wait for results and return the first good one
-	var res readResponse
-	rectRes := 0
-	for res = range responses {
-		log.Debug().Msgf("...waiting for the first answer to return it. res=%#v", res)
-		rectRes++
-		if !res.error {
-			log.Debug().Msgf("...got Response without error (closing channel): %#v", res)
-			responsesClosed = true
+	var wg sync.WaitGroup
+	responses := make(chan readResponse, len(clientsToAsk))
+	done := make(chan struct{})
 
-			return res.vals, res.versions, nil
-		}
-		if rectRes >= sentAsks {
-			log.Warn().Msgf("ReadFromAnywhere: no fastestClient was able to answer the read (closing channel). Kg=%s", request.Keygroup)
-			responsesClosed = true
-			break
-		}
+	for c := range clientsToAsk {
+		wg.Add(1)
+
+		go func(c *Client) {
+			defer wg.Done()
+
+			log.Debug().Msgf("...asking Client %+v for Keygroup %s", c, request.Keygroup)
+			res, err := c.Client.Read(context.Background(), &clientsProto.ReadRequest{Id: request.Id, Keygroup: request.Keygroup})
+
+			if err != nil {
+				log.Err(err).Msg("Reading from client returned error")
+				return
+			}
+
+			r := readResponse{
+				vals:     make([]string, len(res.Data)),
+				versions: make([]vclock.VClock, len(res.Data)),
+			}
+			for i := range res.Data {
+				r.vals[i] = res.Data[i].Val
+				r.versions[i] = res.Data[i].Version.Version
+				log.Debug().Msgf("Reading from client returned data: %+v %+v", res.Data[i].Val, res.Data[i].Version.Version)
+			}
+
+			responses <- r
+
+		}(c)
+	}
+
+	// wait for all responses to come in and close the channel
+	go func() {
+		wg.Wait()
+		done <- struct{}{}
+		close(responses)
+	}()
+
+	// if we get a response, return that
+	// otherwise, if done is called
+	select {
+	case r := <-responses:
+		return r.vals, r.versions, nil
+	case <-done:
+		break
 	}
 
 	// There was no successful response -- Update the keygroup information and try one last time
@@ -169,7 +154,7 @@ func (m *ClientsMgr) readFromAnywhere(ctx context.Context, request *alexandraPro
 		return nil, nil, fmt.Errorf("ReadFromAnywhere: there is no client with keygroup %s and expiry %d", request.Keygroup, request.MinExpiry)
 	}
 
-	result, err := client.read(ctx, request.Keygroup, request.Id)
+	result, err := client.read(context.Background(), request.Keygroup, request.Id)
 	if err != nil {
 		return nil, nil, fmt.Errorf("ReadFromAnywhere: cannot read from fastest client. err=%v", err)
 	}
@@ -197,7 +182,7 @@ func (m *ClientsMgr) getClientTo(host string) (client *Client) {
 	return
 }
 
-func getFastestClient(clts map[string]*Client) (client *Client) {
+func getFastestClient(clts []*Client) (client *Client) {
 	var minTime float32 = math.MaxFloat32
 	var minClient *Client
 	// Set the first client up as fastest client, so that it gets returned if no other client is found.
@@ -214,30 +199,30 @@ func getFastestClient(clts map[string]*Client) (client *Client) {
 	return minClient
 }
 
-func getFastestClientByClientExpiry(clts map[string]*clientExpiry) (client *Client) {
+func getFastestClientByClientExpiry(clts []*clientExpiry) (client *Client) {
 	if clts == nil {
 		return nil
 	}
-	var clientsMap = make(map[string]*Client)
-	for key, value := range clts {
-		clientsMap[key] = value.client
+	var clients = make([]*Client, len(clts))
+	for i, c := range clts {
+		clients[i] = c.client
 	}
-	return getFastestClient(clientsMap)
+	return getFastestClient(clients)
 }
 
 // filterClientsToExpiry if param=-1 then only exp==-1; if param=0 then anything; if param>=0 then anything exp >= than param
-func filterClientsToExpiry(clientEx map[string]*clientExpiry, expiry int64) (out map[string]*clientExpiry) {
+func filterClientsToExpiry(clientEx []*clientExpiry, expiry int64) (out []*clientExpiry) {
 	if clientEx == nil {
 		return nil
 	}
-	out = make(map[string]*clientExpiry)
-	for k, v := range clientEx {
+	out = make([]*clientExpiry, 0)
+	for _, v := range clientEx {
 		if expiry == -1 && v.expiry == -1 {
-			out[k] = v
+			out = append(out, v)
 		} else if expiry == 0 {
-			out[k] = v
+			out = append(out, v)
 		} else if v.expiry >= expiry {
-			out[k] = v
+			out = append(out, v)
 		}
 	}
 	return
@@ -245,10 +230,10 @@ func filterClientsToExpiry(clientEx map[string]*clientExpiry, expiry int64) (out
 
 func (m *ClientsMgr) getClient(keygroup string, slowprob float64) (*Client, error) {
 	if rand.Float64() < slowprob {
-		return m.getRandomClientWithKeygroup(keygroup, 1)
+		return m.getRandomClientWithKeygroup(keygroup, 0)
 	}
 
-	return m.getFastestClientWithKeygroup(keygroup, 1)
+	return m.getFastestClientWithKeygroup(keygroup, 0)
 }
 
 // getFastestClient searches for the fastest of the already existing clients
@@ -257,7 +242,14 @@ func (m *ClientsMgr) getFastestClient() (client *Client) {
 		log.Info().Msg("ClientsMgr: GetFastestClient was called but there are not clients. Using lighthouse client")
 		return m.getClientTo(m.lighthouse)
 	}
-	return getFastestClient(m.clients)
+
+	clts := make([]*Client, 0, len(m.clients))
+
+	for _, c := range m.clients {
+		clts = append(clts, c)
+	}
+
+	return getFastestClient(clts)
 }
 
 // GetFastestClientWithKeygroup returns the fastest client that has the keygroup with an expiry bigger than the parameter
@@ -274,7 +266,7 @@ func (m *ClientsMgr) getFastestClientWithKeygroup(keygroup string, expiry int64)
 		clients = m.keygroups[keygroup]
 		m.Unlock()
 	}
-	log.Debug().Msgf("Clients before filtering: %#v", clients)
+	log.Debug().Msgf("Clients before filtering: %+v", clients)
 	filteredClients := filterClientsToExpiry(clients.clients, expiry)
 	fastestClient := getFastestClientByClientExpiry(filteredClients)
 	if fastestClient == nil {
@@ -290,9 +282,9 @@ func (m *ClientsMgr) getRandomClientWithKeygroup(keygroup string, expiry int64) 
 	m.Unlock()
 	filtered := filterClientsToExpiry(clients.clients, expiry)
 	// Get random element from this list
-	log.Debug().Msgf("Len filtered is %#v", len(filtered))
+	log.Debug().Msgf("Len filtered is %+v", len(filtered))
 	if len(filtered) == 0 {
-		return nil, fmt.Errorf("was not able to find ANY client to keygroup %s with expiry > %d. Clients: %#v", keygroup, expiry, clients)
+		return nil, fmt.Errorf("was not able to find ANY client to keygroup %s with expiry > %d. Clients: %+v", keygroup, expiry, clients)
 	}
 	nodeI := rand.Intn(len(filtered))
 	curI := 0
@@ -315,7 +307,7 @@ func (m *ClientsMgr) maybeUpdateKeygroupClients(keygroup string) {
 		m.updateKeygroupClients(keygroup)
 	} else if time.Since(set.lastUpdated) > keygroupTimeout {
 		log.Debug().Msgf("Keygroup %s has not been updated in %.0f minutes, doing it now", keygroup, keygroupTimeout.Minutes())
-		go m.updateKeygroupClients(keygroup)
+		m.updateKeygroupClients(keygroup)
 	}
 }
 
@@ -330,7 +322,7 @@ func (m *ClientsMgr) updateKeygroupClients(keygroup string) {
 			return
 		}
 	}
-	log.Debug().Msgf("updateKeygroupClients: Got replicas: %#v", replica)
+	log.Debug().Msgf("updateKeygroupClients: Got replicas: %+v", replica)
 
 	m.Lock()
 	defer m.Unlock()
@@ -338,18 +330,17 @@ func (m *ClientsMgr) updateKeygroupClients(keygroup string) {
 	if !exists {
 		m.keygroups[keygroup] = &keygroupSet{
 			lastUpdated: time.Now(),
-			clients:     make(map[string]*clientExpiry),
 		}
 		set = m.keygroups[keygroup]
 	}
-	set.clients = make(map[string]*clientExpiry)
-	for _, client := range replica.Replica {
-		set.clients[client.NodeId] = &clientExpiry{
+	set.clients = make([]*clientExpiry, len(replica.Replica))
+	for i, client := range replica.Replica {
+		set.clients[i] = &clientExpiry{
 			client: m.getClientTo(client.Host),
 			expiry: client.Expiry,
 		}
 	}
 	set.lastUpdated = time.Now()
 	m.keygroups[keygroup] = set
-	log.Debug().Msgf("updateKeygroupClients: new Clients are: %#v", set)
+	log.Debug().Msgf("updateKeygroupClients: new Clients are: %+v", set)
 }

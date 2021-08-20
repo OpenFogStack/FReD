@@ -85,7 +85,7 @@ func newTriggerService(s *storeService, certFile string, keyFile string, caFiles
 }
 
 func (t *triggerService) triggerDelete(i Item) (e error) {
-	log.Debug().Msgf("triggerDelete from triggerservice: in %#v", i)
+	log.Debug().Msgf("triggerDelete from triggerservice: in %+v", i)
 
 	nodes, err := t.s.getKeygroupTrigger(i.Keygroup)
 
@@ -96,7 +96,7 @@ func (t *triggerService) triggerDelete(i Item) (e error) {
 	for _, node := range nodes {
 		client, err := t.getClient(node.Host)
 		if err != nil {
-			e = errors.Errorf("%#v %#v", e, err)
+			e = errors.Errorf("%+v %+v", e, err)
 			continue
 		}
 		_, err = client.DeleteItemTrigger(context.Background(), &trigger.DeleteItemTriggerRequest{
@@ -105,7 +105,7 @@ func (t *triggerService) triggerDelete(i Item) (e error) {
 		})
 
 		if err != nil {
-			e = errors.Errorf("%#v %#v", e, err)
+			e = errors.Errorf("%+v %+v", e, err)
 		}
 	}
 
@@ -113,7 +113,7 @@ func (t *triggerService) triggerDelete(i Item) (e error) {
 }
 
 func (t *triggerService) triggerUpdate(i Item) (e error) {
-	log.Debug().Msgf("triggerUpdate from triggerservice: in %#v", i)
+	log.Debug().Msgf("triggerUpdate from triggerservice: in %+v", i)
 
 	nodes, err := t.s.getKeygroupTrigger(i.Keygroup)
 
@@ -127,7 +127,7 @@ func (t *triggerService) triggerUpdate(i Item) (e error) {
 		client, err := t.getClient(node.Host)
 		if err != nil {
 			log.Error().Msgf("error in triggerUpdate: %s", err.Error())
-			e = errors.Errorf("%#v\n%s", e, err.Error())
+			e = errors.Errorf("%+v\n%s", e, err.Error())
 			continue
 		}
 		_, err = client.PutItemTrigger(context.Background(), &trigger.PutItemTriggerRequest{
@@ -138,7 +138,7 @@ func (t *triggerService) triggerUpdate(i Item) (e error) {
 
 		if err != nil {
 			log.Error().Msgf("error in triggerUpdate: %s", err.Error())
-			e = errors.Errorf("%#v\n%s", e, err.Error())
+			e = errors.Errorf("%+v\n%s", e, err.Error())
 		}
 	}
 
@@ -150,19 +150,19 @@ func (t *triggerService) triggerUpdate(i Item) (e error) {
 }
 
 func (t *triggerService) addTrigger(k Keygroup, tn Trigger) error {
-	log.Debug().Msgf("addTrigger from triggerservice: in %#v %#v", k, tn)
+	log.Debug().Msgf("addTrigger from triggerservice: in %+v %+v", k, tn)
 
 	return t.s.addKeygroupTrigger(k.Name, tn)
 }
 
 func (t *triggerService) getTrigger(k Keygroup) ([]Trigger, error) {
-	log.Debug().Msgf("getTrigger from triggerservice: in %#v", k)
+	log.Debug().Msgf("getTrigger from triggerservice: in %+v", k)
 
 	return t.s.getKeygroupTrigger(k.Name)
 }
 
 func (t *triggerService) removeTrigger(k Keygroup, tn Trigger) error {
-	log.Debug().Msgf("removeTrigger from triggerservice: in %#v %#v", k, tn)
+	log.Debug().Msgf("removeTrigger from triggerservice: in %+v %+v", k, tn)
 
 	return t.s.deleteKeygroupTrigger(k.Name, tn)
 }

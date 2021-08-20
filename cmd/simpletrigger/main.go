@@ -35,7 +35,7 @@ type Server struct {
 
 // PutItemTrigger calls HandleUpdate on the Inthandler
 func (s *Server) PutItemTrigger(_ context.Context, request *trigger.PutItemTriggerRequest) (*trigger.Empty, error) {
-	log.Debug().Msgf("Trigger Node has rcvd PutItem. In: %#v", request)
+	log.Debug().Msgf("Trigger Node has rcvd PutItem. In: %+v", request)
 
 	s.log = append(s.log, LogEntry{
 		Op:  "put",
@@ -49,7 +49,7 @@ func (s *Server) PutItemTrigger(_ context.Context, request *trigger.PutItemTrigg
 
 // DeleteItemTrigger calls this Method on the Inthandler
 func (s *Server) DeleteItemTrigger(_ context.Context, request *trigger.DeleteItemTriggerRequest) (*trigger.Empty, error) {
-	log.Debug().Msgf("Trigger Node has rcvd DeleteItem. In: %#v", request)
+	log.Debug().Msgf("Trigger Node has rcvd DeleteItem. In: %+v", request)
 
 	s.log = append(s.log, LogEntry{
 		Op: "del",
@@ -146,6 +146,8 @@ func main() {
 				NoColor: false,
 			},
 		)
+
+		zerolog.DisableSampling(true)
 	} else if *loghandler != "prod" {
 		log.Fatal().Msg("Log Handler has to be either dev or prod")
 	}

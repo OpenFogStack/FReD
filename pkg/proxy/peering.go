@@ -158,25 +158,3 @@ func (p *PeeringProxy) GetAllItems(ctx context.Context, req *peering.GetAllItems
 
 	return c.GetAllItems(ctx, req)
 }
-
-// AddReplica calls this Method on the Inthandler
-func (p *PeeringProxy) AddReplica(ctx context.Context, req *peering.AddReplicaRequest) (*peering.Empty, error) {
-	c, err := p.getConn(req.Keygroup)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return c.AddReplica(ctx, req)
-}
-
-// RemoveReplica calls this Method on the Inthandler
-func (p *PeeringProxy) RemoveReplica(ctx context.Context, req *peering.RemoveReplicaRequest) (*peering.Empty, error) {
-	c, err := p.getConn(req.Keygroup)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return c.RemoveReplica(ctx, req)
-}
