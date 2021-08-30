@@ -8,7 +8,7 @@ services:
       - nodeB
       - nodeC
     build:
-      context: ../../
+      context: ..
       dockerfile: alexandra.Dockerfile
     image: fred/alexandra:local
     container_name: alexandra

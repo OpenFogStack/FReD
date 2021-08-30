@@ -7,7 +7,7 @@ services:
       - nodeA-2
       - nodeA-3
     build:
-      context: ../../
+      context: ..
       dockerfile: proxy.Dockerfile
     image: fred/fredproxy:local
     container_name: nodeAproxy
@@ -33,7 +33,7 @@ services:
     depends_on:
       - etcd
       - storeA
-    build: ../../
+    build: ..
     image: fred/fred:local
     container_name: nodeA-1
     command: "--remote-storage-host 172.26.1.104:1337 \
@@ -80,7 +80,7 @@ services:
     depends_on:
       - etcd
       - storeA
-    build: ../../
+    build: ..
     image: fred/fred:local
     container_name: nodeA-2
     command: "--remote-storage-host 172.26.1.104:1337 \
@@ -123,7 +123,7 @@ services:
     depends_on:
       - etcd
       - storeA
-    build: ../../
+    build: ..
     image: fred/fred:local
     container_name: nodeA-3
     command: "--remote-storage-host 172.26.1.104:1337 \
@@ -164,7 +164,7 @@ services:
 
   storeA:
     build:
-      context: ../../
+      context: ..
       dockerfile: storage.Dockerfile
     image: fred/store:local
     container_name: storeA

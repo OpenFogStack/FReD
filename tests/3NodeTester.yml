@@ -3,7 +3,7 @@ version: "3.7"
 services:
   tester:
     build:
-      context: ../../
+      context: ..
       dockerfile: tests/3NodeTest/Dockerfile
     image: fred/tester:local
     container_name: tester

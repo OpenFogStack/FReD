@@ -2,7 +2,7 @@ version: "3.7"
 
 services:
   nodeC:
-    build: ../../
+    build: ..
     depends_on:
       - etcd
       - storeC
@@ -46,7 +46,7 @@ services:
 
   storeC:
     build:
-      context: ../../
+      context: ..
       dockerfile: storage.Dockerfile
     image: fred/store:local
     container_name: storeC

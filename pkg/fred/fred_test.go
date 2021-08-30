@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	certBasePath = "../../tests/runner/certificates/"
+	certBasePath = "../../tests/certificates/"
 	etcdDir      = ".default.etcd"
 	nodeID       = fred.NodeID("X")
 )

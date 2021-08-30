@@ -5,7 +5,7 @@ services:
     depends_on:
       - alexandra
     build:
-      context: ../../
+      context: ..
       dockerfile: tests/AlexandraTest/Dockerfile
     image: fred/alexandra-tester:local
     container_name: alexandra-tester

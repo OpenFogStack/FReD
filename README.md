@@ -540,21 +540,22 @@ To get a coverage report, you can use `make coverage` and `make coverhtml`, depe
 
 There are two system tests to test functionality of a FReD deployment as a whole.
 This is part of a TDD approach where tests can be defined first and the software is refined until it completes all tests.
+All system tests can be found in `./tests`.
+All tests require Docker and Docker Compose to work.
 
 ##### 3 Node Test
 
 The "3 node test" starts a FReD deployment of three FReD nodes and runs a client against the FReD cluster that validates different functionalities.
-It can be found in `./tests/3NodeTest`.
 It uses Docker compose and can thus easily be started with `make 3n-all`.
 
 The deployment comprises a single `etcd` Docker container as a NaSe, a simple trigger node, two FReD nodes that each comprise only a single machine (node _B_ and _C_) with a storage server, and a distributed FReD node _A_ that comprises three individual FReD machines behind a `fredproxy` sharing a single storage server.
 All machines are connected over a Docker network.
 
 The test client runs a number of operations against the FReD deployment and outputs a list of errors.
-The complete code for the test client can be found in `./tests/3NodeTest/cmd/main/main.go`.
+The complete code for the test client can be found in `./tests/3NodeTest`.
 
 When the debug log output of the individual nodes is not enough to debug an issue, it is also possible to connect a `dlv` debugger directly to FReD node _B_ to set breakpoints or step through code.
-This is currently configured to use the included debugger in the GoLang IDE.
+This is currently configured to use the included debugger in the GoLand IDE.
 Further information can be found in the 3 node test documentation.
 
 ##### Failing Node Test
@@ -565,6 +566,17 @@ It starts the same deployment as in the 3 node test and runs a number of queries
 It uses the Docker API to destroy and start the corresponding containers.
 
 The code can be found in `./tests/FailingNodeTest` but can be started with `make failtest` in `./tests/3NodeTest/` after a deployment has been created with `make fred`.
+
+##### ALExANDRA Test
+
+The ALExANDRA test tests a limited amount of middleware functionality.
+Use `make alexandratest` to run it.
+The complete code can be found and extended in `./tests/AlexandraTest`.
+
+##### Consistency Test
+
+The consistency test tests consistency guarantees provided by the middleware.
+In `./tests/consistency` run `bash ./run-cluster.sh [NUM_NODES] [NUM_CLIENTS]` and specify the number of FReD nodes and clients.
 
 #### Cluster
 

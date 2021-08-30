@@ -1,3 +1,4 @@
+//go:build !race
 // +build !race
 
 package etcdnase
@@ -21,7 +22,7 @@ import (
 )
 
 const (
-	certBasePath = "../../tests/runner/certificates/"
+	certBasePath = "../../tests/certificates/"
 	etcdDir      = ".default.etcd"
 	nodeID       = "A"
 	host         = "localhost:8000"

@@ -3,7 +3,7 @@ version: "3.7"
 services:
   tester:
     build:
-      context: ../FailingNodeTest
+      context: FailingNodeTest
     image: fred/failtest:local
     container_name: failtest
     networks:
