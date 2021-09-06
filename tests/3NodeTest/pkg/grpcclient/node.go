@@ -132,9 +132,9 @@ func (n *Node) DeleteKeygroup(kgname string, expectError bool) {
 
 }
 
-// GetKeygroupReplica calls the GetKeygroupReplica endpoint of the GRPC interface.
-func (n *Node) GetKeygroupReplica(kgname string, expectError bool) map[string]int {
-	res, err := n.Client.GetKeygroupReplica(context.Background(), &client.GetKeygroupReplicaRequest{Keygroup: kgname})
+// GetKeygroupInfo calls the GetKeygroupInfo endpoint of the GRPC interface.
+func (n *Node) GetKeygroupInfo(kgname string, expectError bool) (bool, map[string]int) {
+	res, err := n.Client.GetKeygroupInfo(context.Background(), &client.GetKeygroupInfoRequest{Keygroup: kgname})
 
 	if err != nil && !expectError {
 		log.Warn().Msgf("GetKeygroupReplica: error %s", err)
@@ -147,7 +147,7 @@ func (n *Node) GetKeygroupReplica(kgname string, expectError bool) map[string]in
 	}
 
 	if err != nil {
-		return nil
+		return false, nil
 	}
 
 	nodes := make(map[string]int)
@@ -156,7 +156,7 @@ func (n *Node) GetKeygroupReplica(kgname string, expectError bool) map[string]in
 		nodes[node.NodeId] = int(node.Expiry)
 	}
 
-	return nodes
+	return res.Mutable, nodes
 }
 
 // AddKeygroupReplica calls the AddKeygroupReplica endpoint of the GRPC interface.

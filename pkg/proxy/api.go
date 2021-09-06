@@ -308,8 +308,8 @@ func (a *APIProxy) AddReplica(ctx context.Context, req *client.AddReplicaRequest
 	return c.AddReplica(ctx, req)
 }
 
-// GetKeygroupReplica calls this method on the exthandler
-func (a *APIProxy) GetKeygroupReplica(ctx context.Context, req *client.GetKeygroupReplicaRequest) (*client.GetKeygroupReplicaResponse, error) {
+// GetKeygroupInfo calls this method on the exthandler
+func (a *APIProxy) GetKeygroupInfo(ctx context.Context, req *client.GetKeygroupInfoRequest) (*client.GetKeygroupInfoResponse, error) {
 	c, err := a.getConn(req.Keygroup)
 
 	if err != nil {
@@ -321,7 +321,7 @@ func (a *APIProxy) GetKeygroupReplica(ctx context.Context, req *client.GetKeygro
 		return nil, err
 	}
 
-	return c.GetKeygroupReplica(ctx, req)
+	return c.GetKeygroupInfo(ctx, req)
 }
 
 // RemoveReplica calls this method on the exthandler

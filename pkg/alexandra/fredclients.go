@@ -221,8 +221,8 @@ func (c *Client) append(ctx context.Context, keygroup string, data string) (*api
 	return res, err
 }
 
-func (c *Client) getKeygroupReplica(ctx context.Context, keygroup string) (*api.GetKeygroupReplicaResponse, error) {
-	res, err := c.Client.GetKeygroupReplica(ctx, &api.GetKeygroupReplicaRequest{Keygroup: keygroup})
+func (c *Client) getKeygroupReplica(ctx context.Context, keygroup string) (*api.GetKeygroupInfoResponse, error) {
+	res, err := c.Client.GetKeygroupInfo(ctx, &api.GetKeygroupInfoRequest{Keygroup: keygroup})
 	return res, err
 }
 

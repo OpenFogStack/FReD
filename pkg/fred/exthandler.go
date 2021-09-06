@@ -320,16 +320,28 @@ func (h *ExtHandler) HandleAddReplica(user string, k Keygroup, n Node) error {
 	return nil
 }
 
-// HandleGetKeygroupReplica handles requests to the GetKeygroupReplica endpoint of the client interface.
-func (h *ExtHandler) HandleGetKeygroupReplica(user string, k Keygroup) ([]Node, map[NodeID]int, error) {
+// HandleGetKeygroupInfo handles requests to the GetKeygroupInfo endpoint of the client interface.
+func (h *ExtHandler) HandleGetKeygroupInfo(user string, k Keygroup) (bool, []Node, map[NodeID]int, error) {
 	allowed, err := h.a.isAllowed(user, GetReplica, k.Name)
 
 	if err != nil || !allowed {
 		log.Err(err).Msg("Exthandler uer is not allowed to GetKeygroupReplica")
-		return nil, nil, errors.Errorf("user %s cannot get replica for keygroup %s", user, k.Name)
+		return false, nil, nil, errors.Errorf("user %s cannot get replica for keygroup %s", user, k.Name)
 	}
 
-	return h.r.getReplicaExternal(k)
+	m, err := h.n.IsMutable(k.Name)
+
+	if err != nil {
+		return false, nil, nil, err
+	}
+
+	n, e, err := h.r.getReplicaExternal(k)
+
+	if err != nil {
+		return false, nil, nil, err
+	}
+
+	return m, n, e, nil
 }
 
 // HandleRemoveReplica handles requests to the RemoveKeygroupReplica endpoint of the client interface.

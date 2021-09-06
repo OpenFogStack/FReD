@@ -60,10 +60,10 @@ class MiddlewareStub(object):
                 request_serializer=middleware__pb2.AddReplicaRequest.SerializeToString,
                 response_deserializer=middleware__pb2.Empty.FromString,
                 )
-        self.GetKeygroupReplica = channel.unary_unary(
-                '/mcc.fred.middleware.Middleware/GetKeygroupReplica',
-                request_serializer=middleware__pb2.GetKeygroupReplicaRequest.SerializeToString,
-                response_deserializer=middleware__pb2.GetKeygroupReplicaResponse.FromString,
+        self.GetKeygroupInfo = channel.unary_unary(
+                '/mcc.fred.middleware.Middleware/GetKeygroupInfo',
+                request_serializer=middleware__pb2.GetKeygroupInfoRequest.SerializeToString,
+                response_deserializer=middleware__pb2.GetKeygroupInfoResponse.FromString,
                 )
         self.RemoveReplica = channel.unary_unary(
                 '/mcc.fred.middleware.Middleware/RemoveReplica',
@@ -165,7 +165,7 @@ class MiddlewareServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def GetKeygroupReplica(self, request, context):
+    def GetKeygroupInfo(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -267,10 +267,10 @@ def add_MiddlewareServicer_to_server(servicer, server):
                     request_deserializer=middleware__pb2.AddReplicaRequest.FromString,
                     response_serializer=middleware__pb2.Empty.SerializeToString,
             ),
-            'GetKeygroupReplica': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetKeygroupReplica,
-                    request_deserializer=middleware__pb2.GetKeygroupReplicaRequest.FromString,
-                    response_serializer=middleware__pb2.GetKeygroupReplicaResponse.SerializeToString,
+            'GetKeygroupInfo': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetKeygroupInfo,
+                    request_deserializer=middleware__pb2.GetKeygroupInfoRequest.FromString,
+                    response_serializer=middleware__pb2.GetKeygroupInfoResponse.SerializeToString,
             ),
             'RemoveReplica': grpc.unary_unary_rpc_method_handler(
                     servicer.RemoveReplica,
@@ -477,7 +477,7 @@ class Middleware(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def GetKeygroupReplica(request,
+    def GetKeygroupInfo(request,
             target,
             options=(),
             channel_credentials=None,
@@ -487,9 +487,9 @@ class Middleware(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/mcc.fred.middleware.Middleware/GetKeygroupReplica',
-            middleware__pb2.GetKeygroupReplicaRequest.SerializeToString,
-            middleware__pb2.GetKeygroupReplicaResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/mcc.fred.middleware.Middleware/GetKeygroupInfo',
+            middleware__pb2.GetKeygroupInfoRequest.SerializeToString,
+            middleware__pb2.GetKeygroupInfoResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

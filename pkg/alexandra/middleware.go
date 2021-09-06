@@ -337,10 +337,10 @@ func (s *Server) GetAllReplica(ctx context.Context, _ *middleware.GetAllReplicaR
 	return &middleware.GetAllReplicaResponse{Replicas: replicas}, err
 }
 
-// GetKeygroupReplica returns a list of all FReD nodes that replicate a given keygroup. In the future, this API will be
+// GetKeygroupInfo returns a list of all FReD nodes that replicate a given keygroup. In the future, this API will be
 // removed as ALExANDRA handles data replication.
-func (s *Server) GetKeygroupReplica(ctx context.Context, req *middleware.GetKeygroupReplicaRequest) (*middleware.GetKeygroupReplicaResponse, error) {
-	res, err := s.clientsMgr.getFastestClient().Client.GetKeygroupReplica(ctx, &api.GetKeygroupReplicaRequest{Keygroup: req.Keygroup})
+func (s *Server) GetKeygroupInfo(ctx context.Context, req *middleware.GetKeygroupInfoRequest) (*middleware.GetKeygroupInfoResponse, error) {
+	res, err := s.clientsMgr.getFastestClient().Client.GetKeygroupInfo(ctx, &api.GetKeygroupInfoRequest{Keygroup: req.Keygroup})
 
 	if err != nil {
 		return nil, err
@@ -354,7 +354,10 @@ func (s *Server) GetKeygroupReplica(ctx context.Context, req *middleware.GetKeyg
 		}
 	}
 
-	return &middleware.GetKeygroupReplicaResponse{Replica: replicas}, err
+	return &middleware.GetKeygroupInfoResponse{
+		Mutable: res.Mutable,
+		Replica: replicas,
+	}, err
 }
 
 // GetKeygroupTriggers returns a list of trigger nodes for a keygroup.

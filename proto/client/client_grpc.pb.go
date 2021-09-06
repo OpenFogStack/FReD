@@ -26,7 +26,7 @@ type ClientClient interface {
 	Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*DeleteResponse, error)
 	Append(ctx context.Context, in *AppendRequest, opts ...grpc.CallOption) (*AppendResponse, error)
 	AddReplica(ctx context.Context, in *AddReplicaRequest, opts ...grpc.CallOption) (*Empty, error)
-	GetKeygroupReplica(ctx context.Context, in *GetKeygroupReplicaRequest, opts ...grpc.CallOption) (*GetKeygroupReplicaResponse, error)
+	GetKeygroupInfo(ctx context.Context, in *GetKeygroupInfoRequest, opts ...grpc.CallOption) (*GetKeygroupInfoResponse, error)
 	RemoveReplica(ctx context.Context, in *RemoveReplicaRequest, opts ...grpc.CallOption) (*Empty, error)
 	GetReplica(ctx context.Context, in *GetReplicaRequest, opts ...grpc.CallOption) (*GetReplicaResponse, error)
 	GetAllReplica(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*GetAllReplicaResponse, error)
@@ -117,9 +117,9 @@ func (c *clientClient) AddReplica(ctx context.Context, in *AddReplicaRequest, op
 	return out, nil
 }
 
-func (c *clientClient) GetKeygroupReplica(ctx context.Context, in *GetKeygroupReplicaRequest, opts ...grpc.CallOption) (*GetKeygroupReplicaResponse, error) {
-	out := new(GetKeygroupReplicaResponse)
-	err := c.cc.Invoke(ctx, "/mcc.fred.client.Client/GetKeygroupReplica", in, out, opts...)
+func (c *clientClient) GetKeygroupInfo(ctx context.Context, in *GetKeygroupInfoRequest, opts ...grpc.CallOption) (*GetKeygroupInfoResponse, error) {
+	out := new(GetKeygroupInfoResponse)
+	err := c.cc.Invoke(ctx, "/mcc.fred.client.Client/GetKeygroupInfo", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -210,7 +210,7 @@ type ClientServer interface {
 	Delete(context.Context, *DeleteRequest) (*DeleteResponse, error)
 	Append(context.Context, *AppendRequest) (*AppendResponse, error)
 	AddReplica(context.Context, *AddReplicaRequest) (*Empty, error)
-	GetKeygroupReplica(context.Context, *GetKeygroupReplicaRequest) (*GetKeygroupReplicaResponse, error)
+	GetKeygroupInfo(context.Context, *GetKeygroupInfoRequest) (*GetKeygroupInfoResponse, error)
 	RemoveReplica(context.Context, *RemoveReplicaRequest) (*Empty, error)
 	GetReplica(context.Context, *GetReplicaRequest) (*GetReplicaResponse, error)
 	GetAllReplica(context.Context, *Empty) (*GetAllReplicaResponse, error)
@@ -249,8 +249,8 @@ func (UnimplementedClientServer) Append(context.Context, *AppendRequest) (*Appen
 func (UnimplementedClientServer) AddReplica(context.Context, *AddReplicaRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddReplica not implemented")
 }
-func (UnimplementedClientServer) GetKeygroupReplica(context.Context, *GetKeygroupReplicaRequest) (*GetKeygroupReplicaResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetKeygroupReplica not implemented")
+func (UnimplementedClientServer) GetKeygroupInfo(context.Context, *GetKeygroupInfoRequest) (*GetKeygroupInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetKeygroupInfo not implemented")
 }
 func (UnimplementedClientServer) RemoveReplica(context.Context, *RemoveReplicaRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveReplica not implemented")
@@ -432,20 +432,20 @@ func _Client_AddReplica_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Client_GetKeygroupReplica_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetKeygroupReplicaRequest)
+func _Client_GetKeygroupInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetKeygroupInfoRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClientServer).GetKeygroupReplica(ctx, in)
+		return srv.(ClientServer).GetKeygroupInfo(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/mcc.fred.client.Client/GetKeygroupReplica",
+		FullMethod: "/mcc.fred.client.Client/GetKeygroupInfo",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClientServer).GetKeygroupReplica(ctx, req.(*GetKeygroupReplicaRequest))
+		return srv.(ClientServer).GetKeygroupInfo(ctx, req.(*GetKeygroupInfoRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -634,8 +634,8 @@ var Client_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Client_AddReplica_Handler,
 		},
 		{
-			MethodName: "GetKeygroupReplica",
-			Handler:    _Client_GetKeygroupReplica_Handler,
+			MethodName: "GetKeygroupInfo",
+			Handler:    _Client_GetKeygroupInfo_Handler,
 		},
 		{
 			MethodName: "RemoveReplica",

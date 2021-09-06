@@ -594,9 +594,10 @@ func TestKeygroupReplicas(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	nodes, expiries, err := f.E.HandleGetKeygroupReplica(user, fred.Keygroup{Name: kg})
+	mutable, nodes, expiries, err := f.E.HandleGetKeygroupInfo(user, fred.Keygroup{Name: kg})
 
 	assert.NoError(t, err)
+	assert.True(t, mutable)
 	assert.Len(t, nodes, 1)
 	assert.Equal(t, nodeID, nodes[0].ID)
 	assert.Equal(t, "127.0.0.1:9000", nodes[0].Host)

@@ -27,7 +27,7 @@ type MiddlewareClient interface {
 	Append(ctx context.Context, in *AppendRequest, opts ...grpc.CallOption) (*AppendResponse, error)
 	Notify(ctx context.Context, in *NotifyRequest, opts ...grpc.CallOption) (*NotifyResponse, error)
 	AddReplica(ctx context.Context, in *AddReplicaRequest, opts ...grpc.CallOption) (*Empty, error)
-	GetKeygroupReplica(ctx context.Context, in *GetKeygroupReplicaRequest, opts ...grpc.CallOption) (*GetKeygroupReplicaResponse, error)
+	GetKeygroupInfo(ctx context.Context, in *GetKeygroupInfoRequest, opts ...grpc.CallOption) (*GetKeygroupInfoResponse, error)
 	RemoveReplica(ctx context.Context, in *RemoveReplicaRequest, opts ...grpc.CallOption) (*Empty, error)
 	GetReplica(ctx context.Context, in *GetReplicaRequest, opts ...grpc.CallOption) (*GetReplicaResponse, error)
 	GetAllReplica(ctx context.Context, in *GetAllReplicaRequest, opts ...grpc.CallOption) (*GetAllReplicaResponse, error)
@@ -127,9 +127,9 @@ func (c *middlewareClient) AddReplica(ctx context.Context, in *AddReplicaRequest
 	return out, nil
 }
 
-func (c *middlewareClient) GetKeygroupReplica(ctx context.Context, in *GetKeygroupReplicaRequest, opts ...grpc.CallOption) (*GetKeygroupReplicaResponse, error) {
-	out := new(GetKeygroupReplicaResponse)
-	err := c.cc.Invoke(ctx, "/mcc.fred.middleware.Middleware/GetKeygroupReplica", in, out, opts...)
+func (c *middlewareClient) GetKeygroupInfo(ctx context.Context, in *GetKeygroupInfoRequest, opts ...grpc.CallOption) (*GetKeygroupInfoResponse, error) {
+	out := new(GetKeygroupInfoResponse)
+	err := c.cc.Invoke(ctx, "/mcc.fred.middleware.Middleware/GetKeygroupInfo", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -221,7 +221,7 @@ type MiddlewareServer interface {
 	Append(context.Context, *AppendRequest) (*AppendResponse, error)
 	Notify(context.Context, *NotifyRequest) (*NotifyResponse, error)
 	AddReplica(context.Context, *AddReplicaRequest) (*Empty, error)
-	GetKeygroupReplica(context.Context, *GetKeygroupReplicaRequest) (*GetKeygroupReplicaResponse, error)
+	GetKeygroupInfo(context.Context, *GetKeygroupInfoRequest) (*GetKeygroupInfoResponse, error)
 	RemoveReplica(context.Context, *RemoveReplicaRequest) (*Empty, error)
 	GetReplica(context.Context, *GetReplicaRequest) (*GetReplicaResponse, error)
 	GetAllReplica(context.Context, *GetAllReplicaRequest) (*GetAllReplicaResponse, error)
@@ -263,8 +263,8 @@ func (UnimplementedMiddlewareServer) Notify(context.Context, *NotifyRequest) (*N
 func (UnimplementedMiddlewareServer) AddReplica(context.Context, *AddReplicaRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddReplica not implemented")
 }
-func (UnimplementedMiddlewareServer) GetKeygroupReplica(context.Context, *GetKeygroupReplicaRequest) (*GetKeygroupReplicaResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetKeygroupReplica not implemented")
+func (UnimplementedMiddlewareServer) GetKeygroupInfo(context.Context, *GetKeygroupInfoRequest) (*GetKeygroupInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetKeygroupInfo not implemented")
 }
 func (UnimplementedMiddlewareServer) RemoveReplica(context.Context, *RemoveReplicaRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveReplica not implemented")
@@ -464,20 +464,20 @@ func _Middleware_AddReplica_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Middleware_GetKeygroupReplica_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetKeygroupReplicaRequest)
+func _Middleware_GetKeygroupInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetKeygroupInfoRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MiddlewareServer).GetKeygroupReplica(ctx, in)
+		return srv.(MiddlewareServer).GetKeygroupInfo(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/mcc.fred.middleware.Middleware/GetKeygroupReplica",
+		FullMethod: "/mcc.fred.middleware.Middleware/GetKeygroupInfo",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MiddlewareServer).GetKeygroupReplica(ctx, req.(*GetKeygroupReplicaRequest))
+		return srv.(MiddlewareServer).GetKeygroupInfo(ctx, req.(*GetKeygroupInfoRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -670,8 +670,8 @@ var Middleware_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Middleware_AddReplica_Handler,
 		},
 		{
-			MethodName: "GetKeygroupReplica",
-			Handler:    _Middleware_GetKeygroupReplica_Handler,
+			MethodName: "GetKeygroupInfo",
+			Handler:    _Middleware_GetKeygroupInfo_Handler,
 		},
 		{
 			MethodName: "RemoveReplica",

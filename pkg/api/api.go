@@ -431,7 +431,7 @@ func (s *Server) AddReplica(ctx context.Context, request *client.AddReplicaReque
 }
 
 // GetKeygroupReplica calls this method on the exthandler
-func (s *Server) GetKeygroupReplica(ctx context.Context, request *client.GetKeygroupReplicaRequest) (*client.GetKeygroupReplicaResponse, error) {
+func (s *Server) GetKeygroupInfo(ctx context.Context, request *client.GetKeygroupInfoRequest) (*client.GetKeygroupInfoResponse, error) {
 	log.Info().Msgf("API Server has rcvd GetKeygroupReplica. In: %+v", request)
 
 	user, err := s.CheckCert(ctx)
@@ -441,7 +441,7 @@ func (s *Server) GetKeygroupReplica(ctx context.Context, request *client.GetKeyg
 		return nil, err
 	}
 
-	n, e, err := s.e.HandleGetKeygroupReplica(user, fred.Keygroup{Name: fred.KeygroupName(request.Keygroup)})
+	m, n, e, err := s.e.HandleGetKeygroupInfo(user, fred.Keygroup{Name: fred.KeygroupName(request.Keygroup)})
 
 	log.Debug().Msgf("... received replicas: %+v", n)
 	if err != nil {
@@ -459,7 +459,8 @@ func (s *Server) GetKeygroupReplica(ctx context.Context, request *client.GetKeyg
 		}
 	}
 
-	return &client.GetKeygroupReplicaResponse{
+	return &client.GetKeygroupInfoResponse{
+		Mutable: m,
 		Replica: replicas,
 	}, nil
 

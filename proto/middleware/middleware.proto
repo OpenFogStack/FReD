@@ -14,7 +14,7 @@ service Middleware {
   rpc Append (AppendRequest) returns (AppendResponse);
   rpc Notify (NotifyRequest) returns (NotifyResponse);
   rpc AddReplica (AddReplicaRequest) returns (Empty);
-  rpc GetKeygroupReplica (GetKeygroupReplicaRequest) returns (GetKeygroupReplicaResponse);
+  rpc GetKeygroupInfo (GetKeygroupInfoRequest) returns (GetKeygroupInfoResponse);
   rpc RemoveReplica (RemoveReplicaRequest) returns (Empty);
   rpc GetReplica (GetReplicaRequest) returns (GetReplicaResponse);
   rpc GetAllReplica (GetAllReplicaRequest) returns (GetAllReplicaResponse);
@@ -111,12 +111,13 @@ message AddReplicaRequest {
   int64 expiry = 3;
 }
 
-message GetKeygroupReplicaRequest {
+message GetKeygroupInfoRequest {
   string keygroup = 1;
 }
 
-message GetKeygroupReplicaResponse {
-  repeated KeygroupReplica replica = 1;
+message GetKeygroupInfoResponse {
+  bool mutable = 1;
+  repeated KeygroupReplica replica = 2;
 }
 
 message KeygroupReplica {

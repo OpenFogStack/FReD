@@ -119,7 +119,10 @@ func (t *ReplicaSuite) RunTests() {
 	}
 	t.c.nodeB.CreateKeygroup("replicanodetest", true, 0, false)
 	t.c.nodeB.AddKeygroupReplica("replicanodetest", t.c.nodeA.ID, 10, false)
-	hosts := t.c.nodeA.GetKeygroupReplica("replicanodetest", false)
+	mutable, hosts := t.c.nodeA.GetKeygroupInfo("replicanodetest", false)
+	if !mutable {
+		logNodeFailure(t.c.nodeA, "keygroup is mutable", "immutable")
+	}
 	if len(hosts) != 2 {
 		logNodeFailure(t.c.nodeA, "2 hosts", fmt.Sprintf("%d host(s)", len(hosts)))
 	}

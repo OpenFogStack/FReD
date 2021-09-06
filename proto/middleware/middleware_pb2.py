@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=b'Z\014.;middleware',
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x10middleware.proto\x12\x13mcc.fred.middleware\"\x07\n\x05\x45mpty\"_\n\x15\x43reateKeygroupRequest\x12\x10\n\x08keygroup\x18\x01 \x01(\t\x12\x0f\n\x07mutable\x18\x02 \x01(\x08\x12\x0e\n\x06\x65xpiry\x18\x03 \x01(\x03\x12\x13\n\x0b\x66irstNodeId\x18\x04 \x01(\t\")\n\x15\x44\x65leteKeygroupRequest\x12\x10\n\x08keygroup\x18\x01 \x01(\t\"\x88\x01\n\x04Item\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0b\n\x03val\x18\x02 \x01(\t\x12\x37\n\x07version\x18\x03 \x03(\x0b\x32&.mcc.fred.middleware.Item.VersionEntry\x1a.\n\x0cVersionEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x04:\x02\x38\x01\">\n\x0bReadRequest\x12\x10\n\x08keygroup\x18\x01 \x01(\t\x12\n\n\x02id\x18\x02 \x01(\t\x12\x11\n\tminExpiry\x18\x03 \x01(\x03\"8\n\x0cReadResponse\x12(\n\x05items\x18\x01 \x03(\x0b\x32\x19.mcc.fred.middleware.Item\":\n\x0bScanRequest\x12\x10\n\x08keygroup\x18\x01 \x01(\t\x12\n\n\x02id\x18\x02 \x01(\t\x12\r\n\x05\x63ount\x18\x03 \x01(\x04\"7\n\x0cScanResponse\x12\'\n\x04\x64\x61ta\x18\x01 \x03(\x0b\x32\x19.mcc.fred.middleware.Data\" \n\x04\x44\x61ta\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x02 \x01(\t\";\n\rUpdateRequest\x12\x10\n\x08keygroup\x18\x01 \x01(\t\x12\n\n\x02id\x18\x02 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x03 \x01(\t\"/\n\rAppendRequest\x12\x10\n\x08keygroup\x18\x01 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x02 \x01(\t\"\x1c\n\x0e\x41ppendResponse\x12\n\n\x02id\x18\x01 \x01(\t\"\x9f\x01\n\rNotifyRequest\x12\x10\n\x08keygroup\x18\x01 \x01(\t\x12\n\n\x02id\x18\x02 \x01(\t\x12@\n\x07version\x18\x03 \x03(\x0b\x32/.mcc.fred.middleware.NotifyRequest.VersionEntry\x1a.\n\x0cVersionEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x04:\x02\x38\x01\"\x10\n\x0eNotifyResponse\"-\n\rDeleteRequest\x12\x10\n\x08keygroup\x18\x01 \x01(\t\x12\n\n\x02id\x18\x02 \x01(\t\"E\n\x11\x41\x64\x64ReplicaRequest\x12\x10\n\x08keygroup\x18\x01 \x01(\t\x12\x0e\n\x06nodeId\x18\x02 \x01(\t\x12\x0e\n\x06\x65xpiry\x18\x03 \x01(\x03\"-\n\x19GetKeygroupReplicaRequest\x12\x10\n\x08keygroup\x18\x01 \x01(\t\"S\n\x1aGetKeygroupReplicaResponse\x12\x35\n\x07replica\x18\x01 \x03(\x0b\x32$.mcc.fred.middleware.KeygroupReplica\"?\n\x0fKeygroupReplica\x12\x0e\n\x06nodeId\x18\x01 \x01(\t\x12\x0e\n\x06\x65xpiry\x18\x02 \x01(\x03\x12\x0c\n\x04host\x18\x03 \x01(\t\"8\n\x14RemoveReplicaRequest\x12\x10\n\x08keygroup\x18\x01 \x01(\t\x12\x0e\n\x06nodeId\x18\x02 \x01(\t\"#\n\x11GetReplicaRequest\x12\x0e\n\x06nodeId\x18\x01 \x01(\t\"2\n\x12GetReplicaResponse\x12\x0e\n\x06nodeId\x18\x01 \x01(\t\x12\x0c\n\x04host\x18\x02 \x01(\t\"\x16\n\x14GetAllReplicaRequest\"R\n\x15GetAllReplicaResponse\x12\x39\n\x08replicas\x18\x01 \x03(\x0b\x32\'.mcc.fred.middleware.GetReplicaResponse\"-\n\x19GetKeygroupTriggerRequest\x12\x10\n\x08keygroup\x18\x01 \x01(\t\"L\n\x1aGetKeygroupTriggerResponse\x12.\n\x08triggers\x18\x01 \x03(\x0b\x32\x1c.mcc.fred.middleware.Trigger\"#\n\x07Trigger\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0c\n\x04host\x18\x02 \x01(\t\"M\n\x11\x41\x64\x64TriggerRequest\x12\x10\n\x08keygroup\x18\x01 \x01(\t\x12\x11\n\ttriggerId\x18\x02 \x01(\t\x12\x13\n\x0btriggerHost\x18\x03 \x01(\t\";\n\x14RemoveTriggerRequest\x12\x10\n\x08keygroup\x18\x01 \x01(\t\x12\x11\n\ttriggerId\x18\x02 \x01(\t\"Z\n\x0bUserRequest\x12\x0c\n\x04user\x18\x01 \x01(\t\x12\x10\n\x08keygroup\x18\x02 \x01(\t\x12+\n\x04role\x18\x03 \x01(\x0e\x32\x1d.mcc.fred.middleware.UserRole*s\n\x08UserRole\x12\x10\n\x0cReadKeygroup\x10\x00\x12\x11\n\rWriteKeygroup\x10\x01\x12\x14\n\x10\x43onfigureReplica\x10\x02\x12\x14\n\x10\x43onfigureTrigger\x10\x03\x12\x16\n\x12\x43onfigureKeygroups\x10\x04\x32\xb3\x0c\n\nMiddleware\x12X\n\x0e\x43reateKeygroup\x12*.mcc.fred.middleware.CreateKeygroupRequest\x1a\x1a.mcc.fred.middleware.Empty\x12X\n\x0e\x44\x65leteKeygroup\x12*.mcc.fred.middleware.DeleteKeygroupRequest\x1a\x1a.mcc.fred.middleware.Empty\x12K\n\x04Read\x12 .mcc.fred.middleware.ReadRequest\x1a!.mcc.fred.middleware.ReadResponse\x12K\n\x04Scan\x12 .mcc.fred.middleware.ScanRequest\x1a!.mcc.fred.middleware.ScanResponse\x12H\n\x06Update\x12\".mcc.fred.middleware.UpdateRequest\x1a\x1a.mcc.fred.middleware.Empty\x12H\n\x06\x44\x65lete\x12\".mcc.fred.middleware.DeleteRequest\x1a\x1a.mcc.fred.middleware.Empty\x12Q\n\x06\x41ppend\x12\".mcc.fred.middleware.AppendRequest\x1a#.mcc.fred.middleware.AppendResponse\x12Q\n\x06Notify\x12\".mcc.fred.middleware.NotifyRequest\x1a#.mcc.fred.middleware.NotifyResponse\x12P\n\nAddReplica\x12&.mcc.fred.middleware.AddReplicaRequest\x1a\x1a.mcc.fred.middleware.Empty\x12u\n\x12GetKeygroupReplica\x12..mcc.fred.middleware.GetKeygroupReplicaRequest\x1a/.mcc.fred.middleware.GetKeygroupReplicaResponse\x12V\n\rRemoveReplica\x12).mcc.fred.middleware.RemoveReplicaRequest\x1a\x1a.mcc.fred.middleware.Empty\x12]\n\nGetReplica\x12&.mcc.fred.middleware.GetReplicaRequest\x1a\'.mcc.fred.middleware.GetReplicaResponse\x12\x66\n\rGetAllReplica\x12).mcc.fred.middleware.GetAllReplicaRequest\x1a*.mcc.fred.middleware.GetAllReplicaResponse\x12v\n\x13GetKeygroupTriggers\x12..mcc.fred.middleware.GetKeygroupTriggerRequest\x1a/.mcc.fred.middleware.GetKeygroupTriggerResponse\x12P\n\nAddTrigger\x12&.mcc.fred.middleware.AddTriggerRequest\x1a\x1a.mcc.fred.middleware.Empty\x12V\n\rRemoveTrigger\x12).mcc.fred.middleware.RemoveTriggerRequest\x1a\x1a.mcc.fred.middleware.Empty\x12G\n\x07\x41\x64\x64User\x12 .mcc.fred.middleware.UserRequest\x1a\x1a.mcc.fred.middleware.Empty\x12J\n\nRemoveUser\x12 .mcc.fred.middleware.UserRequest\x1a\x1a.mcc.fred.middleware.EmptyB\x0eZ\x0c.;middlewareb\x06proto3'
+  serialized_pb=b'\n\x10middleware.proto\x12\x13mcc.fred.middleware\"\x07\n\x05\x45mpty\"_\n\x15\x43reateKeygroupRequest\x12\x10\n\x08keygroup\x18\x01 \x01(\t\x12\x0f\n\x07mutable\x18\x02 \x01(\x08\x12\x0e\n\x06\x65xpiry\x18\x03 \x01(\x03\x12\x13\n\x0b\x66irstNodeId\x18\x04 \x01(\t\")\n\x15\x44\x65leteKeygroupRequest\x12\x10\n\x08keygroup\x18\x01 \x01(\t\"\x88\x01\n\x04Item\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0b\n\x03val\x18\x02 \x01(\t\x12\x37\n\x07version\x18\x03 \x03(\x0b\x32&.mcc.fred.middleware.Item.VersionEntry\x1a.\n\x0cVersionEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x04:\x02\x38\x01\">\n\x0bReadRequest\x12\x10\n\x08keygroup\x18\x01 \x01(\t\x12\n\n\x02id\x18\x02 \x01(\t\x12\x11\n\tminExpiry\x18\x03 \x01(\x03\"8\n\x0cReadResponse\x12(\n\x05items\x18\x01 \x03(\x0b\x32\x19.mcc.fred.middleware.Item\":\n\x0bScanRequest\x12\x10\n\x08keygroup\x18\x01 \x01(\t\x12\n\n\x02id\x18\x02 \x01(\t\x12\r\n\x05\x63ount\x18\x03 \x01(\x04\"7\n\x0cScanResponse\x12\'\n\x04\x64\x61ta\x18\x01 \x03(\x0b\x32\x19.mcc.fred.middleware.Data\" \n\x04\x44\x61ta\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x02 \x01(\t\";\n\rUpdateRequest\x12\x10\n\x08keygroup\x18\x01 \x01(\t\x12\n\n\x02id\x18\x02 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x03 \x01(\t\"/\n\rAppendRequest\x12\x10\n\x08keygroup\x18\x01 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x02 \x01(\t\"\x1c\n\x0e\x41ppendResponse\x12\n\n\x02id\x18\x01 \x01(\t\"\x9f\x01\n\rNotifyRequest\x12\x10\n\x08keygroup\x18\x01 \x01(\t\x12\n\n\x02id\x18\x02 \x01(\t\x12@\n\x07version\x18\x03 \x03(\x0b\x32/.mcc.fred.middleware.NotifyRequest.VersionEntry\x1a.\n\x0cVersionEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x04:\x02\x38\x01\"\x10\n\x0eNotifyResponse\"-\n\rDeleteRequest\x12\x10\n\x08keygroup\x18\x01 \x01(\t\x12\n\n\x02id\x18\x02 \x01(\t\"E\n\x11\x41\x64\x64ReplicaRequest\x12\x10\n\x08keygroup\x18\x01 \x01(\t\x12\x0e\n\x06nodeId\x18\x02 \x01(\t\x12\x0e\n\x06\x65xpiry\x18\x03 \x01(\x03\"*\n\x16GetKeygroupInfoRequest\x12\x10\n\x08keygroup\x18\x01 \x01(\t\"a\n\x17GetKeygroupInfoResponse\x12\x0f\n\x07mutable\x18\x01 \x01(\x08\x12\x35\n\x07replica\x18\x02 \x03(\x0b\x32$.mcc.fred.middleware.KeygroupReplica\"?\n\x0fKeygroupReplica\x12\x0e\n\x06nodeId\x18\x01 \x01(\t\x12\x0e\n\x06\x65xpiry\x18\x02 \x01(\x03\x12\x0c\n\x04host\x18\x03 \x01(\t\"8\n\x14RemoveReplicaRequest\x12\x10\n\x08keygroup\x18\x01 \x01(\t\x12\x0e\n\x06nodeId\x18\x02 \x01(\t\"#\n\x11GetReplicaRequest\x12\x0e\n\x06nodeId\x18\x01 \x01(\t\"2\n\x12GetReplicaResponse\x12\x0e\n\x06nodeId\x18\x01 \x01(\t\x12\x0c\n\x04host\x18\x02 \x01(\t\"\x16\n\x14GetAllReplicaRequest\"R\n\x15GetAllReplicaResponse\x12\x39\n\x08replicas\x18\x01 \x03(\x0b\x32\'.mcc.fred.middleware.GetReplicaResponse\"-\n\x19GetKeygroupTriggerRequest\x12\x10\n\x08keygroup\x18\x01 \x01(\t\"L\n\x1aGetKeygroupTriggerResponse\x12.\n\x08triggers\x18\x01 \x03(\x0b\x32\x1c.mcc.fred.middleware.Trigger\"#\n\x07Trigger\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0c\n\x04host\x18\x02 \x01(\t\"M\n\x11\x41\x64\x64TriggerRequest\x12\x10\n\x08keygroup\x18\x01 \x01(\t\x12\x11\n\ttriggerId\x18\x02 \x01(\t\x12\x13\n\x0btriggerHost\x18\x03 \x01(\t\";\n\x14RemoveTriggerRequest\x12\x10\n\x08keygroup\x18\x01 \x01(\t\x12\x11\n\ttriggerId\x18\x02 \x01(\t\"Z\n\x0bUserRequest\x12\x0c\n\x04user\x18\x01 \x01(\t\x12\x10\n\x08keygroup\x18\x02 \x01(\t\x12+\n\x04role\x18\x03 \x01(\x0e\x32\x1d.mcc.fred.middleware.UserRole*s\n\x08UserRole\x12\x10\n\x0cReadKeygroup\x10\x00\x12\x11\n\rWriteKeygroup\x10\x01\x12\x14\n\x10\x43onfigureReplica\x10\x02\x12\x14\n\x10\x43onfigureTrigger\x10\x03\x12\x16\n\x12\x43onfigureKeygroups\x10\x04\x32\xaa\x0c\n\nMiddleware\x12X\n\x0e\x43reateKeygroup\x12*.mcc.fred.middleware.CreateKeygroupRequest\x1a\x1a.mcc.fred.middleware.Empty\x12X\n\x0e\x44\x65leteKeygroup\x12*.mcc.fred.middleware.DeleteKeygroupRequest\x1a\x1a.mcc.fred.middleware.Empty\x12K\n\x04Read\x12 .mcc.fred.middleware.ReadRequest\x1a!.mcc.fred.middleware.ReadResponse\x12K\n\x04Scan\x12 .mcc.fred.middleware.ScanRequest\x1a!.mcc.fred.middleware.ScanResponse\x12H\n\x06Update\x12\".mcc.fred.middleware.UpdateRequest\x1a\x1a.mcc.fred.middleware.Empty\x12H\n\x06\x44\x65lete\x12\".mcc.fred.middleware.DeleteRequest\x1a\x1a.mcc.fred.middleware.Empty\x12Q\n\x06\x41ppend\x12\".mcc.fred.middleware.AppendRequest\x1a#.mcc.fred.middleware.AppendResponse\x12Q\n\x06Notify\x12\".mcc.fred.middleware.NotifyRequest\x1a#.mcc.fred.middleware.NotifyResponse\x12P\n\nAddReplica\x12&.mcc.fred.middleware.AddReplicaRequest\x1a\x1a.mcc.fred.middleware.Empty\x12l\n\x0fGetKeygroupInfo\x12+.mcc.fred.middleware.GetKeygroupInfoRequest\x1a,.mcc.fred.middleware.GetKeygroupInfoResponse\x12V\n\rRemoveReplica\x12).mcc.fred.middleware.RemoveReplicaRequest\x1a\x1a.mcc.fred.middleware.Empty\x12]\n\nGetReplica\x12&.mcc.fred.middleware.GetReplicaRequest\x1a\'.mcc.fred.middleware.GetReplicaResponse\x12\x66\n\rGetAllReplica\x12).mcc.fred.middleware.GetAllReplicaRequest\x1a*.mcc.fred.middleware.GetAllReplicaResponse\x12v\n\x13GetKeygroupTriggers\x12..mcc.fred.middleware.GetKeygroupTriggerRequest\x1a/.mcc.fred.middleware.GetKeygroupTriggerResponse\x12P\n\nAddTrigger\x12&.mcc.fred.middleware.AddTriggerRequest\x1a\x1a.mcc.fred.middleware.Empty\x12V\n\rRemoveTrigger\x12).mcc.fred.middleware.RemoveTriggerRequest\x1a\x1a.mcc.fred.middleware.Empty\x12G\n\x07\x41\x64\x64User\x12 .mcc.fred.middleware.UserRequest\x1a\x1a.mcc.fred.middleware.Empty\x12J\n\nRemoveUser\x12 .mcc.fred.middleware.UserRequest\x1a\x1a.mcc.fred.middleware.EmptyB\x0eZ\x0c.;middlewareb\x06proto3'
 )
 
 _USERROLE = _descriptor.EnumDescriptor(
@@ -58,8 +58,8 @@ _USERROLE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1886,
-  serialized_end=2001,
+  serialized_start=1897,
+  serialized_end=2012,
 )
 _sym_db.RegisterEnumDescriptor(_USERROLE)
 
@@ -772,16 +772,16 @@ _ADDREPLICAREQUEST = _descriptor.Descriptor(
 )
 
 
-_GETKEYGROUPREPLICAREQUEST = _descriptor.Descriptor(
-  name='GetKeygroupReplicaRequest',
-  full_name='mcc.fred.middleware.GetKeygroupReplicaRequest',
+_GETKEYGROUPINFOREQUEST = _descriptor.Descriptor(
+  name='GetKeygroupInfoRequest',
+  full_name='mcc.fred.middleware.GetKeygroupInfoRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
-      name='keygroup', full_name='mcc.fred.middleware.GetKeygroupReplicaRequest.keygroup', index=0,
+      name='keygroup', full_name='mcc.fred.middleware.GetKeygroupInfoRequest.keygroup', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -800,21 +800,28 @@ _GETKEYGROUPREPLICAREQUEST = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=1040,
-  serialized_end=1085,
+  serialized_end=1082,
 )
 
 
-_GETKEYGROUPREPLICARESPONSE = _descriptor.Descriptor(
-  name='GetKeygroupReplicaResponse',
-  full_name='mcc.fred.middleware.GetKeygroupReplicaResponse',
+_GETKEYGROUPINFORESPONSE = _descriptor.Descriptor(
+  name='GetKeygroupInfoResponse',
+  full_name='mcc.fred.middleware.GetKeygroupInfoResponse',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
-      name='replica', full_name='mcc.fred.middleware.GetKeygroupReplicaResponse.replica', index=0,
-      number=1, type=11, cpp_type=10, label=3,
+      name='mutable', full_name='mcc.fred.middleware.GetKeygroupInfoResponse.mutable', index=0,
+      number=1, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='replica', full_name='mcc.fred.middleware.GetKeygroupInfoResponse.replica', index=1,
+      number=2, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -831,8 +838,8 @@ _GETKEYGROUPREPLICARESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1087,
-  serialized_end=1170,
+  serialized_start=1084,
+  serialized_end=1181,
 )
 
 
@@ -877,8 +884,8 @@ _KEYGROUPREPLICA = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1172,
-  serialized_end=1235,
+  serialized_start=1183,
+  serialized_end=1246,
 )
 
 
@@ -916,8 +923,8 @@ _REMOVEREPLICAREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1237,
-  serialized_end=1293,
+  serialized_start=1248,
+  serialized_end=1304,
 )
 
 
@@ -948,8 +955,8 @@ _GETREPLICAREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1295,
-  serialized_end=1330,
+  serialized_start=1306,
+  serialized_end=1341,
 )
 
 
@@ -987,8 +994,8 @@ _GETREPLICARESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1332,
-  serialized_end=1382,
+  serialized_start=1343,
+  serialized_end=1393,
 )
 
 
@@ -1012,8 +1019,8 @@ _GETALLREPLICAREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1384,
-  serialized_end=1406,
+  serialized_start=1395,
+  serialized_end=1417,
 )
 
 
@@ -1044,8 +1051,8 @@ _GETALLREPLICARESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1408,
-  serialized_end=1490,
+  serialized_start=1419,
+  serialized_end=1501,
 )
 
 
@@ -1076,8 +1083,8 @@ _GETKEYGROUPTRIGGERREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1492,
-  serialized_end=1537,
+  serialized_start=1503,
+  serialized_end=1548,
 )
 
 
@@ -1108,8 +1115,8 @@ _GETKEYGROUPTRIGGERRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1539,
-  serialized_end=1615,
+  serialized_start=1550,
+  serialized_end=1626,
 )
 
 
@@ -1147,8 +1154,8 @@ _TRIGGER = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1617,
-  serialized_end=1652,
+  serialized_start=1628,
+  serialized_end=1663,
 )
 
 
@@ -1193,8 +1200,8 @@ _ADDTRIGGERREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1654,
-  serialized_end=1731,
+  serialized_start=1665,
+  serialized_end=1742,
 )
 
 
@@ -1232,8 +1239,8 @@ _REMOVETRIGGERREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1733,
-  serialized_end=1792,
+  serialized_start=1744,
+  serialized_end=1803,
 )
 
 
@@ -1278,8 +1285,8 @@ _USERREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1794,
-  serialized_end=1884,
+  serialized_start=1805,
+  serialized_end=1895,
 )
 
 _ITEM_VERSIONENTRY.containing_type = _ITEM
@@ -1288,7 +1295,7 @@ _READRESPONSE.fields_by_name['items'].message_type = _ITEM
 _SCANRESPONSE.fields_by_name['data'].message_type = _DATA
 _NOTIFYREQUEST_VERSIONENTRY.containing_type = _NOTIFYREQUEST
 _NOTIFYREQUEST.fields_by_name['version'].message_type = _NOTIFYREQUEST_VERSIONENTRY
-_GETKEYGROUPREPLICARESPONSE.fields_by_name['replica'].message_type = _KEYGROUPREPLICA
+_GETKEYGROUPINFORESPONSE.fields_by_name['replica'].message_type = _KEYGROUPREPLICA
 _GETALLREPLICARESPONSE.fields_by_name['replicas'].message_type = _GETREPLICARESPONSE
 _GETKEYGROUPTRIGGERRESPONSE.fields_by_name['triggers'].message_type = _TRIGGER
 _USERREQUEST.fields_by_name['role'].enum_type = _USERROLE
@@ -1308,8 +1315,8 @@ DESCRIPTOR.message_types_by_name['NotifyRequest'] = _NOTIFYREQUEST
 DESCRIPTOR.message_types_by_name['NotifyResponse'] = _NOTIFYRESPONSE
 DESCRIPTOR.message_types_by_name['DeleteRequest'] = _DELETEREQUEST
 DESCRIPTOR.message_types_by_name['AddReplicaRequest'] = _ADDREPLICAREQUEST
-DESCRIPTOR.message_types_by_name['GetKeygroupReplicaRequest'] = _GETKEYGROUPREPLICAREQUEST
-DESCRIPTOR.message_types_by_name['GetKeygroupReplicaResponse'] = _GETKEYGROUPREPLICARESPONSE
+DESCRIPTOR.message_types_by_name['GetKeygroupInfoRequest'] = _GETKEYGROUPINFOREQUEST
+DESCRIPTOR.message_types_by_name['GetKeygroupInfoResponse'] = _GETKEYGROUPINFORESPONSE
 DESCRIPTOR.message_types_by_name['KeygroupReplica'] = _KEYGROUPREPLICA
 DESCRIPTOR.message_types_by_name['RemoveReplicaRequest'] = _REMOVEREPLICAREQUEST
 DESCRIPTOR.message_types_by_name['GetReplicaRequest'] = _GETREPLICAREQUEST
@@ -1453,19 +1460,19 @@ AddReplicaRequest = _reflection.GeneratedProtocolMessageType('AddReplicaRequest'
   })
 _sym_db.RegisterMessage(AddReplicaRequest)
 
-GetKeygroupReplicaRequest = _reflection.GeneratedProtocolMessageType('GetKeygroupReplicaRequest', (_message.Message,), {
-  'DESCRIPTOR' : _GETKEYGROUPREPLICAREQUEST,
+GetKeygroupInfoRequest = _reflection.GeneratedProtocolMessageType('GetKeygroupInfoRequest', (_message.Message,), {
+  'DESCRIPTOR' : _GETKEYGROUPINFOREQUEST,
   '__module__' : 'middleware_pb2'
-  # @@protoc_insertion_point(class_scope:mcc.fred.middleware.GetKeygroupReplicaRequest)
+  # @@protoc_insertion_point(class_scope:mcc.fred.middleware.GetKeygroupInfoRequest)
   })
-_sym_db.RegisterMessage(GetKeygroupReplicaRequest)
+_sym_db.RegisterMessage(GetKeygroupInfoRequest)
 
-GetKeygroupReplicaResponse = _reflection.GeneratedProtocolMessageType('GetKeygroupReplicaResponse', (_message.Message,), {
-  'DESCRIPTOR' : _GETKEYGROUPREPLICARESPONSE,
+GetKeygroupInfoResponse = _reflection.GeneratedProtocolMessageType('GetKeygroupInfoResponse', (_message.Message,), {
+  'DESCRIPTOR' : _GETKEYGROUPINFORESPONSE,
   '__module__' : 'middleware_pb2'
-  # @@protoc_insertion_point(class_scope:mcc.fred.middleware.GetKeygroupReplicaResponse)
+  # @@protoc_insertion_point(class_scope:mcc.fred.middleware.GetKeygroupInfoResponse)
   })
-_sym_db.RegisterMessage(GetKeygroupReplicaResponse)
+_sym_db.RegisterMessage(GetKeygroupInfoResponse)
 
 KeygroupReplica = _reflection.GeneratedProtocolMessageType('KeygroupReplica', (_message.Message,), {
   'DESCRIPTOR' : _KEYGROUPREPLICA,
@@ -1563,8 +1570,8 @@ _MIDDLEWARE = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=2004,
-  serialized_end=3591,
+  serialized_start=2015,
+  serialized_end=3593,
   methods=[
   _descriptor.MethodDescriptor(
     name='CreateKeygroup',
@@ -1657,12 +1664,12 @@ _MIDDLEWARE = _descriptor.ServiceDescriptor(
     create_key=_descriptor._internal_create_key,
   ),
   _descriptor.MethodDescriptor(
-    name='GetKeygroupReplica',
-    full_name='mcc.fred.middleware.Middleware.GetKeygroupReplica',
+    name='GetKeygroupInfo',
+    full_name='mcc.fred.middleware.Middleware.GetKeygroupInfo',
     index=9,
     containing_service=None,
-    input_type=_GETKEYGROUPREPLICAREQUEST,
-    output_type=_GETKEYGROUPREPLICARESPONSE,
+    input_type=_GETKEYGROUPINFOREQUEST,
+    output_type=_GETKEYGROUPINFORESPONSE,
     serialized_options=None,
     create_key=_descriptor._internal_create_key,
   ),
