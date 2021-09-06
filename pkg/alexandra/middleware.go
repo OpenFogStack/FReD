@@ -288,6 +288,8 @@ func (s *Server) AddReplica(ctx context.Context, req *middleware.AddReplicaReque
 		return nil, err
 	}
 
+	s.clientsMgr.updateKeygroupClients(req.Keygroup)
+
 	return &middleware.Empty{}, err
 }
 
@@ -301,6 +303,8 @@ func (s *Server) RemoveReplica(ctx context.Context, req *middleware.RemoveReplic
 	if err != nil {
 		return nil, err
 	}
+
+	s.clientsMgr.updateKeygroupClients(req.Keygroup)
 
 	return &middleware.Empty{}, err
 }
