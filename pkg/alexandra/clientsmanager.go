@@ -316,8 +316,10 @@ func (m *ClientsMgr) updateKeygroupClients(keygroup string) {
 	log.Debug().Msgf("Updating Clients for Keygroup %s", keygroup)
 	replica, err := m.getFastestClient().getKeygroupReplica(context.Background(), keygroup)
 	if err != nil {
+		log.Debug().Msgf("couldn't get replicas for keygroup %s from fastest client: %s", keygroup, err.Error())
 		replica, err = m.getClientTo(m.lighthouse).getKeygroupReplica(context.Background(), keygroup)
 		if err != nil {
+			log.Debug().Msgf("couldn't get replicas for keygroup %s from lighthouse client: %s", keygroup, err.Error())
 			log.Error().Msgf("updateKeygroupClients cannot reach fastest client OR lighthouse...")
 			return
 		}
