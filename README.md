@@ -81,7 +81,7 @@ $ State or Province Name (full name) []:Berlin
 $ Locality Name (eg, city) []:Berlin
 $ Organization Name (eg, company) []:MCC
 $ Organizational Unit Name (eg, section) []:FRED
-$ Common Name (eg, fully qualified host name) []:etcd
+$ Common Name (eg, fully qualified host name) []:
 $ Email Address []:
 ```
 
@@ -93,14 +93,16 @@ However, you must keep the private key `ca.key` private at all times!
 
 With your CA private key in hand you may now generate certificates for `etcd`, `fred`, storage server, client, and any other software components.
 Use the included `gen-cert.sh` script like this: `gen-cert.sh {NAME} {IP}`, where `{NAME}` is the name for your certificate and `{IP}` is the IP address of your service.
+The name you assign to the certificate for a FReD node should be the ID of the node.
+It is the common name (CN) of this certificate.
 
 Although not strictly required, it is recommended to generate unique certificates for every software component.
 In this example case, the following commands are required:
 
 ```bash
 ./gen-cert.sh etcdnase 172.26.1.1
-./gen-cert.sh frednode 172.26.1.2
-./gen-cert.sh fredclient 172.26.1.3
+./gen-cert.sh fredNodeA 172.26.1.2
+./gen-cert.sh fredClient 172.26.1.3
 ```
 
 #### Network
@@ -148,35 +150,36 @@ Running the `fred` software is similar to running `etcd`, but the image has to b
 ```bash
 docker build -t fred .
 docker run -d \
--v $(pwd)/frednode.crt:/cert/frednode.crt \
--v $(pwd)/frednode.key:/cert/frednode.key \
+-v $(pwd)/fredNodeA.crt:/cert/fredNodeA.crt \
+-v $(pwd)/fredNodeA.key:/cert/fredNodeA.key \
 -v $(pwd)/ca.crt:/cert/ca.crt \
 --network=fredwork \
 --ip=172.26.1.2 \
 fred \
 fred --log-level info \
 --handler dev \
---nodeID fred \
+--nodeID fredNodeA \
 --host 172.26.1.2:9001 \
 --peer-host 172.26.1.2:5555 \
 --adaptor badgerdb \
 --badgerdb-path ./db \
 --nase-host https://172.26.1.1:2379 \
---nase-cert /cert/frednode.crt \
---nase-key /cert/frednode.key \
+--nase-cert /cert/fredNodeA.crt \
+--nase-key /cert/fredNodeA.key \
 --nase-ca /cert/ca.crt \
---trigger-cert /cert/frednode.crt \
---trigger-key /cert/frednode.key \
+--trigger-cert /cert/fredNodeA.crt \
+--trigger-key /cert/fredNodeA.key \
 --trigger-ca /cert/ca.crt \
---peer-cert /cert/frednode.crt \
---peer-key /cert/frednode.key \
+--peer-cert /cert/fredNodeA.crt \
+--peer-key /cert/fredNodeA.key \
 --peer-ca /cert/ca.crt \
---cert /cert/frednode.crt \
---key /cert/frednode.key \
+--cert /cert/fredNodeA.crt \
+--key /cert/fredNodeA.key \
 --ca-file /cert/ca.crt
 ```
 
 This starts an instance of the `fred` software with the `info` log level using the `dev` log handler.
+The ID of this node is `fredNodeA`.
 It also uses an embedded BadgerDB database as a storage backend.
 
 #### Using FReD
@@ -187,8 +190,8 @@ If you want to try it out, use the `client.proto` in `./proto` to build a client
 ```bash
 docker build -t grpcc -f grpcc.Dockerfile .
 docker run \
--v $(pwd)/fredclient.crt:/cert/fredclient.crt \
--v $(pwd)/fredclient.key:/cert/fredclient.key \
+-v $(pwd)/fredClient.crt:/cert/fredClient.crt \
+-v $(pwd)/fredClient.key:/cert/fredClient.key \
 -v $(pwd)/ca.crt:/cert/ca.crt \
 -v $(pwd)/proto/client/client.proto:/client.proto \
 --network=fredwork \
@@ -198,8 +201,8 @@ grpcc \
 grpcc -p client.proto \
 -a 172.26.1.2:9001 \
 --root_cert /cert/ca.crt \
---private_key /cert/fredclient.key \
---cert_chain /cert/fredclient.crt
+--private_key /cert/fredClient.key \
+--cert_chain /cert/fredClient.crt
 ```
 
 This uses the direct client interface of FReD instead of the recommended ALExANDRA middleware.
