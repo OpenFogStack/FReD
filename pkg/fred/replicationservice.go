@@ -224,7 +224,7 @@ func (s *replicationService) relayAppend(i Item) error {
 	return nil
 }
 
-// addReplica handles replication after requests to the AddReplica endpoint. It relays this command if "relay" is set to "true".
+// addReplica handles replication after requests to the AddReplica endpoint.
 func (s *replicationService) addReplica(k Keygroup, n Node) error {
 	log.Debug().Msgf("AddReplica from replservice: in kg=%+v no=%+v", k, n)
 
@@ -251,6 +251,12 @@ func (s *replicationService) addReplica(k Keygroup, n Node) error {
 		return err
 	}
 
+	// if we are not the new node and we are also not a replica for that keygroup, we have nothing to do with that
+	// request: abort
+	if n.ID != s.n.GetNodeID() && !s.s.existsKeygroup(k.Name) {
+		return errors.Errorf("keygroup %+v is unknown and we are not the new node %+v", k, n)
+	}
+
 	// Write the news into the NaSe first
 	err = s.n.JoinNodeIntoKeygroup(k.Name, n.ID, k.Expiry)
 
@@ -267,6 +273,11 @@ func (s *replicationService) addReplica(k Keygroup, n Node) error {
 	}
 
 	// send all existing data to the new node
+	// there are three basic possibilities:
+	// we are a replica for this keygroup and we need to send someone else the data
+	// we are not a replica for this keygroup and we need to get the data from somewhere
+	// we are not a replica but we are also not the new replica
+	// in the last case we just have nothing to do with this and error out
 	// TODO so this one array contains all data items? Maybe not a good idea if there is a lot of data to be sent
 	var i []Item
 

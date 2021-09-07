@@ -238,7 +238,16 @@ func (s *storeService) readAll(kg KeygroupName) ([]Item, error) {
 
 // exists checks if an item exists in the key-value store.
 func (s *storeService) exists(i Item) bool {
+	if !s.iS.ExistsKeygroup(string(i.Keygroup)) {
+		return false
+	}
+
 	return s.iS.Exists(string(i.Keygroup), i.ID)
+}
+
+// existsKeygroup checks if a keygroup exists locally.
+func (s *storeService) existsKeygroup(name KeygroupName) bool {
+	return s.iS.ExistsKeygroup(string(name))
 }
 
 // Update updates an item in the key-value store.
