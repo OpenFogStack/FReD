@@ -18,12 +18,13 @@ import (
 const alphaItemSpeed = float32(0.8)
 
 type Client struct {
+	nodeID    string
 	Client    api.ClientClient
 	conn      *grpc.ClientConn
 	ReadSpeed float32
 }
 
-func newClient(host, certFile, keyFile string) *Client {
+func newClient(nodeID string, host string, certFile string, keyFile string) *Client {
 
 	if certFile == "" {
 		log.Fatal().Msg("fredclient: no certificate file given")
@@ -66,12 +67,17 @@ func newClient(host, certFile, keyFile string) *Client {
 		return &Client{Client: api.NewClientClient(conn)}
 	}
 	log.Info().Msgf("Creating a connection to fred node: %s", host)
-	return &Client{Client: api.NewClientClient(conn), conn: conn, ReadSpeed: -1}
+	return &Client{
+		Client:    api.NewClientClient(conn),
+		conn:      conn,
+		ReadSpeed: -1,
+		nodeID:    nodeID,
+	}
 }
 
 // updateItemSpeed saves a moving average of how long it takes for a fred node to respond.
 // the expectation is that read, writes, deletes and appends of items in keygroups should give an indication on whether
-// a node ist fast to reach for operations on items or not
+// a node is fast to reach for operations on items or not
 // see https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average
 func (c *Client) updateItemSpeed(elapsed time.Duration) {
 	elapsedMs := float32(elapsed.Milliseconds())

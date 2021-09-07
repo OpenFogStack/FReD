@@ -13,8 +13,8 @@ import (
 // Scan issues a scan request from the client to the middleware. The request is forwarded to FReD and incoming items are
 // checked for their versions by comparing locally cached versions (if any). The local cache is also updated
 // (if applicable).
-func (s *Server) Scan(ctx context.Context, req *middleware.ScanRequest) (*middleware.ScanResponse, error) {
-	res, err := s.clientsMgr.getClientTo(s.lighthouse).Client.Scan(ctx, &api.ScanRequest{
+func (m *Middleware) Scan(ctx context.Context, req *middleware.ScanRequest) (*middleware.ScanResponse, error) {
+	res, err := m.clientsMgr.getLightHouse().Client.Scan(ctx, &api.ScanRequest{
 		Keygroup: req.Keygroup,
 		Id:       req.Id,
 		Count:    req.Count,
@@ -32,7 +32,7 @@ func (s *Server) Scan(ctx context.Context, req *middleware.ScanRequest) (*middle
 			Data: datum.Val,
 		}
 
-		err = s.cache.add(req.Keygroup, req.Id, datum.Version.Version)
+		err = m.cache.add(req.Keygroup, req.Id, datum.Version.Version)
 	}
 
 	return &middleware.ScanResponse{Data: data}, err
@@ -41,17 +41,17 @@ func (s *Server) Scan(ctx context.Context, req *middleware.ScanRequest) (*middle
 // Read reads a datum from FReD. Read data are placed in cache (if not in there already). If multiple versions of a
 // datum exist, all versions will be returned to the client so that it can choose one. If the read data is outdated
 // compared to seen versions, an error is returned.
-func (s *Server) Read(_ context.Context, req *middleware.ReadRequest) (*middleware.ReadResponse, error) {
+func (m *Middleware) Read(_ context.Context, req *middleware.ReadRequest) (*middleware.ReadResponse, error) {
 	log.Debug().Msgf("Alexandra has rcvd Read")
 
-	vals, versions, err := s.clientsMgr.readFromAnywhere(req)
+	vals, versions, err := m.clientsMgr.readFromAnywhere(req)
 
 	if err != nil {
 		log.Error().Err(err)
 		return nil, err
 	}
 
-	known, err := s.cache.get(req.Keygroup, req.Id)
+	known, err := m.cache.get(req.Keygroup, req.Id)
 
 	if err != nil {
 		return nil, err
@@ -80,7 +80,7 @@ func (s *Server) Read(_ context.Context, req *middleware.ReadRequest) (*middlewa
 
 	for i := range versions {
 		log.Debug().Msgf("Alexandra Read: putting version %v in cache for %s", versions[i], req.Id)
-		err = s.cache.add(req.Keygroup, req.Id, versions[i])
+		err = m.cache.add(req.Keygroup, req.Id, versions[i])
 		if err != nil {
 			log.Error().Err(err)
 			return nil, err
@@ -112,17 +112,17 @@ func (s *Server) Read(_ context.Context, req *middleware.ReadRequest) (*middlewa
 //
 // If spontaneous write (i.e., datum cannot be found in cache), we assume an empty vector clock in the cache and send
 // that to FReD. If there is a newer (any) data item in FReD already, this will fail.
-func (s *Server) Update(ctx context.Context, req *middleware.UpdateRequest) (*middleware.Empty, error) {
+func (m *Middleware) Update(ctx context.Context, req *middleware.UpdateRequest) (*middleware.Empty, error) {
 	log.Debug().Msgf("Alexandra has rcvd Update")
 
-	c, err := s.clientsMgr.getClient(req.Keygroup, UseSlowerNodeProb)
+	c, err := m.clientsMgr.getClient(req.Keygroup)
 
 	if err != nil {
 		log.Error().Err(err)
 		return nil, err
 	}
 
-	known, err := s.cache.get(req.Keygroup, req.Id)
+	known, err := m.cache.get(req.Keygroup, req.Id)
 
 	if err != nil {
 		log.Error().Err(err)
@@ -149,7 +149,7 @@ func (s *Server) Update(ctx context.Context, req *middleware.UpdateRequest) (*mi
 
 	log.Debug().Msgf("Alexandra Update: new version %v for %s", v, req.Id)
 
-	err = s.cache.supersede(req.Keygroup, req.Id, known, v)
+	err = m.cache.supersede(req.Keygroup, req.Id, known, v)
 
 	if err != nil {
 		log.Error().Err(err)
@@ -169,17 +169,17 @@ func (s *Server) Update(ctx context.Context, req *middleware.UpdateRequest) (*mi
 //
 // If spontaneous delete (i.e., datum cannot be found in cache), we assume an empty vector clock in the cache and send
 // that to FReD. If there is a newer (any) data item in FReD already, this will fail.
-func (s *Server) Delete(ctx context.Context, req *middleware.DeleteRequest) (*middleware.Empty, error) {
+func (m *Middleware) Delete(ctx context.Context, req *middleware.DeleteRequest) (*middleware.Empty, error) {
 	log.Debug().Msgf("Alexandra has rcvd Delete")
 
-	c, err := s.clientsMgr.getClient(req.Keygroup, UseSlowerNodeProb)
+	c, err := m.clientsMgr.getClient(req.Keygroup)
 
 	if err != nil {
 		log.Error().Err(err)
 		return nil, err
 	}
 
-	known, err := s.cache.get(req.Keygroup, req.Id)
+	known, err := m.cache.get(req.Keygroup, req.Id)
 
 	if err != nil {
 		log.Error().Err(err)
@@ -198,7 +198,7 @@ func (s *Server) Delete(ctx context.Context, req *middleware.DeleteRequest) (*mi
 		return nil, err
 	}
 
-	err = s.cache.supersede(req.Keygroup, req.Id, known, v)
+	err = m.cache.supersede(req.Keygroup, req.Id, known, v)
 
 	if err != nil {
 		log.Error().Err(err)
@@ -212,8 +212,8 @@ func (s *Server) Delete(ctx context.Context, req *middleware.DeleteRequest) (*mi
 // Thus, the request is only passed through to FReD without caching it.
 // FReD's append endpoint requires a unique ID for a datum. ALExANDRA automatically uses a Unix nanosecond timestamp for
 // this.
-func (s *Server) Append(ctx context.Context, req *middleware.AppendRequest) (*middleware.AppendResponse, error) {
-	c, err := s.clientsMgr.getClient(req.Keygroup, UseSlowerNodeProb)
+func (m *Middleware) Append(ctx context.Context, req *middleware.AppendRequest) (*middleware.AppendResponse, error) {
+	c, err := m.clientsMgr.getClient(req.Keygroup)
 
 	if err != nil {
 		return nil, err
@@ -229,8 +229,8 @@ func (s *Server) Append(ctx context.Context, req *middleware.AppendRequest) (*mi
 
 // Notify notifies the middleware about a version of a datum that the client has seen by bypassing the middleware. This
 // is required to capture external causality.
-func (s *Server) Notify(_ context.Context, req *middleware.NotifyRequest) (*middleware.NotifyResponse, error) {
-	err := s.cache.add(req.Keygroup, req.Id, req.Version)
+func (m *Middleware) Notify(_ context.Context, req *middleware.NotifyRequest) (*middleware.NotifyResponse, error) {
+	err := m.cache.add(req.Keygroup, req.Id, req.Version)
 
 	if err != nil {
 		return nil, err
@@ -241,15 +241,15 @@ func (s *Server) Notify(_ context.Context, req *middleware.NotifyRequest) (*midd
 
 // CreateKeygroup creates the keygroup and also adds the first node (This is two operations in the eye of FReD:
 // CreateKeygroup and AddReplica)
-func (s *Server) CreateKeygroup(ctx context.Context, req *middleware.CreateKeygroupRequest) (*middleware.Empty, error) {
+func (m *Middleware) CreateKeygroup(ctx context.Context, req *middleware.CreateKeygroupRequest) (*middleware.Empty, error) {
 	log.Debug().Msgf("AlexandraServer has rcdv CreateKeygroup: %+v", req)
-	getReplica, err := s.clientsMgr.getFastestClient().getReplica(ctx, req.FirstNodeId)
+	getReplica, err := m.clientsMgr.getFastestClient().getReplica(ctx, req.FirstNodeId)
 	if err != nil {
 		return nil, err
 	}
 	log.Debug().Msgf("CreateKeygroup: using node %s (addr=%s)", getReplica.NodeId, getReplica.Host)
 
-	_, err = s.clientsMgr.getClientTo(getReplica.Host).createKeygroup(ctx, req.Keygroup, req.Mutable, req.Expiry)
+	_, err = m.clientsMgr.getClientTo(getReplica.Host, getReplica.NodeId).createKeygroup(ctx, req.Keygroup, req.Mutable, req.Expiry)
 
 	if err != nil {
 		return nil, err
@@ -259,12 +259,12 @@ func (s *Server) CreateKeygroup(ctx context.Context, req *middleware.CreateKeygr
 }
 
 // DeleteKeygroup deletes a keygroup from FReD.
-func (s *Server) DeleteKeygroup(ctx context.Context, req *middleware.DeleteKeygroupRequest) (*middleware.Empty, error) {
-	client, err := s.clientsMgr.getFastestClientWithKeygroup(req.Keygroup, 1)
+func (m *Middleware) DeleteKeygroup(ctx context.Context, req *middleware.DeleteKeygroupRequest) (*middleware.Empty, error) {
+	client, err := m.clientsMgr.getFastestClientWithKeygroup(req.Keygroup, 1)
 	if err != nil {
 		return nil, err
 	}
-	log.Debug().Msgf("DeleteKeygroup: using node %+v", client)
+	log.Debug().Msgf("DeleteKeygroup: using node %+v", client.nodeID)
 
 	_, err = client.deleteKeygroup(ctx, req.Keygroup)
 
@@ -277,8 +277,8 @@ func (s *Server) DeleteKeygroup(ctx context.Context, req *middleware.DeleteKeygr
 
 // AddReplica lets the client explicitly add a new replica for a keygroup. In the future, this should happen
 // automatically.
-func (s *Server) AddReplica(ctx context.Context, req *middleware.AddReplicaRequest) (*middleware.Empty, error) {
-	_, err := s.clientsMgr.getFastestClient().Client.AddReplica(ctx, &api.AddReplicaRequest{
+func (m *Middleware) AddReplica(ctx context.Context, req *middleware.AddReplicaRequest) (*middleware.Empty, error) {
+	_, err := m.clientsMgr.getFastestClient().Client.AddReplica(ctx, &api.AddReplicaRequest{
 		Keygroup: req.Keygroup,
 		NodeId:   req.NodeId,
 		Expiry:   req.Expiry,
@@ -288,15 +288,15 @@ func (s *Server) AddReplica(ctx context.Context, req *middleware.AddReplicaReque
 		return nil, err
 	}
 
-	s.clientsMgr.updateKeygroupClients(req.Keygroup)
+	m.clientsMgr.updateKeygroupClients(req.Keygroup)
 
 	return &middleware.Empty{}, err
 }
 
 // RemoveReplica lets the client explicitly remove a new replica for a keygroup. In the future, this should happen
 // automatically.
-func (s *Server) RemoveReplica(ctx context.Context, req *middleware.RemoveReplicaRequest) (*middleware.Empty, error) {
-	_, err := s.clientsMgr.getFastestClient().Client.RemoveReplica(ctx, &api.RemoveReplicaRequest{
+func (m *Middleware) RemoveReplica(ctx context.Context, req *middleware.RemoveReplicaRequest) (*middleware.Empty, error) {
+	_, err := m.clientsMgr.getFastestClient().Client.RemoveReplica(ctx, &api.RemoveReplicaRequest{
 		Keygroup: req.Keygroup,
 		NodeId:   req.NodeId,
 	})
@@ -304,15 +304,15 @@ func (s *Server) RemoveReplica(ctx context.Context, req *middleware.RemoveReplic
 		return nil, err
 	}
 
-	s.clientsMgr.updateKeygroupClients(req.Keygroup)
+	m.clientsMgr.updateKeygroupClients(req.Keygroup)
 
 	return &middleware.Empty{}, err
 }
 
 // GetReplica returns information about a specific FReD node. In the future, this API will be removed as ALExANDRA
 // handles data replication.
-func (s *Server) GetReplica(ctx context.Context, req *middleware.GetReplicaRequest) (*middleware.GetReplicaResponse, error) {
-	res, err := s.clientsMgr.getFastestClient().Client.GetReplica(ctx, &api.GetReplicaRequest{NodeId: req.NodeId})
+func (m *Middleware) GetReplica(ctx context.Context, req *middleware.GetReplicaRequest) (*middleware.GetReplicaResponse, error) {
+	res, err := m.clientsMgr.getFastestClient().Client.GetReplica(ctx, &api.GetReplicaRequest{NodeId: req.NodeId})
 
 	if err != nil {
 		return nil, err
@@ -322,9 +322,9 @@ func (s *Server) GetReplica(ctx context.Context, req *middleware.GetReplicaReque
 }
 
 // GetAllReplica returns a list of all FReD nodes. In the future, this API will be removed as ALExANDRA handles data
-//// replication.
-func (s *Server) GetAllReplica(ctx context.Context, _ *middleware.GetAllReplicaRequest) (*middleware.GetAllReplicaResponse, error) {
-	res, err := s.clientsMgr.getFastestClient().Client.GetAllReplica(ctx, &api.Empty{})
+// replication.
+func (m *Middleware) GetAllReplica(ctx context.Context, _ *middleware.GetAllReplicaRequest) (*middleware.GetAllReplicaResponse, error) {
+	res, err := m.clientsMgr.getFastestClient().Client.GetAllReplica(ctx, &api.Empty{})
 
 	if err != nil {
 		return nil, err
@@ -343,8 +343,8 @@ func (s *Server) GetAllReplica(ctx context.Context, _ *middleware.GetAllReplicaR
 
 // GetKeygroupInfo returns a list of all FReD nodes that replicate a given keygroup. In the future, this API will be
 // removed as ALExANDRA handles data replication.
-func (s *Server) GetKeygroupInfo(ctx context.Context, req *middleware.GetKeygroupInfoRequest) (*middleware.GetKeygroupInfoResponse, error) {
-	res, err := s.clientsMgr.getFastestClient().Client.GetKeygroupInfo(ctx, &api.GetKeygroupInfoRequest{Keygroup: req.Keygroup})
+func (m *Middleware) GetKeygroupInfo(ctx context.Context, req *middleware.GetKeygroupInfoRequest) (*middleware.GetKeygroupInfoResponse, error) {
+	res, err := m.clientsMgr.getFastestClient().Client.GetKeygroupInfo(ctx, &api.GetKeygroupInfoRequest{Keygroup: req.Keygroup})
 
 	if err != nil {
 		return nil, err
@@ -365,8 +365,8 @@ func (s *Server) GetKeygroupInfo(ctx context.Context, req *middleware.GetKeygrou
 }
 
 // GetKeygroupTriggers returns a list of trigger nodes for a keygroup.
-func (s *Server) GetKeygroupTriggers(ctx context.Context, req *middleware.GetKeygroupTriggerRequest) (*middleware.GetKeygroupTriggerResponse, error) {
-	res, err := s.clientsMgr.getClientTo(s.lighthouse).Client.GetKeygroupTriggers(ctx, &api.GetKeygroupTriggerRequest{
+func (m *Middleware) GetKeygroupTriggers(ctx context.Context, req *middleware.GetKeygroupTriggerRequest) (*middleware.GetKeygroupTriggerResponse, error) {
+	res, err := m.clientsMgr.getLightHouse().Client.GetKeygroupTriggers(ctx, &api.GetKeygroupTriggerRequest{
 		Keygroup: req.Keygroup,
 	})
 
@@ -385,8 +385,8 @@ func (s *Server) GetKeygroupTriggers(ctx context.Context, req *middleware.GetKey
 }
 
 // AddTrigger adds a new trigger to a keygroup.
-func (s *Server) AddTrigger(ctx context.Context, req *middleware.AddTriggerRequest) (*middleware.Empty, error) {
-	_, err := s.clientsMgr.getClientTo(s.lighthouse).Client.AddTrigger(ctx, &api.AddTriggerRequest{
+func (m *Middleware) AddTrigger(ctx context.Context, req *middleware.AddTriggerRequest) (*middleware.Empty, error) {
+	_, err := m.clientsMgr.getLightHouse().Client.AddTrigger(ctx, &api.AddTriggerRequest{
 		Keygroup:    req.Keygroup,
 		TriggerId:   req.TriggerId,
 		TriggerHost: req.TriggerHost,
@@ -400,8 +400,8 @@ func (s *Server) AddTrigger(ctx context.Context, req *middleware.AddTriggerReque
 }
 
 // RemoveTrigger removes a trigger node for a keygroup.
-func (s *Server) RemoveTrigger(ctx context.Context, req *middleware.RemoveTriggerRequest) (*middleware.Empty, error) {
-	_, err := s.clientsMgr.getClientTo(s.lighthouse).Client.RemoveTrigger(ctx, &api.RemoveTriggerRequest{
+func (m *Middleware) RemoveTrigger(ctx context.Context, req *middleware.RemoveTriggerRequest) (*middleware.Empty, error) {
+	_, err := m.clientsMgr.getLightHouse().Client.RemoveTrigger(ctx, &api.RemoveTriggerRequest{
 		Keygroup:  req.Keygroup,
 		TriggerId: req.TriggerId,
 	})
@@ -414,8 +414,8 @@ func (s *Server) RemoveTrigger(ctx context.Context, req *middleware.RemoveTrigge
 }
 
 // AddUser adds permissions to access a keygroup for a particular user to FReD.
-func (s *Server) AddUser(ctx context.Context, req *middleware.UserRequest) (*middleware.Empty, error) {
-	_, err := s.clientsMgr.getClientTo(s.lighthouse).Client.AddUser(ctx, &api.AddUserRequest{
+func (m *Middleware) AddUser(ctx context.Context, req *middleware.UserRequest) (*middleware.Empty, error) {
+	_, err := m.clientsMgr.getLightHouse().Client.AddUser(ctx, &api.AddUserRequest{
 		User:     req.User,
 		Keygroup: req.Keygroup,
 		Role:     api.UserRole(req.Role),
@@ -429,8 +429,8 @@ func (s *Server) AddUser(ctx context.Context, req *middleware.UserRequest) (*mid
 }
 
 // RemoveUser removes permissions to access a keygroup for a particular user from FReD.
-func (s *Server) RemoveUser(ctx context.Context, req *middleware.UserRequest) (*middleware.Empty, error) {
-	_, err := s.clientsMgr.getClientTo(s.lighthouse).Client.RemoveUser(ctx, &api.RemoveUserRequest{
+func (m *Middleware) RemoveUser(ctx context.Context, req *middleware.UserRequest) (*middleware.Empty, error) {
+	_, err := m.clientsMgr.getLightHouse().Client.RemoveUser(ctx, &api.RemoveUserRequest{
 		User:     req.User,
 		Keygroup: req.Keygroup,
 		Role:     api.UserRole(req.Role),

@@ -44,18 +44,20 @@ type ClientsMgr struct {
 	clients                             map[string]*Client
 	clientsCert, clientsKey, lighthouse string
 	keygroups                           map[string]*keygroupSet
+	experimental                        bool
 }
 
-func newClientsManager(clientsCert, clientsKey, lighthouse string) *ClientsMgr {
+func newClientsManager(clientsCert string, clientsKey string, lighthouse string, experimental bool) *ClientsMgr {
 	mgr := &ClientsMgr{
-		clients:     make(map[string]*Client),
-		clientsCert: clientsCert,
-		clientsKey:  clientsKey,
-		lighthouse:  lighthouse,
-		keygroups:   make(map[string]*keygroupSet),
+		clients:      make(map[string]*Client),
+		clientsCert:  clientsCert,
+		clientsKey:   clientsKey,
+		lighthouse:   lighthouse,
+		keygroups:    make(map[string]*keygroupSet),
+		experimental: experimental,
 	}
 	// add the lighthouse client to the clients list
-	mgr.getClientTo(lighthouse)
+	mgr.getLightHouse()
 	// rand.Seed(time.Now().UnixNano())
 	return mgr
 }
@@ -105,11 +107,11 @@ func (m *ClientsMgr) readFromAnywhere(request *middleware.ReadRequest) ([]string
 		go func(c *Client) {
 			defer wg.Done()
 
-			log.Debug().Msgf("...asking Client %+v for Keygroup %s", c, request.Keygroup)
+			log.Debug().Msgf("...asking Client %s for Keygroup %s", c.nodeID, request.Keygroup)
 			res, err := c.Client.Read(context.Background(), &clientsProto.ReadRequest{Id: request.Id, Keygroup: request.Keygroup})
 
 			if err != nil {
-				log.Err(err).Msg("Reading from client returned error")
+				log.Err(err).Msgf("Reading from client %s returned error", c.nodeID)
 				return
 			}
 
@@ -120,7 +122,7 @@ func (m *ClientsMgr) readFromAnywhere(request *middleware.ReadRequest) ([]string
 			for i := range res.Data {
 				r.vals[i] = res.Data[i].Val
 				r.versions[i] = res.Data[i].Version.Version
-				log.Debug().Msgf("Reading from client returned data: %+v %+v", res.Data[i].Val, res.Data[i].Version.Version)
+				log.Debug().Msgf("Reading from client %s returned data: %+v %+v", c.nodeID, res.Data[i].Val, res.Data[i].Version.Version)
 			}
 
 			responses <- r
@@ -170,14 +172,21 @@ func (m *ClientsMgr) readFromAnywhere(request *middleware.ReadRequest) ([]string
 	return vals, versions, nil
 }
 
+func (m *ClientsMgr) getLightHouse() (client *Client) {
+	return m.getClientTo(m.lighthouse, "__lighthouse")
+}
+
 // GetClientTo returns a client with this address
-func (m *ClientsMgr) getClientTo(host string) (client *Client) {
+func (m *ClientsMgr) getClientTo(host string, nodeID string) (client *Client) {
 	log.Info().Msgf("GetClientTo: Trying to get Fred Client to host %s", host)
 	client = m.clients[host]
 	if client != nil {
+		if client.nodeID == "__lighthouse" && nodeID != "__lighthouse" {
+			client.nodeID = nodeID
+		}
 		return
 	}
-	client = newClient(host, m.clientsCert, m.clientsKey)
+	client = newClient(nodeID, host, m.clientsCert, m.clientsKey)
 	m.clients[host] = client
 	return
 }
@@ -228,8 +237,8 @@ func filterClientsToExpiry(clientEx []*clientExpiry, expiry int64) (out []*clien
 	return
 }
 
-func (m *ClientsMgr) getClient(keygroup string, slowprob float64) (*Client, error) {
-	if rand.Float64() < slowprob {
+func (m *ClientsMgr) getClient(keygroup string) (*Client, error) {
+	if m.experimental && rand.Float64() < UseSlowerNodeProb {
 		return m.getRandomClientWithKeygroup(keygroup, 0)
 	}
 
@@ -240,7 +249,7 @@ func (m *ClientsMgr) getClient(keygroup string, slowprob float64) (*Client, erro
 func (m *ClientsMgr) getFastestClient() (client *Client) {
 	if len(m.clients) == 0 {
 		log.Info().Msg("ClientsMgr: GetFastestClient was called but there are not clients. Using lighthouse client")
-		return m.getClientTo(m.lighthouse)
+		return m.getLightHouse()
 	}
 
 	clts := make([]*Client, 0, len(m.clients))
@@ -317,7 +326,7 @@ func (m *ClientsMgr) updateKeygroupClients(keygroup string) {
 	replica, err := m.getFastestClient().getKeygroupReplica(context.Background(), keygroup)
 	if err != nil {
 		log.Debug().Msgf("couldn't get replicas for keygroup %s from fastest client: %s", keygroup, err.Error())
-		replica, err = m.getClientTo(m.lighthouse).getKeygroupReplica(context.Background(), keygroup)
+		replica, err = m.getLightHouse().getKeygroupReplica(context.Background(), keygroup)
 		if err != nil {
 			log.Debug().Msgf("couldn't get replicas for keygroup %s from lighthouse client: %s", keygroup, err.Error())
 			log.Error().Msgf("updateKeygroupClients cannot reach fastest client OR lighthouse...")
@@ -338,7 +347,7 @@ func (m *ClientsMgr) updateKeygroupClients(keygroup string) {
 	set.clients = make([]*clientExpiry, len(replica.Replica))
 	for i, client := range replica.Replica {
 		set.clients[i] = &clientExpiry{
-			client: m.getClientTo(client.Host),
+			client: m.getClientTo(client.Host, client.NodeId),
 			expiry: client.Expiry,
 		}
 	}

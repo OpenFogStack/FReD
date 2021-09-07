@@ -233,6 +233,7 @@ func (s *replicationService) addReplica(k Keygroup, n Node) error {
 	// (-> send them past data, send them all other replicas, inform all other replicas)
 	// HOWEVER: if we are the new node, request that data from somewhere else
 	// this method is not called internally as the naming service handles that
+
 	exists, err := s.n.ExistsKeygroup(k.Name)
 	if err != nil {
 		return err

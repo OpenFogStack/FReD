@@ -18,7 +18,8 @@ services:
       --alexandra-key /cert/alexandra.key \
       --alexandra-cert /cert/alexandra.crt \
       --clients-key /cert/alexandra.key \
-      --clients-cert /cert/alexandra.crt"
+      --clients-cert /cert/alexandra.crt \
+      --experimental"
     volumes:
       - ./certificates/alexandra.crt:/cert/alexandra.crt
       - ./certificates/alexandra.key:/cert/alexandra.key
