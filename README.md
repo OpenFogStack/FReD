@@ -145,18 +145,18 @@ This runs a `etcd` cluster with a single machine (hence no fault tolerance), giv
 
 #### FReD
 
-Running the `fred` software is similar to running `etcd`, but the image has to be built first.
+Running the `fred` software is similar to running `etcd`, we make container images available on our GitLab container registry.
 
 ```bash
-docker build -t fred .
+docker pull git.tu-berlin.de:5000/mcc-fred/fred/fred:latest
 docker run -d \
 -v $(pwd)/fredNodeA.crt:/cert/fredNodeA.crt \
 -v $(pwd)/fredNodeA.key:/cert/fredNodeA.key \
 -v $(pwd)/ca.crt:/cert/ca.crt \
 --network=fredwork \
 --ip=172.26.1.2 \
-fred \
-fred --log-level info \
+git.tu-berlin.de:5000/mcc-fred/fred/fred:latest \
+--log-level info \
 --handler dev \
 --nodeID fredNodeA \
 --host 172.26.1.2:9001 \
@@ -234,19 +234,21 @@ It creates a database backed by the local file system (or, optionally, in memory
 DynamoDB is a distributed NoSQL column-family datastore by Amazon, available as-a-Service on AWS.
 
 To use the DynamoDB storage backend, a table must already exist in DynamoDB.
-It should have the String Hash Key "Key" and a [Number field "Expiry" that is enabled as the TTL attribute](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/time-to-live-ttl-how-to.html).
+It should have a composite key with the String Hash Key "Keygroup" and String Range Key "Key", and a [Number field "Expiry" that is enabled as the TTL attribute](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/time-to-live-ttl-how-to.html).
 Furthermore, the `fred` process that talks to DynamoDB should have IAM keys configured as environment variables and the corresponding IAM user must have permission to access the table.
-To create a table named `fred` (this must be passed in as command-line parameter `--dynamo-table=fred`) using the AWS CLI:
+To create a table named `fred` (this must be passed in as command-line parameter `--dynamo-table=fred`) using the AWS CLI (feel free to adapt provisioned throughput to suit your needs):
 
 ```bash
-AWS_PAGER="" aws dynamodb create-table --table-name fred --attribute-definitions "AttributeName=Key,AttributeType=S" --key-schema "AttributeName=Key,KeyType=HASH" --provisioned-throughput "ReadCapacityUnits=1,WriteCapacityUnits=1"
-AWS_PAGER="" aws dynamodb update-time-to-live --table-name fred --time-to-live-specification "Enabled=true, AttributeName=Expiry"
+export AWS_PAGER=""
+aws dynamodb create-table --table-name fred --attribute-definitions "AttributeName=Keygroup,AttributeType=S AttributeName=Key,AttributeType=S" --key-schema "AttributeName=Keygroup,KeyType=HASH AttributeName=Key,KeyType=RANGE" --provisioned-throughput "ReadCapacityUnits=1,WriteCapacityUnits=1"
+aws dynamodb update-time-to-live --table-name fred --time-to-live-specification "Enabled=true, AttributeName=Expiry"
 ```
 
 To delete the table:
 
 ```bash
-AWS_PAGER="" aws dynamodb delete-table --table-name fred
+export AWS_PAGER=""
+aws dynamodb delete-table --table-name fred
 ```
 
 #### Remote
