@@ -229,14 +229,27 @@ func (m *Middleware) Append(ctx context.Context, req *middleware.AppendRequest) 
 
 // Notify notifies the middleware about a version of a datum that the client has seen by bypassing the middleware. This
 // is required to capture external causality.
-func (m *Middleware) Notify(_ context.Context, req *middleware.NotifyRequest) (*middleware.NotifyResponse, error) {
+func (m *Middleware) Notify(_ context.Context, req *middleware.NotifyRequest) (*middleware.Empty, error) {
 	err := m.cache.add(req.Keygroup, req.Id, req.Version)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &middleware.NotifyResponse{}, nil
+	return &middleware.Empty{}, nil
+}
+
+// ChooseReplica allows a client to choose a particular note to send requests to for a keygroup. This will override the
+// fastest node if exists
+func (m *Middleware) ChooseReplica(_ context.Context, req *middleware.ChooseReplicaRequest) (*middleware.Empty, error) {
+	log.Debug().Msgf("AlexandraServer has rcdv ChooseReplica: %+v", req)
+	err := m.clientsMgr.setPreferred(req.Keygroup, req.NodeId)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &middleware.Empty{}, nil
 }
 
 // CreateKeygroup creates the keygroup and also adds the first node (This is two operations in the eye of FReD:
@@ -244,9 +257,11 @@ func (m *Middleware) Notify(_ context.Context, req *middleware.NotifyRequest) (*
 func (m *Middleware) CreateKeygroup(ctx context.Context, req *middleware.CreateKeygroupRequest) (*middleware.Empty, error) {
 	log.Debug().Msgf("AlexandraServer has rcdv CreateKeygroup: %+v", req)
 	getReplica, err := m.clientsMgr.getFastestClient().getReplica(ctx, req.FirstNodeId)
+
 	if err != nil {
 		return nil, err
 	}
+
 	log.Debug().Msgf("CreateKeygroup: using node %s (addr=%s)", getReplica.NodeId, getReplica.Host)
 
 	_, err = m.clientsMgr.getClientTo(getReplica.Host, getReplica.NodeId).createKeygroup(ctx, req.Keygroup, req.Mutable, req.Expiry)
@@ -260,7 +275,7 @@ func (m *Middleware) CreateKeygroup(ctx context.Context, req *middleware.CreateK
 
 // DeleteKeygroup deletes a keygroup from FReD.
 func (m *Middleware) DeleteKeygroup(ctx context.Context, req *middleware.DeleteKeygroupRequest) (*middleware.Empty, error) {
-	client, err := m.clientsMgr.getFastestClientWithKeygroup(req.Keygroup, 1)
+	client, err := m.clientsMgr.getClient(req.Keygroup)
 	if err != nil {
 		return nil, err
 	}
@@ -278,7 +293,13 @@ func (m *Middleware) DeleteKeygroup(ctx context.Context, req *middleware.DeleteK
 // AddReplica lets the client explicitly add a new replica for a keygroup. In the future, this should happen
 // automatically.
 func (m *Middleware) AddReplica(ctx context.Context, req *middleware.AddReplicaRequest) (*middleware.Empty, error) {
-	_, err := m.clientsMgr.getFastestClient().Client.AddReplica(ctx, &api.AddReplicaRequest{
+	c, err := m.clientsMgr.getClient(req.Keygroup)
+
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = c.Client.AddReplica(ctx, &api.AddReplicaRequest{
 		Keygroup: req.Keygroup,
 		NodeId:   req.NodeId,
 		Expiry:   req.Expiry,
@@ -296,7 +317,13 @@ func (m *Middleware) AddReplica(ctx context.Context, req *middleware.AddReplicaR
 // RemoveReplica lets the client explicitly remove a new replica for a keygroup. In the future, this should happen
 // automatically.
 func (m *Middleware) RemoveReplica(ctx context.Context, req *middleware.RemoveReplicaRequest) (*middleware.Empty, error) {
-	_, err := m.clientsMgr.getFastestClient().Client.RemoveReplica(ctx, &api.RemoveReplicaRequest{
+	c, err := m.clientsMgr.getClient(req.Keygroup)
+
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = c.Client.RemoveReplica(ctx, &api.RemoveReplicaRequest{
 		Keygroup: req.Keygroup,
 		NodeId:   req.NodeId,
 	})
@@ -344,7 +371,13 @@ func (m *Middleware) GetAllReplica(ctx context.Context, _ *middleware.GetAllRepl
 // GetKeygroupInfo returns a list of all FReD nodes that replicate a given keygroup. In the future, this API will be
 // removed as ALExANDRA handles data replication.
 func (m *Middleware) GetKeygroupInfo(ctx context.Context, req *middleware.GetKeygroupInfoRequest) (*middleware.GetKeygroupInfoResponse, error) {
-	res, err := m.clientsMgr.getFastestClient().Client.GetKeygroupInfo(ctx, &api.GetKeygroupInfoRequest{Keygroup: req.Keygroup})
+	c, err := m.clientsMgr.getClient(req.Keygroup)
+
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := c.Client.GetKeygroupInfo(ctx, &api.GetKeygroupInfoRequest{Keygroup: req.Keygroup})
 
 	if err != nil {
 		return nil, err

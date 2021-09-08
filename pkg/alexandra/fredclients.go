@@ -18,6 +18,7 @@ import (
 const alphaItemSpeed = float32(0.8)
 
 type Client struct {
+	host      string
 	nodeID    string
 	Client    api.ClientClient
 	conn      *grpc.ClientConn
@@ -71,6 +72,7 @@ func newClient(nodeID string, host string, certFile string, keyFile string) *Cli
 		Client:    api.NewClientClient(conn),
 		conn:      conn,
 		ReadSpeed: -1,
+		host:      host,
 		nodeID:    nodeID,
 	}
 }

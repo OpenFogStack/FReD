@@ -33,6 +33,7 @@ type clientExpiry struct {
 // keygroupSet represents a keygroups clients and the last time this information was updated from FreD
 type keygroupSet struct {
 	lastUpdated time.Time
+	preferred   *Client
 	clients     []*clientExpiry
 }
 
@@ -76,6 +77,27 @@ func (m *ClientsMgr) readFromAnywhere(request *middleware.ReadRequest) ([]string
 		versions []vclock.VClock
 	}
 
+	// if there is a preferred client, only try to ask that
+	if set.preferred != nil {
+		log.Debug().Msgf("there is a preferred node, reading from that: %s", set.preferred.nodeID)
+		res, err := set.preferred.Client.Read(context.Background(), &clientsProto.ReadRequest{Id: request.Id, Keygroup: request.Keygroup})
+
+		if err != nil {
+			log.Err(err).Msgf("Reading from preferred client %s returned error", set.preferred.nodeID)
+		} else {
+			vals := make([]string, len(res.Data))
+			versions := make([]vclock.VClock, len(res.Data))
+
+			for i := range res.Data {
+				vals[i] = res.Data[i].Val
+				versions[i] = res.Data[i].Version.Version
+				log.Debug().Msgf("Reading from client %s returned data: %+v %+v", set.preferred.nodeID, res.Data[i].Val, res.Data[i].Version.Version)
+			}
+
+			return vals, versions, nil
+		}
+	}
+
 	clientsToAsk := make(map[*Client]struct{})
 
 	clts := filterClientsToExpiry(set.clients, request.MinExpiry)
@@ -96,6 +118,8 @@ func (m *ClientsMgr) readFromAnywhere(request *middleware.ReadRequest) ([]string
 	for i := 0; i < otherNodesToAsk; i++ {
 		clientsToAsk[clts[rand.Intn(len(clts))].client] = struct{}{}
 	}
+
+	log.Debug().Msgf("asking %d nodes", len(clientsToAsk))
 
 	var wg sync.WaitGroup
 	responses := make(chan readResponse, len(clientsToAsk))
@@ -178,16 +202,15 @@ func (m *ClientsMgr) getLightHouse() (client *Client) {
 
 // GetClientTo returns a client with this address
 func (m *ClientsMgr) getClientTo(host string, nodeID string) (client *Client) {
-	log.Info().Msgf("GetClientTo: Trying to get Fred Client to host %s", host)
-	client = m.clients[host]
+	log.Info().Msgf("GetClientTo: Trying to get Fred Client to node %s host %s", nodeID, host)
+	client = m.clients[nodeID]
+
 	if client != nil {
-		if client.nodeID == "__lighthouse" && nodeID != "__lighthouse" {
-			client.nodeID = nodeID
-		}
 		return
 	}
+
 	client = newClient(nodeID, host, m.clientsCert, m.clientsKey)
-	m.clients[host] = client
+	m.clients[nodeID] = client
 	return
 }
 
@@ -237,7 +260,29 @@ func filterClientsToExpiry(clientEx []*clientExpiry, expiry int64) (out []*clien
 	return
 }
 
+func (m *ClientsMgr) setPreferred(keygroup string, nodeID string) error {
+	c, ok := m.clients[nodeID]
+
+	if !ok {
+		return fmt.Errorf("unknown node %s", nodeID)
+	}
+
+	m.Lock()
+	defer m.Unlock()
+
+	m.keygroups[keygroup].preferred = c
+	return nil
+}
+
 func (m *ClientsMgr) getClient(keygroup string) (*Client, error) {
+	m.Lock()
+	// if there is a preferred client for that keygroup, use that
+	if k, ok := m.keygroups[keygroup]; ok && k.preferred != nil {
+		m.Unlock()
+		return k.preferred, nil
+	}
+	m.Unlock()
+
 	if m.experimental && rand.Float64() < UseSlowerNodeProb {
 		return m.getRandomClientWithKeygroup(keygroup, 0)
 	}
@@ -333,6 +378,7 @@ func (m *ClientsMgr) updateKeygroupClients(keygroup string) {
 			return
 		}
 	}
+
 	log.Debug().Msgf("updateKeygroupClients: Got replicas: %+v", replica)
 
 	m.Lock()
@@ -344,13 +390,27 @@ func (m *ClientsMgr) updateKeygroupClients(keygroup string) {
 		}
 		set = m.keygroups[keygroup]
 	}
+
+	// we also need to find out if the preferred node for that keygroup (if any) still exists
+	preferred := m.keygroups[keygroup].preferred
+	removePreferred := preferred == nil
+
 	set.clients = make([]*clientExpiry, len(replica.Replica))
 	for i, client := range replica.Replica {
 		set.clients[i] = &clientExpiry{
 			client: m.getClientTo(client.Host, client.NodeId),
 			expiry: client.Expiry,
 		}
+
+		if !removePreferred && client.NodeId == preferred.nodeID {
+			removePreferred = false
+		}
 	}
+
+	if removePreferred {
+		m.keygroups[keygroup].preferred = nil
+	}
+
 	set.lastUpdated = time.Now()
 	m.keygroups[keygroup] = set
 	log.Debug().Msgf("updateKeygroupClients: new Clients are: %+v", set)

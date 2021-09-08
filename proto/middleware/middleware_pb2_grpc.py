@@ -53,7 +53,12 @@ class MiddlewareStub(object):
         self.Notify = channel.unary_unary(
                 '/mcc.fred.middleware.Middleware/Notify',
                 request_serializer=middleware__pb2.NotifyRequest.SerializeToString,
-                response_deserializer=middleware__pb2.NotifyResponse.FromString,
+                response_deserializer=middleware__pb2.Empty.FromString,
+                )
+        self.ChooseReplica = channel.unary_unary(
+                '/mcc.fred.middleware.Middleware/ChooseReplica',
+                request_serializer=middleware__pb2.ChooseReplicaRequest.SerializeToString,
+                response_deserializer=middleware__pb2.Empty.FromString,
                 )
         self.AddReplica = channel.unary_unary(
                 '/mcc.fred.middleware.Middleware/AddReplica',
@@ -154,6 +159,12 @@ class MiddlewareServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def Notify(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ChooseReplica(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -260,7 +271,12 @@ def add_MiddlewareServicer_to_server(servicer, server):
             'Notify': grpc.unary_unary_rpc_method_handler(
                     servicer.Notify,
                     request_deserializer=middleware__pb2.NotifyRequest.FromString,
-                    response_serializer=middleware__pb2.NotifyResponse.SerializeToString,
+                    response_serializer=middleware__pb2.Empty.SerializeToString,
+            ),
+            'ChooseReplica': grpc.unary_unary_rpc_method_handler(
+                    servicer.ChooseReplica,
+                    request_deserializer=middleware__pb2.ChooseReplicaRequest.FromString,
+                    response_serializer=middleware__pb2.Empty.SerializeToString,
             ),
             'AddReplica': grpc.unary_unary_rpc_method_handler(
                     servicer.AddReplica,
@@ -455,7 +471,24 @@ class Middleware(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/mcc.fred.middleware.Middleware/Notify',
             middleware__pb2.NotifyRequest.SerializeToString,
-            middleware__pb2.NotifyResponse.FromString,
+            middleware__pb2.Empty.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def ChooseReplica(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/mcc.fred.middleware.Middleware/ChooseReplica',
+            middleware__pb2.ChooseReplicaRequest.SerializeToString,
+            middleware__pb2.Empty.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

@@ -25,7 +25,8 @@ type MiddlewareClient interface {
 	Update(ctx context.Context, in *UpdateRequest, opts ...grpc.CallOption) (*Empty, error)
 	Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*Empty, error)
 	Append(ctx context.Context, in *AppendRequest, opts ...grpc.CallOption) (*AppendResponse, error)
-	Notify(ctx context.Context, in *NotifyRequest, opts ...grpc.CallOption) (*NotifyResponse, error)
+	Notify(ctx context.Context, in *NotifyRequest, opts ...grpc.CallOption) (*Empty, error)
+	ChooseReplica(ctx context.Context, in *ChooseReplicaRequest, opts ...grpc.CallOption) (*Empty, error)
 	AddReplica(ctx context.Context, in *AddReplicaRequest, opts ...grpc.CallOption) (*Empty, error)
 	GetKeygroupInfo(ctx context.Context, in *GetKeygroupInfoRequest, opts ...grpc.CallOption) (*GetKeygroupInfoResponse, error)
 	RemoveReplica(ctx context.Context, in *RemoveReplicaRequest, opts ...grpc.CallOption) (*Empty, error)
@@ -109,9 +110,18 @@ func (c *middlewareClient) Append(ctx context.Context, in *AppendRequest, opts .
 	return out, nil
 }
 
-func (c *middlewareClient) Notify(ctx context.Context, in *NotifyRequest, opts ...grpc.CallOption) (*NotifyResponse, error) {
-	out := new(NotifyResponse)
+func (c *middlewareClient) Notify(ctx context.Context, in *NotifyRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/mcc.fred.middleware.Middleware/Notify", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *middlewareClient) ChooseReplica(ctx context.Context, in *ChooseReplicaRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, "/mcc.fred.middleware.Middleware/ChooseReplica", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -219,7 +229,8 @@ type MiddlewareServer interface {
 	Update(context.Context, *UpdateRequest) (*Empty, error)
 	Delete(context.Context, *DeleteRequest) (*Empty, error)
 	Append(context.Context, *AppendRequest) (*AppendResponse, error)
-	Notify(context.Context, *NotifyRequest) (*NotifyResponse, error)
+	Notify(context.Context, *NotifyRequest) (*Empty, error)
+	ChooseReplica(context.Context, *ChooseReplicaRequest) (*Empty, error)
 	AddReplica(context.Context, *AddReplicaRequest) (*Empty, error)
 	GetKeygroupInfo(context.Context, *GetKeygroupInfoRequest) (*GetKeygroupInfoResponse, error)
 	RemoveReplica(context.Context, *RemoveReplicaRequest) (*Empty, error)
@@ -257,8 +268,11 @@ func (UnimplementedMiddlewareServer) Delete(context.Context, *DeleteRequest) (*E
 func (UnimplementedMiddlewareServer) Append(context.Context, *AppendRequest) (*AppendResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Append not implemented")
 }
-func (UnimplementedMiddlewareServer) Notify(context.Context, *NotifyRequest) (*NotifyResponse, error) {
+func (UnimplementedMiddlewareServer) Notify(context.Context, *NotifyRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Notify not implemented")
+}
+func (UnimplementedMiddlewareServer) ChooseReplica(context.Context, *ChooseReplicaRequest) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ChooseReplica not implemented")
 }
 func (UnimplementedMiddlewareServer) AddReplica(context.Context, *AddReplicaRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddReplica not implemented")
@@ -442,6 +456,24 @@ func _Middleware_Notify_Handler(srv interface{}, ctx context.Context, dec func(i
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MiddlewareServer).Notify(ctx, req.(*NotifyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Middleware_ChooseReplica_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ChooseReplicaRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MiddlewareServer).ChooseReplica(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/mcc.fred.middleware.Middleware/ChooseReplica",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MiddlewareServer).ChooseReplica(ctx, req.(*ChooseReplicaRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -664,6 +696,10 @@ var Middleware_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Notify",
 			Handler:    _Middleware_Notify_Handler,
+		},
+		{
+			MethodName: "ChooseReplica",
+			Handler:    _Middleware_ChooseReplica_Handler,
 		},
 		{
 			MethodName: "AddReplica",

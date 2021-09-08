@@ -42,10 +42,10 @@ failtest: ## Start the failtest
 
 alexandratest: ## Test alexandra (starts 3node, alexandra, alexandra-test)
 	@docker network create fredwork --gateway 172.26.0.1 --subnet 172.26.0.0/16 || true
-	@docker-compose -f etcd.yml -f nodeA.yml -f nodeB.yml -f nodeC.yml -f trigger.yml -f alexandra.yml -f alexandra-test.yml build
-	@docker-compose -f etcd.yml -f nodeA.yml -f nodeB.yml -f nodeC.yml -f trigger.yml -f alexandra.yml -f alexandra-test.yml up --abort-on-container-exit --force-recreate --renew-anon-volumes --remove-orphans
+	@docker-compose -f etcd.yml -f nodeA.yml -f nodeB.yml -f nodeC.yml -f alexandra.yml -f alexandra-test.yml build
+	@docker-compose -f etcd.yml -f nodeA.yml -f nodeB.yml -f nodeC.yml -f alexandra.yml -f alexandra-test.yml up --abort-on-container-exit --force-recreate --renew-anon-volumes --remove-orphans
 
 alexandra: ## alexandra (starts 3node, alexandra)
 	@docker network create fredwork --gateway 172.26.0.1 --subnet 172.26.0.0/16 || true
-	@docker-compose -f etcd.yml -f nodeA.yml -f nodeB.yml -f nodeC.yml -f trigger.yml -f alexandra.yml build
-	@docker-compose -f etcd.yml -f nodeA.yml -f nodeB.yml -f nodeC.yml -f trigger.yml -f alexandra.yml up --abort-on-container-exit --force-recreate --renew-anon-volumes --remove-orphans
+	@docker-compose -f etcd.yml -f nodeA.yml -f nodeB.yml -f nodeC.yml -f alexandra.yml build
+	@docker-compose -f etcd.yml -f nodeA.yml -f nodeB.yml -f nodeC.yml -f alexandra.yml up --abort-on-container-exit --force-recreate --renew-anon-volumes --remove-orphans

@@ -21,6 +21,7 @@ printf "Got node address %s\n" "$NODE_ADDR"
       --clients-cert /cert/client.crt \
       --log-level info \
       --log-handler dev \
+      --experimental \
       &
 
 sleep 10

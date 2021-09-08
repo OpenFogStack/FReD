@@ -12,7 +12,8 @@ service Middleware {
   rpc Update (UpdateRequest) returns (Empty);
   rpc Delete (DeleteRequest) returns (Empty);
   rpc Append (AppendRequest) returns (AppendResponse);
-  rpc Notify (NotifyRequest) returns (NotifyResponse);
+  rpc Notify (NotifyRequest) returns (Empty);
+  rpc ChooseReplica (ChooseReplicaRequest) returns (Empty);
   rpc AddReplica (AddReplicaRequest) returns (Empty);
   rpc GetKeygroupInfo (GetKeygroupInfoRequest) returns (GetKeygroupInfoResponse);
   rpc RemoveReplica (RemoveReplicaRequest) returns (Empty);
@@ -98,7 +99,10 @@ message NotifyRequest{
   map<string, uint64> version = 3;
 }
 
-message NotifyResponse{}
+message ChooseReplicaRequest{
+  string keygroup = 1;
+  string nodeId = 2;
+}
 
 message DeleteRequest {
   string keygroup = 1;
