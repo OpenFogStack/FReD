@@ -256,7 +256,7 @@ aws dynamodb delete-table --table-name fred
 Instead of accessing the storage backends directly, all storage backends can also be accessed through gRPC, which makes it possible to run the storage backend service separately.
 This is useful if you want multiple `fred` instances acting as a single FReD node to share one datastore.
 To use this feature, use the `storageserver` executable (or the `storage.Dockerfile` in Docker) and configure it like you would configure the storage settings in `fred`.
-It supports DynamoDB, BadgerDB, and In-Memory store, but uses the same interface as `fred` and can thus be easily extended.
+It supports BadgerDB, but uses the same interface as `fred` and can thus be easily extended.
 
 If you want to use this backend, you will need to generate certificates for the storage server as well in order to secure the gRPC connection.
 
