@@ -477,6 +477,14 @@ Pass `--nase-cached` to your `fred` instance to activate caching.
 This improves performance for requests to `fred` but may lead to data inconsistency if configuration changes often.
 By default it is turned off.
 
+## Developer Information
+
+### Vector Clocks
+
+Fred uses [vector clocks](https://en.wikipedia.org/wiki/Vector_clock) to ensure ordering of writes between nodes.
+Whenever an item is updated locally, `addVersion` in storeservice.go is called. This function checks if
+the received version is newer, older or of the same age as the local data and acts accordingly.
+
 ## Contributing
 
 For development, it is recommended to install [GoLand](https://www.jetbrains.com/go/).

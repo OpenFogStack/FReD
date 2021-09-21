@@ -9,11 +9,12 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type Entry struct {
+type entry struct {
 	ID    string
 	Ticks uint64
 }
 
+// Bytes turns a vector clock into its byte representation, which can be reversed with FromBytes
 func Bytes(v vclock.VClock) []byte {
 	ids := make([]string, len(v))
 	i := 0
@@ -24,10 +25,10 @@ func Bytes(v vclock.VClock) []byte {
 
 	sort.Strings(ids)
 
-	entries := make([]Entry, len(v))
+	entries := make([]entry, len(v))
 
 	for i := range ids {
-		entries[i] = Entry{
+		entries[i] = entry{
 			ID:    ids[i],
 			Ticks: v[ids[i]],
 		}
@@ -44,11 +45,12 @@ func Bytes(v vclock.VClock) []byte {
 	return b.Bytes()
 }
 
+// FromBytes is the opposite of Bytes and turns a byte array back into a vector clock
 func FromBytes(data []byte) (vclock.VClock, error) {
 	b := new(bytes.Buffer)
 	b.Write(data)
 
-	entries := make([]Entry, 0)
+	entries := make([]entry, 0)
 	dec := gob.NewDecoder(b)
 
 	err := dec.Decode(&entries)

@@ -510,6 +510,7 @@ func (s *storeService) addVersion(i Item, remoteVersion vclock.VClock, expiry in
 	s.vCache[i.Keygroup].RLock()
 	defer s.vCache[i.Keygroup].RUnlock()
 
+	// if the clock does not exist yet, create it (need to get write lock for this)
 	if _, ok := s.vCache[i.Keygroup].clocks[i.ID]; !ok {
 		s.vCache[i.Keygroup].RUnlock()
 		s.vCache[i.Keygroup].Lock()
