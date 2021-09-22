@@ -549,6 +549,14 @@ func TestTriggerNodes(t *testing.T) {
 
 	assert.NoError(t, err)
 
+	tList, err := db.GetKeygroupTrigger(kg)
+
+	assert.NoError(t, err)
+
+	log.Debug().Msgf("List of keygroup triggers: %+v", tList)
+
+	assert.Len(t, tList, 0)
+
 	t1 := "t1"
 	t1host := "1.1.1.1:3000"
 
@@ -570,7 +578,7 @@ func TestTriggerNodes(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	tList, err := db.GetKeygroupTrigger(kg)
+	tList, err = db.GetKeygroupTrigger(kg)
 
 	assert.NoError(t, err)
 

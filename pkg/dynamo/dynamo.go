@@ -847,6 +847,9 @@ func (s *Storage) CreateKeygroup(kg string) error {
 			keyName: &dynamoDBTypes.AttributeValueMemberS{
 				Value: NULLValue,
 			},
+			triggerName: &dynamoDBTypes.AttributeValueMemberM{
+				Value: map[string]dynamoDBTypes.AttributeValue{},
+			},
 		},
 		TableName: aws.String(s.dynamotable),
 	}
