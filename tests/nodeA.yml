@@ -36,7 +36,7 @@ services:
     build: ..
     image: fred/fred:local
     container_name: nodeA-1
-    command: "--remote-storage-host 172.26.1.104:1337 \
+    command: "--dynamo-endpoint 172.26.1.104:8000 \
     --peer-host 172.26.1.101:5555 \
     --peer-host-proxy 172.26.1.1:5555 \
     --nodeID nodeA \
@@ -48,7 +48,9 @@ services:
     --peer-cert /cert/nodeA.crt \
     --peer-key /cert/nodeA.key \
     --peer-ca /cert/ca.crt \
-    --adaptor remote \
+    --adaptor dynamo \
+    --dynamo-table fred \
+    --dynamo-region eu-central-1 \
     --cpuprofile /profiles/cpuprofile.pprof \
     --memprofile /profiles/memprofile.pprof \
     --nase-host https://172.26.6.1:2379 \
@@ -57,10 +59,6 @@ services:
     --nase-ca /cert/ca.crt \
     --nase-cached \
     --handler dev \
-    --badgerdb-path ./db  \
-    --remote-storage-cert /cert/nodeA.crt \
-    --remote-storage-key /cert/nodeA.key  \
-    --remote-storage-ca /cert/ca.crt  \
     --trigger-cert /cert/nodeA.crt \
     --trigger-key /cert/nodeA.key \
     --trigger-ca /cert/ca.crt"
@@ -83,7 +81,7 @@ services:
     build: ..
     image: fred/fred:local
     container_name: nodeA-2
-    command: "--remote-storage-host 172.26.1.104:1337 \
+    command: "--dynamo-endpoint 172.26.1.104:8000 \
     --peer-host 172.26.1.102:5555 \
     --peer-host-proxy 172.26.1.1:5555 \
     --nodeID nodeA \
@@ -95,17 +93,15 @@ services:
     --peer-cert /cert/nodeA.crt \
     --peer-key /cert/nodeA.key \
     --peer-ca /cert/ca.crt \
-    --adaptor remote \
+    --adaptor dynamo \
+    --dynamo-table fred \
+    --dynamo-region eu-central-1 \
     --nase-host https://172.26.6.1:2379 \
     --nase-cert /cert/nodeA.crt \
     --nase-key /cert/nodeA.key \
     --nase-ca /cert/ca.crt \
     --nase-cached \
     --handler dev \
-    --badgerdb-path ./db  \
-    --remote-storage-cert /cert/nodeA.crt \
-    --remote-storage-key /cert/nodeA.key  \
-    --remote-storage-ca /cert/ca.crt  \
     --trigger-cert /cert/nodeA.crt \
     --trigger-key /cert/nodeA.key \
     --trigger-ca /cert/ca.crt"
@@ -126,7 +122,7 @@ services:
     build: ..
     image: fred/fred:local
     container_name: nodeA-3
-    command: "--remote-storage-host 172.26.1.104:1337 \
+    command: "--dynamo-endpoint 172.26.1.104:8000 \
     --peer-host 172.26.1.103:5555 \
     --peer-host-proxy 172.26.1.1:5555 \
     --nodeID nodeA \
@@ -138,17 +134,15 @@ services:
     --peer-cert /cert/nodeA.crt \
     --peer-key /cert/nodeA.key \
     --peer-ca /cert/ca.crt \
-    --adaptor remote \
+    --adaptor dynamo \
+    --dynamo-table fred \
+    --dynamo-region eu-central-1 \
     --nase-host https://172.26.6.1:2379 \
     --nase-cert /cert/nodeA.crt \
     --nase-key /cert/nodeA.key \
     --nase-ca /cert/ca.crt \
     --nase-cached \
     --handler dev \
-    --badgerdb-path ./db  \
-    --remote-storage-cert /cert/nodeA.crt \
-    --remote-storage-key /cert/nodeA.key  \
-    --remote-storage-ca /cert/ca.crt  \
     --trigger-cert /cert/nodeA.crt \
     --trigger-key /cert/nodeA.key \
     --trigger-ca /cert/ca.crt"
@@ -164,18 +158,12 @@ services:
 
   storeA:
     build:
-      context: ..
-      dockerfile: storage.Dockerfile
-    image: fred/store:local
+      context: 3NodeTest
+      dockerfile: dynamodb.Dockerfile
+    image: "fred/dynamodb:local"
     container_name: storeA
-    command: "--log-level '${LOG_LEVEL_STORE}' \
-    --cert /cert/cert.crt \
-    --key /cert/key.key \
-    --ca-file /cert/ca.crt"
-    volumes:
-      - ./certificates/storeA.crt:/cert/cert.crt
-      - ./certificates/storeA.key:/cert/key.key
-      - ./certificates/ca.crt:/cert/ca.crt
+    ports:
+      - "8000:8000"
     networks:
       fredwork:
         ipv4_address: 172.26.1.104

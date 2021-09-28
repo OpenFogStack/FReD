@@ -5,7 +5,7 @@ export TEST_RANGE := -
 all: clean 3n-all clean
 
 clean: ## clean up all resources
-	@docker-compose -f etcd.yml -f nodeA.yml -f nodeB.yml -f nodeC.yml -f 3NodeTester.yml -f trigger.yml down --remove-orphan
+	@docker-compose -f etcd.yml -f nodeA.yml -f nodeB.yml -f nodeC.yml -f 3NodeTester.yml -f trigger.yml down --remove-orphans
 	@docker network remove fredwork || true
 
 3n-standard: export TEST_RANGE = 1-1

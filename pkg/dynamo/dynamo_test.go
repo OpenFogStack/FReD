@@ -9,11 +9,6 @@ import (
 	"time"
 
 	"github.com/DistributedClocks/GoVector/govec/vclock"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/credentials"
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	dynamoDBTypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
@@ -73,91 +68,7 @@ func TestMain(m *testing.M) {
 		log.Fatal().Msg(err.Error())
 	}
 
-	cfg, err := config.LoadDefaultConfig(context.TODO(),
-		config.WithRegion("eu-central-1"),
-	)
-
-	if err != nil {
-		log.Fatal().Msg(err.Error())
-		return
-	}
-
-	cfg.Credentials = credentials.NewStaticCredentialsProvider("TEST_KEY", "TEST_SECRET", "")
-
-	svc := dynamodb.New(dynamodb.Options{
-		Region:           cfg.Region,
-		HTTPClient:       cfg.HTTPClient,
-		Credentials:      cfg.Credentials,
-		APIOptions:       cfg.APIOptions,
-		Logger:           cfg.Logger,
-		ClientLogMode:    cfg.ClientLogMode,
-		EndpointResolver: dynamodb.EndpointResolverFromURL(fmt.Sprintf("http://%s:%s", ip, port)),
-	})
-
-	log.Debug().Msg("Created session - OK!")
-
-	// aws dynamodb create-table --table-name fred --attribute-definitions "AttributeName=Keygroup,AttributeType=S AttributeName=Key,AttributeType=S" --key-schema "AttributeName=Keygroup,KeyType=HASH AttributeName=Key,KeyType=RANGE" --provisioned-throughput "ReadCapacityUnits=1,WriteCapacityUnits=1"
-	out1, err := svc.CreateTable(context.TODO(), &dynamodb.CreateTableInput{
-		AttributeDefinitions: []dynamoDBTypes.AttributeDefinition{
-			{
-				AttributeName: aws.String(keygroupName),
-				AttributeType: dynamoDBTypes.ScalarAttributeTypeS,
-			},
-			{
-				AttributeName: aws.String(keyName),
-				AttributeType: dynamoDBTypes.ScalarAttributeTypeS,
-			},
-		},
-		GlobalSecondaryIndexes: nil,
-		KeySchema: []dynamoDBTypes.KeySchemaElement{
-			{
-				AttributeName: aws.String(keygroupName),
-				KeyType:       dynamoDBTypes.KeyTypeHash,
-			},
-			{
-				AttributeName: aws.String(keyName),
-				KeyType:       dynamoDBTypes.KeyTypeRange,
-			},
-		},
-		ProvisionedThroughput: &dynamoDBTypes.ProvisionedThroughput{
-			ReadCapacityUnits:  aws.Int64(1),
-			WriteCapacityUnits: aws.Int64(1),
-		},
-		TableName: aws.String(table),
-	})
-
-	if err != nil {
-		log.Fatal().Msg(err.Error())
-		return
-	}
-
-	if out1 != nil {
-		log.Debug().Msgf("Creating table, output: %+v", out1)
-	}
-
-	log.Debug().Msg("Created table - OK!")
-
-	// aws dynamodb update-time-to-live --table-name fred --time-to-live-specification "Enabled=true, AttributeName=Expiry"
-	out2, err := svc.UpdateTimeToLive(context.TODO(), &dynamodb.UpdateTimeToLiveInput{
-		TableName: aws.String(table),
-		TimeToLiveSpecification: &dynamoDBTypes.TimeToLiveSpecification{
-			AttributeName: aws.String(expiryKey),
-			Enabled:       aws.Bool(true),
-		},
-	})
-
-	if err != nil {
-		log.Fatal().Msg(err.Error())
-		return
-	}
-
-	if out2 != nil {
-		log.Debug().Msgf("Updating TTL on table, output: %+v", out2)
-	}
-
-	log.Debug().Msg("Configured TTL - OK!")
-
-	db, err = NewFromExisting(table, svc)
+	db, err = New(table, "eu-central-1", fmt.Sprintf("%s:%s", ip, port), true)
 
 	if err != nil {
 		log.Fatal().Msg(err.Error())

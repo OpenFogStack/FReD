@@ -3,6 +3,7 @@ package dynamo
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 	"sort"
@@ -13,6 +14,7 @@ import (
 	"github.com/DistributedClocks/GoVector/govec/vclock"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	shttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
+	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	dynamoDBTypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
@@ -80,7 +82,91 @@ func vectorToString(v vclock.VClock) string {
 	return url.QueryEscape(vector.SortedVCString(v))
 }
 
-func NewFromExisting(table string, svc *dynamodb.Client) (s *Storage, err error) {
+func New(table string, region string, endpoint string, create bool) (*Storage, error) {
+	log.Debug().Msgf("creating a new dynamodb connection to table %s in region %s", table, region)
+
+	log.Debug().Msg("Checked creds - OK!")
+
+	opts := dynamodb.Options{
+		Region: region,
+	}
+
+	if endpoint != "" {
+		log.Debug().Msgf("creating a new local dynamodb connection (endpoint: http://%s) to table %s in region %s", endpoint, table, region)
+
+		creds := credentials.NewStaticCredentialsProvider("TEST_KEY", "TEST_SECRET", "")
+
+		opts = dynamodb.Options{
+			Region:           region,
+			Credentials:      creds,
+			EndpointResolver: dynamodb.EndpointResolverFromURL(fmt.Sprintf("http://%s", endpoint)),
+		}
+	}
+
+	log.Debug().Msg("Created session - OK!")
+
+	svc := dynamodb.New(opts)
+
+	log.Debug().Msg("Created service - OK!")
+
+	if create {
+		// aws dynamodb create-table --table-name fred --attribute-definitions "AttributeName=Keygroup,AttributeType=S AttributeName=Key,AttributeType=S" --key-schema "AttributeName=Keygroup,KeyType=HASH AttributeName=Key,KeyType=RANGE" --provisioned-throughput "ReadCapacityUnits=1,WriteCapacityUnits=1"
+		_, err := svc.CreateTable(context.TODO(), &dynamodb.CreateTableInput{
+			AttributeDefinitions: []dynamoDBTypes.AttributeDefinition{
+				{
+					AttributeName: aws.String(keygroupName),
+					AttributeType: dynamoDBTypes.ScalarAttributeTypeS,
+				},
+				{
+					AttributeName: aws.String(keyName),
+					AttributeType: dynamoDBTypes.ScalarAttributeTypeS,
+				},
+			},
+			GlobalSecondaryIndexes: nil,
+			KeySchema: []dynamoDBTypes.KeySchemaElement{
+				{
+					AttributeName: aws.String(keygroupName),
+					KeyType:       dynamoDBTypes.KeyTypeHash,
+				},
+				{
+					AttributeName: aws.String(keyName),
+					KeyType:       dynamoDBTypes.KeyTypeRange,
+				},
+			},
+			ProvisionedThroughput: &dynamoDBTypes.ProvisionedThroughput{
+				ReadCapacityUnits:  aws.Int64(1),
+				WriteCapacityUnits: aws.Int64(1),
+			},
+			TableName: aws.String(table),
+		})
+
+		if err != nil {
+			return nil, err
+		}
+
+		log.Debug().Msg("DynamoDB: Created table - OK!")
+
+		// aws dynamodb update-time-to-live --table-name fred --time-to-live-specification "Enabled=true, AttributeName=Expiry"
+		_, err = svc.UpdateTimeToLive(context.TODO(), &dynamodb.UpdateTimeToLiveInput{
+			TableName: aws.String(table),
+			TimeToLiveSpecification: &dynamoDBTypes.TimeToLiveSpecification{
+				AttributeName: aws.String(expiryKey),
+				Enabled:       aws.Bool(true),
+			},
+		})
+
+		if err != nil {
+			return nil, err
+		}
+
+		log.Debug().Msg("DynamoDB: Configured TTL - OK!")
+
+		return &Storage{
+			dynamotable: table,
+			svc:         svc,
+		}, nil
+	}
+
 	log.Debug().Msgf("Loading table %s...", table)
 	// check if the table with that name even exists
 	// if not: error out
@@ -117,25 +203,6 @@ func NewFromExisting(table string, svc *dynamodb.Client) (s *Storage, err error)
 		dynamotable: table,
 		svc:         svc,
 	}, nil
-}
-
-// New creates a new Session for DynamoDB.
-func New(table, region string) (s *Storage, err error) {
-	log.Debug().Msgf("creating a new dynamodb connection to table %s in region %s", table, region)
-
-	log.Debug().Msg("Checked creds - OK!")
-
-	opts := dynamodb.Options{
-		Region: region,
-	}
-
-	log.Debug().Msg("Created session - OK!")
-
-	svc := dynamodb.New(opts)
-
-	log.Debug().Msg("Created service - OK!")
-
-	return NewFromExisting(table, svc)
 }
 
 // Close closes the underlying DynamoDB connection (no cleanup needed at the moment).

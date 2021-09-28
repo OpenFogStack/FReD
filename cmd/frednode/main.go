@@ -67,10 +67,12 @@ type fredConfig struct {
 		CA   string `env:"REMOTE_STORAGE_CA"`
 	}
 	DynamoDB struct {
-		Table      string `env:"DYNAMODB_TABLE"`
-		Region     string `env:"DYNAMODB_REGION"`
-		PublicKey  string `env:"DYNAMODB_PUBLIC_KEY"`
-		PrivateKey string `env:"DYNAMODB_PRIVATE_KEY"`
+		Table       string `env:"DYNAMODB_TABLE"`
+		Region      string `env:"DYNAMODB_REGION"`
+		PublicKey   string `env:"DYNAMODB_PUBLIC_KEY"`
+		PrivateKey  string `env:"DYNAMODB_PRIVATE_KEY"`
+		Endpoint    string `env:"DYNAMODB_ENDPOINT"`
+		CreateTable bool   `env:"DYNAMODB_CREATETABLE"`
 	}
 	Bdb struct {
 		Path string `env:"BADGERDB_PATH"`
@@ -123,6 +125,8 @@ func parseArgs() (fc fredConfig) {
 	flag.StringVar(&(fc.DynamoDB.Region), "dynamo-region", "", "AWS region for DynamoDB storage backend. (Env: DYNAMODB_REGION)")
 	flag.StringVar(&(fc.DynamoDB.PublicKey), "dynamo-public-key", "", "AWS public key for DynamoDB storage backend. (Env: DYNAMODB_PUBLIC_KEY)")
 	flag.StringVar(&(fc.DynamoDB.PrivateKey), "dynamo-private-key", "", "AWS private key for DynamoDB storage backend. (Env: DYNAMODB_PRIVATE_KEY)")
+	flag.StringVar(&(fc.DynamoDB.Endpoint), "dynamo-endpoint", "", "Endpoint of local DynamoDB instance. Leave empty to use DynamoDB on AWS. (Env: DYNAMODB_ENDPOINT)")
+	flag.BoolVar(&(fc.DynamoDB.CreateTable), "dynamo-create-table", false, "Create table in DynamoDB on first run rather than using existing table. (Env: DYNAMODB_CREATETABLE)")
 
 	flag.StringVar(&(fc.Bdb.Path), "badgerdb-path", "", "Path to the BadgerDB database. (Env: BADGERDB_PATH)")
 
@@ -273,7 +277,7 @@ func main() {
 	case "remote":
 		store = storageclient.NewClient(fc.RemoteStore.Host, fc.RemoteStore.Cert, fc.RemoteStore.Key, strings.Split(fc.RemoteStore.CA, ","))
 	case "dynamo":
-		store, err = dynamo.New(fc.DynamoDB.Table, fc.DynamoDB.Region)
+		store, err = dynamo.New(fc.DynamoDB.Table, fc.DynamoDB.Region, fc.DynamoDB.Endpoint, fc.DynamoDB.CreateTable)
 		if err != nil {
 			log.Fatal().Msgf("could not open a dynamo connection: %s", err.(*errors.Error).ErrorStack())
 		}

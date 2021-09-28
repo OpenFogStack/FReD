@@ -1,4 +1,4 @@
 **/*
+!local-fred-dynamo.db
 !/pkg/*
 !/cmd/*
-!nodeA-haproxy.cfg
