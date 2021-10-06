@@ -152,6 +152,10 @@ func main() {
 		s.Stop()
 	}()
 
-	log.Fatal().Err(s.Serve(lis)).Msg("Alexandra Server")
+	err = s.Serve(lis)
+
+	if err != nil {
+		log.Fatal().Msgf("Alexandra Server exited with error: %s", err.Error())
+	}
 
 }

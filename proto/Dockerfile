@@ -1,4 +1,4 @@
-FROM golang:1.16-alpine
+FROM golang:1.17-alpine
 
 ENV PYTHONUNBUFFERED=1
 RUN apk add --update --no-cache grpc make protoc python3

@@ -1,5 +1,5 @@
 # building the binary
-FROM golang:1.16-alpine as golang
+FROM golang:1.17-alpine as golang
 
 LABEL maintainer="tp@mcc.tu-berlin.de"
 

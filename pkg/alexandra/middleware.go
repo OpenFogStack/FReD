@@ -299,6 +299,8 @@ func (m *Middleware) AddReplica(ctx context.Context, req *middleware.AddReplicaR
 		return nil, err
 	}
 
+	defer m.clientsMgr.updateKeygroupClients(req.Keygroup)
+
 	_, err = c.Client.AddReplica(ctx, &api.AddReplicaRequest{
 		Keygroup: req.Keygroup,
 		NodeId:   req.NodeId,
@@ -308,8 +310,6 @@ func (m *Middleware) AddReplica(ctx context.Context, req *middleware.AddReplicaR
 	if err != nil {
 		return nil, err
 	}
-
-	m.clientsMgr.updateKeygroupClients(req.Keygroup)
 
 	return &middleware.Empty{}, err
 }
@@ -323,6 +323,8 @@ func (m *Middleware) RemoveReplica(ctx context.Context, req *middleware.RemoveRe
 		return nil, err
 	}
 
+	defer m.clientsMgr.updateKeygroupClients(req.Keygroup)
+
 	_, err = c.Client.RemoveReplica(ctx, &api.RemoveReplicaRequest{
 		Keygroup: req.Keygroup,
 		NodeId:   req.NodeId,
@@ -330,8 +332,6 @@ func (m *Middleware) RemoveReplica(ctx context.Context, req *middleware.RemoveRe
 	if err != nil {
 		return nil, err
 	}
-
-	m.clientsMgr.updateKeygroupClients(req.Keygroup)
 
 	return &middleware.Empty{}, err
 }
