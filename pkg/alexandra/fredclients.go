@@ -25,7 +25,7 @@ type Client struct {
 	ReadSpeed float32
 }
 
-func newClient(nodeID string, host string, certFile string, keyFile string) *Client {
+func newClient(nodeID string, host string, certFile string, keyFile string, caCert string) *Client {
 
 	if certFile == "" {
 		log.Fatal().Msg("fredclient: no certificate file given")
@@ -45,7 +45,7 @@ func newClient(nodeID string, host string, certFile string, keyFile string) *Cli
 	// Create a new cert pool and add our own CA certificate
 	rootCAs := x509.NewCertPool()
 
-	loaded, err := ioutil.ReadFile("/cert/ca.crt")
+	loaded, err := ioutil.ReadFile(caCert)
 
 	if err != nil {
 		log.Fatal().Msgf("unexpected missing certfile: %v", err)

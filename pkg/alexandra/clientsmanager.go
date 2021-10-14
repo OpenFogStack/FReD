@@ -42,17 +42,18 @@ type keygroupSet struct {
 type ClientsMgr struct {
 	// Mutex for the keygroups map, because it might be changed while iterated over
 	sync.Mutex
-	clients                             map[string]*Client
-	clientsCert, clientsKey, lighthouse string
-	keygroups                           map[string]*keygroupSet
-	experimental                        bool
+	clients                                     map[string]*Client
+	clientsCert, clientsKey, caCert, lighthouse string
+	keygroups                                   map[string]*keygroupSet
+	experimental                                bool
 }
 
-func newClientsManager(clientsCert string, clientsKey string, lighthouse string, experimental bool) *ClientsMgr {
+func newClientsManager(clientsCert string, clientsKey string, caCert string, lighthouse string, experimental bool) *ClientsMgr {
 	mgr := &ClientsMgr{
 		clients:      make(map[string]*Client),
 		clientsCert:  clientsCert,
 		clientsKey:   clientsKey,
+		caCert:       caCert,
 		lighthouse:   lighthouse,
 		keygroups:    make(map[string]*keygroupSet),
 		experimental: experimental,
@@ -209,7 +210,7 @@ func (m *ClientsMgr) getClientTo(host string, nodeID string) (client *Client) {
 		return
 	}
 
-	client = newClient(nodeID, host, m.clientsCert, m.clientsKey)
+	client = newClient(nodeID, host, m.clientsCert, m.clientsKey, m.caCert)
 	m.clients[nodeID] = client
 	return
 }

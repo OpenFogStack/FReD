@@ -12,12 +12,12 @@ type Middleware struct {
 }
 
 // NewMiddleware creates a new Middleware for requests from Alexandra Clients
-func NewMiddleware(nodesCert string, nodesKey string, lighthouse string, isProxied bool, proxyHost string, experimental bool) *Middleware {
+func NewMiddleware(nodesCert string, nodesKey string, caCert string, lighthouse string, isProxied bool, proxyHost string, experimental bool) *Middleware {
 
 	return &Middleware{
 		isProxied:    isProxied,
 		proxyHost:    proxyHost,
-		clientsMgr:   newClientsManager(nodesCert, nodesKey, lighthouse, experimental),
+		clientsMgr:   newClientsManager(nodesCert, nodesKey, caCert, lighthouse, experimental),
 		lighthouse:   lighthouse,
 		cache:        newCache(),
 		experimental: experimental,

@@ -102,7 +102,8 @@ In this example case, the following commands are required:
 ```bash
 ./gen-cert.sh etcdnase 172.26.1.1
 ./gen-cert.sh fredNodeA 172.26.1.2
-./gen-cert.sh fredClient 172.26.1.3
+./gen-cert.sh alexandra 172.26.1.3
+./gen-cert.sh fredClient 172.26.1.4
 ```
 
 #### Network
@@ -182,10 +183,37 @@ This starts an instance of the `fred` software with the `info` log level using t
 The ID of this node is `fredNodeA`.
 It also uses an embedded BadgerDB database as a storage backend.
 
+#### ALExANDRA
+
+We will use the `alexandra` middleware for handling client requests. `alexandra` can be started with the following command.
+
+```bash
+docker pull git.tu-berlin.de:5000/mcc-fred/fred/alexandra:latest
+docker run -d \
+-v $(pwd)/alexandra.crt:/cert/alexandra.crt \
+-v $(pwd)/alexandra.key:/cert/alexandra.key \
+-v $(pwd)/ca.crt:/cert/ca.crt \
+--network=fredwork \
+--ip=172.26.1.3 \
+-p 10000:10000 \
+git.tu-berlin.de:5000/mcc-fred/fred/alexandra:latest \
+--address :10000 \
+--lighthouse 172.26.1.2:9001 \
+--ca-cert /cert/ca.crt \
+--alexandra-key /cert/alexandra.key \
+--alexandra-cert /cert/alexandra.crt \
+--clients-key /cert/alexandra.key \
+--clients-cert /cert/alexandra.crt \
+--experimental
+```
+
+This starts `alexandra` in a Docker container, connects it to `fred` and exposes the port 10000 on localhost with port forwarding, so that
+clients can easily connect to it from the same machine.
+
 #### Using FReD
 
 Your initial FReD deployment is now complete!
-If you want to try it out, use the `client.proto` in `./proto` to build a client or use [`grpcc`](https://github.com/njpatel/grpcc) to get a REPL interface:
+If you want to try it out, use the `middleware.proto` in `./proto/middleware` to build a client or use [`grpcc`](https://github.com/njpatel/grpcc) to get a REPL interface:
 
 ```bash
 docker build -t grpcc -f grpcc.Dockerfile .
@@ -193,20 +221,24 @@ docker run \
 -v $(pwd)/fredClient.crt:/cert/fredClient.crt \
 -v $(pwd)/fredClient.key:/cert/fredClient.key \
 -v $(pwd)/ca.crt:/cert/ca.crt \
--v $(pwd)/proto/client/client.proto:/client.proto \
+-v $(pwd)/proto/middleware/middleware.proto:/middleware.proto \
 --network=fredwork \
---ip=172.26.1.3 \
+--ip=172.26.1.4 \
 -it \
 grpcc \
-grpcc -p client.proto \
--a 172.26.1.2:9001 \
+grpcc -p middleware.proto \
+-a 172.26.1.3:10000 \
 --root_cert /cert/ca.crt \
 --private_key /cert/fredClient.key \
 --cert_chain /cert/fredClient.crt
 ```
 
-This uses the direct client interface of FReD instead of the recommended ALExANDRA middleware.
-This is possible yet suboptimal and this behaviour will be deprecated in the future as ALExANDRA is built out.
+Alternatively, you may use [`grpcui`](https://github.com/fullstorydev/grpcui), which gives you a webinterface to interactively call ALExANDRA.
+After building `grpcui`, you can run it with the following command.
+
+```bash
+grpcui -open-browser -proto $(pwd)/proto/middleware/middleware.proto -cacert ca.crt -cert fredClient.crt -key fredClient.key 127.0.0.1:10000
+```
 
 You may now also add new FReD nodes, different storage backends, Trigger nodes, and more to extend your FReD deployment.
 

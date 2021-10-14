@@ -87,9 +87,6 @@ func main() {
 		log.Info().Msg("No Loglevel specified, using 'debug'")
 	}
 
-	// Setup alexandra
-	m := alexandra.NewMiddleware(c.nodesCert, c.nodesKey, c.lightHouse, c.isProxied, c.proxyHost, c.experimental)
-
 	if c.alexandraCert == "" {
 		log.Fatal().Msg("alexandra server: no certificate file given")
 	}
@@ -101,6 +98,9 @@ func main() {
 	if c.caCert == "" {
 		log.Fatal().Msg("alexandra server: no root certificate file given")
 	}
+
+	// Setup alexandra
+	m := alexandra.NewMiddleware(c.nodesCert, c.nodesKey, c.caCert, c.lightHouse, c.isProxied, c.proxyHost, c.experimental)
 
 	// Load server's certificate and private key
 	loadedServerCert, err := tls.LoadX509KeyPair(c.alexandraCert, c.alexandraKey)
