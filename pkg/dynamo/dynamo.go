@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"git.tu-berlin.de/mcc-fred/fred/pkg/vector"
@@ -308,7 +309,7 @@ func (s *Storage) Read(kg string, id string) ([]string, []vclock.VClock, bool, e
 
 }
 
-func (s *Storage) ReadSome(kg string, id string, count uint64) (map[string][]string, map[string][]vclock.VClock, error) {
+func (s *Storage) ReadSome(kg string, id string, count uint64) ([]string, []string, []vclock.VClock, error) {
 
 	// in this case we need to get all items with "Keygroup" kg and then sort them
 	filt := expression.Name(keygroupName).Equal(expression.Value(kg)).And(expression.Name(keyName).GreaterThanEqual(expression.Value(id)))
@@ -318,7 +319,7 @@ func (s *Storage) ReadSome(kg string, id string, count uint64) (map[string][]str
 
 	if err != nil {
 		log.Error().Msg(errors.New(err).ErrorStack())
-		return nil, nil, errors.New(err)
+		return nil, nil, nil, errors.New(err)
 	}
 
 	params := &dynamodb.ScanInput{
@@ -337,20 +338,25 @@ func (s *Storage) ReadSome(kg string, id string, count uint64) (map[string][]str
 		//return nil, nil, errors.New(err)
 	}
 
-	items := make(map[string][]string)
-	versions := make(map[string][]vclock.VClock)
+	type item struct {
+		key     string
+		val     string
+		version vclock.VClock
+	}
+
+	items := make([]item, 0, len(result.Items))
 
 	for _, i := range result.Items {
 		key, ok := i[keyName]
 
 		if !ok {
-			return nil, nil, nil
+			return nil, nil, nil, errors.Errorf("ReadSome: internal error, can't find key")
 		}
 
 		k, ok := key.(*dynamoDBTypes.AttributeValueMemberS)
 
 		if !ok {
-			return nil, nil, errors.Errorf("ReadSome: malformed key")
+			return nil, nil, nil, errors.Errorf("ReadSome: malformed key")
 		}
 
 		if k.Value == NULLValue {
@@ -360,7 +366,7 @@ func (s *Storage) ReadSome(kg string, id string, count uint64) (map[string][]str
 		val, ok := i[valName]
 
 		if !ok {
-			return nil, nil, errors.Errorf("ReadSome: malformed value")
+			return nil, nil, nil, errors.Errorf("ReadSome: malformed value")
 		}
 
 		if e, ok := i[expiryKey]; ok {
@@ -370,7 +376,7 @@ func (s *Storage) ReadSome(kg string, id string, count uint64) (map[string][]str
 				expiry, err := strconv.Atoi(expiration.Value)
 				if err != nil {
 					log.Error().Msg(errors.New(err).ErrorStack())
-					return nil, nil, errors.New(err)
+					return nil, nil, nil, errors.New(err)
 				}
 
 				log.Debug().Msgf("ReadSome found key expiring at %d, it is %d now", expiry, time.Now().Unix())
@@ -388,53 +394,60 @@ func (s *Storage) ReadSome(kg string, id string, count uint64) (map[string][]str
 			continue
 		}
 
-		it := make([]string, 0, len(values.Value))
-		vvectors := make([]vclock.VClock, 0, len(values.Value))
-
 		for v, data := range values.Value {
 			version, err := vectorFromString(v)
 
 			if err != nil {
 				log.Error().Msg(errors.New(err).ErrorStack())
-				return nil, nil, errors.New(err)
+				return nil, nil, nil, errors.New(err)
 			}
 
-			i, ok := data.(*dynamoDBTypes.AttributeValueMemberS)
+			it, ok := data.(*dynamoDBTypes.AttributeValueMemberS)
 
 			if !ok {
-				return nil, nil, errors.Errorf("ReadSome: malformed item")
+				return nil, nil, nil, errors.Errorf("ReadSome: malformed item")
 			}
 
-			vvectors = append(vvectors, version)
+			items = append(items, item{
+				k.Value,
+				it.Value,
+				version,
+			})
 
-			it = append(it, i.Value)
 		}
-
-		items[k.Value] = it
-		versions[k.Value] = vvectors
 	}
 
-	// sort and filter
-	ids := make([]string, len(items))
+	// now we have a list of items, sort them and convert to lists
+	keys := make([]string, 0, len(items))
+	values := make([]string, 0, len(items))
+	versions := make([]vclock.VClock, 0, len(items))
+
+	// now we have lists of keys and items, we need to sort them by the key attribute alphabetically
+	sort.Slice(items, func(i, j int) bool {
+		return strings.ToLower(items[i].key) < strings.ToLower(items[j].key)
+	})
 
 	i := 0
-	for k := range items {
-		ids[i] = k
-		i++
+	curr := ""
+	for _, x := range items {
+		if x.key != curr {
+			curr = x.key
+			i++
+			if i > int(count) {
+				break
+			}
+		}
+
+		keys = append(keys, x.key)
+		values = append(values, x.val)
+		versions = append(versions, x.version)
 	}
 
-	sort.Strings(ids)
-
-	for i = len(items) - 1; i >= int(count); i-- {
-		delete(items, ids[i])
-		delete(versions, ids[i])
-	}
-
-	return items, versions, nil
+	return keys, values, versions, nil
 }
 
 // ReadAll returns all items in the specified keygroup.
-func (s *Storage) ReadAll(kg string) (map[string][]string, map[string][]vclock.VClock, error) {
+func (s *Storage) ReadAll(kg string) ([]string, []string, []vclock.VClock, error) {
 
 	// in this case we need to get all items with "Keygroup" kg and then sort them
 	filt := expression.Name(keygroupName).Equal(expression.Value(kg))
@@ -444,7 +457,7 @@ func (s *Storage) ReadAll(kg string) (map[string][]string, map[string][]vclock.V
 
 	if err != nil {
 		log.Error().Msg(errors.New(err).ErrorStack())
-		return nil, nil, errors.New(err)
+		return nil, nil, nil, errors.New(err)
 	}
 
 	params := &dynamodb.ScanInput{
@@ -459,25 +472,30 @@ func (s *Storage) ReadAll(kg string) (map[string][]string, map[string][]vclock.V
 	result, err := s.svc.Scan(context.TODO(), params)
 	if err != nil {
 		log.Error().Msg(errors.New(err).ErrorStack())
-		return nil, nil, errors.New(err)
+		return nil, nil, nil, errors.New(err)
 	}
 
 	log.Debug().Msgf("ReadAll: got %d items", len(result.Items))
 
-	items := make(map[string][]string)
-	versions := make(map[string][]vclock.VClock)
+	type item struct {
+		key     string
+		val     string
+		version vclock.VClock
+	}
+
+	items := make([]item, 0, len(result.Items))
 
 	for _, i := range result.Items {
 		key, ok := i[keyName]
 
 		if !ok {
-			return nil, nil, nil
+			return nil, nil, nil, nil
 		}
 
 		k, ok := key.(*dynamoDBTypes.AttributeValueMemberS)
 
 		if !ok {
-			return nil, nil, errors.Errorf("ReadAll: malformed key")
+			return nil, nil, nil, errors.Errorf("ReadAll: malformed key")
 		}
 
 		if k.Value == NULLValue {
@@ -487,7 +505,7 @@ func (s *Storage) ReadAll(kg string) (map[string][]string, map[string][]vclock.V
 		val, ok := i[valName]
 
 		if !ok {
-			return nil, nil, errors.Errorf("ReadAll: malformed value")
+			return nil, nil, nil, errors.Errorf("ReadAll: malformed value")
 		}
 
 		if e, ok := i[expiryKey]; ok {
@@ -497,7 +515,7 @@ func (s *Storage) ReadAll(kg string) (map[string][]string, map[string][]vclock.V
 				expiry, err := strconv.Atoi(expiration.Value)
 				if err != nil {
 					log.Error().Msg(errors.New(err).ErrorStack())
-					return nil, nil, errors.New(err)
+					return nil, nil, nil, errors.New(err)
 				}
 
 				log.Debug().Msgf("ReadAll found key expiring at %d, it is %d now", expiry, time.Now().Unix())
@@ -514,33 +532,45 @@ func (s *Storage) ReadAll(kg string) (map[string][]string, map[string][]vclock.V
 			continue
 		}
 
-		it := make([]string, 0, len(values.Value))
-		vvectors := make([]vclock.VClock, 0, len(values.Value))
-
 		for v, data := range values.Value {
 			version, err := vectorFromString(v)
 
 			if err != nil {
 				log.Error().Msg(errors.New(err).ErrorStack())
-				return nil, nil, errors.New(err)
+				return nil, nil, nil, errors.New(err)
 			}
 
-			i, ok := data.(*dynamoDBTypes.AttributeValueMemberS)
+			it, ok := data.(*dynamoDBTypes.AttributeValueMemberS)
 
 			if !ok {
-				return nil, nil, errors.Errorf("ReadAll: malformed item")
+				return nil, nil, nil, errors.Errorf("ReadAll: malformed item")
 			}
 
-			vvectors = append(vvectors, version)
-
-			it = append(it, i.Value)
+			items = append(items, item{
+				k.Value,
+				it.Value,
+				version,
+			})
 		}
-
-		items[k.Value] = it
-		versions[k.Value] = vvectors
 	}
 
-	return items, versions, nil
+	// now we have a list of items, sort them and convert to lists
+	keys := make([]string, 0, len(items))
+	values := make([]string, 0, len(items))
+	versions := make([]vclock.VClock, 0, len(items))
+
+	// now we have lists of keys and items, we need to sort them by the key attribute alphabetically
+	sort.Slice(items, func(i, j int) bool {
+		return strings.ToLower(items[i].key) < strings.ToLower(items[j].key)
+	})
+
+	for _, x := range items {
+		keys = append(keys, x.key)
+		values = append(values, x.val)
+		versions = append(versions, x.version)
+	}
+
+	return keys, values, versions, nil
 }
 
 // Append appends the item to the specified keygroup by incrementing the latest key by one.

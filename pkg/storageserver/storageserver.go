@@ -95,23 +95,22 @@ func (s Server) Scan(_ context.Context, req *storage.ScanRequest) (*storage.Scan
 	// Stream: call server.send for every item, return if none left.
 	log.Debug().Msgf("GRPCServer: Scan in=%+v", req)
 
-	vals, vvectors, err := s.store.ReadSome(req.Keygroup, req.Start, req.Count)
+	keys, vals, vvectors, err := s.store.ReadSome(req.Keygroup, req.Start, req.Count)
 
 	if err != nil {
 		log.Err(err).Msgf("GRPCServer has encountered an error while scanning %d items from keygroup %+v", req.Count, req.Keygroup)
 		return nil, err
 	}
-	items := make([]*storage.Item, 0)
 
-	for key, data := range vals {
-		for i := range data {
-			items = append(items, &storage.Item{
-				Keygroup: req.Keygroup,
-				Id:       key,
-				Val:      vals[key][i],
-				Version:  vvectors[key][i],
-			})
-		}
+	items := make([]*storage.Item, 0, len(keys))
+
+	for i := range keys {
+		items = append(items, &storage.Item{
+			Keygroup: req.Keygroup,
+			Id:       keys[i],
+			Val:      vals[i],
+			Version:  vvectors[i],
+		})
 	}
 
 	return &storage.ScanResponse{
@@ -123,22 +122,21 @@ func (s Server) Scan(_ context.Context, req *storage.ScanRequest) (*storage.Scan
 func (s Server) ReadAll(_ context.Context, req *storage.ReadAllRequest) (*storage.ReadAllResponse, error) {
 	// Stream: call server.send for every item, return if none left.
 	log.Debug().Msgf("GRPCServer: ReadAll in=%+v", req)
-	vals, vvectors, err := s.store.ReadAll(req.Keygroup)
+	keys, vals, vvectors, err := s.store.ReadAll(req.Keygroup)
 	if err != nil {
 		log.Err(err).Msgf("GRPCServer has encountered an error while reading whole keygroup %+v", req)
 		return nil, err
 	}
-	items := make([]*storage.Item, 0)
 
-	for key, data := range vals {
-		for i := range data {
-			items = append(items, &storage.Item{
-				Keygroup: req.Keygroup,
-				Id:       key,
-				Val:      vals[key][i],
-				Version:  vvectors[key][i],
-			})
-		}
+	items := make([]*storage.Item, 0, len(keys))
+
+	for i := range keys {
+		items = append(items, &storage.Item{
+			Keygroup: req.Keygroup,
+			Id:       keys[i],
+			Val:      vals[i],
+			Version:  vvectors[i],
+		})
 	}
 
 	return &storage.ReadAllResponse{

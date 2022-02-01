@@ -110,7 +110,7 @@ func (c *Client) Read(kg, id string) ([]string, []vclock.VClock, bool, error) {
 }
 
 // ReadSome calls the same method on the remote server
-func (c *Client) ReadSome(kg, id string, count uint64) (map[string][]string, map[string][]vclock.VClock, error) {
+func (c *Client) ReadSome(kg, id string, count uint64) ([]string, []string, []vclock.VClock, error) {
 	res, err := c.dbClient.Scan(context.Background(), &storage.ScanRequest{
 		Keygroup: kg,
 		Start:    id,
@@ -119,50 +119,44 @@ func (c *Client) ReadSome(kg, id string, count uint64) (map[string][]string, map
 
 	if err != nil {
 		log.Err(err).Msgf("StorageClient: Error in Scan in: %+v count %d", kg, count)
-		return nil, nil, errors.New(err)
+		return nil, nil, nil, errors.New(err)
 	}
 
-	vals := make(map[string][]string)
-	vvectors := make(map[string][]vclock.VClock)
+	keys := make([]string, len(res.Items))
+	vals := make([]string, len(res.Items))
+	vvectors := make([]vclock.VClock, len(res.Items))
 
-	for _, item := range res.Items {
-		if _, ok := vals[item.Id]; !ok {
-			vals[item.Id] = make([]string, 0, 1)
-			vvectors[item.Id] = make([]vclock.VClock, 0, 1)
-		}
-
-		vals[item.Id] = append(vals[item.Id], item.Val)
-		vvectors[item.Id] = append(vvectors[item.Id], item.Version)
+	for i, item := range res.Items {
+		keys[i] = item.Id
+		vals[i] = item.Val
+		vvectors[i] = item.Version
 	}
 
-	return vals, vvectors, nil
+	return keys, vals, vvectors, nil
 }
 
 // ReadAll calls the same method on the remote server
-func (c *Client) ReadAll(kg string) (map[string][]string, map[string][]vclock.VClock, error) {
+func (c *Client) ReadAll(kg string) ([]string, []string, []vclock.VClock, error) {
 	res, err := c.dbClient.ReadAll(context.Background(), &storage.ReadAllRequest{
 		Keygroup: kg,
 	})
 
 	if err != nil {
 		log.Err(err).Msgf("StorageClient: Error in ReadAll in: %+v", kg)
-		return nil, nil, errors.New(err)
+		return nil, nil, nil, errors.New(err)
 	}
 
-	vals := make(map[string][]string)
-	vvectors := make(map[string][]vclock.VClock)
+	keys := make([]string, len(res.Items))
+	vals := make([]string, len(res.Items))
+	vvectors := make([]vclock.VClock, len(res.Items))
 
-	for _, item := range res.Items {
-		if _, ok := vals[item.Id]; !ok {
-			vals[item.Id] = make([]string, 0, 1)
-			vvectors[item.Id] = make([]vclock.VClock, 0, 1)
-		}
-
-		vals[item.Id] = append(vals[item.Id], item.Val)
-		vvectors[item.Id] = append(vvectors[item.Id], item.Version)
+	for i, item := range res.Items {
+		keys[i] = item.Id
+		vals[i] = item.Val
+		vvectors[i] = item.Version
 	}
 
-	return vals, vvectors, nil
+	return keys, vals, vvectors, nil
 }
 
 // Update calls the same method on the remote server

@@ -199,16 +199,18 @@ func TestReadSome(t *testing.T) {
 
 	}
 
-	data, _, err := db.ReadSome(kg, "id"+strconv.Itoa(scanStart), uint64(scanRange))
+	keys, values, _, err := db.ReadSome(kg, "id"+strconv.Itoa(scanStart), uint64(scanRange))
 
 	assert.NoError(t, err)
 
-	assert.Len(t, data, scanRange)
+	assert.Len(t, keys, scanRange)
+	assert.Len(t, values, scanRange)
 
 	for i := scanStart; i < scanStart+scanRange; i++ {
-		assert.Contains(t, data, ids[i])
-		assert.Len(t, data[ids[i]], 1)
-		assert.Equal(t, data[ids[i]][0], vals[i])
+		assert.Contains(t, keys, ids[i])
+		assert.Contains(t, values, vals[i])
+		assert.Equal(t, ids[i], keys[i-scanStart])
+		assert.Equal(t, vals[i], values[i-scanStart])
 	}
 }
 
@@ -248,17 +250,18 @@ func TestReadAll(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	data, _, err := db.ReadAll(kg)
+	keys, values, _, err := db.ReadAll(kg)
 
 	assert.NoError(t, err)
 
-	assert.Len(t, data, 3)
-	assert.Len(t, data["id-1"], 1)
-	assert.Equal(t, "data-1", data["id-1"][0])
-	assert.Len(t, data["id-2"], 1)
-	assert.Equal(t, "data-2", data["id-2"][0])
-	assert.Len(t, data["id-3"], 1)
-	assert.Equal(t, "data-3", data["id-3"][0])
+	assert.Len(t, keys, 3)
+	assert.Len(t, values, 3)
+	assert.Equal(t, "id-1", keys[0])
+	assert.Equal(t, "data-1", values[0])
+	assert.Equal(t, "id-2", keys[1])
+	assert.Equal(t, "data-2", values[1])
+	assert.Equal(t, "id-3", keys[2])
+	assert.Equal(t, "data-3", values[2])
 
 }
 

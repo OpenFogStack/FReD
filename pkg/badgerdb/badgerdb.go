@@ -174,9 +174,10 @@ func (s *Storage) Read(kg string, id string) ([]string, []vclock.VClock, bool, e
 }
 
 // ReadSome returns count number of items in the specified keygroup starting at id.
-func (s *Storage) ReadSome(kg, id string, count uint64) (map[string][]string, map[string][]vclock.VClock, error) {
-	items := make(map[string][]string)
-	vvectors := make(map[string][]vclock.VClock)
+func (s *Storage) ReadSome(kg, id string, count uint64) ([]string, []string, []vclock.VClock, error) {
+	keys := make([]string, 0)
+	items := make([]string, 0)
+	vvectors := make([]vclock.VClock, 0)
 
 	err := s.db.View(func(txn *badger.Txn) error {
 		prefix := makeKeygroupKeyName(kg)
@@ -199,14 +200,10 @@ func (s *Storage) ReadSome(kg, id string, count uint64) (map[string][]string, ma
 				return err
 			}
 
-			if _, ok := items[key]; ok {
-				items[key] = append(items[key], string(v))
-				vvectors[key] = append(vvectors[key], vvector)
-				continue
-			}
+			keys = append(keys, key)
+			items = append(items, string(v))
+			vvectors = append(vvectors, vvector)
 
-			items[key] = []string{string(v)}
-			vvectors[key] = []vclock.VClock{vvector}
 			i++
 		}
 
@@ -214,16 +211,17 @@ func (s *Storage) ReadSome(kg, id string, count uint64) (map[string][]string, ma
 	})
 
 	if err != nil {
-		return nil, nil, errors.New(err)
+		return nil, nil, nil, errors.New(err)
 	}
 
-	return items, vvectors, nil
+	return keys, items, vvectors, nil
 }
 
 // ReadAll returns all items in the specified keygroup.
-func (s *Storage) ReadAll(kg string) (map[string][]string, map[string][]vclock.VClock, error) {
-	items := make(map[string][]string)
-	vvectors := make(map[string][]vclock.VClock)
+func (s *Storage) ReadAll(kg string) ([]string, []string, []vclock.VClock, error) {
+	keys := make([]string, 0)
+	items := make([]string, 0)
+	vvectors := make([]vclock.VClock, 0)
 
 	err := s.db.View(func(txn *badger.Txn) error {
 		prefix := makeKeygroupKeyName(kg)
@@ -244,24 +242,20 @@ func (s *Storage) ReadAll(kg string) (map[string][]string, map[string][]vclock.V
 				return err
 			}
 
-			if _, ok := items[key]; ok {
-				items[key] = append(items[key], string(v))
-				vvectors[key] = append(vvectors[key], vvector)
-				continue
-			}
+			keys = append(keys, key)
+			items = append(items, string(v))
+			vvectors = append(vvectors, vvector)
 
-			items[key] = []string{string(v)}
-			vvectors[key] = []vclock.VClock{vvector}
 		}
 
 		return nil
 	})
 
 	if err != nil {
-		return nil, nil, errors.New(err)
+		return nil, nil, nil, errors.New(err)
 	}
 
-	return items, vvectors, nil
+	return keys, items, vvectors, nil
 }
 
 // IDs returns the keys of all items in the specified keygroup.
