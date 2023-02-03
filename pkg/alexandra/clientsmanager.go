@@ -271,7 +271,15 @@ func (m *ClientsMgr) setPreferred(keygroup string, nodeID string) error {
 	m.Lock()
 	defer m.Unlock()
 
+	if _, ok := m.keygroups[keygroup]; !ok {
+		// turns out we don't know about this keygroup yet
+		m.Unlock()
+		m.updateKeygroupClients(keygroup)
+		m.Lock()
+	}
+
 	m.keygroups[keygroup].preferred = c
+
 	return nil
 }
 
