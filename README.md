@@ -66,7 +66,7 @@ openssl genrsa -out ca.key 2048
 
 # generate a CA certificate
 openssl req -x509 -new -nodes \
-     -key ca.key -sha256 \
+     -key ca.key -sha512 \
      -days 1825 -out ca.crt
 
 $ You are about to be asked to enter information that will be incorporated
@@ -119,14 +119,14 @@ docker network create fredwork --gateway 172.26.0.1 --subnet 172.26.0.0/16
 To start a simple `etcd` instance in Docker with our certificates mounted as volumes, you can use this command:
 
 ```bash
-docker pull gcr.io/etcd-development/etcd:v3.5.0
+docker pull gcr.io/etcd-development/etcd:v3.5.7
 docker run -d \
 -v $(pwd)/etcdnase.crt:/cert/etcdnase.crt \
 -v $(pwd)/etcdnase.key:/cert/etcdnase.key \
 -v $(pwd)/ca.crt:/cert/ca.crt \
 --network=fredwork \
 --ip=172.26.1.1 \
-gcr.io/etcd-development/etcd:v3.5.0 \
+gcr.io/etcd-development/etcd:v3.5.7 \
 etcd --name s-1 \
 --data-dir /tmp/etcd/s-1 \
 --listen-client-urls https://172.26.1.1:2379 \

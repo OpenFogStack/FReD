@@ -4,7 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
-	"io/ioutil"
+	"os"
 	"time"
 
 	api "git.tu-berlin.de/mcc-fred/fred/proto/client"
@@ -45,7 +45,7 @@ func newClient(nodeID string, host string, certFile string, keyFile string, caCe
 	// Create a new cert pool and add our own CA certificate
 	rootCAs := x509.NewCertPool()
 
-	loaded, err := ioutil.ReadFile(caCert)
+	loaded, err := os.ReadFile(caCert)
 
 	if err != nil {
 		log.Fatal().Msgf("unexpected missing certfile: %v", err)

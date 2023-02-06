@@ -33,7 +33,7 @@ func TestMain(m *testing.M) {
 
 	if err == nil {
 		if !fInfo.IsDir() {
-			panic(errors.Errorf("%s is not a directory!", badgerDBPath))
+			panic(errors.Errorf("%s is not a directory", badgerDBPath))
 		}
 
 		err = os.RemoveAll(badgerDBPath)
@@ -50,7 +50,7 @@ func TestMain(m *testing.M) {
 
 	if err == nil {
 		if !fInfo.IsDir() {
-			panic(errors.Errorf("%s is not a directory!", badgerDBPath))
+			panic(errors.Errorf("%s is not a directory", badgerDBPath))
 		}
 
 		err = os.RemoveAll(badgerDBPath)

@@ -4,7 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
-	"io/ioutil"
+	"os"
 
 	"git.tu-berlin.de/mcc-fred/fred/proto/storage"
 	"github.com/DistributedClocks/GoVector/govec/vclock"
@@ -51,7 +51,7 @@ func NewClient(host, certFile string, keyFile string, caFiles []string) *Client 
 	}
 
 	for _, f := range caFiles {
-		loaded, err := ioutil.ReadFile(f)
+		loaded, err := os.ReadFile(f)
 
 		if err != nil {
 			log.Fatal().Msgf("Remote storage client: unexpected missing certfile: %v", err)

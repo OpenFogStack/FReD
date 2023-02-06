@@ -506,7 +506,7 @@ func (s *storeService) prune(kg string, id string, versions []vclock.VClock) {
 	// errors might happen if an item is removed twice but who cares
 
 	for _, v := range versions {
-		if v == nil || len(v) == 0 {
+		if len(v) == 0 {
 			return
 		}
 

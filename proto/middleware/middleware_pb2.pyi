@@ -3,509 +3,607 @@
 isort:skip_file
 """
 import builtins
+import collections.abc
 import google.protobuf.descriptor
 import google.protobuf.internal.containers
 import google.protobuf.internal.enum_type_wrapper
 import google.protobuf.message
+import sys
 import typing
-import typing_extensions
 
-DESCRIPTOR: google.protobuf.descriptor.FileDescriptor = ...
+if sys.version_info >= (3, 10):
+    import typing as typing_extensions
+else:
+    import typing_extensions
 
+DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
+
+class _UserRole:
+    ValueType = typing.NewType("ValueType", builtins.int)
+    V: typing_extensions.TypeAlias = ValueType
+
+class _UserRoleEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_UserRole.ValueType], builtins.type):
+    DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
+    ReadKeygroup: _UserRole.ValueType  # 0
+    WriteKeygroup: _UserRole.ValueType  # 1
+    ConfigureReplica: _UserRole.ValueType  # 2
+    ConfigureTrigger: _UserRole.ValueType  # 3
+    ConfigureKeygroups: _UserRole.ValueType  # 4
+
+class UserRole(_UserRole, metaclass=_UserRoleEnumTypeWrapper): ...
+
+ReadKeygroup: UserRole.ValueType  # 0
+WriteKeygroup: UserRole.ValueType  # 1
+ConfigureReplica: UserRole.ValueType  # 2
+ConfigureTrigger: UserRole.ValueType  # 3
+ConfigureKeygroups: UserRole.ValueType  # 4
 global___UserRole = UserRole
-class _UserRole(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[UserRole.V], builtins.type):
-    DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor = ...
-    ReadKeygroup = UserRole.V(0)
-    WriteKeygroup = UserRole.V(1)
-    ConfigureReplica = UserRole.V(2)
-    ConfigureTrigger = UserRole.V(3)
-    ConfigureKeygroups = UserRole.V(4)
-class UserRole(metaclass=_UserRole):
-    V = typing.NewType('V', builtins.int)
-ReadKeygroup = UserRole.V(0)
-WriteKeygroup = UserRole.V(1)
-ConfigureReplica = UserRole.V(2)
-ConfigureTrigger = UserRole.V(3)
-ConfigureKeygroups = UserRole.V(4)
 
+@typing_extensions.final
 class Empty(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
-    def __init__(self,
-        ) -> None: ...
+    def __init__(
+        self,
+    ) -> None: ...
+
 global___Empty = Empty
 
+@typing_extensions.final
 class CreateKeygroupRequest(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
     KEYGROUP_FIELD_NUMBER: builtins.int
     MUTABLE_FIELD_NUMBER: builtins.int
     EXPIRY_FIELD_NUMBER: builtins.int
     FIRSTNODEID_FIELD_NUMBER: builtins.int
-    keygroup: typing.Text = ...
-    mutable: builtins.bool = ...
-    expiry: builtins.int = ...
-    firstNodeId: typing.Text = ...
-
-    def __init__(self,
+    keygroup: builtins.str
+    mutable: builtins.bool
+    expiry: builtins.int
+    firstNodeId: builtins.str
+    def __init__(
+        self,
         *,
-        keygroup : typing.Text = ...,
-        mutable : builtins.bool = ...,
-        expiry : builtins.int = ...,
-        firstNodeId : typing.Text = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"expiry",b"expiry",u"firstNodeId",b"firstNodeId",u"keygroup",b"keygroup",u"mutable",b"mutable"]) -> None: ...
+        keygroup: builtins.str = ...,
+        mutable: builtins.bool = ...,
+        expiry: builtins.int = ...,
+        firstNodeId: builtins.str = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["expiry", b"expiry", "firstNodeId", b"firstNodeId", "keygroup", b"keygroup", "mutable", b"mutable"]) -> None: ...
+
 global___CreateKeygroupRequest = CreateKeygroupRequest
 
+@typing_extensions.final
 class DeleteKeygroupRequest(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
-    KEYGROUP_FIELD_NUMBER: builtins.int
-    keygroup: typing.Text = ...
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
-    def __init__(self,
+    KEYGROUP_FIELD_NUMBER: builtins.int
+    keygroup: builtins.str
+    def __init__(
+        self,
         *,
-        keygroup : typing.Text = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"keygroup",b"keygroup"]) -> None: ...
+        keygroup: builtins.str = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["keygroup", b"keygroup"]) -> None: ...
+
 global___DeleteKeygroupRequest = DeleteKeygroupRequest
 
+@typing_extensions.final
 class Item(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    @typing_extensions.final
     class VersionEntry(google.protobuf.message.Message):
-        DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
+        DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
         KEY_FIELD_NUMBER: builtins.int
         VALUE_FIELD_NUMBER: builtins.int
-        key: typing.Text = ...
-        value: builtins.int = ...
-
-        def __init__(self,
+        key: builtins.str
+        value: builtins.int
+        def __init__(
+            self,
             *,
-            key : typing.Text = ...,
-            value : builtins.int = ...,
-            ) -> None: ...
-        def ClearField(self, field_name: typing_extensions.Literal[u"key",b"key",u"value",b"value"]) -> None: ...
+            key: builtins.str = ...,
+            value: builtins.int = ...,
+        ) -> None: ...
+        def ClearField(self, field_name: typing_extensions.Literal["key", b"key", "value", b"value"]) -> None: ...
 
     ID_FIELD_NUMBER: builtins.int
     VAL_FIELD_NUMBER: builtins.int
     VERSION_FIELD_NUMBER: builtins.int
-    id: typing.Text = ...
-    val: typing.Text = ...
-
+    id: builtins.str
+    val: builtins.str
     @property
-    def version(self) -> google.protobuf.internal.containers.ScalarMap[typing.Text, builtins.int]: ...
-
-    def __init__(self,
+    def version(self) -> google.protobuf.internal.containers.ScalarMap[builtins.str, builtins.int]: ...
+    def __init__(
+        self,
         *,
-        id : typing.Text = ...,
-        val : typing.Text = ...,
-        version : typing.Optional[typing.Mapping[typing.Text, builtins.int]] = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"id",b"id",u"val",b"val",u"version",b"version"]) -> None: ...
+        id: builtins.str = ...,
+        val: builtins.str = ...,
+        version: collections.abc.Mapping[builtins.str, builtins.int] | None = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["id", b"id", "val", b"val", "version", b"version"]) -> None: ...
+
 global___Item = Item
 
+@typing_extensions.final
 class ReadRequest(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
     KEYGROUP_FIELD_NUMBER: builtins.int
     ID_FIELD_NUMBER: builtins.int
     MINEXPIRY_FIELD_NUMBER: builtins.int
-    keygroup: typing.Text = ...
-    id: typing.Text = ...
-    minExpiry: builtins.int = ...
-
-    def __init__(self,
+    keygroup: builtins.str
+    id: builtins.str
+    minExpiry: builtins.int
+    def __init__(
+        self,
         *,
-        keygroup : typing.Text = ...,
-        id : typing.Text = ...,
-        minExpiry : builtins.int = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"id",b"id",u"keygroup",b"keygroup",u"minExpiry",b"minExpiry"]) -> None: ...
+        keygroup: builtins.str = ...,
+        id: builtins.str = ...,
+        minExpiry: builtins.int = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["id", b"id", "keygroup", b"keygroup", "minExpiry", b"minExpiry"]) -> None: ...
+
 global___ReadRequest = ReadRequest
 
+@typing_extensions.final
 class ReadResponse(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
-    ITEMS_FIELD_NUMBER: builtins.int
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
+    ITEMS_FIELD_NUMBER: builtins.int
     @property
     def items(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___Item]: ...
-
-    def __init__(self,
+    def __init__(
+        self,
         *,
-        items : typing.Optional[typing.Iterable[global___Item]] = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"items",b"items"]) -> None: ...
+        items: collections.abc.Iterable[global___Item] | None = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["items", b"items"]) -> None: ...
+
 global___ReadResponse = ReadResponse
 
+@typing_extensions.final
 class ScanRequest(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
     KEYGROUP_FIELD_NUMBER: builtins.int
     ID_FIELD_NUMBER: builtins.int
     COUNT_FIELD_NUMBER: builtins.int
-    keygroup: typing.Text = ...
-    id: typing.Text = ...
-    count: builtins.int = ...
-
-    def __init__(self,
+    keygroup: builtins.str
+    id: builtins.str
+    count: builtins.int
+    def __init__(
+        self,
         *,
-        keygroup : typing.Text = ...,
-        id : typing.Text = ...,
-        count : builtins.int = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"count",b"count",u"id",b"id",u"keygroup",b"keygroup"]) -> None: ...
+        keygroup: builtins.str = ...,
+        id: builtins.str = ...,
+        count: builtins.int = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["count", b"count", "id", b"id", "keygroup", b"keygroup"]) -> None: ...
+
 global___ScanRequest = ScanRequest
 
+@typing_extensions.final
 class ScanResponse(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
-    DATA_FIELD_NUMBER: builtins.int
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
+    DATA_FIELD_NUMBER: builtins.int
     @property
     def data(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___Data]: ...
-
-    def __init__(self,
+    def __init__(
+        self,
         *,
-        data : typing.Optional[typing.Iterable[global___Data]] = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"data",b"data"]) -> None: ...
+        data: collections.abc.Iterable[global___Data] | None = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["data", b"data"]) -> None: ...
+
 global___ScanResponse = ScanResponse
 
+@typing_extensions.final
 class Data(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
     ID_FIELD_NUMBER: builtins.int
     DATA_FIELD_NUMBER: builtins.int
-    id: typing.Text = ...
-    data: typing.Text = ...
-
-    def __init__(self,
+    id: builtins.str
+    data: builtins.str
+    def __init__(
+        self,
         *,
-        id : typing.Text = ...,
-        data : typing.Text = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"data",b"data",u"id",b"id"]) -> None: ...
+        id: builtins.str = ...,
+        data: builtins.str = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["data", b"data", "id", b"id"]) -> None: ...
+
 global___Data = Data
 
+@typing_extensions.final
 class UpdateRequest(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
     KEYGROUP_FIELD_NUMBER: builtins.int
     ID_FIELD_NUMBER: builtins.int
     DATA_FIELD_NUMBER: builtins.int
-    keygroup: typing.Text = ...
-    id: typing.Text = ...
-    data: typing.Text = ...
-
-    def __init__(self,
+    keygroup: builtins.str
+    id: builtins.str
+    data: builtins.str
+    def __init__(
+        self,
         *,
-        keygroup : typing.Text = ...,
-        id : typing.Text = ...,
-        data : typing.Text = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"data",b"data",u"id",b"id",u"keygroup",b"keygroup"]) -> None: ...
+        keygroup: builtins.str = ...,
+        id: builtins.str = ...,
+        data: builtins.str = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["data", b"data", "id", b"id", "keygroup", b"keygroup"]) -> None: ...
+
 global___UpdateRequest = UpdateRequest
 
+@typing_extensions.final
 class AppendRequest(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
     KEYGROUP_FIELD_NUMBER: builtins.int
     DATA_FIELD_NUMBER: builtins.int
-    keygroup: typing.Text = ...
-    data: typing.Text = ...
-
-    def __init__(self,
+    keygroup: builtins.str
+    data: builtins.str
+    def __init__(
+        self,
         *,
-        keygroup : typing.Text = ...,
-        data : typing.Text = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"data",b"data",u"keygroup",b"keygroup"]) -> None: ...
+        keygroup: builtins.str = ...,
+        data: builtins.str = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["data", b"data", "keygroup", b"keygroup"]) -> None: ...
+
 global___AppendRequest = AppendRequest
 
+@typing_extensions.final
 class AppendResponse(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
-    ID_FIELD_NUMBER: builtins.int
-    id: typing.Text = ...
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
-    def __init__(self,
+    ID_FIELD_NUMBER: builtins.int
+    id: builtins.str
+    def __init__(
+        self,
         *,
-        id : typing.Text = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"id",b"id"]) -> None: ...
+        id: builtins.str = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["id", b"id"]) -> None: ...
+
 global___AppendResponse = AppendResponse
 
+@typing_extensions.final
 class NotifyRequest(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    @typing_extensions.final
     class VersionEntry(google.protobuf.message.Message):
-        DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
+        DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
         KEY_FIELD_NUMBER: builtins.int
         VALUE_FIELD_NUMBER: builtins.int
-        key: typing.Text = ...
-        value: builtins.int = ...
-
-        def __init__(self,
+        key: builtins.str
+        value: builtins.int
+        def __init__(
+            self,
             *,
-            key : typing.Text = ...,
-            value : builtins.int = ...,
-            ) -> None: ...
-        def ClearField(self, field_name: typing_extensions.Literal[u"key",b"key",u"value",b"value"]) -> None: ...
+            key: builtins.str = ...,
+            value: builtins.int = ...,
+        ) -> None: ...
+        def ClearField(self, field_name: typing_extensions.Literal["key", b"key", "value", b"value"]) -> None: ...
 
     KEYGROUP_FIELD_NUMBER: builtins.int
     ID_FIELD_NUMBER: builtins.int
     VERSION_FIELD_NUMBER: builtins.int
-    keygroup: typing.Text = ...
-    id: typing.Text = ...
-
+    keygroup: builtins.str
+    id: builtins.str
     @property
-    def version(self) -> google.protobuf.internal.containers.ScalarMap[typing.Text, builtins.int]: ...
-
-    def __init__(self,
+    def version(self) -> google.protobuf.internal.containers.ScalarMap[builtins.str, builtins.int]: ...
+    def __init__(
+        self,
         *,
-        keygroup : typing.Text = ...,
-        id : typing.Text = ...,
-        version : typing.Optional[typing.Mapping[typing.Text, builtins.int]] = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"id",b"id",u"keygroup",b"keygroup",u"version",b"version"]) -> None: ...
+        keygroup: builtins.str = ...,
+        id: builtins.str = ...,
+        version: collections.abc.Mapping[builtins.str, builtins.int] | None = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["id", b"id", "keygroup", b"keygroup", "version", b"version"]) -> None: ...
+
 global___NotifyRequest = NotifyRequest
 
+@typing_extensions.final
 class ChooseReplicaRequest(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
     KEYGROUP_FIELD_NUMBER: builtins.int
     NODEID_FIELD_NUMBER: builtins.int
-    keygroup: typing.Text = ...
-    nodeId: typing.Text = ...
-
-    def __init__(self,
+    keygroup: builtins.str
+    nodeId: builtins.str
+    def __init__(
+        self,
         *,
-        keygroup : typing.Text = ...,
-        nodeId : typing.Text = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"keygroup",b"keygroup",u"nodeId",b"nodeId"]) -> None: ...
+        keygroup: builtins.str = ...,
+        nodeId: builtins.str = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["keygroup", b"keygroup", "nodeId", b"nodeId"]) -> None: ...
+
 global___ChooseReplicaRequest = ChooseReplicaRequest
 
+@typing_extensions.final
 class DeleteRequest(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
     KEYGROUP_FIELD_NUMBER: builtins.int
     ID_FIELD_NUMBER: builtins.int
-    keygroup: typing.Text = ...
-    id: typing.Text = ...
-
-    def __init__(self,
+    keygroup: builtins.str
+    id: builtins.str
+    def __init__(
+        self,
         *,
-        keygroup : typing.Text = ...,
-        id : typing.Text = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"id",b"id",u"keygroup",b"keygroup"]) -> None: ...
+        keygroup: builtins.str = ...,
+        id: builtins.str = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["id", b"id", "keygroup", b"keygroup"]) -> None: ...
+
 global___DeleteRequest = DeleteRequest
 
+@typing_extensions.final
 class AddReplicaRequest(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
     KEYGROUP_FIELD_NUMBER: builtins.int
     NODEID_FIELD_NUMBER: builtins.int
     EXPIRY_FIELD_NUMBER: builtins.int
-    keygroup: typing.Text = ...
-    nodeId: typing.Text = ...
-    expiry: builtins.int = ...
-
-    def __init__(self,
+    keygroup: builtins.str
+    nodeId: builtins.str
+    expiry: builtins.int
+    def __init__(
+        self,
         *,
-        keygroup : typing.Text = ...,
-        nodeId : typing.Text = ...,
-        expiry : builtins.int = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"expiry",b"expiry",u"keygroup",b"keygroup",u"nodeId",b"nodeId"]) -> None: ...
+        keygroup: builtins.str = ...,
+        nodeId: builtins.str = ...,
+        expiry: builtins.int = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["expiry", b"expiry", "keygroup", b"keygroup", "nodeId", b"nodeId"]) -> None: ...
+
 global___AddReplicaRequest = AddReplicaRequest
 
+@typing_extensions.final
 class GetKeygroupInfoRequest(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
-    KEYGROUP_FIELD_NUMBER: builtins.int
-    keygroup: typing.Text = ...
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
-    def __init__(self,
+    KEYGROUP_FIELD_NUMBER: builtins.int
+    keygroup: builtins.str
+    def __init__(
+        self,
         *,
-        keygroup : typing.Text = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"keygroup",b"keygroup"]) -> None: ...
+        keygroup: builtins.str = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["keygroup", b"keygroup"]) -> None: ...
+
 global___GetKeygroupInfoRequest = GetKeygroupInfoRequest
 
+@typing_extensions.final
 class GetKeygroupInfoResponse(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
     MUTABLE_FIELD_NUMBER: builtins.int
     REPLICA_FIELD_NUMBER: builtins.int
-    mutable: builtins.bool = ...
-
+    mutable: builtins.bool
     @property
     def replica(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___KeygroupReplica]: ...
-
-    def __init__(self,
+    def __init__(
+        self,
         *,
-        mutable : builtins.bool = ...,
-        replica : typing.Optional[typing.Iterable[global___KeygroupReplica]] = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"mutable",b"mutable",u"replica",b"replica"]) -> None: ...
+        mutable: builtins.bool = ...,
+        replica: collections.abc.Iterable[global___KeygroupReplica] | None = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["mutable", b"mutable", "replica", b"replica"]) -> None: ...
+
 global___GetKeygroupInfoResponse = GetKeygroupInfoResponse
 
+@typing_extensions.final
 class KeygroupReplica(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
     NODEID_FIELD_NUMBER: builtins.int
     EXPIRY_FIELD_NUMBER: builtins.int
     HOST_FIELD_NUMBER: builtins.int
-    nodeId: typing.Text = ...
-    expiry: builtins.int = ...
-    host: typing.Text = ...
-
-    def __init__(self,
+    nodeId: builtins.str
+    expiry: builtins.int
+    host: builtins.str
+    def __init__(
+        self,
         *,
-        nodeId : typing.Text = ...,
-        expiry : builtins.int = ...,
-        host : typing.Text = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"expiry",b"expiry",u"host",b"host",u"nodeId",b"nodeId"]) -> None: ...
+        nodeId: builtins.str = ...,
+        expiry: builtins.int = ...,
+        host: builtins.str = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["expiry", b"expiry", "host", b"host", "nodeId", b"nodeId"]) -> None: ...
+
 global___KeygroupReplica = KeygroupReplica
 
+@typing_extensions.final
 class RemoveReplicaRequest(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
     KEYGROUP_FIELD_NUMBER: builtins.int
     NODEID_FIELD_NUMBER: builtins.int
-    keygroup: typing.Text = ...
-    nodeId: typing.Text = ...
-
-    def __init__(self,
+    keygroup: builtins.str
+    nodeId: builtins.str
+    def __init__(
+        self,
         *,
-        keygroup : typing.Text = ...,
-        nodeId : typing.Text = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"keygroup",b"keygroup",u"nodeId",b"nodeId"]) -> None: ...
+        keygroup: builtins.str = ...,
+        nodeId: builtins.str = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["keygroup", b"keygroup", "nodeId", b"nodeId"]) -> None: ...
+
 global___RemoveReplicaRequest = RemoveReplicaRequest
 
+@typing_extensions.final
 class GetReplicaRequest(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
-    NODEID_FIELD_NUMBER: builtins.int
-    nodeId: typing.Text = ...
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
-    def __init__(self,
+    NODEID_FIELD_NUMBER: builtins.int
+    nodeId: builtins.str
+    def __init__(
+        self,
         *,
-        nodeId : typing.Text = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"nodeId",b"nodeId"]) -> None: ...
+        nodeId: builtins.str = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["nodeId", b"nodeId"]) -> None: ...
+
 global___GetReplicaRequest = GetReplicaRequest
 
+@typing_extensions.final
 class GetReplicaResponse(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
     NODEID_FIELD_NUMBER: builtins.int
     HOST_FIELD_NUMBER: builtins.int
-    nodeId: typing.Text = ...
-    host: typing.Text = ...
-
-    def __init__(self,
+    nodeId: builtins.str
+    host: builtins.str
+    def __init__(
+        self,
         *,
-        nodeId : typing.Text = ...,
-        host : typing.Text = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"host",b"host",u"nodeId",b"nodeId"]) -> None: ...
+        nodeId: builtins.str = ...,
+        host: builtins.str = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["host", b"host", "nodeId", b"nodeId"]) -> None: ...
+
 global___GetReplicaResponse = GetReplicaResponse
 
+@typing_extensions.final
 class GetAllReplicaRequest(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
-    def __init__(self,
-        ) -> None: ...
+    def __init__(
+        self,
+    ) -> None: ...
+
 global___GetAllReplicaRequest = GetAllReplicaRequest
 
+@typing_extensions.final
 class GetAllReplicaResponse(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
-    REPLICAS_FIELD_NUMBER: builtins.int
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
+    REPLICAS_FIELD_NUMBER: builtins.int
     @property
     def replicas(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___GetReplicaResponse]: ...
-
-    def __init__(self,
+    def __init__(
+        self,
         *,
-        replicas : typing.Optional[typing.Iterable[global___GetReplicaResponse]] = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"replicas",b"replicas"]) -> None: ...
+        replicas: collections.abc.Iterable[global___GetReplicaResponse] | None = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["replicas", b"replicas"]) -> None: ...
+
 global___GetAllReplicaResponse = GetAllReplicaResponse
 
+@typing_extensions.final
 class GetKeygroupTriggerRequest(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
-    KEYGROUP_FIELD_NUMBER: builtins.int
-    keygroup: typing.Text = ...
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
-    def __init__(self,
+    KEYGROUP_FIELD_NUMBER: builtins.int
+    keygroup: builtins.str
+    def __init__(
+        self,
         *,
-        keygroup : typing.Text = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"keygroup",b"keygroup"]) -> None: ...
+        keygroup: builtins.str = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["keygroup", b"keygroup"]) -> None: ...
+
 global___GetKeygroupTriggerRequest = GetKeygroupTriggerRequest
 
+@typing_extensions.final
 class GetKeygroupTriggerResponse(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
-    TRIGGERS_FIELD_NUMBER: builtins.int
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
+    TRIGGERS_FIELD_NUMBER: builtins.int
     @property
     def triggers(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___Trigger]: ...
-
-    def __init__(self,
+    def __init__(
+        self,
         *,
-        triggers : typing.Optional[typing.Iterable[global___Trigger]] = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"triggers",b"triggers"]) -> None: ...
+        triggers: collections.abc.Iterable[global___Trigger] | None = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["triggers", b"triggers"]) -> None: ...
+
 global___GetKeygroupTriggerResponse = GetKeygroupTriggerResponse
 
+@typing_extensions.final
 class Trigger(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
     ID_FIELD_NUMBER: builtins.int
     HOST_FIELD_NUMBER: builtins.int
-    id: typing.Text = ...
-    host: typing.Text = ...
-
-    def __init__(self,
+    id: builtins.str
+    host: builtins.str
+    def __init__(
+        self,
         *,
-        id : typing.Text = ...,
-        host : typing.Text = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"host",b"host",u"id",b"id"]) -> None: ...
+        id: builtins.str = ...,
+        host: builtins.str = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["host", b"host", "id", b"id"]) -> None: ...
+
 global___Trigger = Trigger
 
+@typing_extensions.final
 class AddTriggerRequest(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
     KEYGROUP_FIELD_NUMBER: builtins.int
     TRIGGERID_FIELD_NUMBER: builtins.int
     TRIGGERHOST_FIELD_NUMBER: builtins.int
-    keygroup: typing.Text = ...
-    triggerId: typing.Text = ...
-    triggerHost: typing.Text = ...
-
-    def __init__(self,
+    keygroup: builtins.str
+    triggerId: builtins.str
+    triggerHost: builtins.str
+    def __init__(
+        self,
         *,
-        keygroup : typing.Text = ...,
-        triggerId : typing.Text = ...,
-        triggerHost : typing.Text = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"keygroup",b"keygroup",u"triggerHost",b"triggerHost",u"triggerId",b"triggerId"]) -> None: ...
+        keygroup: builtins.str = ...,
+        triggerId: builtins.str = ...,
+        triggerHost: builtins.str = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["keygroup", b"keygroup", "triggerHost", b"triggerHost", "triggerId", b"triggerId"]) -> None: ...
+
 global___AddTriggerRequest = AddTriggerRequest
 
+@typing_extensions.final
 class RemoveTriggerRequest(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
     KEYGROUP_FIELD_NUMBER: builtins.int
     TRIGGERID_FIELD_NUMBER: builtins.int
-    keygroup: typing.Text = ...
-    triggerId: typing.Text = ...
-
-    def __init__(self,
+    keygroup: builtins.str
+    triggerId: builtins.str
+    def __init__(
+        self,
         *,
-        keygroup : typing.Text = ...,
-        triggerId : typing.Text = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"keygroup",b"keygroup",u"triggerId",b"triggerId"]) -> None: ...
+        keygroup: builtins.str = ...,
+        triggerId: builtins.str = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["keygroup", b"keygroup", "triggerId", b"triggerId"]) -> None: ...
+
 global___RemoveTriggerRequest = RemoveTriggerRequest
 
+@typing_extensions.final
 class UserRequest(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
     USER_FIELD_NUMBER: builtins.int
     KEYGROUP_FIELD_NUMBER: builtins.int
     ROLE_FIELD_NUMBER: builtins.int
-    user: typing.Text = ...
-    keygroup: typing.Text = ...
-    role: global___UserRole.V = ...
-
-    def __init__(self,
+    user: builtins.str
+    keygroup: builtins.str
+    role: global___UserRole.ValueType
+    def __init__(
+        self,
         *,
-        user : typing.Text = ...,
-        keygroup : typing.Text = ...,
-        role : global___UserRole.V = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"keygroup",b"keygroup",u"role",b"role",u"user",b"user"]) -> None: ...
+        user: builtins.str = ...,
+        keygroup: builtins.str = ...,
+        role: global___UserRole.ValueType = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["keygroup", b"keygroup", "role", b"role", "user", b"user"]) -> None: ...
+
 global___UserRequest = UserRequest

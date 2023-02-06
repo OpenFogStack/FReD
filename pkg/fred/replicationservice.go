@@ -370,12 +370,12 @@ func (s *replicationService) removeReplica(k Keygroup, n Node) error {
 	}
 	// Check if to-be-deleted node is in the keygorup
 	if _, ok := members[n.ID]; !ok {
-		return errors.Errorf("Can not remove node from keygroup it is not a member of.")
+		return errors.Errorf("can not remove node from keygroup it is not a member of")
 	}
 	// Check if the node is the last member of the keygroup (so the only one holding data)
 	if len(members) <= 1 {
-		log.Error().Msgf("Trying to exit the only node left from the keygroup. Please delete keygroup instead.")
-		return errors.Errorf("Can not exit last node from keygroup %s. Maybe you want to delete the keygroup instead?", k.Name)
+		log.Error().Msgf("trying to exit the only node left from the keygroup. please delete keygroup instead")
+		return errors.Errorf("can not exit last node from keygroup %s. maybe you want to delete the keygroup instead", k.Name)
 	}
 
 	// let's tell this new node that it should delete the local copy of this keygroup

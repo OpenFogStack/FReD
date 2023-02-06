@@ -41,7 +41,7 @@ func TestMain(m *testing.M) {
 
 	if err == nil {
 		if !fInfo.IsDir() {
-			panic(errors.Errorf("%s is not a directory!", etcdDir))
+			panic(errors.Errorf("%s is not a directory", etcdDir))
 		}
 
 		err = os.RemoveAll(etcdDir)
@@ -109,7 +109,7 @@ func TestMain(m *testing.M) {
 
 	if err == nil {
 		if !fInfo.IsDir() {
-			panic(errors.Errorf("%s is not a directory!", etcdDir))
+			panic(errors.Errorf("%s is not a directory", etcdDir))
 		}
 
 		err = os.RemoveAll(etcdDir)

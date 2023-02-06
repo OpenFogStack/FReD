@@ -2,7 +2,7 @@ version: "3.7"
 
 services:
   etcd:
-    image: gcr.io/etcd-development/etcd:v3.4.7
+    image: gcr.io/etcd-development/etcd:v3.5.7
     container_name: etcd-1
     entrypoint: "etcd --name s-1 \
       --data-dir /tmp/etcd/s-1 \

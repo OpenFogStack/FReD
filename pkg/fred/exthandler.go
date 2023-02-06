@@ -265,7 +265,7 @@ func (h *ExtHandler) HandleDelete(user string, i Item, versions []vclock.VClock)
 	}
 
 	if !h.s.exists(i) {
-		return i, errors.Errorf("item does not exist so it cannot be deleted.")
+		return i, errors.Errorf("item does not exist so it cannot be deleted")
 	}
 
 	i.Tombstoned = true

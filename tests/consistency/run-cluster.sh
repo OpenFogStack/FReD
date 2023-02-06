@@ -8,6 +8,7 @@ GATEWAY=172.18.20.1
 SUBNET=172.18.20.0/24
 BASE_IP=172.18.20.
 ETCD_IP=172.18.20.2
+ETCD_VERSION=v3.5.7
 
 docker network remove "$NET_NAME" 2&> /dev/null || true
 
@@ -29,7 +30,7 @@ gen_cert() {
   [ req ]
   default_bits = 2048
   prompt = no
-  default_md = sha256
+  default_md = sha512
   req_extensions = v3_req
   distinguished_name = dn
 
@@ -142,7 +143,7 @@ gen_cert client "${ips[@]}" || exit 1
 
 # start etcd
 
-docker pull gcr.io/etcd-development/etcd:v3.5.0 || (cleanup && exit 1)
+docker pull gcr.io/etcd-development/etcd:${ETCD_VERION} || (cleanup && exit 1)
 
 docker run -d \
   --name "$CLUSTER_NAME"etcd \
@@ -151,7 +152,7 @@ docker run -d \
   -v "$CERT_FOLDER"/ca.crt:/cert/ca.crt \
   --network="$NET_NAME" \
   --ip="$ETCD_IP" \
-  gcr.io/etcd-development/etcd:v3.5.0 \
+  gcr.io/etcd-development/etcd:${ETCD_VERSION} \
   etcd \
   --name s-1 \
   --data-dir /tmp/etcd/s-1 \

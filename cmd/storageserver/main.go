@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"flag"
-	"io/ioutil"
 	"net"
 	"os"
 
@@ -93,7 +92,7 @@ func main() {
 	// Create a new cert pool and add our own CA certificate
 	rootCAs := x509.NewCertPool()
 
-	loaded, err := ioutil.ReadFile(*ca)
+	loaded, err := os.ReadFile(*ca)
 
 	if err != nil {
 		log.Fatal().Msgf("unexpected missing certfile: %v", err)

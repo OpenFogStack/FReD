@@ -4,7 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
-	"io/ioutil"
+	"os"
 
 	"git.tu-berlin.de/mcc-fred/fred/pkg/fred"
 	"git.tu-berlin.de/mcc-fred/fred/proto/peering"
@@ -51,7 +51,7 @@ func NewClient(certFile string, keyFile string, caFile string) *Client {
 		return nil
 	}
 
-	loaded, err := ioutil.ReadFile(caFile)
+	loaded, err := os.ReadFile(caFile)
 
 	if err != nil {
 		log.Fatal().Msgf("peering client: unexpected missing certfile: %v", err)

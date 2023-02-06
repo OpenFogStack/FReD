@@ -1,4 +1,4 @@
-FROM amazon/dynamodb-local:1.16.0
+FROM amazon/dynamodb-local:1.21.0
 
 WORKDIR /home/dynamodblocal
 

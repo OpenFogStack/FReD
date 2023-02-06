@@ -2,7 +2,7 @@ version: "3.7"
 
 services:
   etcd:
-    image: gcr.io/etcd-development/etcd:v3.5.0
+    image: gcr.io/etcd-development/etcd:v3.5.7
     container_name: etcd-1
     entrypoint: "etcd --name s-1 \
       --data-dir /tmp/etcd/s-1 \
@@ -13,13 +13,13 @@ services:
       --initial-cluster s-1=http://172.26.6.1:2380 \
       --initial-cluster-token tkn \
       --initial-cluster-state new \
-      --cert-file=/cert/server.crt \
-      --key-file=/cert/server.key \
+      --cert-file=/cert/etcd.crt \
+      --key-file=/cert/etcd.key \
       --client-cert-auth \
       --trusted-ca-file=/cert/ca.crt"
     volumes:
-      - ./certificates/etcd.crt:/cert/server.crt
-      - ./certificates/etcd.key:/cert/server.key
+      - ./certificates/etcd.crt:/cert/etcd.crt
+      - ./certificates/etcd.key:/cert/etcd.key
       - ./certificates/ca.crt:/cert/ca.crt
     ports:
       - 2379:2379

@@ -1,10 +1,10 @@
 # Base image: https://hub.docker.com/_/golang/
-FROM golang:1.17
+FROM golang:1.19
 
 # Install golint
 ENV GOPATH /go
 ENV PATH ${GOPATH}/bin:$PATH
-RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.41.1
+RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.51.1
 
 # Install clang from LLVM repository
 RUN apt-get update && apt-get install -y --no-install-recommends \

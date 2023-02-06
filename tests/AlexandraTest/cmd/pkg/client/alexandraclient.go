@@ -4,7 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
-	"io/ioutil"
+	"os"
 
 	"git.tu-berlin.de/mcc-fred/fred/proto/middleware"
 	"github.com/rs/zerolog/log"
@@ -27,7 +27,7 @@ func NewAlexandraClient(address string) AlexandraClient {
 	// Create a new cert pool and add our own CA certificate
 	rootCAs := x509.NewCertPool()
 
-	loaded, err := ioutil.ReadFile("/cert/ca.crt")
+	loaded, err := os.ReadFile("/cert/ca.crt")
 
 	if err != nil {
 		log.Fatal().Msgf("unexpected missing certfile: %v", err)

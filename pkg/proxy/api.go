@@ -5,8 +5,8 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"io/ioutil"
 	"net"
+	"os"
 	"time"
 
 	"git.tu-berlin.de/mcc-fred/fred/proto/client"
@@ -35,7 +35,7 @@ func StartAPIProxy(p *Proxy, port int, cert string, key string, caCert string) (
 	// Create a new cert pool and add our own CA certificate
 	rootCAs := x509.NewCertPool()
 
-	loaded, err := ioutil.ReadFile(caCert)
+	loaded, err := os.ReadFile(caCert)
 
 	if err != nil {
 		return nil, err

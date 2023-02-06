@@ -4,8 +4,8 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
-	"io/ioutil"
 	"net"
+	"os"
 	"strconv"
 	"time"
 
@@ -158,7 +158,7 @@ func NewServer(host string, handler *fred.ExtHandler, certFile string, keyFile s
 	// Create a new cert pool and add our own CA certificate
 	rootCAs := x509.NewCertPool()
 
-	loaded, err := ioutil.ReadFile(caFile)
+	loaded, err := os.ReadFile(caFile)
 
 	if err != nil {
 		log.Fatal().Msgf("API server: unexpected missing certfile: %v", err)
@@ -430,7 +430,7 @@ func (s *Server) AddReplica(ctx context.Context, request *client.AddReplicaReque
 	return &client.Empty{}, nil
 }
 
-// GetKeygroupReplica calls this method on the exthandler
+// GetKeygroupInfo calls this method on the exthandler
 func (s *Server) GetKeygroupInfo(ctx context.Context, request *client.GetKeygroupInfoRequest) (*client.GetKeygroupInfoResponse, error) {
 	log.Info().Msgf("API Server has rcvd GetKeygroupReplica. In: %+v", request)
 

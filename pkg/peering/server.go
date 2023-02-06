@@ -4,8 +4,8 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
-	"io/ioutil"
 	"net"
+	"os"
 
 	"git.tu-berlin.de/mcc-fred/fred/proto/peering"
 	"github.com/rs/zerolog/log"
@@ -47,7 +47,7 @@ func NewServer(host string, handler *fred.IntHandler, certFile string, keyFile s
 	// Create a new cert pool and add our own CA certificate
 	rootCAs := x509.NewCertPool()
 
-	loaded, err := ioutil.ReadFile(caFile)
+	loaded, err := os.ReadFile(caFile)
 
 	if err != nil {
 		log.Fatal().Msgf("peering server: unexpected missing certfile: %v", err)

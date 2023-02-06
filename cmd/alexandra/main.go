@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"flag"
-	"io/ioutil"
 	"net"
 	"os"
 	"os/signal"
@@ -113,7 +112,7 @@ func main() {
 	// Create a new cert pool and add our own CA certificate
 	rootCAs := x509.NewCertPool()
 
-	loaded, err := ioutil.ReadFile(c.caCert)
+	loaded, err := os.ReadFile(c.caCert)
 
 	if err != nil {
 		log.Fatal().Msgf("alexandra server: unexpected missing certfile: %v", err)

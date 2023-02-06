@@ -5,7 +5,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"git.tu-berlin.de/mcc-fred/fred/proto/client"
 	"github.com/DistributedClocks/GoVector/govec/vclock"
@@ -53,7 +53,7 @@ func NewNode(addr string, port int, id string, certFile string, keyFile string, 
 	}
 
 	// Read in the cert file
-	certs, err := ioutil.ReadFile(caFile)
+	certs, err := os.ReadFile(caFile)
 	if err != nil {
 		log.Fatal().Err(err).Msgf("node: Failed to append %q to RootCAs: %v", caFile, err)
 	}

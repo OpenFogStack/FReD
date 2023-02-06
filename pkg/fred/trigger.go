@@ -4,7 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
-	"io/ioutil"
+	"os"
 
 	"git.tu-berlin.de/mcc-fred/fred/proto/trigger"
 	"github.com/go-errors/errors"
@@ -60,7 +60,7 @@ func newTriggerService(s *storeService, certFile string, keyFile string, caFiles
 	}
 
 	for _, f := range caFiles {
-		loaded, err := ioutil.ReadFile(f)
+		loaded, err := os.ReadFile(f)
 
 		if err != nil {
 			log.Fatal().Msgf("unexpected missing certfile: %v", err)
