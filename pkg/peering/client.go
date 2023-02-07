@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"os"
+	"sync"
 
 	"git.tu-berlin.de/mcc-fred/fred/pkg/fred"
 	"git.tu-berlin.de/mcc-fred/fred/proto/peering"
@@ -18,6 +19,7 @@ import (
 // Client is an peering client to communicate with peers.
 type Client struct {
 	conn        map[string]peering.NodeClient
+	connLock    sync.RWMutex
 	credentials credentials.TransportCredentials
 }
 
@@ -67,28 +69,35 @@ func NewClient(certFile string, keyFile string, caFile string) *Client {
 
 	return &Client{
 		conn:        make(map[string]peering.NodeClient),
+		connLock:    sync.RWMutex{},
 		credentials: credentials.NewTLS(tlsConfig),
 	}
 }
 
 // getClient creates a new connection to a server or uses an existing one.
 func (c *Client) getClient(host string) (peering.NodeClient, error) {
-	if client, ok := c.conn[host]; ok {
-		return client, nil
+
+	c.connLock.RLock()
+	client, ok := c.conn[host]
+	c.connLock.RUnlock()
+
+	if !ok {
+		c.connLock.Lock()
+		conn, err := grpc.Dial(host, grpc.WithTransportCredentials(c.credentials))
+
+		if err != nil {
+			c.connLock.Unlock()
+			log.Error().Err(err).Msg("peering client: Cannot create Grpc connection")
+			return nil, errors.New(err)
+		}
+
+		log.Debug().Msgf("peering client: Created Connection to %s", host)
+
+		client = peering.NewNodeClient(conn)
+
+		c.conn[host] = client
+		c.connLock.Unlock()
 	}
-
-	conn, err := grpc.Dial(host, grpc.WithTransportCredentials(c.credentials))
-
-	if err != nil {
-		log.Error().Err(err).Msg("peering client: Cannot create Grpc connection")
-		return nil, errors.New(err)
-	}
-
-	log.Debug().Msgf("peering client: Created Connection to %s", host)
-
-	client := peering.NewNodeClient(conn)
-
-	c.conn[host] = client
 
 	return client, nil
 }
