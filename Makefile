@@ -29,9 +29,6 @@ msan: dep ## Run memory sanitizer
 coverage: ## Generate global code coverage report
 	@sh ./ci/tools/coverage.sh;
 
-coverhtml: ## Generate global code coverage report in HTML
-	@sh ./ci/tools/coverage.sh html;
-
 dep: ## Get the dependencies
 	@go mod download
 

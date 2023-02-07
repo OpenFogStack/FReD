@@ -20,10 +20,5 @@ tail -q -n +2 "${COVERAGE_DIR}"/*.cov >> "${COVERAGE_DIR}"/coverage ;
 # Display the global code coverage
 go tool cover -func="${COVERAGE_DIR}"/coverage ;
 
-# If needed, generate HTML report
-if [ "$1" = "html" ]; then
-    go tool cover -html="${COVERAGE_DIR}"/coverage -o coverage.html ;
-fi
-
 # Remove the coverage files directory
 rm -rf "$COVERAGE_DIR";

@@ -39,16 +39,7 @@ code_coverage:
     *dependencies
   script:
     - make coverage
-
-code_coverage_report:
-  stage: test
-  retry: 2
-  before_script:
-    *dependencies
-  script:
-    - make coverhtml
-  only:
-    - main
+  coverage: '/total:\s+\(statements\)\s+\d+.\d*\%/'
 
 build:
   stage: build
