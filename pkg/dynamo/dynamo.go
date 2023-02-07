@@ -39,24 +39,23 @@ const (
 // where "Keygroup" is the partition key and "Key" is the sort key (both together form the primary key).
 // Set this up with the following aws-cli command (table name in this case is "fred"):
 //
-// 		aws dynamodb create-table --table-name fred \
-//			--attribute-definitions "AttributeName=Keygroup,AttributeType=S AttributeName=Key,AttributeType=S" \
-//			--key-schema "AttributeName=Keygroup,KeyType=HASH AttributeName=Key,KeyType=RANGE" \
-//			--provisioned-throughput "ReadCapacityUnits=1,WriteCapacityUnits=1"
+//	aws dynamodb create-table --table-name fred \
+//		--attribute-definitions "AttributeName=Keygroup,AttributeType=S AttributeName=Key,AttributeType=S" \
+//		--key-schema "AttributeName=Keygroup,KeyType=HASH AttributeName=Key,KeyType=RANGE" \
+//		--provisioned-throughput "ReadCapacityUnits=1,WriteCapacityUnits=1"
 //
 // The "Expiry" attribute is used to expire data items automatically in DynamoDB. Set this up with this command:
 //
-// 		aws dynamodb update-time-to-live --table-name fred \
-//			--time-to-live-specification "Enabled=true, AttributeName=Expiry"
+//	aws dynamodb update-time-to-live --table-name fred \
+//		--time-to-live-specification "Enabled=true, AttributeName=Expiry"
 //
 // Two types of items are stored here:
-// 	* Keygroup configuration is stored with the NULL "Key" and the keygroup name: this has  the "Trigger" attribute that
-//	stores a map of trigger nodes for that keygroup
-//	* Keys are stored with a "Keygroup" and unique "Key", where the Value is a list of version vectors and values - the
-//	additional "Expiry" attribute can be set to let the keys expire, and it is updated with each update to the data item
-//	(note that this means that in DynamoDB, all versions of an item expire at the same time, not necessarily in the
-//	order in which they appeared)
-//
+//   - Keygroup configuration is stored with the NULL "Key" and the keygroup name: this has  the "Trigger" attribute that
+//     stores a map of trigger nodes for that keygroup
+//   - Keys are stored with a "Keygroup" and unique "Key", where the Value is a list of version vectors and values - the
+//     additional "Expiry" attribute can be set to let the keys expire, and it is updated with each update to the data item
+//     (note that this means that in DynamoDB, all versions of an item expire at the same time, not necessarily in the
+//     order in which they appeared)
 type Storage struct {
 	dynamotable string
 	svc         *dynamodb.Client
@@ -266,10 +265,10 @@ func (s *Storage) Read(kg string, id string) ([]string, []vclock.VClock, bool, e
 				return nil, nil, false, errors.New(err)
 			}
 
-			log.Debug().Msgf("Read found key expiring at %d, it is %d now", expiry, time.Now().Unix())
+			log.Debug().Msgf("Read found key expiring at %d, it is %d now", expiry, time.Now().UTC().Unix())
 
 			// oops, item has expired - we treat this as "not found"
-			if int64(expiry) < time.Now().Unix() {
+			if int64(expiry) < time.Now().UTC().Unix() {
 				return nil, nil, false, nil
 			}
 		}
@@ -379,10 +378,10 @@ func (s *Storage) ReadSome(kg string, id string, count uint64) ([]string, []stri
 					return nil, nil, nil, errors.New(err)
 				}
 
-				log.Debug().Msgf("ReadSome found key expiring at %d, it is %d now", expiry, time.Now().Unix())
+				log.Debug().Msgf("ReadSome found key expiring at %d, it is %d now", expiry, time.Now().UTC().Unix())
 
 				// oops, item has expired - we treat this as "not found"
-				if int64(expiry) < time.Now().Unix() {
+				if int64(expiry) < time.Now().UTC().Unix() {
 					continue
 				}
 			}
@@ -518,10 +517,10 @@ func (s *Storage) ReadAll(kg string) ([]string, []string, []vclock.VClock, error
 					return nil, nil, nil, errors.New(err)
 				}
 
-				log.Debug().Msgf("ReadAll found key expiring at %d, it is %d now", expiry, time.Now().Unix())
+				log.Debug().Msgf("ReadAll found key expiring at %d, it is %d now", expiry, time.Now().UTC().Unix())
 
 				// oops, item has expired - we treat this as "not found"
-				if int64(expiry) < time.Now().Unix() {
+				if int64(expiry) < time.Now().UTC().Unix() {
 					continue
 				}
 			}
@@ -608,7 +607,7 @@ func (s *Storage) Append(kg string, id string, val string, expiry int) error {
 
 	if expiry > 0 {
 		in.Item[expiryKey] = &dynamoDBTypes.AttributeValueMemberN{
-			Value: strconv.FormatInt(time.Now().Unix()+int64(expiry), 10),
+			Value: strconv.FormatInt(time.Now().UTC().Unix()+int64(expiry), 10),
 		}
 	}
 
@@ -679,10 +678,10 @@ func (s *Storage) IDs(kg string) ([]string, error) {
 					return nil, errors.New(err)
 				}
 
-				log.Debug().Msgf("Read found key expiring at %d, it is %d now", expiry, time.Now().Unix())
+				log.Debug().Msgf("Read found key expiring at %d, it is %d now", expiry, time.Now().UTC().Unix())
 
 				// oops, item has expired - we treat this as "not found"
-				if int64(expiry) < time.Now().Unix() {
+				if int64(expiry) < time.Now().UTC().Unix() {
 					continue
 				}
 			}
@@ -729,7 +728,7 @@ func (s *Storage) Update(kg string, id string, val string, expiry int, vvector v
 	if expiry > 0 {
 		input.ExpressionAttributeNames["#expiry"] = expiryKey
 		input.ExpressionAttributeValues[":expiry"] = &dynamoDBTypes.AttributeValueMemberN{
-			Value: strconv.FormatInt(time.Now().Unix()+int64(expiry), 10),
+			Value: strconv.FormatInt(time.Now().UTC().Unix()+int64(expiry), 10),
 		}
 		input.UpdateExpression = aws.String(*input.UpdateExpression + " SET  #expiry = :expiry")
 	}
@@ -781,7 +780,7 @@ func (s *Storage) Update(kg string, id string, val string, expiry int, vvector v
 					if expiry > 0 {
 						input.ExpressionAttributeNames["#expiry"] = expiryKey
 						input.ExpressionAttributeValues[":expiry"] = &dynamoDBTypes.AttributeValueMemberN{
-							Value: strconv.FormatInt(time.Now().Unix()+int64(expiry), 10),
+							Value: strconv.FormatInt(time.Now().UTC().Unix()+int64(expiry), 10),
 						}
 						input.UpdateExpression = aws.String(*input.UpdateExpression + ", #expiry = :expiry")
 					}
@@ -894,10 +893,10 @@ func (s *Storage) Exists(kg string, id string) bool {
 				return false
 			}
 
-			log.Debug().Msgf("Exists found key expiring at %d, it is %d now", expiry, time.Now().Unix())
+			log.Debug().Msgf("Exists found key expiring at %d, it is %d now", expiry, time.Now().UTC().Unix())
 
 			// oops, item has expired - we treat this as "not found"
-			if int64(expiry) < time.Now().Unix() {
+			if int64(expiry) < time.Now().UTC().Unix() {
 				return false
 			}
 		}

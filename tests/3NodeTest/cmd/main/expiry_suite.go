@@ -25,7 +25,7 @@ func (t *ExpirySuite) RunTests() {
 
 	logNodeAction(t.c.nodeA, "Test whether nodeA has received the update. Wait 5s and check that it is not there anymore")
 	t.c.nodeA.GetItem("expirytest", "test", false)
-	time.Sleep(5 * time.Second)
+	time.Sleep(6 * time.Second)
 	t.c.nodeA.GetItem("expirytest", "test", true)
 
 	logNodeAction(t.c.nodeC, "....the item should still exist with nodeC")
