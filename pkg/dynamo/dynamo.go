@@ -100,6 +100,8 @@ func New(table string, region string, endpoint string, create bool) (*Storage, e
 			Region:           region,
 			Credentials:      creds,
 			EndpointResolver: dynamodb.EndpointResolverFromURL(fmt.Sprintf("http://%s", endpoint)),
+			// this is a custom endpoint, we might as well ddos it
+			RetryMaxAttempts: 100,
 		}
 	}
 

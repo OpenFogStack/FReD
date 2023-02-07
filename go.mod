@@ -5,9 +5,9 @@ go 1.19
 require (
 	github.com/DistributedClocks/GoVector v0.0.0-20210402100930-db949c81a0af
 	github.com/aws/aws-sdk-go-v2 v1.17.4
-	github.com/aws/aws-sdk-go-v2/credentials v1.3.1
-	github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression v1.1.3
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.4.1
+	github.com/aws/aws-sdk-go-v2/credentials v1.13.12
+	github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression v1.4.38
+	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.18.2
 	github.com/aws/smithy-go v1.13.5
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/cespare/xxhash/v2 v2.2.0
@@ -30,11 +30,12 @@ require (
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/Microsoft/go-winio v0.5.2 // indirect
 	github.com/Microsoft/hcsshim v0.9.5 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.1.3 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.0.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/dynamodbstreams v1.3.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.2.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.0.1 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.10.11 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.28 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.22 // indirect
+	github.com/aws/aws-sdk-go-v2/service/dynamodbstreams v1.14.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.9.11 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.7.22 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.0 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect

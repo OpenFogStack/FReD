@@ -119,26 +119,6 @@ func (c *Client) read(ctx context.Context, keygroup string, id string) (*api.Rea
 	return res, err
 }
 
-/*
-// Update also updates the moving average item speed
-func (c *Client) update(ctx context.Context, keygroup string, id string, data string) (vclock.VClock, error) {
-	start := time.Now()
-	res, err := c.Client.Update(ctx, &api.UpdateRequest{
-		Keygroup: keygroup,
-		Id:       id,
-		Data:     data,
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	elapsed := time.Since(start)
-	c.updateItemSpeed(elapsed)
-
-	return res.Version.Version, nil
-}*/
-
 // UpdateVersions also updates the moving average item speed
 func (c *Client) updateVersions(ctx context.Context, keygroup string, id string, data string, versions []vclock.VClock) (vclock.VClock, error) {
 	v := make([]*api.Version, len(versions))
@@ -166,25 +146,6 @@ func (c *Client) updateVersions(ctx context.Context, keygroup string, id string,
 
 	return res.Version.Version, nil
 }
-
-/*
-// Delete also updates the moving average item speed
-func (c *Client) delete(ctx context.Context, keygroup string, id string) (vclock.VClock, error) {
-	start := time.Now()
-	res, err := c.Client.Delete(ctx, &api.DeleteRequest{
-		Keygroup: keygroup,
-		Id:       id,
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	elapsed := time.Since(start)
-	c.updateItemSpeed(elapsed)
-
-	return res.Version.Version, nil
-}*/
 
 // DeleteVersions also updates the moving average item speed
 func (c *Client) deleteVersions(ctx context.Context, keygroup string, id string, versions []vclock.VClock) (vclock.VClock, error) {

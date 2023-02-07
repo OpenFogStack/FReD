@@ -1,6 +1,8 @@
 package fred
 
 import (
+	"sync"
+
 	"github.com/DistributedClocks/GoVector/govec/vclock"
 	"github.com/go-errors/errors"
 	"github.com/rs/zerolog/log"
@@ -113,6 +115,8 @@ func (s *replicationService) relayDeleteKeygroup(k Keygroup) error {
 		return err
 	}
 
+	addrs := make(map[NodeID]string)
+
 	for id := range ids {
 		addr, err := s.n.GetNodeAddress(id)
 
@@ -121,13 +125,26 @@ func (s *replicationService) relayDeleteKeygroup(k Keygroup) error {
 			return err
 		}
 
-		log.Debug().Msgf("RelayDeleteKeygroup from replservice: sending %+v to %+v", k, addr)
-		err = s.c.SendDeleteKeygroup(addr, k.Name)
-
-		if err != nil {
-			log.Debug().Msg(err.Error())
-		}
+		addrs[id] = addr
 	}
+
+	// wait group to wait for all the other nodes to delete the keygroup
+	var wg sync.WaitGroup
+
+	for id, addr := range addrs {
+		wg.Add(1)
+		go func(addr string, id NodeID) {
+			defer wg.Done()
+			log.Debug().Msgf("RelayDeleteKeygroup from replservice: sending %+v to %+v", k, addr)
+			err = s.c.SendDeleteKeygroup(addr, k.Name)
+
+			if err != nil {
+				log.Debug().Msg(err.Error())
+			}
+		}(addr, id)
+	}
+
+	wg.Wait()
 
 	// Only now delete the keygroup with the nase
 	err = s.n.DeleteKeygroup(k.Name)
@@ -161,6 +178,8 @@ func (s *replicationService) relayUpdate(i Item) error {
 		return err
 	}
 
+	addrs := make(map[NodeID]string)
+
 	for id := range ids {
 		addr, err := s.n.GetNodeAddress(id)
 
@@ -169,15 +188,29 @@ func (s *replicationService) relayUpdate(i Item) error {
 			return err
 		}
 
-		log.Debug().Msgf("RelayUpdate from replservice: sending %+v to %+v", i, addr)
-		if err := s.c.SendUpdate(addr, i.Keygroup, i.ID, i.Val, i.Tombstoned, i.Version); err != nil {
-			err = s.reportNodeFail(id, i.Keygroup, i.ID)
-
-			if err != nil {
-				log.Debug().Msg(err.Error())
-			}
-		}
+		addrs[id] = addr
 	}
+
+	// wait group to wait for all the other nodes to relay update the keygroup
+	var wg sync.WaitGroup
+
+	for id, addr := range addrs {
+		wg.Add(1)
+		go func(addr string, id NodeID) {
+			defer wg.Done()
+
+			log.Debug().Msgf("RelayUpdate from replservice: sending %+v to %+v", i, addr)
+			if err := s.c.SendUpdate(addr, i.Keygroup, i.ID, i.Val, i.Tombstoned, i.Version); err != nil {
+				err = s.reportNodeFail(id, i.Keygroup, i.ID)
+
+				if err != nil {
+					log.Debug().Msg(err.Error())
+				}
+			}
+		}(addr, id)
+	}
+
+	wg.Wait()
 
 	return nil
 }
@@ -203,6 +236,8 @@ func (s *replicationService) relayAppend(i Item) error {
 		return err
 	}
 
+	addrs := make(map[NodeID]string)
+
 	for id := range ids {
 		addr, err := s.n.GetNodeAddress(id)
 
@@ -211,15 +246,29 @@ func (s *replicationService) relayAppend(i Item) error {
 			return err
 		}
 
-		log.Debug().Msgf("relayAppend from replservice: sending %+v to %+v", i, addr)
-		if err := s.c.SendAppend(addr, i.Keygroup, i.ID, i.Val); err != nil {
-			err = s.reportNodeFail(id, i.Keygroup, i.ID)
-
-			if err != nil {
-				log.Debug().Msg(err.Error())
-			}
-		}
+		addrs[id] = addr
 	}
+
+	// wait group to wait for all the other nodes to relay append the keygroup
+	var wg sync.WaitGroup
+
+	for id, addr := range addrs {
+		wg.Add(1)
+		go func(addr string, id NodeID) {
+			defer wg.Done()
+
+			log.Debug().Msgf("relayAppend from replservice: sending %+v to %+v", i, addr)
+			if err := s.c.SendAppend(addr, i.Keygroup, i.ID, i.Val); err != nil {
+				err = s.reportNodeFail(id, i.Keygroup, i.ID)
+
+				if err != nil {
+					log.Debug().Msg(err.Error())
+				}
+			}
+		}(addr, id)
+	}
+
+	wg.Wait()
 
 	return nil
 }
@@ -397,17 +446,6 @@ func (s *replicationService) removeReplica(k Keygroup, n Node) error {
 }
 
 // getNode returns the locally saved node with this ID
-//func (s *replicationService) getNode(n Node) (Node, error) {
-//	addr, err := s.n.GetNodeAddress(n.ID)
-//	n = Node{
-//		ID:   n.ID,
-//		Host: addr,
-//	}
-//
-//	return n, err
-//}
-
-// getNode returns the locally saved node with this ID
 func (s *replicationService) getNodeExternal(n Node) (Node, error) {
 	addr, err := s.n.GetNodeAddressExternal(n.ID)
 	n = Node{
@@ -422,40 +460,6 @@ func (s *replicationService) getNodeExternal(n Node) (Node, error) {
 func (s *replicationService) getNodesExternalAdress() ([]Node, error) {
 	return s.n.GetAllNodesExternal()
 }
-
-// getReplica returns a list of all replica nodes for a given keygroup.
-//func (s *replicationService) getReplica(k Keygroup) (nodes []Node, expiries map[NodeID]int, err error) {
-//	log.Debug().Msgf("GetReplica from replservice: in %+v", k)
-//
-//	exists, err := s.n.ExistsKeygroup(k.Name)
-//	if !exists {
-//		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
-//		return nil, nil, errors.Errorf("no such keygroup according to NaSe")
-//	}
-//	if err != nil {
-//		return nil, nil, err
-//	}
-//
-//	expiries = make(map[NodeID]int)
-//
-//	ids, err := s.n.GetKeygroupMembers(k.Name, true)
-//	for id, expiry := range ids {
-//		addr, err := s.n.GetNodeAddress(id)
-//
-//		if err != nil {
-//			return nil, nil, err
-//		}
-//
-//		newNode := &Node{
-//			ID:   id,
-//			Host: addr,
-//		}
-//		// TODO is this the optimal solution?
-//		nodes = append(nodes, *newNode)
-//		expiries[id] = expiry
-//	}
-//	return
-//}
 
 // getReplicaExternal returns a list of all replica nodes for a given keygroup.
 func (s *replicationService) getReplicaExternal(k Keygroup) (nodes []Node, expiries map[NodeID]int, err error) {

@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"os"
+	"sync"
 
 	"git.tu-berlin.de/mcc-fred/fred/proto/trigger"
 	"github.com/go-errors/errors"
@@ -93,21 +94,39 @@ func (t *triggerService) triggerDelete(i Item) (e error) {
 		return err
 	}
 
+	clients := make(map[string]trigger.TriggerNodeClient)
+
 	for _, node := range nodes {
 		client, err := t.getClient(node.Host)
+
 		if err != nil {
 			e = errors.Errorf("%+v %+v", e, err)
 			continue
 		}
-		_, err = client.DeleteItemTrigger(context.Background(), &trigger.DeleteItemTriggerRequest{
-			Keygroup: string(i.Keygroup),
-			Id:       i.ID,
-		})
 
-		if err != nil {
-			e = errors.Errorf("%+v %+v", e, err)
-		}
+		clients[node.Host] = client
 	}
+
+	// wait group to wait for all the other nodes to relay append the keygroup
+	var wg sync.WaitGroup
+
+	for _, client := range clients {
+		wg.Add(1)
+		go func(client trigger.TriggerNodeClient) {
+			defer wg.Done()
+
+			_, err = client.DeleteItemTrigger(context.Background(), &trigger.DeleteItemTriggerRequest{
+				Keygroup: string(i.Keygroup),
+				Id:       i.ID,
+			})
+
+			if err != nil {
+				e = errors.Errorf("%+v %+v", e, err)
+			}
+		}(client)
+	}
+
+	wg.Wait()
 
 	return e
 }
@@ -121,30 +140,42 @@ func (t *triggerService) triggerUpdate(i Item) (e error) {
 		log.Error().Msgf("error in triggerUpdate: %s", err.Error())
 		return err
 	}
+	clients := make(map[Trigger]trigger.TriggerNodeClient)
 
 	for _, node := range nodes {
-		log.Debug().Msgf("triggerUpdate: updating %s %s", node.ID, node.Host)
 		client, err := t.getClient(node.Host)
 		if err != nil {
 			log.Error().Msgf("error in triggerUpdate: %s", err.Error())
 			e = errors.Errorf("%+v\n%s", e, err.Error())
 			continue
 		}
-		_, err = client.PutItemTrigger(context.Background(), &trigger.PutItemTriggerRequest{
-			Keygroup: string(i.Keygroup),
-			Id:       i.ID,
-			Val:      i.Val,
-		})
 
-		if err != nil {
-			log.Error().Msgf("error in triggerUpdate: %s", err.Error())
-			e = errors.Errorf("%+v\n%s", e, err.Error())
-		}
+		clients[node] = client
 	}
 
-	if e != nil {
-		log.Error().Msgf("error in triggerUpdate: %s", e.Error())
+	// wait group to wait for all the other nodes to relay append the keygroup
+	var wg sync.WaitGroup
+
+	for node, client := range clients {
+		wg.Add(1)
+		go func(node Trigger, client trigger.TriggerNodeClient) {
+			defer wg.Done()
+
+			log.Debug().Msgf("triggerUpdate: updating %s %s", node.ID, node.Host)
+			_, err = client.PutItemTrigger(context.Background(), &trigger.PutItemTriggerRequest{
+				Keygroup: string(i.Keygroup),
+				Id:       i.ID,
+				Val:      i.Val,
+			})
+
+			if err != nil {
+				log.Error().Msgf("error in triggerUpdate: %s", err.Error())
+				e = errors.Errorf("%+v\n%s", e, err.Error())
+			}
+		}(node, client)
 	}
+
+	wg.Wait()
 
 	return e
 }
