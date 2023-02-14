@@ -64,7 +64,7 @@ func (m *Middleware) Read(_ context.Context, req *middleware.ReadRequest) (*midd
 		// (preferably exactly one version) that is equal or newer to that seen version.
 		covered := false
 		for _, read := range versions {
-			if seen.Compare(read, vclock.Descendant) || seen.Compare(read, vclock.Equal) {
+			if seen.Compare(read, vclock.Descendant|vclock.Equal) {
 				covered = true
 				break
 			}

@@ -140,7 +140,7 @@ func (s *storeService) readVersion(kg KeygroupName, id string, versions []vclock
 
 	for i := range data {
 		for _, v := range versions {
-			if v.Compare(vvectors[i], vclock.Equal) || v.Compare(vvectors[i], vclock.Ancestor) {
+			if v.Compare(vvectors[i], vclock.Equal|vclock.Ancestor) {
 				items = append(items, Item{
 					Keygroup:   kg,
 					ID:         id,
@@ -369,7 +369,7 @@ func (s *storeService) updateVersions(i Item, versions []vclock.VClock, expiry i
 	for _, v1 := range s.vCache[i.Keygroup].clocks[i.ID].clocks {
 		reject := true
 		for _, v2 := range versions {
-			if v1.Compare(v2, vclock.Equal) || v1.Compare(v2, vclock.Descendant) {
+			if v1.Compare(v2, vclock.Equal|vclock.Descendant) {
 				reject = false
 				break
 			}
@@ -447,38 +447,51 @@ func (s *storeService) addVersion(i Item, remoteVersion vclock.VClock, expiry in
 
 	for _, local := range s.vCache[i.Keygroup].clocks[i.ID].clocks {
 		// if we already have a newer version, there is nothing to do for us
-		if local.Compare(remoteVersion, vclock.Ancestor) {
-			log.Debug().Msgf("%s is an ancestor of %s: discarding version", vector.SortedVCString(remoteVersion), vector.SortedVCString(local))
-			return nil
-		}
+		switch local.Order(remoteVersion) {
+		case vclock.Ancestor:
+			{
+				log.Debug().Msgf("%s is an ancestor of %s: discarding version", vector.SortedVCString(remoteVersion), vector.SortedVCString(local))
+				return nil
+			}
 
 		// if this is an equal version, we better hope that we already know about this and the contents aren't any different
-		if local.Compare(remoteVersion, vclock.Equal) {
-			log.Debug().Msgf("%s is equal to %s: discarding version", vector.SortedVCString(remoteVersion), vector.SortedVCString(local))
+		case vclock.Equal:
+			{
+				log.Debug().Msgf("%s is equal to %s: discarding version", vector.SortedVCString(remoteVersion), vector.SortedVCString(local))
 
-			// ok this should actually never happen
-			// it can happen when a replica is added while an update is in progress
-			// in that case the values should be the same so we can safely ignore it
-			// but I'm not a fan of that tbh
-			// TODO: figure out why updates can arrive twice while adding a replica
+				// ok this should actually never happen
+				// it can happen when a replica is added while an update is in progress
+				// in that case the values should be the same so we can safely ignore it
+				// but I'm not a fan of that tbh
+				// TODO: figure out why updates can arrive twice while adding a replica
 
-			return nil
+				return nil
+			}
+
+		// if this is a newer version than we have, we can actually just overwrite our local version, and we're good
+		case vclock.Descendant:
+			{
+				log.Debug().Msgf("%s is a descendant of %s", vector.SortedVCString(remoteVersion), vector.SortedVCString(local))
+				// to do that, we just need to set our local cache to this new version
+				// and then store that version
+				// we won't lose any data or anything: a merge would just lead to the same remoteVersion since it is larger
+				log.Debug().Msgf("removing version %s", vector.SortedVCString(local))
+				s.prune(string(i.Keygroup), i.ID, []vclock.VClock{local})
+				continue
+			}
+
+		case vclock.Concurrent:
+			{
+				// not ancestor, descendant, equal => concurrent
+				log.Debug().Msgf("%s is concurrent to %s", vector.SortedVCString(remoteVersion), vector.SortedVCString(local))
+				newClocks = append(newClocks, local)
+			}
+
+		default:
+			{
+				log.Fatal().Msgf("unknown order: %d", remoteVersion.Order(local))
+			}
 		}
-
-		// if this is a newer version than we have, we can actually just overwrite our local version and we're good
-		if local.Compare(remoteVersion, vclock.Descendant) {
-			log.Debug().Msgf("%s is a descendant of %s", vector.SortedVCString(remoteVersion), vector.SortedVCString(local))
-			// to do that, we just need to set our local cache to this new version
-			// and then store that version
-			// we won't lose any data or anything: a merge would just lead to the same remoteVersion since it is larger
-			log.Debug().Msgf("removing version %s", vector.SortedVCString(local))
-			s.prune(string(i.Keygroup), i.ID, []vclock.VClock{local})
-			continue
-		}
-
-		// not ancestor, descendant, equal => concurrent
-		log.Debug().Msgf("%s is concurrent to %s", vector.SortedVCString(remoteVersion), vector.SortedVCString(local))
-		newClocks = append(newClocks, local)
 	}
 
 	log.Debug().Msgf("storing version %s", vector.SortedVCString(remoteVersion))

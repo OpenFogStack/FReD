@@ -3,6 +3,7 @@ module git.tu-berlin.de/mcc-fred/fred
 go 1.19
 
 require (
+	git.tu-berlin.de/mcc-fred/vclock v0.1.1
 	github.com/aws/aws-sdk-go-v2 v1.17.4
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.12
 	github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression v1.4.38
@@ -24,8 +25,6 @@ require (
 	google.golang.org/grpc v1.47.0
 	google.golang.org/protobuf v1.28.0
 )
-
-require git.tu-berlin.de/mcc-fred/vclock v0.1.0
 
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect

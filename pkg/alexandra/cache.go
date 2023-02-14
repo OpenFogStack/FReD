@@ -88,20 +88,25 @@ func (c *cache) add(kg string, id string, version vclock.VClock) error {
 
 	// let's first go to the existing versions
 	for _, v := range c.keygroups[kg].items[id].clocks {
+		switch v.Order(version) {
 		// seems like we have that version in store already!
 		// just return, nothing to do here
-		if version.Compare(v, vclock.Equal) {
-			return nil
-		}
+		case vclock.Equal:
+			{
+				return nil
+			}
 		// if there is a concurrent version to our new version, we need to keep that
-		if version.Compare(v, vclock.Concurrent) {
-			newClocks = append(newClocks, v)
-			continue
-		}
+		case vclock.Concurrent:
+			{
+				newClocks = append(newClocks, v)
+				continue
+			}
 		// if by chance we come upon a newer version, this has all been pointless
 		// actually, this is a bad sign: we seem to have read outdated data!
-		if version.Compare(v, vclock.Descendant) {
-			return fmt.Errorf("add failed because your version %v is older than cached version %v", version, v)
+		case vclock.Ancestor:
+			{
+				return fmt.Errorf("add failed because your version %v is older than cached version %v", version, v)
+			}
 		}
 	}
 

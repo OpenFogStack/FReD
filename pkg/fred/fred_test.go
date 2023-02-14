@@ -35,7 +35,8 @@ func TestMain(m *testing.M) {
 		},
 	)
 
-	zerolog.SetGlobalLevel(zerolog.FatalLevel)
+	//zerolog.SetGlobalLevel(zerolog.FatalLevel)
+	zerolog.SetGlobalLevel(zerolog.DebugLevel)
 
 	fInfo, err := os.Stat(etcdDir)
 
