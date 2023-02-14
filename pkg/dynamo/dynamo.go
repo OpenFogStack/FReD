@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"git.tu-berlin.de/mcc-fred/fred/pkg/vector"
-	"github.com/DistributedClocks/GoVector/govec/vclock"
+	"git.tu-berlin.de/mcc-fred/vclock"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	shttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
 	"github.com/aws/aws-sdk-go-v2/credentials"

@@ -6,7 +6,7 @@ import (
 
 	api "git.tu-berlin.de/mcc-fred/fred/proto/client"
 	"git.tu-berlin.de/mcc-fred/fred/proto/middleware"
-	"github.com/DistributedClocks/GoVector/govec/vclock"
+	"git.tu-berlin.de/mcc-fred/vclock"
 	"github.com/rs/zerolog/log"
 )
 

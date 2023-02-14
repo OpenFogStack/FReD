@@ -8,7 +8,7 @@ import (
 	"os"
 
 	"git.tu-berlin.de/mcc-fred/fred/proto/client"
-	"github.com/DistributedClocks/GoVector/govec/vclock"
+	"git.tu-berlin.de/mcc-fred/vclock"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"

@@ -10,7 +10,7 @@ import (
 	"git.tu-berlin.de/mcc-fred/fred/pkg/etcdnase"
 	"git.tu-berlin.de/mcc-fred/fred/pkg/fred"
 	"git.tu-berlin.de/mcc-fred/fred/pkg/peering"
-	"github.com/DistributedClocks/GoVector/govec/vclock"
+	"git.tu-berlin.de/mcc-fred/vclock"
 	"github.com/go-errors/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"

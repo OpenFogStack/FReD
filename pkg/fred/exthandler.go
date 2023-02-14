@@ -1,7 +1,7 @@
 package fred
 
 import (
-	"github.com/DistributedClocks/GoVector/govec/vclock"
+	"git.tu-berlin.de/mcc-fred/vclock"
 	"github.com/go-errors/errors"
 	"github.com/rs/zerolog/log"
 )
