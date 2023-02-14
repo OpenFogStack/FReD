@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/DistributedClocks/GoVector/govec/vclock"
+	"git.tu-berlin.de/mcc-fred/vclock"
 )
 
 // SortedVCString returns a deterministic string encoding of a vector clock

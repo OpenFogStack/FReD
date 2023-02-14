@@ -6,7 +6,7 @@ import (
 
 	api "git.tu-berlin.de/mcc-fred/fred/proto/client"
 	"git.tu-berlin.de/mcc-fred/fred/proto/middleware"
-	"github.com/DistributedClocks/GoVector/govec/vclock"
+	"git.tu-berlin.de/mcc-fred/vclock"
 	"github.com/rs/zerolog/log"
 )
 
@@ -64,7 +64,7 @@ func (m *Middleware) Read(_ context.Context, req *middleware.ReadRequest) (*midd
 		// (preferably exactly one version) that is equal or newer to that seen version.
 		covered := false
 		for _, read := range versions {
-			if seen.Compare(read, vclock.Descendant) || seen.Compare(read, vclock.Equal) {
+			if seen.Compare(read, vclock.Descendant|vclock.Equal) {
 				covered = true
 				break
 			}

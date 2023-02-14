@@ -5,7 +5,7 @@ import (
 
 	"git.tu-berlin.de/mcc-fred/fred/pkg/vector"
 	"git.tu-berlin.de/mcc-fred/fred/tests/3NodeTest/pkg/grpcclient"
-	"github.com/DistributedClocks/GoVector/govec/vclock"
+	"git.tu-berlin.de/mcc-fred/vclock"
 )
 
 type VersioningSuite struct {

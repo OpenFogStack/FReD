@@ -3,7 +3,7 @@ module git.tu-berlin.de/mcc-fred/fred
 go 1.19
 
 require (
-	github.com/DistributedClocks/GoVector v0.0.0-20210402100930-db949c81a0af
+	git.tu-berlin.de/mcc-fred/vclock v0.1.1
 	github.com/aws/aws-sdk-go-v2 v1.17.4
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.12
 	github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression v1.4.38
@@ -114,6 +114,7 @@ require (
 	golang.org/x/text v0.5.0 // indirect
 	golang.org/x/time v0.0.0-20220210224613-90d013bbcef8 // indirect
 	google.golang.org/genproto v0.0.0-20220617124728-180714bec0ad // indirect
+	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
