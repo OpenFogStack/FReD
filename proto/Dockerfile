@@ -15,10 +15,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # RUN apk add --update --no-cache grpc make protoc python3 python3-dev
 
 RUN python3 -m pip install --no-cache --upgrade wheel pip setuptools && \
-    python3 -m pip install --no-cache --upgrade grpcio grpcio-tools mypy-protobuf mypy
+    python3 -m pip install --no-cache --upgrade grpcio==1.51.1 grpcio-tools==1.51.1 mypy-protobuf==3.4.0 mypy==1.0.0
 
-RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-RUN go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28.1
+RUN go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
 
 WORKDIR /proto
 
