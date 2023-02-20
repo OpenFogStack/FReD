@@ -1,6 +1,6 @@
-# FReD Documentation
+# FReD Docs
 
-These docs are made for GitLab pages using Jekyll and the `just-the-docs` theme.
+These docs are made for GitHub pages using Jekyll and the `just-the-docs` theme.
 
 GitHub recommends `bundler`:
 
