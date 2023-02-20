@@ -14,6 +14,6 @@ FReD is maintained by [Tobias Pfandzelter, Trever Schirmer, and Nils Japke of th
 Funded by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) -- 415899119.
 
 FReD is open-source software and contributions are welcome.
-You can find the complete documentation on the [FReD website](https://openfogstack.github.io/FReD).
+You can find the complete documentation on the [FReD website](https://openfogstack.github.io/fred).
 All contributions should be submitted as merge requests on the [main repository on the TU Berlin GitLab](https://git.tu-berlin.de/mcc-fred/fred) and are subject to review by the maintainers.
 Check out the [Contributing](#contributing) section for more information.
