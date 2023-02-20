@@ -1,0 +1,65 @@
+I"�<h2 id="about">About</h2>
+
+<p>Celestial is an emulator for the LEO edge.
+It supports satellite servers as well as ground stations.
+Each node is booted as a microVM.
+Celestial scales across as many hosts as you want.</p>
+
+<p>At any given time, only a subset of given satellite servers are booted,
+dependent on your configured bounding box.</p>
+
+<p>Celestial…</p>
+
+<ul>
+  <li>…creates Firecracker microVMs with your custom kernel and filesystem</li>
+  <li>…modifies network connections for a realistic network condition</li>
+  <li>…let’s you define a bounding box on earth, so you only need to emulate
+satellites that you’re actually interested in</li>
+  <li>…creates/suspends microVMs as they move in to/out of your bounding box</li>
+  <li>…has APIs for your satellites to retrieve some meta-information</li>
+</ul>
+
+<p>Check out <a href="https://github.com/OpenFogStack/celestial-videoconferencing-evaluation"><code class="language-plaintext highlighter-rouge">celestial-videoconferencing-evaluation</code></a>
+for an example application on Celestial!
+Also check out the <a href="https://github.com/OpenFogStack/celestial-buoy-evaluation"><code class="language-plaintext highlighter-rouge">celestial-buoy-evaluation</code></a>
+and the <a href="https://github.com/OpenFogStack/celestial-twissandra-evaluation"><code class="language-plaintext highlighter-rouge">celestial-twissandra-evaluation</code></a>.
+Even more examples can be found in <a href="https://github.com/OpenFogStack/celestial/tree/main/examples">the <code class="language-plaintext highlighter-rouge">examples</code> directory</a>.</p>
+
+<p><strong>A word of caution</strong>: you can technically run the server-side software on any
+computer you want, but it requires root access to fiddle with your network settings.
+Therefore, we <em>highly</em> encourage you to only run it on dedicated servers.
+It’s doing its best to clean up everything, but it has to make changes to a lot
+of networking settings, so we can’t guarantee that it doesn’t destroy any of your
+other stuff.</p>
+
+<h3 id="research">Research</h3>
+
+<p>If you use this software in a publication, please cite it as:</p>
+
+<div class="code-example">
+  <p>T. Pfandzelter and D. Bermbach, <strong>Celestial: Virtual Software System Testbeds
+for the LEO Edge</strong>, 23rd ACM/IFIP International Middleware Conference
+(Middleware ‘22), Quebec City, Canada, 2022, doi: 10.1145/3528535.3531517.</p>
+</div>
+<div class="language-bibtex highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">@inproceedings</span><span class="p">{</span><span class="nl">pfandzelter2022celestial</span><span class="p">,</span>
+    <span class="na">title</span> <span class="p">=</span> <span class="s">"Celestial: Virtual Software System Testbeds for the LEO Edge"</span><span class="p">,</span>
+    <span class="na">booktitle</span> <span class="p">=</span> <span class="s">"23rd ACM/IFIP International Middleware Conference (Middleware '22)"</span><span class="p">,</span>
+    <span class="na">author</span> <span class="p">=</span> <span class="s">"Pfandzelter, Tobias and Bermbach, David"</span><span class="p">,</span>
+    <span class="na">year</span> <span class="p">=</span> <span class="m">2022</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>A full list of our <a href="https://www.tu.berlin/en/mcc/research/publications/">publications</a>
+and <a href="https://www.tu.berlin/en/mcc/research/prototypes/">prototypes</a>
+is available on our group website.</p>
+
+<h3 id="license">License</h3>
+
+<p>The code in this repository is licensed under the terms of the <a href="./LICENSE">GPLv3</a>
+license.</p>
+
+<h3 id="documentation">Documentation</h3>
+
+<p>The complete documentation can be found at <a href="https://openfogstack.github.io/celestial"><code class="language-plaintext highlighter-rouge">openfogstack.github.io/celestial</code></a>
+or in the <code class="language-plaintext highlighter-rouge">docs</code> directory.</p>
+:ET

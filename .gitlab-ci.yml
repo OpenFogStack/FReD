@@ -11,40 +11,35 @@ stages:
 
 golint:
   stage: analysis
-  before_script:
-    *dependencies
+  before_script: *dependencies
   script:
     - make lint
 
 unit_tests:
   stage: test
   retry: 2
-  before_script:
-    *dependencies
+  before_script: *dependencies
   script:
     - make test
 
 race_detector:
   stage: test
   retry: 2
-  before_script:
-    *dependencies
+  before_script: *dependencies
   script:
     - make race
 
 code_coverage:
   stage: test
   retry: 2
-  before_script:
-    *dependencies
+  before_script: *dependencies
   script:
     - make coverage
   coverage: '/total:\s+\(statements\)\s+\d+.\d*\%/'
 
 build:
   stage: build
-  before_script:
-    *dependencies
+  before_script: *dependencies
   script:
     - make
 
@@ -53,7 +48,7 @@ release:
   timeout: 20m
   image:
     name: goreleaser/goreleaser
-    entrypoint: [ '' ]
+    entrypoint: [""]
 
   variables:
     DOCKER_REGISTRY: $CI_REGISTRY
