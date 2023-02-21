@@ -23,7 +23,7 @@ description: >- # this means to ignore newlines until "baseurl:"
   **FReD** is a distributed middleware for **F**og **Re**plicated **D**ata.
   It abstracts data management for fog-based applications by grouping data into _keygroups_, each keygroup a set of key-value pairs that can be managed independently.
   Applications have full control over keygroup replication: replicate your data where you need it.
-baseurl: "/fred" # the subpath of your site, e.g. /blog
+baseurl: "/FReD" # the subpath of your site, e.g. /blog
 url: "https://openfogstack.github.io" # the base hostname & protocol for your site, e.g. http://example.com
 
 # Build settings
