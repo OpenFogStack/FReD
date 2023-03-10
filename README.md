@@ -14,6 +14,28 @@ Applications have full control over keygroup replication: replicate your data wh
 FReD is maintained by [Tobias Pfandzelter, Trever Schirmer, and Nils Japke of the Mobile Cloud Computing research group at Technische Universität Berlin and Einstein Center Digital Future in the scope of the FogStore project](https://www.tu.berlin/en/mcc).
 Funded by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) -- 415899119.
 
+If you use this software in a publication, please cite it as:
+
+### Text
+
+T. Pfandzelter, N. Japke, T. Schirmer, J. Hasenburg, and D. Bermbach, **Managing Data Replication and Distribution in the Fog with FReD**, 2023.
+
+### BibTeX
+
+```bibtex
+@article{pfandzelter2023fred,
+    title = "Managing Data Replication and Distribution in the Fog with FReD",
+    author = "Pfandzelter, Tobias and Japke, Nils and Schirmer, Trever and Hasenburg, Jonathan and Bermbach, David",
+    journal = "arXiv:2303.05256 [cs.DC]",
+    year = 2023
+}
+```
+
+For a full list of publications, please see [our website](https://www.tu.berlin/en/mcc/research/publications).
+
+### License
+
+The code in this repository is licensed under the terms of the [MIT](./LICENSE) license.
 FReD is open-source software and contributions are welcome.
 You can find the complete documentation on the [FReD website](https://openfogstack.github.io/FReD).
 All contributions should be submitted as merge requests on the [main repository on the TU Berlin GitLab](https://git.tu-berlin.de/mcc-fred/fred) and are subject to review by the maintainers.
