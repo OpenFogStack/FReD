@@ -33,13 +33,14 @@ services:
     --trigger-key /cert/nodeC.key \
     --trigger-ca /cert/ca.crt"
     environment:
-      - LOG_LEVEL
+      INSECURE: "${INSECURE:-}"
+      LOG_LEVEL: "${LOG_LEVEL:-}"
     volumes:
       - ./certificates/nodeC.crt:/cert/nodeC.crt
       - ./certificates/nodeC.key:/cert/nodeC.key
       - ./certificates/ca.crt:/cert/ca.crt
     ports:
-      - 9004:9001
+      - "9004:9001"
     networks:
       fredwork:
         ipv4_address: 172.26.3.1
@@ -54,6 +55,8 @@ services:
     --cert /cert/cert.crt \
     --key /cert/key.key \
     --ca-file /cert/ca.crt"
+    environment:
+      INSECURE: "${INSECURE:-}"
     volumes:
       - ./certificates/storeC.crt:/cert/cert.crt
       - ./certificates/storeC.key:/cert/key.key

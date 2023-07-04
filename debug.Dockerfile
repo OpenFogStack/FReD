@@ -1,6 +1,6 @@
 # This is a compy from the dockerfile that adds support for debugging. It is used in the 3NodeTest to debug nodeB
 # building the binary
-FROM golang:1.19-buster as golang
+FROM golang:1.20-buster as golang
 
 LABEL maintainer="tp@mcc.tu-berlin.de"
 

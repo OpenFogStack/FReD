@@ -21,6 +21,9 @@ services:
       --peer-cert /cert/nodeA.crt \
       --peer-key /cert/nodeA.key \
       --peer-ca /cert/ca.crt"
+    environment:
+      INSECURE: "${INSECURE:-}"
+      LOG_LEVEL: "${LOG_LEVEL:-}"
     volumes:
       - ./certificates/nodeA.crt:/cert/nodeA.crt
       - ./certificates/nodeA.key:/cert/nodeA.key
@@ -63,7 +66,8 @@ services:
     --trigger-key /cert/nodeA.key \
     --trigger-ca /cert/ca.crt"
     environment:
-      - LOG_LEVEL
+      INSECURE: "${INSECURE:-}"
+      LOG_LEVEL: "${LOG_LEVEL:-}"
     stop_signal: SIGINT
     volumes:
       - ./certificates/nodeA.crt:/cert/nodeA.crt
@@ -106,7 +110,8 @@ services:
     --trigger-key /cert/nodeA.key \
     --trigger-ca /cert/ca.crt"
     environment:
-      - LOG_LEVEL
+      INSECURE: "${INSECURE:-}"
+      LOG_LEVEL: "${LOG_LEVEL:-}"
     volumes:
       - ./certificates/nodeA.crt:/cert/nodeA.crt
       - ./certificates/nodeA.key:/cert/nodeA.key
@@ -147,7 +152,8 @@ services:
     --trigger-key /cert/nodeA.key \
     --trigger-ca /cert/ca.crt"
     environment:
-      - LOG_LEVEL
+      INSECURE: "${INSECURE:-}"
+      LOG_LEVEL: "${LOG_LEVEL:-}"
     volumes:
       - ./certificates/nodeA.crt:/cert/nodeA.crt
       - ./certificates/nodeA.key:/cert/nodeA.key
@@ -162,6 +168,8 @@ services:
       dockerfile: dynamodb.Dockerfile
     image: "fred/dynamodb:local"
     container_name: storeA
+    environment:
+      INSECURE: "${INSECURE:-}"
     ports:
       - "8000:8000"
     networks:

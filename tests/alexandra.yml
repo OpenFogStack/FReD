@@ -20,12 +20,14 @@ services:
       --clients-key /cert/alexandra.key \
       --clients-cert /cert/alexandra.crt \
       --experimental"
+    environment:
+      INSECURE: "${INSECURE:-}"
     volumes:
       - ./certificates/alexandra.crt:/cert/alexandra.crt
       - ./certificates/alexandra.key:/cert/alexandra.key
       - ./certificates/ca.crt:/cert/ca.crt
     ports:
-      - 10000:10000
+      - "10000:10000"
     networks:
       fredwork:
         ipv4_address: 172.26.4.1

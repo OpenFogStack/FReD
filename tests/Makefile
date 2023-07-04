@@ -1,6 +1,6 @@
 export TEST_RANGE := -
 
-.PHONY: all clean 3nodetest 3nodetest-debug-nodeB 3n-all 3n-standard 3n-replica 3n-trigger 3n-immutable 3n-expiry 3n-selfreplica 3n-auth 3n-concurrency 3n-concurrency-immutable 3n-versioning fred failtest alexandra
+.PHONY: all clean 3nodetest 3nodetest-debug-nodeB fred failtest alexandra 3n-all 3n-standard 3n-replica 3n-trigger 3n-immutable 3n-expiry 3n-selfreplica 3n-auth 3n-concurrency 3n-concurrency-immutable 3n-versioning 3n-all-insecure 3n-standard-insecure 3n-replica-insecure 3n-trigger-insecure 3n-immutable-insecure 3n-expiry-insecure 3n-selfreplica-insecure 3n-auth-insecure 3n-concurrency-insecure 3n-concurrency-immutable-insecure 3n-versioning-insecure
 
 all: clean 3n-all clean
 
@@ -8,17 +8,20 @@ clean: ## clean up all resources
 	@docker-compose -f etcd.yml -f nodeA.yml -f nodeB.yml -f nodeC.yml -f 3NodeTester.yml -f trigger.yml down --remove-orphans
 	@docker network remove fredwork || true
 
-3n-standard: export TEST_RANGE = 1-1
-3n-replica: export TEST_RANGE = 2-2
-3n-trigger: export TEST_RANGE = 3-3
-3n-immutable: export TEST_RANGE = 4-4
-3n-expiry: export TEST_RANGE = 5-5
-3n-selfreplica: export TEST_RANGE = 6-6
-3n-auth: export TEST_RANGE = 7-7
-3n-concurrency: export TEST_RANGE = 8-8
-3n-concurrency-immutable: export TEST_RANGE = 9-9
-3n-versioning: export TEST_RANGE = 10-10
-3n-all 3n-standard 3n-replica 3n-trigger 3n-immutable 3n-expiry 3n-selfreplica 3n-auth 3n-concurrency 3n-concurrency-immutable 3n-versioning: 3nodetest
+
+3n-all-insecure 3n-standard-insecure 3n-replica-insecure 3n-trigger-insecure 3n-immutable-insecure 3n-expiry-insecure 3n-selfreplica-insecure 3n-auth-insecure 3n-concurrency-insecure 3n-concurrency-immutable-insecure 3n-versioning-insecure: export INSECURE = 1
+3n-all 3n-standard 3n-replica 3n-trigger 3n-immutable 3n-expiry 3n-selfreplica 3n-auth 3n-concurrency 3n-concurrency-immutable 3n-versioning 3n-all-insecure 3n-standard-insecure 3n-replica-insecure 3n-trigger-insecure 3n-immutable-insecure 3n-expiry-insecure 3n-selfreplica-insecure 3n-auth-insecure 3n-concurrency-insecure 3n-concurrency-immutable-insecure 3n-versioning-insecure:  export INSECURE = ""
+3n-standard 3n-standard-insecure: export TEST_RANGE = 1-1
+3n-replica 3n-replica-insecure: export TEST_RANGE = 2-2
+3n-trigger 3n-trigger-insecure: export TEST_RANGE = 3-3
+3n-immutable 3n-immutable-insecure: export TEST_RANGE = 4-4
+3n-expiry 3n-expiry-insecure: export TEST_RANGE = 5-5
+3n-selfreplica 3n-selfreplica-insecure: export TEST_RANGE = 6-6
+3n-auth 3n-auth-insecure: export TEST_RANGE = 7-7
+3n-concurrency 3n-concurrency-insecure: export TEST_RANGE = 8-8
+3n-concurrency-immutable 3n-concurrency-immutable-insecure: export TEST_RANGE = 9-9
+3n-versioning 3n-versioning-insecure: export TEST_RANGE = 10-10
+3n-all 3n-standard 3n-replica 3n-trigger 3n-immutable 3n-expiry 3n-selfreplica 3n-auth 3n-concurrency 3n-concurrency-immutable 3n-versioning 3n-all-insecure 3n-standard-insecure 3n-replica-insecure 3n-trigger-insecure 3n-immutable-insecure 3n-expiry-insecure 3n-selfreplica-insecure 3n-auth-insecure 3n-concurrency-insecure 3n-concurrency-immutable-insecure 3n-versioning-insecure: 3nodetest
 
 3nodetest: clean ## start all containers with docker compose and run the test dockerized
 	@docker network create fredwork --gateway 172.26.0.1 --subnet 172.26.0.0/16 || true

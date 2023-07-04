@@ -28,6 +28,7 @@ services:
       --wait-user=false"
     environment:
       SECRET_KEY: "${SECRET_KEY:-default_secret_key}"
+      INSECURE: "${INSECURE:-}"
     volumes:
       - ./certificates/client.crt:/cert/client.crt
       - ./certificates/client.key:/cert/client.key

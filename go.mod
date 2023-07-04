@@ -1,6 +1,6 @@
 module git.tu-berlin.de/mcc-fred/fred
 
-go 1.19
+go 1.20
 
 require (
 	git.tu-berlin.de/mcc-fred/vclock v0.1.1
