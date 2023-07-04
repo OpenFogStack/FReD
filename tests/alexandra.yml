@@ -20,8 +20,6 @@ services:
       --clients-key /cert/alexandra.key \
       --clients-cert /cert/alexandra.crt \
       --experimental"
-    environment:
-      INSECURE: "${INSECURE:-}"
     volumes:
       - ./certificates/alexandra.crt:/cert/alexandra.crt
       - ./certificates/alexandra.key:/cert/alexandra.key

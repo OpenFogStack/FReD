@@ -2,14 +2,12 @@ package main
 
 import (
 	"crypto/tls"
-	"crypto/x509"
 	"flag"
 	"net"
 	"os"
 
+	"git.tu-berlin.de/mcc-fred/fred/pkg/grpcutil"
 	storage2 "git.tu-berlin.de/mcc-fred/fred/proto/storage"
-	"google.golang.org/grpc/credentials"
-
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
@@ -70,46 +68,14 @@ func main() {
 		log.Info().Msg("No Loglevel specified, using 'debug'")
 	}
 
-	if *cert == "" {
-		log.Fatal().Msg("no certificate file given")
-	}
-
-	if *key == "" {
-		log.Fatal().Msg("no key file given")
-	}
-
-	if *ca == "" {
-		log.Fatal().Msg("no root certificate file given")
-	}
-
-	// Load server's certificate and private key
-	serverCert, err := tls.LoadX509KeyPair(*cert, *key)
+	creds, _, err := grpcutil.GetCredsFromConfig(*cert, *key, []string{*ca}, false, &tls.Config{ClientAuth: tls.RequireAndVerifyClientCert})
 
 	if err != nil {
-		log.Fatal().Msgf("could not load key pair: %v", err)
-	}
-
-	// Create a new cert pool and add our own CA certificate
-	rootCAs := x509.NewCertPool()
-
-	loaded, err := os.ReadFile(*ca)
-
-	if err != nil {
-		log.Fatal().Msgf("unexpected missing certfile: %v", err)
-	}
-
-	rootCAs.AppendCertsFromPEM(loaded)
-
-	// Create the credentials and return it
-	config := &tls.Config{
-		Certificates: []tls.Certificate{serverCert},
-		ClientAuth:   tls.RequireAndVerifyClientCert,
-		ClientCAs:    rootCAs,
-		MinVersion:   tls.VersionTLS12,
+		log.Fatal().Err(err).Msg("Error getting credentials")
 	}
 
 	var store fred.Store = badgerdb.New(*path)
-	grpcServer := grpc.NewServer(grpc.Creds(credentials.NewTLS(config)))
+	grpcServer := grpc.NewServer(grpc.Creds(creds))
 	storage2.RegisterDatabaseServer(grpcServer, storage.NewStorageServer(&store))
 	log.Debug().Msgf("Server is listening on port %s", *host)
 	log.Fatal().Err(grpcServer.Serve(lis))

@@ -2,12 +2,10 @@ package peering
 
 import (
 	"context"
-	"crypto/tls"
-	"crypto/x509"
-	"os"
 	"sync"
 
 	"git.tu-berlin.de/mcc-fred/fred/pkg/fred"
+	"git.tu-berlin.de/mcc-fred/fred/pkg/grpcutil"
 	"git.tu-berlin.de/mcc-fred/fred/proto/peering"
 	"git.tu-berlin.de/mcc-fred/vclock"
 	"github.com/go-errors/errors"
@@ -25,52 +23,18 @@ type Client struct {
 
 // NewClient creates a new empty client to communicate with peers.
 func NewClient(certFile string, keyFile string, caFile string) *Client {
-	if certFile == "" {
-		log.Fatal().Msg("peering client: no certificate file given")
-	}
 
-	if keyFile == "" {
-		log.Fatal().Msg("peering client: no key file given")
-	}
-
-	if caFile == "" {
-		log.Fatal().Msg("peering client: no root certificate file given")
-	}
-
-	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+	creds, _, err := grpcutil.GetCreds(certFile, keyFile, []string{caFile}, false)
 
 	if err != nil {
-		log.Fatal().Err(err).Msg("peering client: Cannot load certificates")
-
+		log.Fatal().Err(err).Msg("peering client: Cannot create TLS credentials")
 		return nil
-	}
-
-	// Create a new cert pool and add our own CA certificate
-	rootCAs, err := x509.SystemCertPool()
-
-	if err != nil {
-		log.Fatal().Err(err).Msg("peering client: Cannot load root certificates")
-		return nil
-	}
-
-	loaded, err := os.ReadFile(caFile)
-
-	if err != nil {
-		log.Fatal().Msgf("peering client: unexpected missing certfile: %v", err)
-	}
-
-	rootCAs.AppendCertsFromPEM(loaded)
-
-	tlsConfig := &tls.Config{
-		Certificates: []tls.Certificate{cert},
-		MinVersion:   tls.VersionTLS12,
-		RootCAs:      rootCAs,
 	}
 
 	return &Client{
 		conn:        make(map[string]peering.NodeClient),
 		connLock:    sync.RWMutex{},
-		credentials: credentials.NewTLS(tlsConfig),
+		credentials: creds,
 	}
 }
 

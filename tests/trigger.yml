@@ -11,7 +11,6 @@ services:
     --key /cert/key.key \
     --ca-file /cert/ca.crt"
     environment:
-      INSECURE: "${INSECURE:-}"
       LOG_LEVEL: "${LOG_LEVEL:-}"
     volumes:
       - ./certificates/trigger.crt:/cert/cert.crt

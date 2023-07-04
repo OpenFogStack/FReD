@@ -33,7 +33,6 @@ services:
     --trigger-key /cert/nodeB.key \
     --trigger-ca /cert/ca.crt"
     environment:
-      INSECURE: "${INSECURE:-}"
       LOG_LEVEL: "${LOG_LEVEL:-}"
     volumes:
       - ./certificates/nodeB.crt:/cert/nodeB.crt
@@ -55,8 +54,6 @@ services:
     --cert /cert/cert.crt \
     --key /cert/key.key \
     --ca-file /cert/ca.crt"
-    environment:
-      INSECURE: "${INSECURE:-}"
     volumes:
       - ./certificates/storeB.crt:/cert/cert.crt
       - ./certificates/storeB.key:/cert/key.key

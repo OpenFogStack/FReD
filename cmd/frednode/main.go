@@ -11,7 +11,7 @@ import (
 
 	"git.tu-berlin.de/mcc-fred/fred/pkg/dynamo"
 	"git.tu-berlin.de/mcc-fred/fred/pkg/storageclient"
-	"github.com/caarlos0/env/v6"
+	"github.com/caarlos0/env/v9"
 	"github.com/go-errors/errors"
 	"github.com/mmcloughlin/geohash"
 	"github.com/rs/zerolog"

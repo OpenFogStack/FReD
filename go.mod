@@ -9,7 +9,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression v1.4.38
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.18.2
 	github.com/aws/smithy-go v1.13.5
-	github.com/caarlos0/env/v6 v6.10.1
 	github.com/cespare/xxhash/v2 v2.2.0
 	github.com/dgraph-io/badger/v3 v3.2103.5
 	github.com/dgraph-io/ristretto v0.1.1
@@ -25,6 +24,8 @@ require (
 	google.golang.org/grpc v1.47.0
 	google.golang.org/protobuf v1.28.0
 )
+
+require github.com/caarlos0/env/v9 v9.0.0
 
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect

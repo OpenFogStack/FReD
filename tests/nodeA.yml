@@ -22,7 +22,6 @@ services:
       --peer-key /cert/nodeA.key \
       --peer-ca /cert/ca.crt"
     environment:
-      INSECURE: "${INSECURE:-}"
       LOG_LEVEL: "${LOG_LEVEL:-}"
     volumes:
       - ./certificates/nodeA.crt:/cert/nodeA.crt
@@ -56,7 +55,7 @@ services:
     --dynamo-region eu-central-1 \
     --cpuprofile /profiles/cpuprofile.pprof \
     --memprofile /profiles/memprofile.pprof \
-    --nase-host https://172.26.6.1:2379 \
+    --nase-host 172.26.6.1:2379 \
     --nase-cert /cert/nodeA.crt \
     --nase-key /cert/nodeA.key \
     --nase-ca /cert/ca.crt \
@@ -66,7 +65,6 @@ services:
     --trigger-key /cert/nodeA.key \
     --trigger-ca /cert/ca.crt"
     environment:
-      INSECURE: "${INSECURE:-}"
       LOG_LEVEL: "${LOG_LEVEL:-}"
     stop_signal: SIGINT
     volumes:
@@ -100,7 +98,7 @@ services:
     --adaptor dynamo \
     --dynamo-table fred \
     --dynamo-region eu-central-1 \
-    --nase-host https://172.26.6.1:2379 \
+    --nase-host 172.26.6.1:2379 \
     --nase-cert /cert/nodeA.crt \
     --nase-key /cert/nodeA.key \
     --nase-ca /cert/ca.crt \
@@ -110,7 +108,6 @@ services:
     --trigger-key /cert/nodeA.key \
     --trigger-ca /cert/ca.crt"
     environment:
-      INSECURE: "${INSECURE:-}"
       LOG_LEVEL: "${LOG_LEVEL:-}"
     volumes:
       - ./certificates/nodeA.crt:/cert/nodeA.crt
@@ -142,7 +139,7 @@ services:
     --adaptor dynamo \
     --dynamo-table fred \
     --dynamo-region eu-central-1 \
-    --nase-host https://172.26.6.1:2379 \
+    --nase-host 172.26.6.1:2379 \
     --nase-cert /cert/nodeA.crt \
     --nase-key /cert/nodeA.key \
     --nase-ca /cert/ca.crt \
@@ -152,7 +149,6 @@ services:
     --trigger-key /cert/nodeA.key \
     --trigger-ca /cert/ca.crt"
     environment:
-      INSECURE: "${INSECURE:-}"
       LOG_LEVEL: "${LOG_LEVEL:-}"
     volumes:
       - ./certificates/nodeA.crt:/cert/nodeA.crt
@@ -168,8 +164,6 @@ services:
       dockerfile: dynamodb.Dockerfile
     image: "fred/dynamodb:local"
     container_name: storeA
-    environment:
-      INSECURE: "${INSECURE:-}"
     ports:
       - "8000:8000"
     networks:

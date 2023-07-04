@@ -19,7 +19,7 @@ services:
     --peer-key /cert/nodeC.key \
     --peer-ca /cert/ca.crt \
     --adaptor remote \
-    --nase-host https://172.26.6.1:2379 \
+    --nase-host 172.26.6.1:2379 \
     --nase-cert /cert/nodeC.crt \
     --nase-key /cert/nodeC.key \
     --nase-ca /cert/ca.crt \
@@ -33,7 +33,6 @@ services:
     --trigger-key /cert/nodeC.key \
     --trigger-ca /cert/ca.crt"
     environment:
-      INSECURE: "${INSECURE:-}"
       LOG_LEVEL: "${LOG_LEVEL:-}"
     volumes:
       - ./certificates/nodeC.crt:/cert/nodeC.crt
@@ -55,8 +54,6 @@ services:
     --cert /cert/cert.crt \
     --key /cert/key.key \
     --ca-file /cert/ca.crt"
-    environment:
-      INSECURE: "${INSECURE:-}"
     volumes:
       - ./certificates/storeC.crt:/cert/cert.crt
       - ./certificates/storeC.key:/cert/key.key

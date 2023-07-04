@@ -6,9 +6,9 @@ import (
 	"crypto/x509"
 	"fmt"
 	"net"
-	"os"
 	"time"
 
+	"git.tu-berlin.de/mcc-fred/fred/pkg/grpcutil"
 	"git.tu-berlin.de/mcc-fred/fred/proto/client"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -25,42 +25,21 @@ type APIProxy struct {
 }
 
 func StartAPIProxy(p *Proxy, port int, cert string, key string, caCert string) (*grpc.Server, error) {
-	// Load server's certificate and private key
-	serverCert, err := tls.LoadX509KeyPair(cert, key)
+	creds, rootCA, err := grpcutil.GetCredsFromConfig(cert, key, []string{caCert}, false, &tls.Config{ClientAuth: tls.RequireAndVerifyClientCert})
 
 	if err != nil {
 		return nil, err
-	}
-
-	// Create a new cert pool and add our own CA certificate
-	rootCAs := x509.NewCertPool()
-
-	loaded, err := os.ReadFile(caCert)
-
-	if err != nil {
-		return nil, err
-	}
-
-	rootCAs.AppendCertsFromPEM(loaded)
-	// Create the credentials and return it
-
-	config := &tls.Config{
-		Certificates: []tls.Certificate{serverCert},
-		ClientAuth:   tls.RequireAndVerifyClientCert,
-		ClientCAs:    rootCAs,
-		RootCAs:      rootCAs,
-		MinVersion:   tls.VersionTLS12,
 	}
 
 	a := &APIProxy{
 		p:     p,
 		port:  port,
 		conn:  make(map[string]client.ClientClient),
-		opts:  grpc.WithTransportCredentials(credentials.NewTLS(config)),
-		roots: rootCAs,
+		opts:  grpc.WithTransportCredentials(creds),
+		roots: rootCA,
 	}
 
-	s := grpc.NewServer(grpc.Creds(credentials.NewTLS(config)))
+	s := grpc.NewServer(grpc.Creds(creds))
 
 	client.RegisterClientServer(s, a)
 
