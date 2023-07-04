@@ -88,8 +88,6 @@ func main() {
 	port, _ = strconv.Atoi(*nodeAhttpPort)
 	littleClient := grpcclient.NewNode(*nodeAhost, port, *nodeApeeringID, *littleCertFile, *littleKeyFile, *caFile)
 
-	time.Sleep(15 * time.Second)
-
 	config := &Config{
 		waitUser: *waitUser,
 
@@ -116,6 +114,13 @@ func main() {
 		nodeB:        nodeB,
 		nodeC:        nodeC,
 		littleClient: littleClient,
+	}
+
+	log.Info().Msgf("have config %+v", config)
+
+	for i := 15; i > 0; i-- {
+		log.Info().Msgf("Starting in %d seconds", i)
+		time.Sleep(1 * time.Second)
 	}
 
 	// to add a test suite, increase the size by one and add the instance of the suite to the slice

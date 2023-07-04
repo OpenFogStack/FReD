@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"crypto/tls"
-	"crypto/x509"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -11,11 +10,11 @@ import (
 	"net/http"
 	"os"
 
+	"git.tu-berlin.de/mcc-fred/fred/pkg/grpcutil"
 	"git.tu-berlin.de/mcc-fred/fred/proto/trigger"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 )
 
 // LogEntry is one entry of the trigger node log of operations that it has received.
@@ -60,33 +59,13 @@ func (s *Server) DeleteItemTrigger(_ context.Context, request *trigger.DeleteIte
 }
 
 func startServer(cert string, key string, ca string, host string, wsHost string) {
-	// Load server's certificate and private key
-	serverCert, err := tls.LoadX509KeyPair(cert, key)
+	creds, _, err := grpcutil.GetCredsFromConfig(cert, key, []string{ca}, false, &tls.Config{ClientAuth: tls.RequireAndVerifyClientCert})
 
 	if err != nil {
-		log.Fatal().Msgf("could not load key pair: %v", err)
+		log.Fatal().Err(err).Msg("Failed to get credentials")
 	}
 
-	// Create a new cert pool and add our own CA certificate
-	rootCAs := x509.NewCertPool()
-
-	loaded, err := os.ReadFile(ca)
-
-	if err != nil {
-		log.Fatal().Msgf("unexpected missing certfile: %v", err)
-	}
-
-	rootCAs.AppendCertsFromPEM(loaded)
-
-	// Create the credentials and return it
-	config := &tls.Config{
-		Certificates: []tls.Certificate{serverCert},
-		ClientAuth:   tls.RequireAndVerifyClientCert,
-		ClientCAs:    rootCAs,
-		MinVersion:   tls.VersionTLS12,
-	}
-
-	s := &Server{grpc.NewServer(grpc.Creds(credentials.NewTLS(config))), []LogEntry{}}
+	s := &Server{grpc.NewServer(grpc.Creds(creds)), []LogEntry{}}
 
 	lis, err := net.Listen("tcp", host)
 	if err != nil {
@@ -105,7 +84,7 @@ func startServer(cert string, key string, ca string, host string, wsHost string)
 		}
 	}()
 
-	// start a http server that let's us see what the trigger node has received
+	// start a http server that lets us see what the trigger node has received
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		l, err := json.Marshal(s.log)
 

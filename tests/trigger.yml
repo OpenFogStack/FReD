@@ -10,6 +10,8 @@ services:
     command: "--cert /cert/cert.crt \
     --key /cert/key.key \
     --ca-file /cert/ca.crt"
+    environment:
+      LOG_LEVEL: "${LOG_LEVEL:-}"
     volumes:
       - ./certificates/trigger.crt:/cert/cert.crt
       - ./certificates/trigger.key:/cert/key.key

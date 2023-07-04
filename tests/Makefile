@@ -1,6 +1,6 @@
 export TEST_RANGE := -
 
-.PHONY: all clean 3nodetest 3nodetest-debug-nodeB 3n-all 3n-standard 3n-replica 3n-trigger 3n-immutable 3n-expiry 3n-selfreplica 3n-auth 3n-concurrency 3n-concurrency-immutable 3n-versioning fred failtest alexandra
+.PHONY: all clean 3nodetest 3nodetest-debug-nodeB fred failtest alexandra 3n-all 3n-standard 3n-replica 3n-trigger 3n-immutable 3n-expiry 3n-selfreplica 3n-auth 3n-concurrency 3n-concurrency-immutable 3n-versioning
 
 all: clean 3n-all clean
 

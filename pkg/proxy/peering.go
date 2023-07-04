@@ -2,15 +2,11 @@ package proxy
 
 import (
 	"context"
-	"crypto/tls"
-	"crypto/x509"
 	"fmt"
-	"os"
 
+	"git.tu-berlin.de/mcc-fred/fred/pkg/grpcutil"
 	"git.tu-berlin.de/mcc-fred/fred/proto/peering"
-	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 )
 
 type PeeringProxy struct {
@@ -21,53 +17,21 @@ type PeeringProxy struct {
 }
 
 func StartPeeringProxy(p *Proxy, port int, certFile string, keyFile string, caFile string) (*grpc.Server, error) {
-	if certFile == "" {
-		log.Fatal().Msg("peering proxy: no certificate file given")
-	}
 
-	if keyFile == "" {
-		log.Fatal().Msg("peering proxy: no key file given")
-	}
-
-	if caFile == "" {
-		log.Fatal().Msg("peering proxy: no root certificate file given")
-	}
-
-	// Load server's certificate and private key
-	serverCert, err := tls.LoadX509KeyPair(certFile, keyFile)
+	creds, _, err := grpcutil.GetCreds(certFile, keyFile, []string{caFile}, false)
 
 	if err != nil {
 		return nil, err
-	}
-
-	// Create a new cert pool and add our own CA certificate
-	rootCAs := x509.NewCertPool()
-
-	loaded, err := os.ReadFile(caFile)
-
-	if err != nil {
-		return nil, err
-	}
-
-	rootCAs.AppendCertsFromPEM(loaded)
-	// Create the credentials and return it
-
-	config := &tls.Config{
-		Certificates: []tls.Certificate{serverCert},
-		ClientAuth:   tls.RequireAndVerifyClientCert,
-		ClientCAs:    rootCAs,
-		RootCAs:      rootCAs,
-		MinVersion:   tls.VersionTLS12,
 	}
 
 	a := &PeeringProxy{
 		p:    p,
 		port: port,
 		conn: make(map[string]peering.NodeClient),
-		opts: grpc.WithTransportCredentials(credentials.NewTLS(config)),
+		opts: grpc.WithTransportCredentials(creds),
 	}
 
-	s := grpc.NewServer(grpc.Creds(credentials.NewTLS(config)))
+	s := grpc.NewServer(grpc.Creds(creds))
 
 	peering.RegisterNodeServer(s, a)
 

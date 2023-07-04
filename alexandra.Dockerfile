@@ -1,5 +1,5 @@
 # building the binary
-FROM golang:1.19-alpine as golang
+FROM golang:1.20-alpine as golang
 
 LABEL maintainer="tp@mcc.tu-berlin.de"
 
@@ -32,4 +32,4 @@ EXPOSE 443
 EXPOSE 10000
 
 ENV PATH=.
-ENTRYPOINT ["alexandra"]
+ENTRYPOINT ["./alexandra"]

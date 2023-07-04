@@ -2,16 +2,13 @@ package alexandra
 
 import (
 	"context"
-	"crypto/tls"
-	"crypto/x509"
-	"os"
 	"time"
 
+	"git.tu-berlin.de/mcc-fred/fred/pkg/grpcutil"
 	api "git.tu-berlin.de/mcc-fred/fred/proto/client"
 	"git.tu-berlin.de/mcc-fred/vclock"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 )
 
 // Alpha is the value used for the exponential moving average. range=[0;1] with higher value => discount older observations faster
@@ -26,42 +23,13 @@ type Client struct {
 }
 
 func newClient(nodeID string, host string, certFile string, keyFile string, caCert string) *Client {
-
-	if certFile == "" {
-		log.Fatal().Msg("fredclient: no certificate file given")
-	}
-
-	if keyFile == "" {
-		log.Fatal().Msg("fredclient: no key file given")
-	}
-
-	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+	creds, _, err := grpcutil.GetCreds(certFile, keyFile, []string{caCert}, false)
 
 	if err != nil {
-		log.Fatal().Err(err).Str("certFile", certFile).Str("keyFile", keyFile).Msg("Cannot load certificates for new FredClient")
-		return nil
+		log.Fatal().Err(err).Msg("Cannot get grpc credentials")
 	}
 
-	// Create a new cert pool and add our own CA certificate
-	rootCAs := x509.NewCertPool()
-
-	loaded, err := os.ReadFile(caCert)
-
-	if err != nil {
-		log.Fatal().Msgf("unexpected missing certfile: %v", err)
-	}
-
-	rootCAs.AppendCertsFromPEM(loaded)
-
-	tlsConfig := &tls.Config{
-		Certificates: []tls.Certificate{cert},
-		MinVersion:   tls.VersionTLS12,
-		RootCAs:      rootCAs,
-	}
-
-	tc := credentials.NewTLS(tlsConfig)
-
-	conn, err := grpc.Dial(host, grpc.WithTransportCredentials(tc))
+	conn, err := grpc.Dial(host, grpc.WithTransportCredentials(creds))
 
 	if err != nil {
 		log.Fatal().Err(err).Msgf("Cannot create Grpc connection to client %s", host)

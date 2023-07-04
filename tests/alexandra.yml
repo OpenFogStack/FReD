@@ -25,7 +25,7 @@ services:
       - ./certificates/alexandra.key:/cert/alexandra.key
       - ./certificates/ca.crt:/cert/ca.crt
     ports:
-      - 10000:10000
+      - "10000:10000"
     networks:
       fredwork:
         ipv4_address: 172.26.4.1

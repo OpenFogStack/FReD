@@ -2,16 +2,13 @@ package storageclient
 
 import (
 	"context"
-	"crypto/tls"
-	"crypto/x509"
-	"os"
 
+	"git.tu-berlin.de/mcc-fred/fred/pkg/grpcutil"
 	"git.tu-berlin.de/mcc-fred/fred/proto/storage"
 	"git.tu-berlin.de/mcc-fred/vclock"
 	"github.com/go-errors/errors"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 )
 
 // Client to a grpc server
@@ -22,53 +19,15 @@ type Client struct {
 
 // NewClient Client creates a new Client to communicate with a GRpc server
 func NewClient(host, certFile string, keyFile string, caFiles []string) *Client {
-	if certFile == "" {
-		log.Fatal().Msg("Remote storage client: no certificate file given")
-	}
 
-	if keyFile == "" {
-		log.Fatal().Msg("Remote storage client: no key file given")
-	}
-
-	if len(caFiles) == 0 {
-		log.Fatal().Msg("Remote storage client: no root certificate files given")
-	}
-
-	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+	creds, _, err := grpcutil.GetCreds(certFile, keyFile, caFiles, false)
 
 	if err != nil {
-		log.Fatal().Err(err).Msg("Remote storage client: cannot load certificates")
-
+		log.Fatal().Err(err).Msg("Remote storage client: cannot create Grpc connection")
 		return nil
 	}
 
-	// Create a new cert pool and add our own CA certificate
-	rootCAs, err := x509.SystemCertPool()
-
-	if err != nil {
-		log.Fatal().Err(err).Msg("Remote storage client: cannot load root certificates")
-		return nil
-	}
-
-	for _, f := range caFiles {
-		loaded, err := os.ReadFile(f)
-
-		if err != nil {
-			log.Fatal().Msgf("Remote storage client: unexpected missing certfile: %v", err)
-		}
-
-		rootCAs.AppendCertsFromPEM(loaded)
-	}
-
-	tlsConfig := &tls.Config{
-		Certificates: []tls.Certificate{cert},
-		MinVersion:   tls.VersionTLS12,
-		RootCAs:      rootCAs,
-	}
-
-	tc := credentials.NewTLS(tlsConfig)
-
-	conn, err := grpc.Dial(host, grpc.WithTransportCredentials(tc))
+	conn, err := grpc.Dial(host, grpc.WithTransportCredentials(creds))
 
 	if err != nil {
 		log.Fatal().Err(err).Msg("Remote storage client: cannot create Grpc connection")

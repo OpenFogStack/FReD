@@ -2,7 +2,6 @@ package main
 
 import (
 	"crypto/tls"
-	"crypto/x509"
 	"flag"
 	"net"
 	"os"
@@ -10,11 +9,11 @@ import (
 	"syscall"
 
 	"git.tu-berlin.de/mcc-fred/fred/pkg/alexandra"
+	"git.tu-berlin.de/mcc-fred/fred/pkg/grpcutil"
 	"git.tu-berlin.de/mcc-fred/fred/proto/middleware"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 )
 
 type config struct {
@@ -30,6 +29,7 @@ type config struct {
 	proxyHost     string
 	address       string
 	experimental  bool
+	insecure      bool
 }
 
 func parseArgs() (c config) {
@@ -45,6 +45,7 @@ func parseArgs() (c config) {
 	flag.StringVar(&(c.proxyHost), "proxy-host", "", "Proxy host if this is proxied")
 	flag.StringVar(&(c.address), "address", "", "where to start the server")
 	flag.BoolVar(&(c.experimental), "experimental", false, "enable experimental features")
+	flag.BoolVar(&(c.insecure), "insecure", false, "disable tls for clients")
 	flag.Parse()
 	return
 }
@@ -101,30 +102,12 @@ func main() {
 	// Setup alexandra
 	m := alexandra.NewMiddleware(c.nodesCert, c.nodesKey, c.caCert, c.lightHouse, c.isProxied, c.proxyHost, c.experimental)
 
-	// Load server's certificate and private key
-	loadedServerCert, err := tls.LoadX509KeyPair(c.alexandraCert, c.alexandraKey)
+	// Setup TLS
+	creds, _, err := grpcutil.GetCredsFromConfig(c.alexandraCert, c.alexandraKey, []string{c.caCert}, c.insecure, &tls.Config{ClientAuth: tls.RequireAndVerifyClientCert})
 
 	if err != nil {
-		log.Fatal().Msgf("alexandra server: could not load key pair: %v", err)
+		log.Fatal().Err(err).Msg("Failed to get credentials")
 		return
-	}
-
-	// Create a new cert pool and add our own CA certificate
-	rootCAs := x509.NewCertPool()
-
-	loaded, err := os.ReadFile(c.caCert)
-
-	if err != nil {
-		log.Fatal().Msgf("alexandra server: unexpected missing certfile: %v", err)
-	}
-
-	rootCAs.AppendCertsFromPEM(loaded)
-	// Create the credentials and return it
-	config := &tls.Config{
-		Certificates: []tls.Certificate{loadedServerCert},
-		ClientAuth:   tls.RequireAndVerifyClientCert,
-		ClientCAs:    rootCAs,
-		MinVersion:   tls.VersionTLS12,
 	}
 
 	lis, err := net.Listen("tcp", c.address)
@@ -134,7 +117,7 @@ func main() {
 		return
 	}
 
-	s := grpc.NewServer(grpc.Creds(credentials.NewTLS(config)))
+	s := grpc.NewServer(grpc.Creds(creds))
 
 	middleware.RegisterMiddlewareServer(s, m)
 

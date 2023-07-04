@@ -5,11 +5,11 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"net"
-	"os"
 	"strconv"
 	"time"
 
 	"git.tu-berlin.de/mcc-fred/fred/pkg/fred"
+	"git.tu-berlin.de/mcc-fred/fred/pkg/grpcutil"
 	"git.tu-berlin.de/mcc-fred/fred/proto/client"
 	"git.tu-berlin.de/mcc-fred/vclock"
 	"github.com/go-errors/errors"
@@ -135,42 +135,11 @@ func (s *Server) CheckCert(ctx context.Context) (string, error) {
 
 // NewServer creates a new Server for requests from Fred Clients
 func NewServer(host string, handler *fred.ExtHandler, certFile string, keyFile string, caFile string, isProxied bool, proxy string) *Server {
-	if certFile == "" {
-		log.Fatal().Msg("API server: no certificate file given")
-	}
-
-	if keyFile == "" {
-		log.Fatal().Msg("API server: no key file given")
-	}
-
-	if caFile == "" {
-		log.Fatal().Msg("API server: no root certificate file given")
-	}
-
-	// Load server's certificate and private key
-	serverCert, err := tls.LoadX509KeyPair(certFile, keyFile)
+	creds, rootCAs, err := grpcutil.GetCredsFromConfig(certFile, keyFile, []string{caFile}, false, &tls.Config{ClientAuth: tls.RequireAndVerifyClientCert})
 
 	if err != nil {
-		log.Fatal().Msgf("API server: could not load key pair: %v", err)
+		log.Fatal().Err(err).Msg("API server: Failed to generate credentials")
 		return nil
-	}
-
-	// Create a new cert pool and add our own CA certificate
-	rootCAs := x509.NewCertPool()
-
-	loaded, err := os.ReadFile(caFile)
-
-	if err != nil {
-		log.Fatal().Msgf("API server: unexpected missing certfile: %v", err)
-	}
-
-	rootCAs.AppendCertsFromPEM(loaded)
-	// Create the credentials and return it
-	config := &tls.Config{
-		Certificates: []tls.Certificate{serverCert},
-		ClientAuth:   tls.RequireAndVerifyClientCert,
-		ClientCAs:    rootCAs,
-		MinVersion:   tls.VersionTLS12,
 	}
 
 	proxyHost, proxyPort, err := net.SplitHostPort(proxy)
@@ -187,7 +156,7 @@ func NewServer(host string, handler *fred.ExtHandler, certFile string, keyFile s
 		proxyHost: proxyHost,
 		proxyPort: proxyPort,
 		Server: grpc.NewServer(
-			grpc.Creds(credentials.NewTLS(config)),
+			grpc.Creds(creds),
 		),
 	}
 

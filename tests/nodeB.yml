@@ -33,13 +33,13 @@ services:
     --trigger-key /cert/nodeB.key \
     --trigger-ca /cert/ca.crt"
     environment:
-      - LOG_LEVEL
+      LOG_LEVEL: "${LOG_LEVEL:-}"
     volumes:
       - ./certificates/nodeB.crt:/cert/nodeB.crt
       - ./certificates/nodeB.key:/cert/nodeB.key
       - ./certificates/ca.crt:/cert/ca.crt
     ports:
-      - 9003:9001
+      - "9003:9001"
     networks:
       fredwork:
         ipv4_address: 172.26.2.1

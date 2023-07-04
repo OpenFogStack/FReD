@@ -1,6 +1,6 @@
 # Shamelessly stolen from the original dockerfile
 # building the binary
-FROM golang:1.19-alpine as golang
+FROM golang:1.20-alpine as golang
 
 LABEL maintainer="tp@mcc.tu-berlin.de"
 
@@ -31,4 +31,4 @@ COPY --from=golang /go/bin/storageserver storageserver
 EXPOSE 1337
 
 ENV PATH=.
-ENTRYPOINT ["storageserver"]
+ENTRYPOINT ["./storageserver"]

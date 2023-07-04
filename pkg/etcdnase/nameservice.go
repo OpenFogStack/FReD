@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"git.tu-berlin.de/mcc-fred/fred/pkg/fred"
+	"git.tu-berlin.de/mcc-fred/fred/pkg/grpcutil"
 	"github.com/dgraph-io/ristretto"
 	"github.com/go-errors/errors"
 	"github.com/rs/zerolog/log"
@@ -39,16 +40,11 @@ type NameService struct {
 
 // NewNameService creates a new NameService
 func NewNameService(nodeID string, endpoints []string, certFile string, keyFile string, caFile string, cached bool) (*NameService, error) {
-	if certFile == "" {
-		log.Fatal().Msg("etcd NaSe: no certificate file given")
-	}
 
-	if keyFile == "" {
-		log.Fatal().Msg("etcd NaSe: no key file given")
-	}
+	_, _, err := grpcutil.GetCreds(certFile, keyFile, []string{caFile}, false)
 
-	if caFile == "" {
-		log.Fatal().Msg("etcd NaSe: no root certificate file given")
+	if err != nil {
+		return nil, errors.Errorf("Error configuring certificates for the etcd client: %v", err)
 	}
 
 	tlsInfo := transport.TLSInfo{

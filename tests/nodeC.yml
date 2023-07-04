@@ -19,7 +19,7 @@ services:
     --peer-key /cert/nodeC.key \
     --peer-ca /cert/ca.crt \
     --adaptor remote \
-    --nase-host https://172.26.6.1:2379 \
+    --nase-host 172.26.6.1:2379 \
     --nase-cert /cert/nodeC.crt \
     --nase-key /cert/nodeC.key \
     --nase-ca /cert/ca.crt \
@@ -33,13 +33,13 @@ services:
     --trigger-key /cert/nodeC.key \
     --trigger-ca /cert/ca.crt"
     environment:
-      - LOG_LEVEL
+      LOG_LEVEL: "${LOG_LEVEL:-}"
     volumes:
       - ./certificates/nodeC.crt:/cert/nodeC.crt
       - ./certificates/nodeC.key:/cert/nodeC.key
       - ./certificates/ca.crt:/cert/ca.crt
     ports:
-      - 9004:9001
+      - "9004:9001"
     networks:
       fredwork:
         ipv4_address: 172.26.3.1
