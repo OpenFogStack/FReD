@@ -1,10 +1,14 @@
 # Base image: https://hub.docker.com/_/golang/
 FROM golang:1.20
 
+ENV DOCKER_CHANNEL stable
+ENV DOCKER_VERSION 24.0.2
+ENV GOLANGCI_LINT_VERSION v1.53.3
+
 # Install golint
 ENV GOPATH /go
 ENV PATH ${GOPATH}/bin:$PATH
-RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.51.1
+RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin ${GOLANGCI_LINT_VERSION}
 
 # Install clang from LLVM repository
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -13,8 +17,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Install Docker (to build images)
-ENV DOCKER_CHANNEL stable
-ENV DOCKER_VERSION 20.10.7
 
 RUN set -eux; \
     \
@@ -40,7 +42,3 @@ RUN set -eux; \
     rm docker.tgz; \
     \
     docker --version
-
-# Install Docker Compose
-RUN curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-RUN chmod +x /usr/local/bin/docker-compose

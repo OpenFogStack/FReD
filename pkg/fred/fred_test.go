@@ -224,7 +224,7 @@ func TestMisformedKVInput(t *testing.T) {
 	testMisformedKVInput(t, "user", "misformed2", "id", "")
 }
 
-func testMisformedKeygroupInput(t *testing.T, user string, kg fred.KeygroupName, id string, value string) {
+func testMisformedKeygroupInput(t *testing.T, user string, kg fred.KeygroupName, _ string, _ string) {
 	err := f.E.HandleCreateKeygroup(user, fred.Keygroup{
 		Name:    kg,
 		Mutable: true,

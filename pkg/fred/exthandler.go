@@ -404,13 +404,13 @@ func (h *ExtHandler) HandleRemoveTrigger(user string, k Keygroup, t Trigger) err
 }
 
 // HandleGetReplica handles requests to the GetReplica endpoint of the client interface.
-func (h *ExtHandler) HandleGetReplica(user string, n Node) (Node, error) {
+func (h *ExtHandler) HandleGetReplica(_ string, n Node) (Node, error) {
 
 	return h.r.getNodeExternal(n)
 }
 
 // HandleGetAllReplica handles requests to the GetAllReplica endpoint of the client interface.
-func (h *ExtHandler) HandleGetAllReplica(user string) ([]Node, error) {
+func (h *ExtHandler) HandleGetAllReplica(_ string) ([]Node, error) {
 
 	return h.r.getNodesExternalAdress()
 }
