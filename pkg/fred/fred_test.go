@@ -80,7 +80,7 @@ func TestMain(m *testing.M) {
 
 	<-e.Server.ReadyNotify()
 
-	n, err := etcdnase.NewNameService(string(nodeID), []string{"127.0.0.1:7000"}, certBasePath+"nodeA.crt", certBasePath+"nodeA.key", certBasePath+"ca.crt", true)
+	n, err := etcdnase.NewNameService(string(nodeID), []string{"127.0.0.1:7000"}, certBasePath+"nodeA.crt", certBasePath+"nodeA.key", certBasePath+"ca.crt", false, true)
 
 	if err != nil {
 		panic(err)
@@ -88,7 +88,7 @@ func TestMain(m *testing.M) {
 
 	config := fred.Config{
 		Store:             badgerdb.NewMemory(),
-		Client:            peering.NewClient(certBasePath+"nodeA.crt", certBasePath+"nodeA.key", certBasePath+"ca.crt"),
+		Client:            peering.NewClient(certBasePath+"nodeA.crt", certBasePath+"nodeA.key", certBasePath+"ca.crt", false),
 		NaSe:              n,
 		PeeringHost:       "127.0.0.1:8000",
 		PeeringHostProxy:  "",

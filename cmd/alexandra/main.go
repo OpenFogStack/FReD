@@ -17,19 +17,21 @@ import (
 )
 
 type config struct {
-	lightHouse    string
-	caCert        string
-	alexandraCert string
-	alexandraKey  string
-	nodesCert     string
-	nodesKey      string
-	loglevel      string
-	logHandler    string
-	isProxied     bool
-	proxyHost     string
-	address       string
-	experimental  bool
-	insecure      bool
+	lightHouse          string
+	caCert              string
+	alexandraCert       string
+	alexandraKey        string
+	alexandraSkipVerify bool
+	alexandraInsecure   bool
+	nodesCert           string
+	nodesKey            string
+	nodesSkipVerify     bool
+	loglevel            string
+	logHandler          string
+	isProxied           bool
+	proxyHost           string
+	address             string
+	experimental        bool
 }
 
 func parseArgs() (c config) {
@@ -37,15 +39,17 @@ func parseArgs() (c config) {
 	flag.StringVar(&(c.caCert), "ca-cert", "", "certificate of the ca")
 	flag.StringVar(&(c.alexandraCert), "alexandra-cert", "", "Certificate to check clients")
 	flag.StringVar(&(c.alexandraKey), "alexandra-key", "", "key to show clients")
+	flag.BoolVar(&(c.alexandraSkipVerify), "alexandra-skip-verify", false, "skip tls auth for clients")
+	flag.BoolVar(&(c.alexandraInsecure), "alexandra-insecure", false, "disable tls for clients")
 	flag.StringVar(&(c.nodesCert), "clients-cert", "", "Certificate to check fred nodes")
 	flag.StringVar(&(c.nodesKey), "clients-key", "", "key to show fred nodes")
+	flag.BoolVar(&(c.nodesSkipVerify), "clients-skip-verify", false, "skip tls auth for fred nodes")
 	flag.StringVar(&(c.loglevel), "log-level", "debug", "Log level, can be \"debug\", \"info\" ,\"warn\", \"error\", \"fatal\", \"panic\".")
 	flag.StringVar(&(c.logHandler), "log-handler", "dev", "dev or prod")
 	flag.BoolVar(&(c.isProxied), "is-proxy", false, "Is this behind a proxy?")
 	flag.StringVar(&(c.proxyHost), "proxy-host", "", "Proxy host if this is proxied")
 	flag.StringVar(&(c.address), "address", "", "where to start the server")
 	flag.BoolVar(&(c.experimental), "experimental", false, "enable experimental features")
-	flag.BoolVar(&(c.insecure), "insecure", false, "disable tls for clients")
 	flag.Parse()
 	return
 }
@@ -100,10 +104,10 @@ func main() {
 	}
 
 	// Setup alexandra
-	m := alexandra.NewMiddleware(c.nodesCert, c.nodesKey, c.caCert, c.lightHouse, c.isProxied, c.proxyHost, c.experimental)
+	m := alexandra.NewMiddleware(c.nodesCert, c.nodesKey, c.caCert, c.lightHouse, c.isProxied, c.proxyHost, c.experimental, c.nodesSkipVerify)
 
 	// Setup TLS
-	creds, _, err := grpcutil.GetCredsFromConfig(c.alexandraCert, c.alexandraKey, []string{c.caCert}, c.insecure, &tls.Config{ClientAuth: tls.RequireAndVerifyClientCert})
+	creds, _, err := grpcutil.GetCredsFromConfig(c.alexandraCert, c.alexandraKey, []string{c.caCert}, c.alexandraInsecure, c.alexandraSkipVerify, &tls.Config{ClientAuth: tls.RequireAndVerifyClientCert})
 
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to get credentials")

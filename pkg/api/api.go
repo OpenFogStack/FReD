@@ -134,8 +134,8 @@ func (s *Server) CheckCert(ctx context.Context) (string, error) {
 }
 
 // NewServer creates a new Server for requests from Fred Clients
-func NewServer(host string, handler *fred.ExtHandler, certFile string, keyFile string, caFile string, isProxied bool, proxy string) *Server {
-	creds, rootCAs, err := grpcutil.GetCredsFromConfig(certFile, keyFile, []string{caFile}, false, &tls.Config{ClientAuth: tls.RequireAndVerifyClientCert})
+func NewServer(host string, handler *fred.ExtHandler, certFile string, keyFile string, caFile string, skipVerify bool, isProxied bool, proxy string) *Server {
+	creds, rootCAs, err := grpcutil.GetCredsFromConfig(certFile, keyFile, []string{caFile}, false, skipVerify, &tls.Config{ClientAuth: tls.RequireAndVerifyClientCert})
 
 	if err != nil {
 		log.Fatal().Err(err).Msg("API server: Failed to generate credentials")

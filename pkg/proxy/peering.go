@@ -16,9 +16,9 @@ type PeeringProxy struct {
 	opts grpc.DialOption
 }
 
-func StartPeeringProxy(p *Proxy, port int, certFile string, keyFile string, caFile string) (*grpc.Server, error) {
+func StartPeeringProxy(p *Proxy, port int, certFile string, keyFile string, caFile string, skipVerify bool) (*grpc.Server, error) {
 
-	creds, _, err := grpcutil.GetCreds(certFile, keyFile, []string{caFile}, false)
+	creds, _, err := grpcutil.GetCreds(certFile, keyFile, []string{caFile}, false, skipVerify)
 
 	if err != nil {
 		return nil, err

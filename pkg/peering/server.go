@@ -22,9 +22,9 @@ type Server struct {
 }
 
 // NewServer creates a new Server for communication to the inthandler from other nodes
-func NewServer(host string, handler *fred.IntHandler, certFile string, keyFile string, caFile string) *Server {
+func NewServer(host string, handler *fred.IntHandler, certFile string, keyFile string, caFile string, skipVerify bool) *Server {
 
-	creds, _, err := grpcutil.GetCredsFromConfig(certFile, keyFile, []string{caFile}, false, &tls.Config{ClientAuth: tls.RequireAndVerifyClientCert})
+	creds, _, err := grpcutil.GetCredsFromConfig(certFile, keyFile, []string{caFile}, false, skipVerify, &tls.Config{ClientAuth: tls.RequireAndVerifyClientCert})
 	if err != nil {
 		log.Fatal().Err(err).Msg("peering server: Cannot create TLS credentials")
 		return nil

@@ -24,8 +24,8 @@ type APIProxy struct {
 	roots *x509.CertPool
 }
 
-func StartAPIProxy(p *Proxy, port int, cert string, key string, caCert string) (*grpc.Server, error) {
-	creds, rootCA, err := grpcutil.GetCredsFromConfig(cert, key, []string{caCert}, false, &tls.Config{ClientAuth: tls.RequireAndVerifyClientCert})
+func StartAPIProxy(p *Proxy, port int, cert string, key string, caCert string, skipVerify bool) (*grpc.Server, error) {
+	creds, rootCA, err := grpcutil.GetCredsFromConfig(cert, key, []string{caCert}, false, skipVerify, &tls.Config{ClientAuth: tls.RequireAndVerifyClientCert})
 
 	if err != nil {
 		return nil, err

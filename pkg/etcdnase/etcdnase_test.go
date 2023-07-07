@@ -84,7 +84,7 @@ func TestMain(m *testing.M) {
 
 	<-e.Server.ReadyNotify()
 
-	n, err = NewNameService(nodeID, []string{"127.0.0.1:6000"}, certBasePath+"nodeA.crt", certBasePath+"nodeA.key", certBasePath+"ca.crt", true)
+	n, err = NewNameService(nodeID, []string{"127.0.0.1:6000"}, certBasePath+"nodeA.crt", certBasePath+"nodeA.key", certBasePath+"ca.crt", false, true)
 
 	if err != nil {
 		panic(err)
@@ -283,7 +283,7 @@ func TestCache(t *testing.T) {
 	kg := fred.KeygroupName("kg-caching")
 	user := "user2"
 
-	n2, err := NewNameService(string(altNodeID), []string{"127.0.0.1:6000"}, certBasePath+"nodeB.crt", certBasePath+"nodeB.key", certBasePath+"ca.crt", true)
+	n2, err := NewNameService(string(altNodeID), []string{"127.0.0.1:6000"}, certBasePath+"nodeB.crt", certBasePath+"nodeB.key", certBasePath+"ca.crt", false, true)
 
 	assert.NoError(t, err)
 
@@ -355,7 +355,7 @@ func TestCacheRace(t *testing.T) {
 
 	for i := 0; i < concurrent; i++ {
 		id := "node" + strconv.Itoa(i)
-		x, err := NewNameService(id, []string{"127.0.0.1:6000"}, certBasePath+"nodeA.crt", certBasePath+"nodeA.key", certBasePath+"ca.crt", true)
+		x, err := NewNameService(id, []string{"127.0.0.1:6000"}, certBasePath+"nodeA.crt", certBasePath+"nodeA.key", certBasePath+"ca.crt", false, true)
 		assert.NoError(t, err)
 
 		err = x.RegisterSelf(fmt.Sprintf("localhost:10%d01", i), fmt.Sprintf("localhost:10%d02", i))
@@ -452,7 +452,7 @@ func BenchmarkPut(b *testing.B) {
 }
 
 func BenchmarkGetNoCache(b *testing.B) {
-	n, err := NewNameService(nodeID, []string{"127.0.0.1:6000"}, certBasePath+"nodeA.crt", certBasePath+"nodeA.key", certBasePath+"ca.crt", false)
+	n, err := NewNameService(nodeID, []string{"127.0.0.1:6000"}, certBasePath+"nodeA.crt", certBasePath+"nodeA.key", certBasePath+"ca.crt", false, false)
 	assert.NoError(b, err)
 	b.ResetTimer()
 
@@ -466,7 +466,7 @@ func BenchmarkGetNoCache(b *testing.B) {
 }
 
 func BenchmarkGetPrefixNoCache(b *testing.B) {
-	n, err := NewNameService(nodeID, []string{"127.0.0.1:6000"}, certBasePath+"nodeA.crt", certBasePath+"nodeA.key", certBasePath+"ca.crt", false)
+	n, err := NewNameService(nodeID, []string{"127.0.0.1:6000"}, certBasePath+"nodeA.crt", certBasePath+"nodeA.key", certBasePath+"ca.crt", false, false)
 	assert.NoError(b, err)
 	b.ResetTimer()
 
@@ -481,7 +481,7 @@ func BenchmarkGetPrefixNoCache(b *testing.B) {
 }
 
 func BenchmarkPutNoCache(b *testing.B) {
-	n, err := NewNameService(nodeID, []string{"127.0.0.1:6000"}, certBasePath+"nodeA.crt", certBasePath+"nodeA.key", certBasePath+"ca.crt", false)
+	n, err := NewNameService(nodeID, []string{"127.0.0.1:6000"}, certBasePath+"nodeA.crt", certBasePath+"nodeA.key", certBasePath+"ca.crt", false, false)
 	assert.NoError(b, err)
 	b.ResetTimer()
 

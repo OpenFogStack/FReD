@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-func getSecureCreds(certFile string, keyFile string, caFiles []string, config *tls.Config) (credentials.TransportCredentials, *x509.CertPool, error) {
+func getSecureCreds(certFile string, keyFile string, caFiles []string, skipVerify bool, config *tls.Config) (credentials.TransportCredentials, *x509.CertPool, error) {
 	if certFile == "" {
 		return nil, nil, errors.New("no certificate file given")
 	}
@@ -47,6 +47,7 @@ func getSecureCreds(certFile string, keyFile string, caFiles []string, config *t
 	config.ClientCAs = rootCAs
 	config.RootCAs = rootCAs
 	config.MinVersion = tls.VersionTLS12
+	config.InsecureSkipVerify = skipVerify
 
 	return credentials.NewTLS(config), rootCAs, nil
 }
@@ -55,14 +56,14 @@ func getInsecureCreds() credentials.TransportCredentials {
 	return insecure.NewCredentials()
 }
 
-func GetCreds(certFile string, keyFile string, caFiles []string, insecure bool) (credentials.TransportCredentials, *x509.CertPool, error) {
-	return GetCredsFromConfig(certFile, keyFile, caFiles, insecure, &tls.Config{})
+func GetCreds(certFile string, keyFile string, caFiles []string, insecure bool, skipVerify bool) (credentials.TransportCredentials, *x509.CertPool, error) {
+	return GetCredsFromConfig(certFile, keyFile, caFiles, insecure, skipVerify, &tls.Config{})
 }
 
-func GetCredsFromConfig(certFile string, keyFile string, caFiles []string, insecure bool, config *tls.Config) (credentials.TransportCredentials, *x509.CertPool, error) {
+func GetCredsFromConfig(certFile string, keyFile string, caFiles []string, insecure bool, skipVerify bool, config *tls.Config) (credentials.TransportCredentials, *x509.CertPool, error) {
 	if insecure {
 		return getInsecureCreds(), nil, nil
 	}
 
-	return getSecureCreds(certFile, keyFile, caFiles, config)
+	return getSecureCreds(certFile, keyFile, caFiles, skipVerify, config)
 }

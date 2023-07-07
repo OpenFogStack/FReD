@@ -33,38 +33,42 @@ type fredConfig struct {
 		Lng float64 `env:"LONG"`
 	}
 	Server struct {
-		Host  string `env:"HOST"`
-		Proxy string `env:"PROXY"`
-		Cert  string `env:"CERT"`
-		Key   string `env:"KEY"`
-		CA    string `env:"CA_FILE"`
+		Host       string `env:"HOST"`
+		Proxy      string `env:"PROXY"`
+		Cert       string `env:"CERT"`
+		Key        string `env:"KEY"`
+		CA         string `env:"CA_FILE"`
+		SkipVerify bool   `env:"SKIP_VERIFY"`
 	}
 	Storage struct {
 		Adaptor string `env:"STORAGE_ADAPTOR"`
 	}
 	Peering struct {
-		Host  string `env:"PEERING_HOST"`
-		Proxy string `env:"PEERING_PROXY"`
-		Cert  string `env:"PEERING_CERT"`
-		Key   string `env:"PEERING_KEY"`
-		CA    string `env:"PEERING_CA"`
+		Host       string `env:"PEERING_HOST"`
+		Proxy      string `env:"PEERING_PROXY"`
+		Cert       string `env:"PEERING_CERT"`
+		Key        string `env:"PEERING_KEY"`
+		CA         string `env:"PEERING_CA"`
+		SkipVerify bool   `env:"PEERING_SKIP_VERIFY"`
 	}
 	Log struct {
 		Level   string `env:"LOG_LEVEL"`
 		Handler string `env:"LOG_HANDLER"`
 	}
 	NaSe struct {
-		Host   string `env:"NASE_HOST"`
-		Cert   string `env:"NASE_CERT"`
-		Key    string `env:"NASE_KEY"`
-		CA     string `env:"NASE_CA"`
-		Cached bool   `env:"NASE_CACHED"`
+		Host       string `env:"NASE_HOST"`
+		Cert       string `env:"NASE_CERT"`
+		Key        string `env:"NASE_KEY"`
+		CA         string `env:"NASE_CA"`
+		SkipVerify bool   `env:"NASE_SKIP_VERIFY"`
+		Cached     bool   `env:"NASE_CACHED"`
 	}
 	RemoteStore struct {
-		Host string `env:"REMOTE_STORAGE_HOST"`
-		Cert string `env:"REMOTE_STORAGE_CERT"`
-		Key  string `env:"REMOTE_STORAGE_KEY"`
-		CA   string `env:"REMOTE_STORAGE_CA"`
+		Host       string `env:"REMOTE_STORAGE_HOST"`
+		Cert       string `env:"REMOTE_STORAGE_CERT"`
+		Key        string `env:"REMOTE_STORAGE_KEY"`
+		CA         string `env:"REMOTE_STORAGE_CA"`
+		SkipVerify bool   `env:"REMOTE_STORAGE_SKIP_VERIFY"`
 	}
 	DynamoDB struct {
 		Table       string `env:"DYNAMODB_TABLE"`
@@ -78,9 +82,10 @@ type fredConfig struct {
 		Path string `env:"BADGERDB_PATH"`
 	}
 	Trigger struct {
-		Cert string `env:"TRIGGER_CERT"`
-		Key  string `env:"TRIGGER_KEY"`
-		CA   string `env:"TRIGGER_CA"`
+		Cert       string `env:"TRIGGER_CERT"`
+		Key        string `env:"TRIGGER_KEY"`
+		CA         string `env:"TRIGGER_CA"`
+		SkipVerify bool   `env:"TRIGGER_SKIP_VERIFY"`
 	}
 	Profiling struct {
 		CPUProfPath string `env:"PROFILING_CPU_PATH"`
@@ -103,6 +108,7 @@ func parseArgs() (fc fredConfig) {
 	flag.StringVar(&(fc.Server.Cert), "cert", "", "Certificate for external connections. (Env: CERT)")
 	flag.StringVar(&(fc.Server.Key), "key", "", "Key file for external connections. (Env: KEY)")
 	flag.StringVar(&(fc.Server.CA), "ca-file", "", "Certificate authority root certificate file for external connections. (Env: CA_FILE)")
+	flag.BoolVar(&(fc.Server.SkipVerify), "skip-verify", false, "Skip verification of client certificates. (Env: SKIP_VERIFY)")
 
 	// peering configuration
 	// this is the address that grpc will bind to (locally)
@@ -111,7 +117,8 @@ func parseArgs() (fc fredConfig) {
 	flag.StringVar(&(fc.Peering.Proxy), "peer-host-proxy", "", "Publicly reachable address of this peering server (if behind a proxy). (Env: PEERING_PROXY)")
 	flag.StringVar(&(fc.Peering.Cert), "peer-cert", "", "Certificate for peering connection. (Env: PEERING_CERT)")
 	flag.StringVar(&(fc.Peering.Key), "peer-key", "", "Key file for peering connection. (Env: PEERING_KEY)")
-	flag.StringVar(&(fc.Peering.CA), "peer-ca", "", "Certificate authority root certificate file for peering connections. (Env: PEERING)")
+	flag.StringVar(&(fc.Peering.CA), "peer-ca", "", "Certificate authority root certificate file for peering connections. (Env: PEERING_CA)")
+	flag.BoolVar(&(fc.Peering.SkipVerify), "peer-skip-verify", false, "Skip verification of client certificates. (Env: PEERING_SKIP_VERIFY)")
 
 	// storage configuration
 	flag.StringVar(&(fc.Storage.Adaptor), "adaptor", "", "Storage adaptor, can be \"remote\", \"badgerdb\", \"memory\", \"dynamo\". (Env: STORAGE_ADAPTOR)")
@@ -140,12 +147,14 @@ func parseArgs() (fc fredConfig) {
 	flag.StringVar(&(fc.NaSe.Cert), "nase-cert", "", "Certificate file to authenticate against etcd. (Env: NASE_CERT)")
 	flag.StringVar(&(fc.NaSe.Key), "nase-key", "", "Key file to authenticate against etcd. (Env: NASE_KEY)")
 	flag.StringVar(&(fc.NaSe.CA), "nase-ca", "", "CA certificate file to authenticate against etcd. (Env: NASE_CA)")
+	flag.BoolVar(&(fc.NaSe.SkipVerify), "nase-skip-verify", false, "Skip verification of etcd certificates. (Env: NASE_SKIP_VERIFY)")
 	flag.BoolVar(&(fc.NaSe.Cached), "nase-cached", false, "Flag to indicate, whether to use a cache for NaSe. (Env: NASE_CACHED)")
 
 	// trigger node tls configuration
 	flag.StringVar(&(fc.Trigger.Cert), "trigger-cert", "", "Certificate for trigger node connection. (Env: TRIGGER_CERT)")
 	flag.StringVar(&(fc.Trigger.Key), "trigger-key", "", "Key file for trigger node connection. (Env: TRIGGER_KEY)")
 	flag.StringVar(&(fc.Trigger.CA), "trigger-ca", "", "Comma-separated list of CA certificate files for trigger node connection. (Env: TRIGGER_CA)")
+	flag.BoolVar(&(fc.Trigger.SkipVerify), "trigger-skip-verify", false, "Skip verification of client certificates. (Env: TRIGGER_SKIP_VERIFY)")
 
 	flag.StringVar(&(fc.Profiling.CPUProfPath), "cpuprofile", "", "Enable CPU profiling and specify path for pprof output")
 	flag.StringVar(&(fc.Profiling.MemProfPath), "memprofile", "", "Enable memory profiling and specify path for pprof output")
@@ -275,7 +284,7 @@ func main() {
 	case "memory":
 		store = badgerdb.NewMemory()
 	case "remote":
-		store = storageclient.NewClient(fc.RemoteStore.Host, fc.RemoteStore.Cert, fc.RemoteStore.Key, strings.Split(fc.RemoteStore.CA, ","))
+		store = storageclient.NewClient(fc.RemoteStore.Host, fc.RemoteStore.Cert, fc.RemoteStore.Key, strings.Split(fc.RemoteStore.CA, ","), fc.RemoteStore.SkipVerify)
 	case "dynamo":
 		store, err = dynamo.New(fc.DynamoDB.Table, fc.DynamoDB.Region, fc.DynamoDB.Endpoint, fc.DynamoDB.CreateTable)
 		if err != nil {
@@ -286,12 +295,12 @@ func main() {
 	}
 
 	log.Debug().Msg("Starting Interconnection Client...")
-	c := peering.NewClient(fc.Peering.Cert, fc.Peering.Key, fc.Peering.CA)
+	c := peering.NewClient(fc.Peering.Cert, fc.Peering.Key, fc.Peering.CA, fc.Peering.SkipVerify)
 
 	log.Debug().Msg("Starting NaSe Client...")
 
 	var n fred.NameService
-	n, err = etcdnase.NewNameService(fc.General.nodeID, []string{fc.NaSe.Host}, fc.NaSe.Cert, fc.NaSe.Key, fc.NaSe.CA, fc.NaSe.Cached)
+	n, err = etcdnase.NewNameService(fc.General.nodeID, []string{fc.NaSe.Host}, fc.NaSe.Cert, fc.NaSe.Key, fc.NaSe.CA, fc.NaSe.SkipVerify, fc.NaSe.Cached)
 
 	if err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
@@ -312,11 +321,11 @@ func main() {
 	})
 
 	log.Debug().Msg("Starting Interconnection Server...")
-	is := peering.NewServer(fc.Peering.Host, f.I, fc.Peering.Cert, fc.Peering.Key, fc.Peering.CA)
+	is := peering.NewServer(fc.Peering.Host, f.I, fc.Peering.Cert, fc.Peering.Key, fc.Peering.CA, fc.Peering.SkipVerify)
 
 	log.Debug().Msg("Starting GRPC Server for Client (==Externalconnection)...")
 	isProxied := fc.Server.Proxy != "" && fc.Server.Host != fc.Server.Proxy
-	es := api.NewServer(fc.Server.Host, f.E, fc.Server.Cert, fc.Server.Key, fc.Server.CA, isProxied, fc.Server.Proxy)
+	es := api.NewServer(fc.Server.Host, f.E, fc.Server.Cert, fc.Server.Key, fc.Server.CA, fc.Server.SkipVerify, isProxied, fc.Server.Proxy)
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit,

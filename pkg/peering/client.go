@@ -22,9 +22,9 @@ type Client struct {
 }
 
 // NewClient creates a new empty client to communicate with peers.
-func NewClient(certFile string, keyFile string, caFile string) *Client {
+func NewClient(certFile string, keyFile string, caFile string, skipVerify bool) *Client {
 
-	creds, _, err := grpcutil.GetCreds(certFile, keyFile, []string{caFile}, false)
+	creds, _, err := grpcutil.GetCreds(certFile, keyFile, []string{caFile}, false, skipVerify)
 
 	if err != nil {
 		log.Fatal().Err(err).Msg("peering client: Cannot create TLS credentials")

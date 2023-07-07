@@ -39,18 +39,19 @@ type NameService struct {
 }
 
 // NewNameService creates a new NameService
-func NewNameService(nodeID string, endpoints []string, certFile string, keyFile string, caFile string, cached bool) (*NameService, error) {
+func NewNameService(nodeID string, endpoints []string, certFile string, keyFile string, caFile string, skipVerfiy bool, cached bool) (*NameService, error) {
 
-	_, _, err := grpcutil.GetCreds(certFile, keyFile, []string{caFile}, false)
+	_, _, err := grpcutil.GetCreds(certFile, keyFile, []string{caFile}, false, skipVerfiy)
 
 	if err != nil {
 		return nil, errors.Errorf("Error configuring certificates for the etcd client: %v", err)
 	}
 
 	tlsInfo := transport.TLSInfo{
-		CertFile:      certFile,
-		KeyFile:       keyFile,
-		TrustedCAFile: caFile,
+		CertFile:           certFile,
+		KeyFile:            keyFile,
+		TrustedCAFile:      caFile,
+		InsecureSkipVerify: skipVerfiy,
 	}
 
 	tlsConfig, err := tlsInfo.ClientConfig()

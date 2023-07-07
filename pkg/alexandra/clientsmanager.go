@@ -44,19 +44,21 @@ type ClientsMgr struct {
 	sync.Mutex
 	clients                                     map[string]*Client
 	clientsCert, clientsKey, caCert, lighthouse string
+	clientsSkipVerify                           bool
 	keygroups                                   map[string]*keygroupSet
 	experimental                                bool
 }
 
-func newClientsManager(clientsCert string, clientsKey string, caCert string, lighthouse string, experimental bool) *ClientsMgr {
+func newClientsManager(clientsCert string, clientsKey string, caCert string, lighthouse string, experimental bool, skipVerify bool) *ClientsMgr {
 	mgr := &ClientsMgr{
-		clients:      make(map[string]*Client),
-		clientsCert:  clientsCert,
-		clientsKey:   clientsKey,
-		caCert:       caCert,
-		lighthouse:   lighthouse,
-		keygroups:    make(map[string]*keygroupSet),
-		experimental: experimental,
+		clients:           make(map[string]*Client),
+		clientsCert:       clientsCert,
+		clientsKey:        clientsKey,
+		clientsSkipVerify: skipVerify,
+		caCert:            caCert,
+		lighthouse:        lighthouse,
+		keygroups:         make(map[string]*keygroupSet),
+		experimental:      experimental,
 	}
 	// add the lighthouse client to the clients list
 	mgr.getLightHouse()
@@ -210,7 +212,7 @@ func (m *ClientsMgr) getClientTo(host string, nodeID string) (client *Client) {
 		return
 	}
 
-	client = newClient(nodeID, host, m.clientsCert, m.clientsKey, m.caCert)
+	client = newClient(nodeID, host, m.clientsCert, m.clientsKey, m.caCert, m.clientsSkipVerify)
 	m.clients[nodeID] = client
 	return
 }

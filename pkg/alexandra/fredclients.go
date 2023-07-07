@@ -22,8 +22,8 @@ type Client struct {
 	ReadSpeed float32
 }
 
-func newClient(nodeID string, host string, certFile string, keyFile string, caCert string) *Client {
-	creds, _, err := grpcutil.GetCreds(certFile, keyFile, []string{caCert}, false)
+func newClient(nodeID string, host string, certFile string, keyFile string, caCert string, skipVerify bool) *Client {
+	creds, _, err := grpcutil.GetCreds(certFile, keyFile, []string{caCert}, false, skipVerify)
 
 	if err != nil {
 		log.Fatal().Err(err).Msg("Cannot get grpc credentials")

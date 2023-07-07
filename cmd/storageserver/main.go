@@ -27,6 +27,7 @@ func main() {
 	cert := flag.String("cert", "", "certificate file for grpc server")
 	key := flag.String("key", "", "key file for grpc server")
 	ca := flag.String("ca-file", "", "CA root for grpc server")
+	skipVerify := flag.Bool("skip-verify", false, "Skip TLS verification for grpc server")
 
 	flag.Parse()
 	lis, err := net.Listen("tcp", *host)
@@ -68,7 +69,7 @@ func main() {
 		log.Info().Msg("No Loglevel specified, using 'debug'")
 	}
 
-	creds, _, err := grpcutil.GetCredsFromConfig(*cert, *key, []string{*ca}, false, &tls.Config{ClientAuth: tls.RequireAndVerifyClientCert})
+	creds, _, err := grpcutil.GetCredsFromConfig(*cert, *key, []string{*ca}, false, *skipVerify, &tls.Config{ClientAuth: tls.RequireAndVerifyClientCert})
 
 	if err != nil {
 		log.Fatal().Err(err).Msg("Error getting credentials")

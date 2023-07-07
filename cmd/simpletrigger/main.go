@@ -58,8 +58,8 @@ func (s *Server) DeleteItemTrigger(_ context.Context, request *trigger.DeleteIte
 	return &trigger.Empty{}, nil
 }
 
-func startServer(cert string, key string, ca string, host string, wsHost string) {
-	creds, _, err := grpcutil.GetCredsFromConfig(cert, key, []string{ca}, false, &tls.Config{ClientAuth: tls.RequireAndVerifyClientCert})
+func startServer(cert string, key string, ca string, skipVerify bool, host string, wsHost string) {
+	creds, _, err := grpcutil.GetCredsFromConfig(cert, key, []string{ca}, false, skipVerify, &tls.Config{ClientAuth: tls.RequireAndVerifyClientCert})
 
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to get credentials")
@@ -111,6 +111,7 @@ func main() {
 	cert := flag.String("cert", "", "certificate file for grpc server")
 	key := flag.String("key", "", "key file for grpc server")
 	ca := flag.String("ca-file", "", "CA root for grpc server")
+	skipVerify := flag.Bool("skip-verify", false, "Skip verification of client certificates")
 
 	flag.Parse()
 
@@ -130,5 +131,5 @@ func main() {
 		log.Fatal().Msg("Log Handler has to be either dev or prod")
 	}
 
-	startServer(*cert, *key, *ca, *host, *wsHost)
+	startServer(*cert, *key, *ca, *skipVerify, *host, *wsHost)
 }

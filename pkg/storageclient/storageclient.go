@@ -18,9 +18,9 @@ type Client struct {
 }
 
 // NewClient Client creates a new Client to communicate with a GRpc server
-func NewClient(host, certFile string, keyFile string, caFiles []string) *Client {
+func NewClient(host, certFile string, keyFile string, caFiles []string, skipVerify bool) *Client {
 
-	creds, _, err := grpcutil.GetCreds(certFile, keyFile, caFiles, false)
+	creds, _, err := grpcutil.GetCreds(certFile, keyFile, caFiles, false, skipVerify)
 
 	if err != nil {
 		log.Fatal().Err(err).Msg("Remote storage client: cannot create Grpc connection")

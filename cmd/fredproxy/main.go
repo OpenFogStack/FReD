@@ -29,9 +29,11 @@ func main() {
 	peeringCert := flag.String("peer-cert", "", "Certificate for peering connection.")
 	peeringKey := flag.String("peer-key", "", "Key file for peering connection.")
 	peeringCA := flag.String("peer-ca", "", "Certificate authority root certificate file for peering connections.")
+	peeringSkipVerify := flag.Bool("peer-skip-verify", false, "Skip verification of peer certificate.")
 	apiCert := flag.String("api-cert", "", "Certificate for API connection.")
 	apiKey := flag.String("api-key", "", "Key file for API connection.")
 	apiCA := flag.String("api-ca", "", "Certificate authority root certificate file for API connections.")
+	apiSkipVerify := flag.Bool("api-skip-verify", false, "Skip verification of API certificate.")
 
 	flag.Parse()
 
@@ -72,12 +74,12 @@ func main() {
 	// parse machines
 	p := proxy.NewProxy(strings.Split(*machines, ","))
 
-	pS, err := proxy.StartPeeringProxy(p, *peeringPort, *peeringCert, *peeringKey, *peeringCA)
+	pS, err := proxy.StartPeeringProxy(p, *peeringPort, *peeringCert, *peeringKey, *peeringCA, *peeringSkipVerify)
 	if err != nil {
 		log.Fatal().Err(err).Msg(err.Error())
 	}
 
-	aS, err := proxy.StartAPIProxy(p, *clientPort, *apiCert, *apiKey, *apiCA)
+	aS, err := proxy.StartAPIProxy(p, *clientPort, *apiCert, *apiKey, *apiCA, *apiSkipVerify)
 	if err != nil {
 		log.Fatal().Err(err).Msg(err.Error())
 	}
