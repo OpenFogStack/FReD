@@ -22,11 +22,12 @@ import (
 
 // Server handles GRPC Requests and calls the according functions of the exthandler
 type Server struct {
-	e         *fred.ExtHandler
-	roots     *x509.CertPool
-	isProxied bool
-	proxyHost string
-	proxyPort string
+	e          *fred.ExtHandler
+	roots      *x509.CertPool
+	isProxied  bool
+	skipVerify bool
+	proxyHost  string
+	proxyPort  string
 	*grpc.Server
 }
 
@@ -68,6 +69,11 @@ func (s *Server) CheckCert(ctx context.Context) (string, error) {
 		return "", errors.New(err)
 	}
 
+	// set host to empty so we don't check it in the certificate
+	if s.skipVerify {
+		host = ""
+	}
+
 	// verify the certificate:
 	// IF we are not proxied and communicate with the client directly:
 	// 1) it should be issued by a CA in our root CA pool
@@ -103,7 +109,7 @@ func (s *Server) CheckCert(ctx context.Context) (string, error) {
 	// their way into the network, we can be sure that the proxy/LB has checked the certificate
 	// in this case, the proxy will give the user name to us as a header (thanks, proxy!)
 
-	if host != s.proxyHost {
+	if !s.skipVerify && host != s.proxyHost {
 		return "", errors.Errorf("node is proxied but got request not from proxy (%s instead of %s)", host, s.proxyHost)
 	}
 
@@ -150,11 +156,12 @@ func NewServer(host string, handler *fred.ExtHandler, certFile string, keyFile s
 	}
 
 	s := &Server{
-		e:         handler,
-		roots:     rootCAs,
-		isProxied: isProxied,
-		proxyHost: proxyHost,
-		proxyPort: proxyPort,
+		e:          handler,
+		roots:      rootCAs,
+		isProxied:  isProxied,
+		proxyHost:  proxyHost,
+		proxyPort:  proxyPort,
+		skipVerify: skipVerify,
 		Server: grpc.NewServer(
 			grpc.Creds(creds),
 		),
