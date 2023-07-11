@@ -14,16 +14,22 @@ If you use this software in a publication, please cite it as:
 
 ### Text
 
-T. Pfandzelter, N. Japke, T. Schirmer, J. Hasenburg, and D. Bermbach, **Managing Data Replication and Distribution in the Fog with FReD**, 2023.
+T. Pfandzelter, N. Japke, T. Schirmer, J. Hasenburg, and D. Bermbach, **Managing Data Replication and Distribution in the Fog with FReD**, Software: Practice and Experience, Jul. 2023.
 
 ### BibTeX
 
 ```bibtex
 @article{pfandzelter2023fred,
-    title = "Managing Data Replication and Distribution in the Fog with FReD",
     author = "Pfandzelter, Tobias and Japke, Nils and Schirmer, Trever and Hasenburg, Jonathan and Bermbach, David",
-    journal = "arXiv:2303.05256 [cs.DC]",
-    year = 2023
+    title = "Managing Data Replication and Distribution in the Fog with FReD",
+    journal = "Software: Practice and Experience",
+    month = jul,
+    year = 2023,
+    issn = "0038-0644",
+    url = "https://doi.org/10.1002/spe.3237",
+    doi = "10.1002/spe.3237",
+    publisher = "Wiley",
+    address = "Hoboken, NJ, USA",
 }
 ```
 
