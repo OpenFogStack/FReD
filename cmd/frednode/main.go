@@ -34,6 +34,7 @@ type fredConfig struct {
 	}
 	Server struct {
 		Host       string `env:"HOST"`
+		AdvertiseHost string `env:"ADVERTISE_HOST"`
 		Proxy      string `env:"PROXY"`
 		Cert       string `env:"CERT"`
 		Key        string `env:"KEY"`
@@ -45,6 +46,7 @@ type fredConfig struct {
 	}
 	Peering struct {
 		Host       string `env:"PEERING_HOST"`
+		AdvertiseHost string `env:"PEERING_ADVERTISE_HOST"`
 		Proxy      string `env:"PEERING_PROXY"`
 		Cert       string `env:"PEERING_CERT"`
 		Key        string `env:"PEERING_KEY"`
@@ -104,6 +106,7 @@ func parseArgs() (fc fredConfig) {
 
 	// API server configuration
 	flag.StringVar(&(fc.Server.Host), "host", "", "Host address of server for external connections. (Env: HOST)")
+	flag.StringVar(&(fc.Server.AdvertiseHost), "advertise-host", "", "Publicly reachable host address of server for external connections. (Env: ADVERTISE_HOST)")
 	flag.StringVar(&(fc.Server.Proxy), "host-proxy", "", "Publicly reachable host address of server for external connections (if behind a proxy). (Env: PROXY)")
 	flag.StringVar(&(fc.Server.Cert), "cert", "", "Certificate for external connections. (Env: CERT)")
 	flag.StringVar(&(fc.Server.Key), "key", "", "Key file for external connections. (Env: KEY)")
@@ -113,6 +116,7 @@ func parseArgs() (fc fredConfig) {
 	// peering configuration
 	// this is the address that grpc will bind to (locally)
 	flag.StringVar(&(fc.Peering.Host), "peer-host", "", "local address of this peering server. (Env: PEERING_HOST)")
+	flag.StringVar(&(fc.Peering.AdvertiseHost), "peer-advertise-host", "", "Publicly reachable address of this peering server. (Env: PEERING_ADVERTISE_HOST)")
 	// this is the address that the node will advertise to nase
 	flag.StringVar(&(fc.Peering.Proxy), "peer-host-proxy", "", "Publicly reachable address of this peering server (if behind a proxy). (Env: PEERING_PROXY)")
 	flag.StringVar(&(fc.Peering.Cert), "peer-cert", "", "Certificate for peering connection. (Env: PEERING_CERT)")
@@ -190,6 +194,11 @@ func parseArgs() (fc fredConfig) {
 	if fc.Log.Level != "debug" && fc.Log.Level != "info" && fc.Log.Level != "warn" && fc.Log.Level != "error" && fc.Log.Level != "fatal" && fc.Log.Level != "panic" {
 		flag.Usage()
 		log.Fatal().Msgf("Given log level %s is not one of: \"debug\", \"info\" ,\"warn\", \"error\", \"fatal\", \"panic\".", fc.Log.Level)
+	}
+
+	if fc.Server.AdvertiseHost != "" && fc.Server.Proxy != "" {
+		flag.Usage()
+		log.Fatal().Msgf("You can only specify one of: \"host\", \"host-proxy\".")
 	}
 
 	if fc.General.nodeID == "" {
@@ -294,6 +303,14 @@ func main() {
 		log.Fatal().Msg("unknown storage backend")
 	}
 
+	if fc.Server.AdvertiseHost == "" {
+		fc.Server.AdvertiseHost = fc.Server.Host
+	}
+
+	if fc.Peering.AdvertiseHost == "" {
+		fc.Peering.AdvertiseHost = fc.Peering.Host
+	}
+
 	log.Debug().Msg("Starting Interconnection Client...")
 	c := peering.NewClient(fc.Peering.Cert, fc.Peering.Key, fc.Peering.CA, fc.Peering.SkipVerify)
 
@@ -311,9 +328,9 @@ func main() {
 		Store:             store,
 		Client:            c,
 		NaSe:              n,
-		PeeringHost:       fc.Peering.Host,
+		PeeringHost:       fc.Peering.AdvertiseHost,
 		PeeringHostProxy:  fc.Peering.Proxy,
-		ExternalHost:      fc.Server.Host,
+		ExternalHost:      fc.Server.AdvertiseHost,
 		ExternalHostProxy: fc.Server.Proxy,
 		TriggerCert:       fc.Trigger.Cert,
 		TriggerKey:        fc.Trigger.Key,
