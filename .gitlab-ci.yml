@@ -49,9 +49,12 @@ container:
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - export IMAGE_TAG=CI_COMMIT_SHORT_SHA-$(echo $CI_COMMIT_REF_NAME | cut -d '/' -f1)
-    - docker buildx build --push . -t git.tu-berlin.de:5000/mcc-fred/fred/fred:$IMAGE_TAG
-    - docker buildx build --push . -t git.tu-berlin.de:5000/mcc-fred/fred/fredproxy:$IMAGE_TAG
-    - docker buildx build --push . -t git.tu-berlin.de:5000/mcc-fred/fred/alexandra:$IMAGE_TAG
+    - docker build -t git.tu-berlin.de:5000/mcc-fred/fred/fred:$IMAGE_TAG .
+    - docker build -t git.tu-berlin.de:5000/mcc-fred/fred/fredproxy:$IMAGE_TAG -f proxy.Dockerfile .
+    - docker build -t git.tu-berlin.de:5000/mcc-fred/fred/alexandra:$IMAGE_TAG -f alexandra.Dockerfile .
+    - docker push git.tu-berlin.de:5000/mcc-fred/fred/fred:$IMAGE_TAG
+    - docker push git.tu-berlin.de:5000/mcc-fred/fred/fredproxy:$IMAGE_TAG
+    - docker push git.tu-berlin.de:5000/mcc-fred/fred/alexandra:$IMAGE_TAG
 
 release:
   stage: release
