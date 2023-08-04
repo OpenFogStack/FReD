@@ -1,6 +1,6 @@
 export TEST_RANGE := -
 
-.PHONY: all clean 3nodetest 3nodetest-debug-nodeB fred failtest alexandra 3n-all 3n-standard 3n-replica 3n-trigger 3n-immutable 3n-expiry 3n-selfreplica 3n-auth 3n-concurrency 3n-concurrency-immutable 3n-versioning
+.PHONY: all clean 3nodetest 3nodetest-debug-nodeB fred failtest alexandra alexandratest 3n-all 3n-standard 3n-replica 3n-trigger 3n-immutable 3n-expiry 3n-selfreplica 3n-auth 3n-concurrency 3n-concurrency-immutable 3n-versioning
 
 all: clean 3n-all clean
 
@@ -40,7 +40,7 @@ failtest: ## Start the failtest
 	@docker-compose -f failtest.yml build
 	@docker-compose -f failtest.yml up --force-recreate --abort-on-container-exit --renew-anon-volumes --exit-code-from tester
 
-alexandratest: ## Test alexandra (starts 3node, alexandra, alexandra-test)
+alexandratest: clean ## Test alexandra (starts 3node, alexandra, alexandra-test)
 	@docker network create fredwork --gateway 172.26.0.1 --subnet 172.26.0.0/16 || true
 	@docker-compose -f etcd.yml -f nodeA.yml -f nodeB.yml -f nodeC.yml -f alexandra.yml -f alexandra-test.yml build
 	@docker-compose -f etcd.yml -f nodeA.yml -f nodeB.yml -f nodeC.yml -f alexandra.yml -f alexandra-test.yml up --abort-on-container-exit --force-recreate --renew-anon-volumes --remove-orphans

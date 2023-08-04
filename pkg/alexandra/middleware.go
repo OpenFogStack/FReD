@@ -14,6 +14,10 @@ import (
 // checked for their versions by comparing locally cached versions (if any). The local cache is also updated
 // (if applicable).
 func (m *Middleware) Scan(ctx context.Context, req *middleware.ScanRequest) (*middleware.ScanResponse, error) {
+
+	m.vcache.cRLock(req.Keygroup, req.Id)
+	defer m.vcache.cRUnlock(req.Keygroup, req.Id)
+
 	res, err := m.clientsMgr.getLightHouse().Client.Scan(ctx, &api.ScanRequest{
 		Keygroup: req.Keygroup,
 		Id:       req.Id,
@@ -32,7 +36,7 @@ func (m *Middleware) Scan(ctx context.Context, req *middleware.ScanRequest) (*mi
 			Data: datum.Val,
 		}
 
-		err = m.cache.add(req.Keygroup, req.Id, datum.Version.Version)
+		err = m.vcache.add(req.Keygroup, req.Id, datum.Version.Version)
 	}
 
 	return &middleware.ScanResponse{Data: data}, err
@@ -44,14 +48,19 @@ func (m *Middleware) Scan(ctx context.Context, req *middleware.ScanRequest) (*mi
 func (m *Middleware) Read(_ context.Context, req *middleware.ReadRequest) (*middleware.ReadResponse, error) {
 	log.Debug().Msgf("Alexandra has rcvd Read")
 
+	m.vcache.cRLock(req.Keygroup, req.Id)
+	defer m.vcache.cRUnlock(req.Keygroup, req.Id)
+
 	vals, versions, err := m.clientsMgr.readFromAnywhere(req)
+
+	// TODO: serialize access
 
 	if err != nil {
 		log.Error().Err(err)
 		return nil, err
 	}
 
-	known, err := m.cache.get(req.Keygroup, req.Id)
+	known, err := m.vcache.get(req.Keygroup, req.Id)
 
 	if err != nil {
 		return nil, err
@@ -80,7 +89,7 @@ func (m *Middleware) Read(_ context.Context, req *middleware.ReadRequest) (*midd
 
 	for i := range versions {
 		log.Debug().Msgf("Alexandra Read: putting version %v in cache for %s", versions[i], req.Id)
-		err = m.cache.add(req.Keygroup, req.Id, versions[i])
+		err = m.vcache.add(req.Keygroup, req.Id, versions[i])
 		if err != nil {
 			log.Error().Err(err)
 			return nil, err
@@ -115,6 +124,9 @@ func (m *Middleware) Read(_ context.Context, req *middleware.ReadRequest) (*midd
 func (m *Middleware) Update(ctx context.Context, req *middleware.UpdateRequest) (*middleware.Empty, error) {
 	log.Debug().Msgf("Alexandra has rcvd Update")
 
+	m.vcache.cLock(req.Keygroup, req.Id)
+	defer m.vcache.cUnlock(req.Keygroup, req.Id)
+
 	c, err := m.clientsMgr.getClient(req.Keygroup)
 
 	if err != nil {
@@ -122,7 +134,7 @@ func (m *Middleware) Update(ctx context.Context, req *middleware.UpdateRequest) 
 		return nil, err
 	}
 
-	known, err := m.cache.get(req.Keygroup, req.Id)
+	known, err := m.vcache.get(req.Keygroup, req.Id)
 
 	if err != nil {
 		log.Error().Err(err)
@@ -149,7 +161,7 @@ func (m *Middleware) Update(ctx context.Context, req *middleware.UpdateRequest) 
 
 	log.Debug().Msgf("Alexandra Update: new version %v for %s", v, req.Id)
 
-	err = m.cache.supersede(req.Keygroup, req.Id, known, v)
+	err = m.vcache.supersede(req.Keygroup, req.Id, known, v)
 
 	if err != nil {
 		log.Error().Err(err)
@@ -172,6 +184,9 @@ func (m *Middleware) Update(ctx context.Context, req *middleware.UpdateRequest) 
 func (m *Middleware) Delete(ctx context.Context, req *middleware.DeleteRequest) (*middleware.Empty, error) {
 	log.Debug().Msgf("Alexandra has rcvd Delete")
 
+	m.vcache.cLock(req.Keygroup, req.Id)
+	defer m.vcache.cUnlock(req.Keygroup, req.Id)
+
 	c, err := m.clientsMgr.getClient(req.Keygroup)
 
 	if err != nil {
@@ -179,7 +194,7 @@ func (m *Middleware) Delete(ctx context.Context, req *middleware.DeleteRequest) 
 		return nil, err
 	}
 
-	known, err := m.cache.get(req.Keygroup, req.Id)
+	known, err := m.vcache.get(req.Keygroup, req.Id)
 
 	if err != nil {
 		log.Error().Err(err)
@@ -198,7 +213,7 @@ func (m *Middleware) Delete(ctx context.Context, req *middleware.DeleteRequest) 
 		return nil, err
 	}
 
-	err = m.cache.supersede(req.Keygroup, req.Id, known, v)
+	err = m.vcache.supersede(req.Keygroup, req.Id, known, v)
 
 	if err != nil {
 		log.Error().Err(err)
@@ -213,6 +228,7 @@ func (m *Middleware) Delete(ctx context.Context, req *middleware.DeleteRequest) 
 // FReD's append endpoint requires a unique ID for a datum. ALExANDRA automatically uses a Unix nanosecond timestamp for
 // this.
 func (m *Middleware) Append(ctx context.Context, req *middleware.AppendRequest) (*middleware.AppendResponse, error) {
+
 	c, err := m.clientsMgr.getClient(req.Keygroup)
 
 	if err != nil {
@@ -230,7 +246,12 @@ func (m *Middleware) Append(ctx context.Context, req *middleware.AppendRequest) 
 // Notify notifies the middleware about a version of a datum that the client has seen by bypassing the middleware. This
 // is required to capture external causality.
 func (m *Middleware) Notify(_ context.Context, req *middleware.NotifyRequest) (*middleware.Empty, error) {
-	err := m.cache.add(req.Keygroup, req.Id, req.Version)
+
+
+	m.vcache.cLock(req.Keygroup, req.Id)
+	defer m.vcache.cUnlock(req.Keygroup, req.Id)
+
+	err := m.vcache.add(req.Keygroup, req.Id, req.Version)
 
 	if err != nil {
 		return nil, err

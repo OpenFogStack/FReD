@@ -7,7 +7,7 @@ type Middleware struct {
 	proxyHost    string
 	clientsMgr   *ClientsMgr
 	lighthouse   string
-	cache        *cache
+	vcache        *vcache
 	experimental bool
 }
 
@@ -19,7 +19,7 @@ func NewMiddleware(nodesCert string, nodesKey string, caCert string, lighthouse 
 		proxyHost:    proxyHost,
 		clientsMgr:   newClientsManager(nodesCert, nodesKey, caCert, lighthouse, experimental, skipVerify),
 		lighthouse:   lighthouse,
-		cache:        newCache(),
+		vcache:        newVCache(),
 		experimental: experimental,
 	}
 }
