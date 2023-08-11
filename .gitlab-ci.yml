@@ -46,6 +46,12 @@ build:
 container:
   stage: build
   before_script: *dependencies
+
+  # do not run this for tags, as we want proper containers released with goreleaser
+  except:
+    refs:
+      - tags
+
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - export IMAGE_TAG=$(echo $CI_COMMIT_REF_NAME | cut -d '/' -f1)-$CI_COMMIT_SHORT_SHA
