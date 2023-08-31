@@ -36,10 +36,14 @@ func (m *Middleware) Scan(ctx context.Context, req *middleware.ScanRequest) (*mi
 			Data: datum.Val,
 		}
 
-		err = m.vcache.add(req.Keygroup, req.Id, datum.Version.Version)
+		err = m.vcache.add(req.Keygroup, datum.Id, datum.Version.Version)
+
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	return &middleware.ScanResponse{Data: data}, err
+	return &middleware.ScanResponse{Data: data}, nil
 }
 
 // Read reads a datum from FReD. Read data are placed in cache (if not in there already). If multiple versions of a
