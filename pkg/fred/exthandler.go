@@ -135,6 +135,8 @@ func (h *ExtHandler) HandleScan(user string, i Item, count uint64) ([]Item, erro
 		return nil, errors.Errorf("error scanning %d items starting at %s from keygroup %s", count, i.ID, i.Keygroup)
 	}
 
+	log.Debug().Msgf("Scan of item=%s keygroup=%s count=%d resulted in %d items", i.ID, i.Keygroup, count, len(result))
+
 	return result, nil
 }
 
