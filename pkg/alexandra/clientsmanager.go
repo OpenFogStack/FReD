@@ -87,18 +87,19 @@ func (m *ClientsMgr) readFromAnywhere(request *middleware.ReadRequest) ([]string
 
 		if err != nil {
 			log.Err(err).Msgf("Reading from preferred client %s returned error", set.preferred.nodeID)
-		} else {
-			vals := make([]string, len(res.Data))
-			versions := make([]vclock.VClock, len(res.Data))
-
-			for i := range res.Data {
-				vals[i] = res.Data[i].Val
-				versions[i] = res.Data[i].Version.Version
-				log.Debug().Msgf("Reading from client %s returned data: %+v %+v", set.preferred.nodeID, res.Data[i].Val, res.Data[i].Version.Version)
-			}
-
-			return vals, versions, nil
+			return nil, nil, err
 		}
+
+		vals := make([]string, len(res.Data))
+		versions := make([]vclock.VClock, len(res.Data))
+
+		for i := range res.Data {
+			vals[i] = res.Data[i].Val
+			versions[i] = res.Data[i].Version.Version
+			log.Debug().Msgf("Reading from client %s returned data: %+v %+v", set.preferred.nodeID, res.Data[i].Val, res.Data[i].Version.Version)
+		}
+
+		return vals, versions, nil
 	}
 
 	clientsToAsk := make(map[*Client]struct{})
