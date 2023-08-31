@@ -87,18 +87,19 @@ func (m *ClientsMgr) readFromAnywhere(request *middleware.ReadRequest) ([]string
 
 		if err != nil {
 			log.Err(err).Msgf("Reading from preferred client %s returned error", set.preferred.nodeID)
-		} else {
-			vals := make([]string, len(res.Data))
-			versions := make([]vclock.VClock, len(res.Data))
-
-			for i := range res.Data {
-				vals[i] = res.Data[i].Val
-				versions[i] = res.Data[i].Version.Version
-				log.Debug().Msgf("Reading from client %s returned data: %+v %+v", set.preferred.nodeID, res.Data[i].Val, res.Data[i].Version.Version)
-			}
-
-			return vals, versions, nil
+			return nil, nil, err
 		}
+
+		vals := make([]string, len(res.Data))
+		versions := make([]vclock.VClock, len(res.Data))
+
+		for i := range res.Data {
+			vals[i] = res.Data[i].Val
+			versions[i] = res.Data[i].Version.Version
+			log.Debug().Msgf("Reading from client %s returned data: %+v %+v", set.preferred.nodeID, res.Data[i].Val, res.Data[i].Version.Version)
+		}
+
+		return vals, versions, nil
 	}
 
 	clientsToAsk := make(map[*Client]struct{})
@@ -200,7 +201,28 @@ func (m *ClientsMgr) readFromAnywhere(request *middleware.ReadRequest) ([]string
 }
 
 func (m *ClientsMgr) getLightHouse() (client *Client) {
-	return m.getClientTo(m.lighthouse, "__lighthouse")
+	// get a client to the lighthouse, get its node id, then save the client with the proper node id
+	l := newClient("__lighthouse", m.lighthouse, m.clientsCert, m.clientsKey, m.caCert, m.clientsSkipVerify)
+
+	// make a request for the node id
+	res, err := l.Client.GetAllReplica(context.Background(), &clientsProto.Empty{})
+
+	if err != nil {
+		log.Fatal().Msgf("Error getting node id from lighthouse: %s", err.Error())
+		return nil
+	}
+
+	// go through the list of replicas and find the one that has the same host as the lighthouse
+	nodeID := ""
+	for _, replica := range res.Replicas {
+		if replica.Host == m.lighthouse {
+			nodeID = replica.NodeId
+			break
+		}
+	}
+
+	// now that we have the node id, we can save the client
+	return m.getClientTo(m.lighthouse, nodeID)
 }
 
 // GetClientTo returns a client with this address

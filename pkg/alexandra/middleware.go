@@ -14,6 +14,7 @@ import (
 // checked for their versions by comparing locally cached versions (if any). The local cache is also updated
 // (if applicable).
 func (m *Middleware) Scan(ctx context.Context, req *middleware.ScanRequest) (*middleware.ScanResponse, error) {
+	log.Debug().Msgf("Alexandra has rcvd Scan")
 
 	m.vcache.cRLock(req.Keygroup, req.Id)
 	defer m.vcache.cRUnlock(req.Keygroup, req.Id)
@@ -36,10 +37,14 @@ func (m *Middleware) Scan(ctx context.Context, req *middleware.ScanRequest) (*mi
 			Data: datum.Val,
 		}
 
-		err = m.vcache.add(req.Keygroup, req.Id, datum.Version.Version)
+		err = m.vcache.add(req.Keygroup, datum.Id, datum.Version.Version)
+
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	return &middleware.ScanResponse{Data: data}, err
+	return &middleware.ScanResponse{Data: data}, nil
 }
 
 // Read reads a datum from FReD. Read data are placed in cache (if not in there already). If multiple versions of a

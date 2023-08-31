@@ -279,7 +279,7 @@ func (s *Server) Read(ctx context.Context, request *client.ReadRequest) (*client
 
 // Scan calls this method on the exthandler
 func (s *Server) Scan(ctx context.Context, request *client.ScanRequest) (*client.ScanResponse, error) {
-	log.Info().Msgf("API Server has rcvd Read. In: %+v", request)
+	log.Info().Msgf("API Server has rcvd Scan. In: %+v", request)
 
 	user, err := s.CheckCert(ctx)
 

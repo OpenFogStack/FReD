@@ -146,7 +146,7 @@ func (vc *vcache) add(kg string, id string, version vclock.VClock) error {
 		// actually, this is a bad sign: we seem to have read outdated data!
 		case vclock.Ancestor:
 			{
-				return fmt.Errorf("add failed because your version %v is older than cached version %v", version, v)
+				return fmt.Errorf("add failed because your version %v of %s in keygroup %s is older than cached version %v", version, id, kg, v)
 			}
 		}
 	}
@@ -154,7 +154,7 @@ func (vc *vcache) add(kg string, id string, version vclock.VClock) error {
 	// now actually add the new version
 	newClocks = append(newClocks, version.Copy())
 
-	log.Debug().Msgf("Cache Add: new: %+v old: %+v", newClocks, vc.keygroups[kg].items[id].clocks)
+	log.Debug().Msgf("Cache Add (kg %s item %s): new: %+v old: %+v", kg, id, newClocks, vc.keygroups[kg].items[id].clocks)
 
 	// and store our new clocks
 	vc.keygroups[kg].items[id].clocks = newClocks
