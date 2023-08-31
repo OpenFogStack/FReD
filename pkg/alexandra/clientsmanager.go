@@ -200,7 +200,28 @@ func (m *ClientsMgr) readFromAnywhere(request *middleware.ReadRequest) ([]string
 }
 
 func (m *ClientsMgr) getLightHouse() (client *Client) {
-	return m.getClientTo(m.lighthouse, "__lighthouse")
+	// get a client to the lighthouse, get its node id, then save the client with the proper node id
+	l := newClient("__lighthouse", m.lighthouse, m.clientsCert, m.clientsKey, m.caCert, m.clientsSkipVerify)
+
+	// make a request for the node id
+	res, err := l.Client.GetAllReplica(context.Background(), &clientsProto.Empty{})
+
+	if err != nil {
+		log.Fatal().Msgf("Error getting node id from lighthouse: %s", err.Error())
+		return nil
+	}
+
+	// go through the list of replicas and find the one that has the same host as the lighthouse
+	nodeID := ""
+	for _, replica := range res.Replicas {
+		if replica.Host == m.lighthouse {
+			nodeID = replica.NodeId
+			break
+		}
+	}
+
+	// now that we have the node id, we can save the client
+	return m.getClientTo(m.lighthouse, nodeID)
 }
 
 // GetClientTo returns a client with this address
