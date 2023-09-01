@@ -73,6 +73,15 @@ func (c *Client) deleteKeygroup(ctx context.Context, keygroup string) (*api.Empt
 	return res, err
 }
 
+func (c *Client) scan(ctx context.Context, keygroup string, id string, count uint64) (*api.ScanResponse, error) {
+	res, err := c.Client.Scan(ctx, &api.ScanRequest{
+		Keygroup: keygroup,
+		Id:       id,
+		Count:    count,
+	})
+	return res, err
+}
+
 // Read also updates the moving average item speed
 func (c *Client) read(ctx context.Context, keygroup string, id string) (*api.ReadResponse, error) {
 	start := time.Now()

@@ -23,6 +23,10 @@ const (
 	// UseSlowerNodeProb In how many percent of the cases: instead of using the fastest client, use a random client to update its readSpeed
 	// only used for Read,Write,Delete,Append (since these are the only operations that update the readSpeed)
 	UseSlowerNodeProb = 0.089
+
+	// start time
+	// how long to wait for the lighthouse on initial start
+	startTime = 15 * time.Second
 )
 
 type clientExpiry struct {
@@ -61,7 +65,18 @@ func newClientsManager(clientsCert string, clientsKey string, caCert string, lig
 		experimental:      experimental,
 	}
 	// add the lighthouse client to the clients list
-	mgr.getLightHouse()
+	// try to connect to the lighthouse
+	// if it fails, try again once a second for timeout seconds
+	start := time.Now()
+	for time.Since(start) < startTime {
+		_, err := mgr.getLightHouse()
+		if err == nil {
+			break
+		}
+		log.Error().Msgf("Couldn't connect to lighthouse: %s", err.Error())
+		time.Sleep(time.Second)
+	}
+
 	// rand.Seed(time.Now().UnixNano())
 	return mgr
 }
@@ -200,7 +215,7 @@ func (m *ClientsMgr) readFromAnywhere(request *middleware.ReadRequest) ([]string
 	return vals, versions, nil
 }
 
-func (m *ClientsMgr) getLightHouse() (client *Client) {
+func (m *ClientsMgr) getLightHouse() (client *Client, err error) {
 	// get a client to the lighthouse, get its node id, then save the client with the proper node id
 	l := newClient("__lighthouse", m.lighthouse, m.clientsCert, m.clientsKey, m.caCert, m.clientsSkipVerify)
 
@@ -208,8 +223,8 @@ func (m *ClientsMgr) getLightHouse() (client *Client) {
 	res, err := l.Client.GetAllReplica(context.Background(), &clientsProto.Empty{})
 
 	if err != nil {
-		log.Fatal().Msgf("Error getting node id from lighthouse: %s", err.Error())
-		return nil
+		log.Error().Msgf("Error getting node id from lighthouse: %s", err.Error())
+		return nil, fmt.Errorf("Error getting node id from lighthouse: %s", err.Error())
 	}
 
 	// go through the list of replicas and find the one that has the same host as the lighthouse
@@ -222,7 +237,7 @@ func (m *ClientsMgr) getLightHouse() (client *Client) {
 	}
 
 	// now that we have the node id, we can save the client
-	return m.getClientTo(m.lighthouse, nodeID)
+	return m.getClientTo(m.lighthouse, nodeID), nil
 }
 
 // GetClientTo returns a client with this address
@@ -327,7 +342,14 @@ func (m *ClientsMgr) getClient(keygroup string) (*Client, error) {
 func (m *ClientsMgr) getFastestClient() (client *Client) {
 	if len(m.clients) == 0 {
 		log.Info().Msg("ClientsMgr: GetFastestClient was called but there are not clients. Using lighthouse client")
-		return m.getLightHouse()
+
+		lc, err := m.getLightHouse()
+		if err != nil {
+			log.Error().Msgf("ClientsMgr: GetFastestClient was called but there are not clients. And lighthouse client could not be reached. Returning nil")
+			return nil
+		}
+
+		return lc
 	}
 
 	clts := make([]*Client, 0, len(m.clients))
@@ -404,7 +426,16 @@ func (m *ClientsMgr) updateKeygroupClients(keygroup string) {
 	replica, err := m.getFastestClient().getKeygroupReplica(context.Background(), keygroup)
 	if err != nil {
 		log.Debug().Msgf("couldn't get replicas for keygroup %s from fastest client: %s", keygroup, err.Error())
-		replica, err = m.getLightHouse().getKeygroupReplica(context.Background(), keygroup)
+
+		lc, err := m.getLightHouse()
+
+		if err != nil {
+			log.Debug().Msgf("couldn't get replicas for keygroup %s from lighthouse client: %s", keygroup, err.Error())
+			log.Error().Msgf("updateKeygroupClients cannot reach fastest client OR lighthouse...")
+			return
+		}
+
+		replica, err = lc.getKeygroupReplica(context.Background(), keygroup)
 		if err != nil {
 			log.Debug().Msgf("couldn't get replicas for keygroup %s from lighthouse client: %s", keygroup, err.Error())
 			log.Error().Msgf("updateKeygroupClients cannot reach fastest client OR lighthouse...")

@@ -19,11 +19,14 @@ func (m *Middleware) Scan(ctx context.Context, req *middleware.ScanRequest) (*mi
 	m.vcache.cRLock(req.Keygroup, req.Id)
 	defer m.vcache.cRUnlock(req.Keygroup, req.Id)
 
-	res, err := m.clientsMgr.getLightHouse().Client.Scan(ctx, &api.ScanRequest{
-		Keygroup: req.Keygroup,
-		Id:       req.Id,
-		Count:    req.Count,
-	})
+	c, err := m.clientsMgr.getClient(req.Keygroup)
+
+	if err != nil {
+		log.Error().Err(err)
+		return nil, err
+	}
+
+	res, err := c.scan(ctx, req.Keygroup, req.Id, req.Count)
 
 	if err != nil {
 		return nil, err
@@ -43,6 +46,8 @@ func (m *Middleware) Scan(ctx context.Context, req *middleware.ScanRequest) (*mi
 			return nil, err
 		}
 	}
+
+	log.Debug().Msgf("Alexandra Scan: got %d items for %s", len(data), req.Id)
 
 	return &middleware.ScanResponse{Data: data}, nil
 }
@@ -425,7 +430,14 @@ func (m *Middleware) GetKeygroupInfo(ctx context.Context, req *middleware.GetKey
 
 // GetKeygroupTriggers returns a list of trigger nodes for a keygroup.
 func (m *Middleware) GetKeygroupTriggers(ctx context.Context, req *middleware.GetKeygroupTriggerRequest) (*middleware.GetKeygroupTriggerResponse, error) {
-	res, err := m.clientsMgr.getLightHouse().Client.GetKeygroupTriggers(ctx, &api.GetKeygroupTriggerRequest{
+
+	lc, err := m.clientsMgr.getLightHouse()
+
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := lc.Client.GetKeygroupTriggers(ctx, &api.GetKeygroupTriggerRequest{
 		Keygroup: req.Keygroup,
 	})
 
@@ -445,7 +457,14 @@ func (m *Middleware) GetKeygroupTriggers(ctx context.Context, req *middleware.Ge
 
 // AddTrigger adds a new trigger to a keygroup.
 func (m *Middleware) AddTrigger(ctx context.Context, req *middleware.AddTriggerRequest) (*middleware.Empty, error) {
-	_, err := m.clientsMgr.getLightHouse().Client.AddTrigger(ctx, &api.AddTriggerRequest{
+
+	lc, err := m.clientsMgr.getLightHouse()
+
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = lc.Client.AddTrigger(ctx, &api.AddTriggerRequest{
 		Keygroup:    req.Keygroup,
 		TriggerId:   req.TriggerId,
 		TriggerHost: req.TriggerHost,
@@ -460,7 +479,14 @@ func (m *Middleware) AddTrigger(ctx context.Context, req *middleware.AddTriggerR
 
 // RemoveTrigger removes a trigger node for a keygroup.
 func (m *Middleware) RemoveTrigger(ctx context.Context, req *middleware.RemoveTriggerRequest) (*middleware.Empty, error) {
-	_, err := m.clientsMgr.getLightHouse().Client.RemoveTrigger(ctx, &api.RemoveTriggerRequest{
+
+	lc, err := m.clientsMgr.getLightHouse()
+
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = lc.Client.RemoveTrigger(ctx, &api.RemoveTriggerRequest{
 		Keygroup:  req.Keygroup,
 		TriggerId: req.TriggerId,
 	})
@@ -474,7 +500,14 @@ func (m *Middleware) RemoveTrigger(ctx context.Context, req *middleware.RemoveTr
 
 // AddUser adds permissions to access a keygroup for a particular user to FReD.
 func (m *Middleware) AddUser(ctx context.Context, req *middleware.UserRequest) (*middleware.Empty, error) {
-	_, err := m.clientsMgr.getLightHouse().Client.AddUser(ctx, &api.AddUserRequest{
+
+	lc, err := m.clientsMgr.getLightHouse()
+
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = lc.Client.AddUser(ctx, &api.AddUserRequest{
 		User:     req.User,
 		Keygroup: req.Keygroup,
 		Role:     api.UserRole(req.Role),
@@ -489,7 +522,14 @@ func (m *Middleware) AddUser(ctx context.Context, req *middleware.UserRequest) (
 
 // RemoveUser removes permissions to access a keygroup for a particular user from FReD.
 func (m *Middleware) RemoveUser(ctx context.Context, req *middleware.UserRequest) (*middleware.Empty, error) {
-	_, err := m.clientsMgr.getLightHouse().Client.RemoveUser(ctx, &api.RemoveUserRequest{
+
+	lc, err := m.clientsMgr.getLightHouse()
+
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = lc.Client.RemoveUser(ctx, &api.RemoveUserRequest{
 		User:     req.User,
 		Keygroup: req.Keygroup,
 		Role:     api.UserRole(req.Role),
