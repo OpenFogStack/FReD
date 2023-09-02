@@ -33,25 +33,26 @@ type fredConfig struct {
 		Lng float64 `env:"LONG"`
 	}
 	Server struct {
-		Host       string `env:"HOST"`
+		Host          string `env:"HOST"`
 		AdvertiseHost string `env:"ADVERTISE_HOST"`
-		Proxy      string `env:"PROXY"`
-		Cert       string `env:"CERT"`
-		Key        string `env:"KEY"`
-		CA         string `env:"CA_FILE"`
-		SkipVerify bool   `env:"SKIP_VERIFY"`
+		Proxy         string `env:"PROXY"`
+		Cert          string `env:"CERT"`
+		Key           string `env:"KEY"`
+		CA            string `env:"CA_FILE"`
+		SkipVerify    bool   `env:"SKIP_VERIFY"`
 	}
 	Storage struct {
 		Adaptor string `env:"STORAGE_ADAPTOR"`
 	}
 	Peering struct {
-		Host       string `env:"PEERING_HOST"`
-		AdvertiseHost string `env:"PEERING_ADVERTISE_HOST"`
-		Proxy      string `env:"PEERING_PROXY"`
-		Cert       string `env:"PEERING_CERT"`
-		Key        string `env:"PEERING_KEY"`
-		CA         string `env:"PEERING_CA"`
-		SkipVerify bool   `env:"PEERING_SKIP_VERIFY"`
+		Host             string `env:"PEERING_HOST"`
+		AdvertiseHost    string `env:"PEERING_ADVERTISE_HOST"`
+		Proxy            string `env:"PEERING_PROXY"`
+		Cert             string `env:"PEERING_CERT"`
+		Key              string `env:"PEERING_KEY"`
+		CA               string `env:"PEERING_CA"`
+		AsyncReplication bool   `env:"PEERING_ASYNC_REPLICATION"`
+		SkipVerify       bool   `env:"PEERING_SKIP_VERIFY"`
 	}
 	Log struct {
 		Level   string `env:"LOG_LEVEL"`
@@ -122,6 +123,7 @@ func parseArgs() (fc fredConfig) {
 	flag.StringVar(&(fc.Peering.Cert), "peer-cert", "", "Certificate for peering connection. (Env: PEERING_CERT)")
 	flag.StringVar(&(fc.Peering.Key), "peer-key", "", "Key file for peering connection. (Env: PEERING_KEY)")
 	flag.StringVar(&(fc.Peering.CA), "peer-ca", "", "Certificate authority root certificate file for peering connections. (Env: PEERING_CA)")
+	flag.BoolVar(&(fc.Peering.AsyncReplication), "peer-async-replication", false, "Enable asynchronous replication. Experimental. (Env: PEERING_ASYNC_REPLICATION)")
 	flag.BoolVar(&(fc.Peering.SkipVerify), "peer-skip-verify", false, "Skip verification of client certificates. (Env: PEERING_SKIP_VERIFY)")
 
 	// storage configuration
@@ -325,16 +327,17 @@ func main() {
 	}
 
 	f := fred.New(&fred.Config{
-		Store:             store,
-		Client:            c,
-		NaSe:              n,
-		PeeringHost:       fc.Peering.AdvertiseHost,
-		PeeringHostProxy:  fc.Peering.Proxy,
-		ExternalHost:      fc.Server.AdvertiseHost,
-		ExternalHostProxy: fc.Server.Proxy,
-		TriggerCert:       fc.Trigger.Cert,
-		TriggerKey:        fc.Trigger.Key,
-		TriggerCA:         strings.Split(fc.Trigger.CA, ","),
+		Store:                   store,
+		Client:                  c,
+		NaSe:                    n,
+		PeeringHost:             fc.Peering.AdvertiseHost,
+		PeeringHostProxy:        fc.Peering.Proxy,
+		PeeringAsyncReplication: fc.Peering.AsyncReplication,
+		ExternalHost:            fc.Server.AdvertiseHost,
+		ExternalHostProxy:       fc.Server.Proxy,
+		TriggerCert:             fc.Trigger.Cert,
+		TriggerKey:              fc.Trigger.Key,
+		TriggerCA:               strings.Split(fc.Trigger.CA, ","),
 	})
 
 	log.Debug().Msg("Starting Interconnection Server...")

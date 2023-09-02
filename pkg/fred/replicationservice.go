@@ -19,18 +19,22 @@ type Client interface {
 }
 
 type replicationService struct {
-	c Client
-	s *storeService
-	n NameService
+	c     Client
+	s     *storeService
+	n     NameService
+	async bool
 }
 
 // newReplicationService creates a new handler for internal request (i.e. from peer nodes or the naming service).
-// The nameservice makes sure that the information is synced with the other nodes
-func newReplicationService(s *storeService, c Client, n NameService) *replicationService {
+// The nameservice makes sure that the information is synced with the other nodes.
+// The experimental async flag determines whether the replication service should send the replication messages asynchronously.
+// This only applies to data item updates (update, delete, append), not keygroup modification.
+func newReplicationService(s *storeService, c Client, n NameService, async bool) *replicationService {
 	service := &replicationService{
-		s: s,
-		c: c,
-		n: n,
+		s:     s,
+		c:     c,
+		n:     n,
+		async: async,
 	}
 
 	return service
@@ -210,7 +214,9 @@ func (s *replicationService) relayUpdate(i Item) error {
 		}(addr, id)
 	}
 
-	wg.Wait()
+	if !s.async {
+		wg.Wait()
+	}
 
 	return nil
 }
@@ -268,7 +274,9 @@ func (s *replicationService) relayAppend(i Item) error {
 		}(addr, id)
 	}
 
-	wg.Wait()
+	if !s.async {
+		wg.Wait()
+	}
 
 	return nil
 }

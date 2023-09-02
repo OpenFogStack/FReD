@@ -7,17 +7,18 @@ import (
 
 // Config holds configuration parameters for an instance of FReD.
 type Config struct {
-	Store             Store
-	Client            Client
-	NaSe              NameService
-	PeeringHost       string
-	PeeringHostProxy  string
-	ExternalHost      string
-	ExternalHostProxy string
-	NodeID            string
-	TriggerCert       string
-	TriggerKey        string
-	TriggerCA         []string
+	Store                   Store
+	Client                  Client
+	NaSe                    NameService
+	PeeringHost             string
+	PeeringHostProxy        string
+	PeeringAsyncReplication bool
+	ExternalHost            string
+	ExternalHostProxy       string
+	NodeID                  string
+	TriggerCert             string
+	TriggerKey              string
+	TriggerCA               []string
 }
 
 // Fred is an instance of FReD.
@@ -49,7 +50,7 @@ func New(config *Config) (f Fred) {
 
 	s := newStoreService(config.Store, config.NaSe.GetNodeID())
 
-	r := newReplicationService(s, config.Client, config.NaSe)
+	r := newReplicationService(s, config.Client, config.NaSe, config.PeeringAsyncReplication)
 
 	t := newTriggerService(s, config.TriggerCert, config.TriggerKey, config.TriggerCA)
 
