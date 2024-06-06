@@ -82,6 +82,15 @@ func (c *Client) scan(ctx context.Context, keygroup string, id string, count uin
 	return res, err
 }
 
+func (c *Client) keys(ctx context.Context, keygroup string, id string, count uint64) (*api.KeysResponse, error) {
+	res, err := c.Client.Keys(ctx, &api.KeysRequest{
+		Keygroup: keygroup,
+		Id:       id,
+		Count:    count,
+	})
+	return res, err
+}
+
 // Read also updates the moving average item speed
 func (c *Client) read(ctx context.Context, keygroup string, id string) (*api.ReadResponse, error) {
 	start := time.Now()

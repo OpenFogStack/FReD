@@ -35,6 +35,11 @@ class MiddlewareStub(object):
                 request_serializer=middleware__pb2.ScanRequest.SerializeToString,
                 response_deserializer=middleware__pb2.ScanResponse.FromString,
                 )
+        self.Keys = channel.unary_unary(
+                '/mcc.fred.middleware.Middleware/Keys',
+                request_serializer=middleware__pb2.KeysRequest.SerializeToString,
+                response_deserializer=middleware__pb2.KeysResponse.FromString,
+                )
         self.Update = channel.unary_unary(
                 '/mcc.fred.middleware.Middleware/Update',
                 request_serializer=middleware__pb2.UpdateRequest.SerializeToString,
@@ -135,6 +140,12 @@ class MiddlewareServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def Scan(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def Keys(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -252,6 +263,11 @@ def add_MiddlewareServicer_to_server(servicer, server):
                     servicer.Scan,
                     request_deserializer=middleware__pb2.ScanRequest.FromString,
                     response_serializer=middleware__pb2.ScanResponse.SerializeToString,
+            ),
+            'Keys': grpc.unary_unary_rpc_method_handler(
+                    servicer.Keys,
+                    request_deserializer=middleware__pb2.KeysRequest.FromString,
+                    response_serializer=middleware__pb2.KeysResponse.SerializeToString,
             ),
             'Update': grpc.unary_unary_rpc_method_handler(
                     servicer.Update,
@@ -404,6 +420,23 @@ class Middleware(object):
         return grpc.experimental.unary_unary(request, target, '/mcc.fred.middleware.Middleware/Scan',
             middleware__pb2.ScanRequest.SerializeToString,
             middleware__pb2.ScanResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def Keys(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/mcc.fred.middleware.Middleware/Keys',
+            middleware__pb2.KeysRequest.SerializeToString,
+            middleware__pb2.KeysResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

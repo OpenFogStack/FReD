@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strconv"
 )
 
 type StandardSuite struct {
@@ -64,19 +63,19 @@ func (t *StandardSuite) RunTests() {
 	ids := make([]string, numItems)
 	data := make([]string, numItems)
 
-	for i := 0; i < 20; i++ {
-		data[i] = "val" + strconv.Itoa(i)
-		ids[i] = "id" + strconv.Itoa(i)
+	for i := 0; i < numItems; i++ {
+		data[i] = fmt.Sprintf("val%03d", i)
+		ids[i] = fmt.Sprintf("id%03d", i)
 		t.c.nodeA.PutItem("scantest", ids[i], data[i], false)
 	}
 
 	// 3. do a scan read
 	// we expect [scanRange] amount of items, starting with [scanStart]
-	startKey := "id" + strconv.Itoa(scanStart)
+	startKey := fmt.Sprintf("id%03d", scanStart)
 
 	items := t.c.nodeA.ScanItems("scantest", startKey, uint64(scanRange), false)
 
-	expected := scanRange - scanStart
+	expected := scanRange
 
 	if len(items) != expected {
 		logNodeFailure(t.c.nodeA, fmt.Sprintf("%d items", expected), fmt.Sprintf("%d items", len(items)))
@@ -93,6 +92,26 @@ func (t *StandardSuite) RunTests() {
 		}
 		if val != data[i] {
 			logNodeFailure(t.c.nodeA, fmt.Sprintf("item %s is %s", ids[i], data[i]), fmt.Sprintf("item %s is %s", ids[i], items[ids[i]]))
+			continue
+		}
+	}
+
+	// 4. do a key list read
+	// we expect [scanRange] amount of items, starting with [scanStart]
+	keys := t.c.nodeA.ScanKeys("scantest", startKey, uint64(scanRange), false)
+
+	if len(keys) != expected {
+		logNodeFailure(t.c.nodeA, fmt.Sprintf("%d keys", expected), fmt.Sprintf("%d keys", len(keys)))
+	}
+
+	for i := 0; i < numItems; i++ {
+		if i < scanStart || i >= scanStart+expected {
+			continue
+		}
+		key := keys[i-scanStart]
+
+		if key != ids[i] {
+			logNodeFailure(t.c.nodeA, fmt.Sprintf("item %s is %s", ids[i], data[i]), fmt.Sprintf("item %s is %s", ids[i], keys[i]))
 			continue
 		}
 	}

@@ -202,6 +202,50 @@ func (s *storeService) scan(kg KeygroupName, id string, count uint64) ([]Item, e
 	return items, nil
 }
 
+// Keys returns a list of count item keys starting with id from the key-value store.
+func (s *storeService) keys(kg KeygroupName, id string, count uint64) ([]Item, error) {
+	err := checkKGandID(kg, id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !s.iS.ExistsKeygroup(string(kg)) {
+		return nil, errors.Errorf("no such keygroup in store: %+v", kg)
+	}
+
+	if !s.exists(Item{
+		Keygroup: kg,
+		ID:       id,
+	}) {
+		return nil, errors.Errorf("no such item %s in keygroup %+v", id, kg)
+	}
+
+	keys, data, vvectors, err := s.iS.ReadSome(string(kg), id, count)
+
+	if err != nil {
+		return nil, err
+	}
+
+	items := make([]Item, len(keys))
+
+	for i := range keys {
+		key := keys[i]
+		item := data[i]
+		version := vvectors[i]
+
+		items[i] = Item{
+			Keygroup:   kg,
+			ID:         key,
+			Version:    version,
+			Tombstoned: item == "",
+		}
+	}
+
+	//return s.cleanOlderVersions(items)
+	return items, nil
+}
+
 // ReadAll returns all items of a particular keygroup from the key-value store.
 func (s *storeService) readAll(kg KeygroupName) ([]Item, error) {
 	err := checkKeygroup(kg)

@@ -313,6 +313,41 @@ func (s *Server) Scan(ctx context.Context, request *client.ScanRequest) (*client
 
 }
 
+// Keys calls this method on the exthandler
+func (s *Server) Keys(ctx context.Context, request *client.KeysRequest) (*client.KeysResponse, error) {
+	log.Info().Msgf("API Server has rcvd Keys. In: %+v", request)
+
+	user, err := s.CheckCert(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := s.e.HandleKeys(user, fred.Item{Keygroup: fred.KeygroupName(request.Keygroup), ID: request.Id}, request.Count)
+
+	if err != nil {
+		log.Debug().Msgf("API Server is returning error: %+v", err)
+		return nil, err
+
+	}
+
+	keys := make([]*client.Key, len(res))
+
+	for i := 0; i < len(res); i++ {
+		keys[i] = &client.Key{
+			Id: res[i].ID,
+			Version: &client.Version{
+				Version: res[i].Version.GetMap(),
+			},
+		}
+	}
+
+	return &client.KeysResponse{
+		Keys: keys,
+	}, nil
+
+}
+
 // Append calls this method on the exthandler
 func (s *Server) Append(ctx context.Context, request *client.AppendRequest) (*client.AppendResponse, error) {
 	log.Info().Msgf("API Server has rcvd Append. In: %+v", request)

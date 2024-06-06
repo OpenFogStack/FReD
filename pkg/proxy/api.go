@@ -219,6 +219,23 @@ func (a *APIProxy) Scan(ctx context.Context, req *client.ScanRequest) (*client.S
 	return c.Scan(ctx, req)
 }
 
+// Keys calls this method on the exthandler
+func (a *APIProxy) Keys(ctx context.Context, req *client.KeysRequest) (*client.KeysResponse, error) {
+
+	c, err := a.getConn(req.Keygroup)
+
+	if err != nil {
+		return nil, err
+	}
+
+	ctx, err = a.addUserHeader(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return c.Keys(ctx, req)
+}
+
 // Append calls this method on the exthandler
 func (a *APIProxy) Append(ctx context.Context, req *client.AppendRequest) (*client.AppendResponse, error) {
 

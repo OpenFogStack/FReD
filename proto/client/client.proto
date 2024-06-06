@@ -9,6 +9,7 @@ service Client {
   rpc DeleteKeygroup (DeleteKeygroupRequest) returns (Empty);
   rpc Read (ReadRequest) returns (ReadResponse);
   rpc Scan (ScanRequest) returns (ScanResponse);
+  rpc Keys (KeysRequest) returns (KeysResponse);
   rpc Update (UpdateRequest) returns (UpdateResponse);
   rpc Delete (DeleteRequest) returns (DeleteResponse);
   rpc Append (AppendRequest) returns (AppendResponse);
@@ -72,6 +73,21 @@ message ScanRequest {
 
 message ScanResponse {
     repeated Item data = 1;
+}
+
+message KeysRequest {
+  string keygroup = 1;
+  string id = 2;
+  uint64 count = 3;
+}
+
+message Key  {
+  string id = 1;
+  Version version = 2;
+}
+
+message KeysResponse {
+  repeated Key keys = 1;
 }
 
 message UpdateRequest {

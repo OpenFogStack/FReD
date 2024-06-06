@@ -216,6 +216,63 @@ class ScanResponse(google.protobuf.message.Message):
 global___ScanResponse = ScanResponse
 
 @typing_extensions.final
+class KeysRequest(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    KEYGROUP_FIELD_NUMBER: builtins.int
+    ID_FIELD_NUMBER: builtins.int
+    COUNT_FIELD_NUMBER: builtins.int
+    keygroup: builtins.str
+    id: builtins.str
+    count: builtins.int
+    def __init__(
+        self,
+        *,
+        keygroup: builtins.str = ...,
+        id: builtins.str = ...,
+        count: builtins.int = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["count", b"count", "id", b"id", "keygroup", b"keygroup"]) -> None: ...
+
+global___KeysRequest = KeysRequest
+
+@typing_extensions.final
+class Key(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    ID_FIELD_NUMBER: builtins.int
+    VERSION_FIELD_NUMBER: builtins.int
+    id: builtins.str
+    @property
+    def version(self) -> global___Version: ...
+    def __init__(
+        self,
+        *,
+        id: builtins.str = ...,
+        version: global___Version | None = ...,
+    ) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["version", b"version"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["id", b"id", "version", b"version"]) -> None: ...
+
+global___Key = Key
+
+@typing_extensions.final
+class KeysResponse(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    KEYS_FIELD_NUMBER: builtins.int
+    @property
+    def keys(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___Key]: ...
+    def __init__(
+        self,
+        *,
+        keys: collections.abc.Iterable[global___Key] | None = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["keys", b"keys"]) -> None: ...
+
+global___KeysResponse = KeysResponse
+
+@typing_extensions.final
 class UpdateRequest(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 

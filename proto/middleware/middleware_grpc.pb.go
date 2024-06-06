@@ -26,6 +26,7 @@ type MiddlewareClient interface {
 	DeleteKeygroup(ctx context.Context, in *DeleteKeygroupRequest, opts ...grpc.CallOption) (*Empty, error)
 	Read(ctx context.Context, in *ReadRequest, opts ...grpc.CallOption) (*ReadResponse, error)
 	Scan(ctx context.Context, in *ScanRequest, opts ...grpc.CallOption) (*ScanResponse, error)
+	Keys(ctx context.Context, in *KeysRequest, opts ...grpc.CallOption) (*KeysResponse, error)
 	Update(ctx context.Context, in *UpdateRequest, opts ...grpc.CallOption) (*Empty, error)
 	Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*Empty, error)
 	Append(ctx context.Context, in *AppendRequest, opts ...grpc.CallOption) (*AppendResponse, error)
@@ -81,6 +82,15 @@ func (c *middlewareClient) Read(ctx context.Context, in *ReadRequest, opts ...gr
 func (c *middlewareClient) Scan(ctx context.Context, in *ScanRequest, opts ...grpc.CallOption) (*ScanResponse, error) {
 	out := new(ScanResponse)
 	err := c.cc.Invoke(ctx, "/mcc.fred.middleware.Middleware/Scan", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *middlewareClient) Keys(ctx context.Context, in *KeysRequest, opts ...grpc.CallOption) (*KeysResponse, error) {
+	out := new(KeysResponse)
+	err := c.cc.Invoke(ctx, "/mcc.fred.middleware.Middleware/Keys", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -230,6 +240,7 @@ type MiddlewareServer interface {
 	DeleteKeygroup(context.Context, *DeleteKeygroupRequest) (*Empty, error)
 	Read(context.Context, *ReadRequest) (*ReadResponse, error)
 	Scan(context.Context, *ScanRequest) (*ScanResponse, error)
+	Keys(context.Context, *KeysRequest) (*KeysResponse, error)
 	Update(context.Context, *UpdateRequest) (*Empty, error)
 	Delete(context.Context, *DeleteRequest) (*Empty, error)
 	Append(context.Context, *AppendRequest) (*AppendResponse, error)
@@ -262,6 +273,9 @@ func (UnimplementedMiddlewareServer) Read(context.Context, *ReadRequest) (*ReadR
 }
 func (UnimplementedMiddlewareServer) Scan(context.Context, *ScanRequest) (*ScanResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Scan not implemented")
+}
+func (UnimplementedMiddlewareServer) Keys(context.Context, *KeysRequest) (*KeysResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Keys not implemented")
 }
 func (UnimplementedMiddlewareServer) Update(context.Context, *UpdateRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
@@ -388,6 +402,24 @@ func _Middleware_Scan_Handler(srv interface{}, ctx context.Context, dec func(int
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MiddlewareServer).Scan(ctx, req.(*ScanRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Middleware_Keys_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(KeysRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MiddlewareServer).Keys(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/mcc.fred.middleware.Middleware/Keys",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MiddlewareServer).Keys(ctx, req.(*KeysRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -684,6 +716,10 @@ var Middleware_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Scan",
 			Handler:    _Middleware_Scan_Handler,
+		},
+		{
+			MethodName: "Keys",
+			Handler:    _Middleware_Keys_Handler,
 		},
 		{
 			MethodName: "Update",

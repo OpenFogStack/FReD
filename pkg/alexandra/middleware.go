@@ -52,6 +52,47 @@ func (m *Middleware) Scan(ctx context.Context, req *middleware.ScanRequest) (*mi
 	return &middleware.ScanResponse{Data: data}, nil
 }
 
+// Keys issues a keys request from the client to the middleware. The request is forwarded to FReD and incoming items are
+// checked for their versions by comparing locally cached versions (if any). The local cache is also updated
+// (if applicable).
+func (m *Middleware) Keys(ctx context.Context, req *middleware.KeysRequest) (*middleware.KeysResponse, error) {
+	log.Debug().Msgf("Alexandra has rcvd Scan")
+
+	m.vcache.cRLock(req.Keygroup, req.Id)
+	defer m.vcache.cRUnlock(req.Keygroup, req.Id)
+
+	c, err := m.clientsMgr.getClient(req.Keygroup)
+
+	if err != nil {
+		log.Error().Err(err)
+		return nil, err
+	}
+
+	res, err := c.keys(ctx, req.Keygroup, req.Id, req.Count)
+
+	if err != nil {
+		return nil, err
+	}
+
+	keys := make([]*middleware.Key, len(res.Keys))
+
+	for i, k := range res.Keys {
+		keys[i] = &middleware.Key{
+			Id: k.Id,
+		}
+
+		err = m.vcache.add(req.Keygroup, k.Id, k.Version.Version)
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	log.Debug().Msgf("Alexandra Keys: got %d items for %s", len(keys), req.Id)
+
+	return &middleware.KeysResponse{Keys: keys}, nil
+}
+
 // Read reads a datum from FReD. Read data are placed in cache (if not in there already). If multiple versions of a
 // datum exist, all versions will be returned to the client so that it can choose one. If the read data is outdated
 // compared to seen versions, an error is returned.
@@ -256,7 +297,6 @@ func (m *Middleware) Append(ctx context.Context, req *middleware.AppendRequest) 
 // Notify notifies the middleware about a version of a datum that the client has seen by bypassing the middleware. This
 // is required to capture external causality.
 func (m *Middleware) Notify(_ context.Context, req *middleware.NotifyRequest) (*middleware.Empty, error) {
-
 
 	m.vcache.cLock(req.Keygroup, req.Id)
 	defer m.vcache.cUnlock(req.Keygroup, req.Id)

@@ -452,6 +452,37 @@ func (n *Node) ScanItems(kgname, item string, count uint64, expectError bool) ma
 	return items
 }
 
+// ScanKeys calls the Keys endpoint of the GRPC interface.
+func (n *Node) ScanKeys(kgname, item string, count uint64, expectError bool) []string {
+	res, err := n.Client.Keys(context.Background(), &client.KeysRequest{
+		Keygroup: kgname,
+		Id:       item,
+		Count:    count,
+	})
+
+	if err != nil && !expectError {
+		log.Warn().Msgf("ScanItems: error %s", err)
+		n.Errors++
+	}
+
+	if err == nil && expectError {
+		log.Warn().Msg("ScanItems: Expected Error but got no error")
+		n.Errors++
+	}
+
+	if res == nil {
+		return nil
+	}
+
+	items := make([]string, len(res.Keys))
+
+	for i, d := range res.Keys {
+		items[i] = d.Id
+	}
+
+	return items
+}
+
 // DeleteItem calls the DeleteItem endpoint of the GRPC interface.
 func (n *Node) DeleteItem(kgname, item string, expectError bool) {
 

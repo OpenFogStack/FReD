@@ -9,6 +9,7 @@ service Middleware {
   rpc DeleteKeygroup (DeleteKeygroupRequest) returns (Empty);
   rpc Read (ReadRequest) returns (ReadResponse);
   rpc Scan (ScanRequest) returns (ScanResponse);
+  rpc Keys (KeysRequest) returns (KeysResponse);
   rpc Update (UpdateRequest) returns (Empty);
   rpc Delete (DeleteRequest) returns (Empty);
   rpc Append (AppendRequest) returns (AppendResponse);
@@ -71,6 +72,20 @@ message ScanRequest {
 
 message ScanResponse {
   repeated Data data = 1;
+}
+
+message KeysRequest {
+  string keygroup = 1;
+  string id = 2;
+  uint64 count = 3;
+}
+
+message KeysResponse {
+  repeated Key keys = 1;
+}
+
+message Key {
+  string id = 1;
 }
 
 message Data {
