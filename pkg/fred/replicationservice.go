@@ -137,7 +137,7 @@ func (s *replicationService) relayDeleteKeygroup(k Keygroup) error {
 
 	for id, addr := range addrs {
 		wg.Add(1)
-		go func(addr string, id NodeID) {
+		go func(addr string, _ NodeID) {
 			defer wg.Done()
 			log.Debug().Msgf("RelayDeleteKeygroup from replservice: sending %+v to %+v", k, addr)
 			err = s.c.SendDeleteKeygroup(addr, k.Name)

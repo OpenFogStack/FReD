@@ -85,7 +85,7 @@ func startServer(cert string, key string, ca string, skipVerify bool, host strin
 	}()
 
 	// start a http server that lets us see what the trigger node has received
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/", func(w http.ResponseWriter, _ *http.Request) {
 		l, err := json.Marshal(s.log)
 
 		if err != nil {

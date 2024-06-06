@@ -1,10 +1,10 @@
 # Base image: https://hub.docker.com/_/golang/
-FROM golang:1.20
+FROM golang:1.22
 
 ENV DOCKER_CHANNEL stable
 ENV DOCKER_VERSION 24.0.2
 ENV DOCKER_BUILDX_VERSION 0.11.1
-ENV GOLANGCI_LINT_VERSION v1.53.3
+ENV GOLANGCI_LINT_VERSION v1.59.0
 
 # Install golint
 ENV GOPATH /go
