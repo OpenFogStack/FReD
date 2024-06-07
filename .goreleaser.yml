@@ -1,3 +1,5 @@
+version: 2
+
 gitlab_urls:
   api: https://git.tu-berlin.de/api/v4/
   download: https://git.tu-berlin.de
@@ -73,7 +75,7 @@ dockers:
       - go.mod
       - go.sum
   - ids:
-      - ALeXANDRA
+      - ALExANDRA
     goos: linux
     goarch: amd64
     dockerfile: alexandra.Dockerfile
