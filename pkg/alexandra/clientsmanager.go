@@ -82,7 +82,9 @@ func newClientsManager(clientsCert string, clientsKey string, caCert string, lig
 }
 
 func (m *ClientsMgr) readFromAnywhere(request *middleware.ReadRequest) ([]string, []vclock.VClock, error) {
-	log.Debug().Msgf("ClientsManager is reading from anywhere. Req= %+v", request)
+	log.Debug().Msg("ClientsManager is reading from anywhere.")
+	log.Trace().Msgf("ReadRequest: %+v", request)
+
 	m.maybeUpdateKeygroupClients(request.Keygroup)
 
 	// Start a coroutine to every fastestClient we ask
@@ -97,7 +99,7 @@ func (m *ClientsMgr) readFromAnywhere(request *middleware.ReadRequest) ([]string
 
 	// if there is a preferred client, only try to ask that
 	if set.preferred != nil {
-		log.Debug().Msgf("there is a preferred node, reading from that: %s", set.preferred.nodeID)
+		log.Trace().Msgf("there is a preferred node, reading from that: %s", set.preferred.nodeID)
 		res, err := set.preferred.Client.Read(context.Background(), &clientsProto.ReadRequest{Id: request.Id, Keygroup: request.Keygroup})
 
 		if err != nil {
@@ -111,7 +113,7 @@ func (m *ClientsMgr) readFromAnywhere(request *middleware.ReadRequest) ([]string
 		for i := range res.Data {
 			vals[i] = res.Data[i].Val
 			versions[i] = res.Data[i].Version.Version
-			log.Debug().Msgf("Reading from client %s returned data: %+v %+v", set.preferred.nodeID, res.Data[i].Val, res.Data[i].Version.Version)
+			log.Trace().Msgf("Reading from client %s returned data: %+v %+v", set.preferred.nodeID, res.Data[i].Val, res.Data[i].Version.Version)
 		}
 
 		return vals, versions, nil
@@ -138,7 +140,7 @@ func (m *ClientsMgr) readFromAnywhere(request *middleware.ReadRequest) ([]string
 		clientsToAsk[clts[rand.Intn(len(clts))].client] = struct{}{}
 	}
 
-	log.Debug().Msgf("asking %d nodes", len(clientsToAsk))
+	log.Trace().Msgf("asking %d nodes", len(clientsToAsk))
 
 	var wg sync.WaitGroup
 	responses := make(chan readResponse, len(clientsToAsk))
@@ -150,7 +152,7 @@ func (m *ClientsMgr) readFromAnywhere(request *middleware.ReadRequest) ([]string
 		go func(c *Client) {
 			defer wg.Done()
 
-			log.Debug().Msgf("...asking Client %s for Keygroup %s", c.nodeID, request.Keygroup)
+			log.Trace().Msgf("...asking Client %s for Keygroup %s", c.nodeID, request.Keygroup)
 			res, err := c.Client.Read(context.Background(), &clientsProto.ReadRequest{Id: request.Id, Keygroup: request.Keygroup})
 
 			if err != nil {
@@ -165,7 +167,7 @@ func (m *ClientsMgr) readFromAnywhere(request *middleware.ReadRequest) ([]string
 			for i := range res.Data {
 				r.vals[i] = res.Data[i].Val
 				r.versions[i] = res.Data[i].Version.Version
-				log.Debug().Msgf("Reading from client %s returned data: %+v %+v", c.nodeID, res.Data[i].Val, res.Data[i].Version.Version)
+				log.Trace().Msgf("Reading from client %s returned data: %+v %+v", c.nodeID, res.Data[i].Val, res.Data[i].Version.Version)
 			}
 
 			responses <- r
@@ -190,7 +192,7 @@ func (m *ClientsMgr) readFromAnywhere(request *middleware.ReadRequest) ([]string
 	}
 
 	// There was no successful response -- Update the keygroup information and try one last time
-	log.Info().Msg("ReadFromAnywhere: Was not able to reach any queried node, updating cache and retrying...")
+	log.Debug().Msg("ReadFromAnywhere: Was not able to reach any queried node, updating cache and retrying...")
 	m.updateKeygroupClients(request.Keygroup)
 
 	client, err := m.getFastestClientWithKeygroup(request.Keygroup, request.MinExpiry)
@@ -216,6 +218,8 @@ func (m *ClientsMgr) readFromAnywhere(request *middleware.ReadRequest) ([]string
 }
 
 func (m *ClientsMgr) getLightHouse() (client *Client, err error) {
+	log.Trace().Msg("ClientsMgr: GetLightHouse was called")
+
 	// get a client to the lighthouse, get its node id, then save the client with the proper node id
 	l := newClient("__lighthouse", m.lighthouse, m.clientsCert, m.clientsKey, m.caCert, m.clientsSkipVerify)
 
@@ -242,7 +246,7 @@ func (m *ClientsMgr) getLightHouse() (client *Client, err error) {
 
 // GetClientTo returns a client with this address
 func (m *ClientsMgr) getClientTo(host string, nodeID string) (client *Client) {
-	log.Info().Msgf("GetClientTo: Trying to get Fred Client to node %s host %s", nodeID, host)
+	log.Trace().Msgf("GetClientTo: Trying to get Fred Client to node %s host %s", nodeID, host)
 	client = m.clients[nodeID]
 
 	if client != nil {
@@ -341,7 +345,7 @@ func (m *ClientsMgr) getClient(keygroup string) (*Client, error) {
 // getFastestClient searches for the fastest of the already existing clients
 func (m *ClientsMgr) getFastestClient() (client *Client) {
 	if len(m.clients) == 0 {
-		log.Info().Msg("ClientsMgr: GetFastestClient was called but there are not clients. Using lighthouse client")
+		log.Debug().Msg("ClientsMgr: GetFastestClient was called but there are not clients. Using lighthouse client")
 
 		lc, err := m.getLightHouse()
 		if err != nil {
@@ -375,7 +379,7 @@ func (m *ClientsMgr) getFastestClientWithKeygroup(keygroup string, expiry int64)
 		clients = m.keygroups[keygroup]
 		m.Unlock()
 	}
-	log.Debug().Msgf("Clients before filtering: %+v", clients)
+	log.Trace().Msgf("Clients before filtering: %+v", clients)
 	filteredClients := filterClientsToExpiry(clients.clients, expiry)
 	fastestClient := getFastestClientByClientExpiry(filteredClients)
 	if fastestClient == nil {
@@ -391,7 +395,7 @@ func (m *ClientsMgr) getRandomClientWithKeygroup(keygroup string, expiry int64) 
 	m.Unlock()
 	filtered := filterClientsToExpiry(clients.clients, expiry)
 	// Get random element from this list
-	log.Debug().Msgf("Len filtered is %+v", len(filtered))
+	log.Trace().Msgf("Len filtered is %+v", len(filtered))
 	if len(filtered) == 0 {
 		return nil, fmt.Errorf("was not able to find ANY client to keygroup %s with expiry > %d. Clients: %+v", keygroup, expiry, clients)
 	}
@@ -422,7 +426,7 @@ func (m *ClientsMgr) maybeUpdateKeygroupClients(keygroup string) {
 
 // updateKeygroupClients updates the clients a keygroup has in a blocking way
 func (m *ClientsMgr) updateKeygroupClients(keygroup string) {
-	log.Debug().Msgf("Updating Clients for Keygroup %s", keygroup)
+	log.Trace().Msgf("Updating Clients for Keygroup %s", keygroup)
 	replica, err := m.getFastestClient().getKeygroupReplica(context.Background(), keygroup)
 	if err != nil {
 		log.Debug().Msgf("couldn't get replicas for keygroup %s from fastest client: %s", keygroup, err.Error())
@@ -443,7 +447,7 @@ func (m *ClientsMgr) updateKeygroupClients(keygroup string) {
 		}
 	}
 
-	log.Debug().Msgf("updateKeygroupClients: Got replicas: %+v", replica)
+	log.Trace().Msgf("updateKeygroupClients: Got replicas: %+v", replica)
 
 	m.Lock()
 	defer m.Unlock()
@@ -477,5 +481,5 @@ func (m *ClientsMgr) updateKeygroupClients(keygroup string) {
 
 	set.lastUpdated = time.Now()
 	m.keygroups[keygroup] = set
-	log.Debug().Msgf("updateKeygroupClients: new Clients are: %+v", set)
+	log.Trace().Msgf("updateKeygroupClients: new Clients are: %+v", set)
 }

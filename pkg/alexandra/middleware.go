@@ -14,7 +14,7 @@ import (
 // checked for their versions by comparing locally cached versions (if any). The local cache is also updated
 // (if applicable).
 func (m *Middleware) Scan(ctx context.Context, req *middleware.ScanRequest) (*middleware.ScanResponse, error) {
-	log.Debug().Msgf("Alexandra has rcvd Scan")
+	log.Trace().Msgf("Alexandra has rcvd Scan %+v", req)
 
 	m.vcache.cRLock(req.Keygroup, req.Id)
 	defer m.vcache.cRUnlock(req.Keygroup, req.Id)
@@ -56,7 +56,7 @@ func (m *Middleware) Scan(ctx context.Context, req *middleware.ScanRequest) (*mi
 // checked for their versions by comparing locally cached versions (if any). The local cache is also updated
 // (if applicable).
 func (m *Middleware) Keys(ctx context.Context, req *middleware.KeysRequest) (*middleware.KeysResponse, error) {
-	log.Debug().Msgf("Alexandra has rcvd Scan")
+	log.Trace().Msgf("Alexandra has rcvd Scan %+v", req)
 
 	m.vcache.cRLock(req.Keygroup, req.Id)
 	defer m.vcache.cRUnlock(req.Keygroup, req.Id)
@@ -88,7 +88,7 @@ func (m *Middleware) Keys(ctx context.Context, req *middleware.KeysRequest) (*mi
 		}
 	}
 
-	log.Debug().Msgf("Alexandra Keys: got %d items for %s", len(keys), req.Id)
+	log.Trace().Msgf("Alexandra Keys: got %d items for %s", len(keys), req.Id)
 
 	return &middleware.KeysResponse{Keys: keys}, nil
 }
@@ -97,7 +97,7 @@ func (m *Middleware) Keys(ctx context.Context, req *middleware.KeysRequest) (*mi
 // datum exist, all versions will be returned to the client so that it can choose one. If the read data is outdated
 // compared to seen versions, an error is returned.
 func (m *Middleware) Read(_ context.Context, req *middleware.ReadRequest) (*middleware.ReadResponse, error) {
-	log.Debug().Msgf("Alexandra has rcvd Read")
+	log.Trace().Msgf("Alexandra has rcvd Read %+v", req)
 
 	m.vcache.cRLock(req.Keygroup, req.Id)
 	defer m.vcache.cRUnlock(req.Keygroup, req.Id)
@@ -136,10 +136,10 @@ func (m *Middleware) Read(_ context.Context, req *middleware.ReadRequest) (*midd
 		}
 	}
 
-	log.Debug().Msgf("Alexandra Read key %s in kg %s: got vals %v versions %v", req.Id, req.Keygroup, vals, versions)
+	log.Trace().Msgf("Alexandra Read key %s in kg %s: got vals %v versions %v", req.Id, req.Keygroup, vals, versions)
 
 	for i := range versions {
-		log.Debug().Msgf("Alexandra Read: putting version %v in cache for %s", versions[i], req.Id)
+		log.Trace().Msgf("Alexandra Read: putting version %v in cache for %s", versions[i], req.Id)
 		err = m.vcache.add(req.Keygroup, req.Id, versions[i])
 		if err != nil {
 			log.Error().Err(err)
@@ -156,7 +156,7 @@ func (m *Middleware) Read(_ context.Context, req *middleware.ReadRequest) (*midd
 		}
 	}
 
-	log.Info().Msgf("Read: old %+v new %+v", known, versions)
+	log.Debug().Msgf("Read: old %+v new %+v", known, versions)
 
 	return &middleware.ReadResponse{
 		Items: items,
@@ -173,7 +173,7 @@ func (m *Middleware) Read(_ context.Context, req *middleware.ReadRequest) (*midd
 // If spontaneous write (i.e., datum cannot be found in cache), we assume an empty vector clock in the cache and send
 // that to FReD. If there is a newer (any) data item in FReD already, this will fail.
 func (m *Middleware) Update(ctx context.Context, req *middleware.UpdateRequest) (*middleware.Empty, error) {
-	log.Debug().Msgf("Alexandra has rcvd Update")
+	log.Trace().Msgf("Alexandra has rcvd Update %+v", req)
 
 	m.vcache.cLock(req.Keygroup, req.Id)
 	defer m.vcache.cUnlock(req.Keygroup, req.Id)
@@ -219,7 +219,7 @@ func (m *Middleware) Update(ctx context.Context, req *middleware.UpdateRequest) 
 		return nil, err
 	}
 
-	log.Info().Msgf("Update: old %+v new %+v", known, v)
+	log.Debug().Msgf("Update: old %+v new %+v", known, v)
 
 	return &middleware.Empty{}, nil
 }
@@ -233,7 +233,7 @@ func (m *Middleware) Update(ctx context.Context, req *middleware.UpdateRequest) 
 // If spontaneous delete (i.e., datum cannot be found in cache), we assume an empty vector clock in the cache and send
 // that to FReD. If there is a newer (any) data item in FReD already, this will fail.
 func (m *Middleware) Delete(ctx context.Context, req *middleware.DeleteRequest) (*middleware.Empty, error) {
-	log.Debug().Msgf("Alexandra has rcvd Delete")
+	log.Trace().Msgf("Alexandra has rcvd Delete %+v", req)
 
 	m.vcache.cLock(req.Keygroup, req.Id)
 	defer m.vcache.cUnlock(req.Keygroup, req.Id)
@@ -279,6 +279,7 @@ func (m *Middleware) Delete(ctx context.Context, req *middleware.DeleteRequest) 
 // FReD's append endpoint requires a unique ID for a datum. ALExANDRA automatically uses a Unix nanosecond timestamp for
 // this.
 func (m *Middleware) Append(ctx context.Context, req *middleware.AppendRequest) (*middleware.AppendResponse, error) {
+	log.Trace().Msgf("Alexandra has rcvd Append %+v", req)
 
 	c, err := m.clientsMgr.getClient(req.Keygroup)
 
@@ -297,6 +298,7 @@ func (m *Middleware) Append(ctx context.Context, req *middleware.AppendRequest) 
 // Notify notifies the middleware about a version of a datum that the client has seen by bypassing the middleware. This
 // is required to capture external causality.
 func (m *Middleware) Notify(_ context.Context, req *middleware.NotifyRequest) (*middleware.Empty, error) {
+	log.Trace().Msgf("Alexandra has rcvd Notify %+v", req)
 
 	m.vcache.cLock(req.Keygroup, req.Id)
 	defer m.vcache.cUnlock(req.Keygroup, req.Id)
@@ -313,7 +315,7 @@ func (m *Middleware) Notify(_ context.Context, req *middleware.NotifyRequest) (*
 // ChooseReplica allows a client to choose a particular note to send requests to for a keygroup. This will override the
 // fastest node if exists
 func (m *Middleware) ChooseReplica(_ context.Context, req *middleware.ChooseReplicaRequest) (*middleware.Empty, error) {
-	log.Debug().Msgf("AlexandraServer has rcdv ChooseReplica: %+v", req)
+	log.Trace().Msgf("AlexandraServer has rcdv ChooseReplica: %+v", req)
 	err := m.clientsMgr.setPreferred(req.Keygroup, req.NodeId)
 
 	if err != nil {
@@ -326,14 +328,14 @@ func (m *Middleware) ChooseReplica(_ context.Context, req *middleware.ChooseRepl
 // CreateKeygroup creates the keygroup and also adds the first node (This is two operations in the eye of FReD:
 // CreateKeygroup and AddReplica)
 func (m *Middleware) CreateKeygroup(ctx context.Context, req *middleware.CreateKeygroupRequest) (*middleware.Empty, error) {
-	log.Debug().Msgf("AlexandraServer has rcdv CreateKeygroup: %+v", req)
+	log.Trace().Msgf("AlexandraServer has rcdv CreateKeygroup: %+v", req)
 	getReplica, err := m.clientsMgr.getFastestClient().getReplica(ctx, req.FirstNodeId)
 
 	if err != nil {
 		return nil, err
 	}
 
-	log.Debug().Msgf("CreateKeygroup: using node %s (addr=%s)", getReplica.NodeId, getReplica.Host)
+	log.Trace().Msgf("CreateKeygroup: using node %s (addr=%s)", getReplica.NodeId, getReplica.Host)
 
 	_, err = m.clientsMgr.getClientTo(getReplica.Host, getReplica.NodeId).createKeygroup(ctx, req.Keygroup, req.Mutable, req.Expiry)
 
@@ -346,11 +348,13 @@ func (m *Middleware) CreateKeygroup(ctx context.Context, req *middleware.CreateK
 
 // DeleteKeygroup deletes a keygroup from FReD.
 func (m *Middleware) DeleteKeygroup(ctx context.Context, req *middleware.DeleteKeygroupRequest) (*middleware.Empty, error) {
+	log.Trace().Msgf("AlexandraServer has rcdv DeleteKeygroup: %+v", req)
+
 	client, err := m.clientsMgr.getClient(req.Keygroup)
 	if err != nil {
 		return nil, err
 	}
-	log.Debug().Msgf("DeleteKeygroup: using node %+v", client.nodeID)
+	log.Trace().Msgf("DeleteKeygroup: using node %+v", client.nodeID)
 
 	_, err = client.deleteKeygroup(ctx, req.Keygroup)
 
@@ -364,6 +368,8 @@ func (m *Middleware) DeleteKeygroup(ctx context.Context, req *middleware.DeleteK
 // AddReplica lets the client explicitly add a new replica for a keygroup. In the future, this should happen
 // automatically.
 func (m *Middleware) AddReplica(ctx context.Context, req *middleware.AddReplicaRequest) (*middleware.Empty, error) {
+	log.Trace().Msgf("AlexandraServer has rcdv AddReplica: %+v", req)
+
 	c, err := m.clientsMgr.getClient(req.Keygroup)
 
 	if err != nil {
@@ -388,6 +394,8 @@ func (m *Middleware) AddReplica(ctx context.Context, req *middleware.AddReplicaR
 // RemoveReplica lets the client explicitly remove a new replica for a keygroup. In the future, this should happen
 // automatically.
 func (m *Middleware) RemoveReplica(ctx context.Context, req *middleware.RemoveReplicaRequest) (*middleware.Empty, error) {
+	log.Trace().Msgf("AlexandraServer has rcdv RemoveReplica: %+v", req)
+
 	c, err := m.clientsMgr.getClient(req.Keygroup)
 
 	if err != nil {
@@ -410,6 +418,8 @@ func (m *Middleware) RemoveReplica(ctx context.Context, req *middleware.RemoveRe
 // GetReplica returns information about a specific FReD node. In the future, this API will be removed as ALExANDRA
 // handles data replication.
 func (m *Middleware) GetReplica(ctx context.Context, req *middleware.GetReplicaRequest) (*middleware.GetReplicaResponse, error) {
+	log.Trace().Msgf("AlexandraServer has rcdv GetReplica: %+v", req)
+
 	res, err := m.clientsMgr.getFastestClient().Client.GetReplica(ctx, &api.GetReplicaRequest{NodeId: req.NodeId})
 
 	if err != nil {
@@ -422,6 +432,8 @@ func (m *Middleware) GetReplica(ctx context.Context, req *middleware.GetReplicaR
 // GetAllReplica returns a list of all FReD nodes. In the future, this API will be removed as ALExANDRA handles data
 // replication.
 func (m *Middleware) GetAllReplica(ctx context.Context, _ *middleware.GetAllReplicaRequest) (*middleware.GetAllReplicaResponse, error) {
+	log.Trace().Msgf("AlexandraServer has rcdv GetAllReplica %+v", nil)
+
 	res, err := m.clientsMgr.getFastestClient().Client.GetAllReplica(ctx, &api.Empty{})
 
 	if err != nil {
@@ -442,6 +454,8 @@ func (m *Middleware) GetAllReplica(ctx context.Context, _ *middleware.GetAllRepl
 // GetKeygroupInfo returns a list of all FReD nodes that replicate a given keygroup. In the future, this API will be
 // removed as ALExANDRA handles data replication.
 func (m *Middleware) GetKeygroupInfo(ctx context.Context, req *middleware.GetKeygroupInfoRequest) (*middleware.GetKeygroupInfoResponse, error) {
+	log.Trace().Msgf("AlexandraServer has rcdv GetKeygroupInfo: %+v", req)
+
 	c, err := m.clientsMgr.getClient(req.Keygroup)
 
 	if err != nil {
@@ -470,6 +484,7 @@ func (m *Middleware) GetKeygroupInfo(ctx context.Context, req *middleware.GetKey
 
 // GetKeygroupTriggers returns a list of trigger nodes for a keygroup.
 func (m *Middleware) GetKeygroupTriggers(ctx context.Context, req *middleware.GetKeygroupTriggerRequest) (*middleware.GetKeygroupTriggerResponse, error) {
+	log.Trace().Msgf("AlexandraServer has rcdv GetKeygroupTriggers: %+v", req)
 
 	lc, err := m.clientsMgr.getLightHouse()
 
@@ -497,6 +512,7 @@ func (m *Middleware) GetKeygroupTriggers(ctx context.Context, req *middleware.Ge
 
 // AddTrigger adds a new trigger to a keygroup.
 func (m *Middleware) AddTrigger(ctx context.Context, req *middleware.AddTriggerRequest) (*middleware.Empty, error) {
+	log.Trace().Msgf("AlexandraServer has rcdv AddTrigger: %+v", req)
 
 	lc, err := m.clientsMgr.getLightHouse()
 
@@ -519,6 +535,7 @@ func (m *Middleware) AddTrigger(ctx context.Context, req *middleware.AddTriggerR
 
 // RemoveTrigger removes a trigger node for a keygroup.
 func (m *Middleware) RemoveTrigger(ctx context.Context, req *middleware.RemoveTriggerRequest) (*middleware.Empty, error) {
+	log.Trace().Msgf("AlexandraServer has rcdv RemoveTrigger: %+v", req)
 
 	lc, err := m.clientsMgr.getLightHouse()
 
@@ -540,6 +557,7 @@ func (m *Middleware) RemoveTrigger(ctx context.Context, req *middleware.RemoveTr
 
 // AddUser adds permissions to access a keygroup for a particular user to FReD.
 func (m *Middleware) AddUser(ctx context.Context, req *middleware.UserRequest) (*middleware.Empty, error) {
+	log.Trace().Msgf("AlexandraServer has rcdv AddUser: %+v", req)
 
 	lc, err := m.clientsMgr.getLightHouse()
 
@@ -562,6 +580,7 @@ func (m *Middleware) AddUser(ctx context.Context, req *middleware.UserRequest) (
 
 // RemoveUser removes permissions to access a keygroup for a particular user from FReD.
 func (m *Middleware) RemoveUser(ctx context.Context, req *middleware.UserRequest) (*middleware.Empty, error) {
+	log.Trace().Msgf("AlexandraServer has rcdv RemoveUser: %+v", req)
 
 	lc, err := m.clientsMgr.getLightHouse()
 

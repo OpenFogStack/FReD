@@ -23,6 +23,8 @@ type Client struct {
 }
 
 func newClient(nodeID string, host string, certFile string, keyFile string, caCert string, skipVerify bool) *Client {
+	log.Trace().Msgf("Creating a new client for node %s", nodeID)
+
 	creds, _, err := grpcutil.GetCreds(certFile, keyFile, []string{caCert}, false, skipVerify)
 
 	if err != nil {
@@ -35,7 +37,7 @@ func newClient(nodeID string, host string, certFile string, keyFile string, caCe
 		log.Fatal().Err(err).Msgf("Cannot create Grpc connection to client %s", host)
 		return &Client{Client: api.NewClientClient(conn)}
 	}
-	log.Info().Msgf("Creating a connection to fred node: %s", host)
+	log.Trace().Msgf("Creating a connection to fred node: %s", host)
 	return &Client{
 		Client:    api.NewClientClient(conn),
 		conn:      conn,

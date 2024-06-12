@@ -55,7 +55,7 @@ func (c *Client) getClient(host string) (peering.NodeClient, error) {
 			return nil, errors.New(err)
 		}
 
-		log.Debug().Msgf("peering client: Created Connection to %s", host)
+		log.Trace().Msgf("peering client: Created Connection to %s", host)
 
 		client = peering.NewNodeClient(conn)
 

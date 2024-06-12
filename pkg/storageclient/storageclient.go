@@ -47,7 +47,7 @@ func (c *Client) Close() error {
 // Read calls the same method on the remote server
 func (c *Client) Read(kg, id string) ([]string, []vclock.VClock, bool, error) {
 	res, err := c.dbClient.Read(context.Background(), &storage.ReadRequest{Keygroup: kg, Id: id})
-	log.Debug().Err(err).Msgf("StorageClient: Read in: %+v %+v out: %+v", kg, id, res)
+	log.Trace().Err(err).Msgf("StorageClient: Read in: %+v %+v out: %+v", kg, id, res)
 
 	if err != nil {
 		return nil, nil, false, errors.New(err)
@@ -129,7 +129,7 @@ func (c *Client) Update(kg string, id string, val string, expiry int, vvector vc
 		Version:  vvector.GetMap(),
 	})
 
-	log.Debug().Err(err).Msgf("StorageClient: Update in: %+v,%+v,%+v,%+v out: %+v", kg, id, val, vvector, response)
+	log.Trace().Err(err).Msgf("StorageClient: Update in: %+v,%+v,%+v,%+v out: %+v", kg, id, val, vvector, response)
 
 	if err != nil {
 		return errors.New(err)
@@ -146,7 +146,7 @@ func (c *Client) Append(kg string, id string, val string, expiry int) error {
 		Val:      val,
 		Expiry:   int64(expiry)},
 	)
-	log.Debug().Err(err).Msgf("StorageClient: Append in: %+v,%+v out: %+v", kg, val, response)
+	log.Trace().Err(err).Msgf("StorageClient: Append in: %+v,%+v out: %+v", kg, val, response)
 
 	if err != nil {
 		return errors.New(err)
@@ -163,7 +163,7 @@ func (c *Client) Delete(kg string, id string, vvector vclock.VClock) error {
 		Version:  vvector.GetMap(),
 	})
 
-	log.Debug().Err(err).Msgf("StorageClient: Delete in: %+v %+v %+v out: %+v", kg, id, vvector, response)
+	log.Trace().Err(err).Msgf("StorageClient: Delete in: %+v %+v %+v out: %+v", kg, id, vvector, response)
 
 	if err != nil {
 		return errors.New(err)
@@ -176,7 +176,7 @@ func (c *Client) Delete(kg string, id string, vvector vclock.VClock) error {
 func (c *Client) CreateKeygroup(kg string) error {
 	keygroup := &storage.CreateKeygroupRequest{Keygroup: kg}
 	response, err := c.dbClient.CreateKeygroup(context.Background(), keygroup)
-	log.Debug().Err(err).Msgf("StorageClient: CreateKeygroup in: %+v out: %+v", kg, response)
+	log.Trace().Err(err).Msgf("StorageClient: CreateKeygroup in: %+v out: %+v", kg, response)
 
 	if err != nil {
 		return errors.New(err)
@@ -188,7 +188,7 @@ func (c *Client) CreateKeygroup(kg string) error {
 // DeleteKeygroup calls the same method on the remote server
 func (c *Client) DeleteKeygroup(kg string) error {
 	response, err := c.dbClient.DeleteKeygroup(context.Background(), &storage.DeleteKeygroupRequest{Keygroup: kg})
-	log.Debug().Err(err).Msgf("StorageClient: DeleteKeygroup in: %+v out: %+v", kg, response)
+	log.Trace().Err(err).Msgf("StorageClient: DeleteKeygroup in: %+v out: %+v", kg, response)
 
 	if err != nil {
 		return errors.New(err)
@@ -214,7 +214,7 @@ func (c *Client) Exists(kg string, id string) bool {
 		Keygroup: kg,
 		Id:       id,
 	})
-	log.Debug().Err(err).Msgf("StorageClient: Exists in: %+v %+v out: %+v", kg, id, response)
+	log.Trace().Err(err).Msgf("StorageClient: Exists in: %+v %+v out: %+v", kg, id, response)
 
 	if err != nil {
 		return false
@@ -226,7 +226,7 @@ func (c *Client) Exists(kg string, id string) bool {
 // ExistsKeygroup calls the same method on the remote server.
 func (c *Client) ExistsKeygroup(kg string) bool {
 	response, err := c.dbClient.ExistsKeygroup(context.Background(), &storage.ExistsKeygroupRequest{Keygroup: kg})
-	log.Debug().Err(err).Msgf("StorageClient: ExistsKeygroup in: %+v out: %+v", kg, response)
+	log.Trace().Err(err).Msgf("StorageClient: ExistsKeygroup in: %+v out: %+v", kg, response)
 
 	if err != nil {
 		return false
@@ -249,7 +249,7 @@ func (c *Client) AddKeygroupTrigger(kg string, id string, host string) error {
 		Host: host,
 	}
 	response, err := c.dbClient.AddKeygroupTrigger(context.Background(), keygroupTrigger)
-	log.Debug().Err(err).Msgf("StorageClient: AddKeygroupTrigger in: %+v out: %+v", kg, response)
+	log.Trace().Err(err).Msgf("StorageClient: AddKeygroupTrigger in: %+v out: %+v", kg, response)
 
 	if err != nil {
 		return errors.New(err)
@@ -265,7 +265,7 @@ func (c *Client) DeleteKeygroupTrigger(kg string, id string) error {
 		Id:       id,
 	}
 	response, err := c.dbClient.DeleteKeygroupTrigger(context.Background(), keygroupTrigger)
-	log.Debug().Err(err).Msgf("StorageClient: DeleteKeygroupTrigger in: %+v out: %+v", kg, response)
+	log.Trace().Err(err).Msgf("StorageClient: DeleteKeygroupTrigger in: %+v out: %+v", kg, response)
 
 	if err != nil {
 		return errors.New(err)
@@ -280,7 +280,7 @@ func (c *Client) GetKeygroupTrigger(kg string) (map[string]string, error) {
 		Keygroup: kg,
 	}
 	res, err := c.dbClient.GetKeygroupTrigger(context.Background(), keygroup)
-	log.Debug().Err(err).Msgf("StorageClient: GetKeygroupTrigger in: %+v", kg)
+	log.Trace().Err(err).Msgf("StorageClient: GetKeygroupTrigger in: %+v", kg)
 
 	if err != nil {
 		return nil, errors.New(err)

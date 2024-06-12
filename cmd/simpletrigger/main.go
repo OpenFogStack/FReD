@@ -33,7 +33,7 @@ type Server struct {
 
 // PutItemTrigger calls HandleUpdate on the Inthandler
 func (s *Server) PutItemTrigger(_ context.Context, request *trigger.PutItemTriggerRequest) (*trigger.Empty, error) {
-	log.Debug().Msgf("Trigger Node has rcvd PutItem. In: %+v", request)
+	log.Trace().Msgf("Trigger Node has rcvd PutItem. In: %+v", request)
 
 	s.log = append(s.log, LogEntry{
 		Op:  "put",
@@ -47,7 +47,7 @@ func (s *Server) PutItemTrigger(_ context.Context, request *trigger.PutItemTrigg
 
 // DeleteItemTrigger calls this Method on the Inthandler
 func (s *Server) DeleteItemTrigger(_ context.Context, request *trigger.DeleteItemTriggerRequest) (*trigger.Empty, error) {
-	log.Debug().Msgf("Trigger Node has rcvd DeleteItem. In: %+v", request)
+	log.Trace().Msgf("Trigger Node has rcvd DeleteItem. In: %+v", request)
 
 	s.log = append(s.log, LogEntry{
 		Op: "del",
@@ -118,6 +118,7 @@ func main() {
 	// Setup Logging
 	// In Dev the ConsoleWriter has nice colored output, but is not very fast.
 	// In Prod the default handler is used. It writes json to stdout and is very fast.
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	if *loghandler == "dev" {
 		log.Logger = log.Output(
 			zerolog.ConsoleWriter{
@@ -125,6 +126,7 @@ func main() {
 				NoColor: false,
 			},
 		)
+		zerolog.SetGlobalLevel(zerolog.TraceLevel)
 
 		zerolog.DisableSampling(true)
 	} else if *loghandler != "prod" {

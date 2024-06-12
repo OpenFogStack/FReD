@@ -18,7 +18,7 @@ func newAuthService(n NameService) *authService {
 }
 
 func (a *authService) addRoles(u string, r []Role, k KeygroupName) error {
-	log.Debug().Msgf("adding roles %+v for user %s for keygroup %s", r, u, k)
+	log.Trace().Msgf("adding roles %+v for user %s for keygroup %s", r, u, k)
 	for _, role := range r {
 		for m := range permissions[role] {
 
@@ -34,7 +34,7 @@ func (a *authService) addRoles(u string, r []Role, k KeygroupName) error {
 }
 
 func (a *authService) revokeRoles(u string, r []Role, k KeygroupName) error {
-	log.Debug().Msgf("removing roles %+v from user %s for keygroup %s", r, u, k)
+	log.Trace().Msgf("removing roles %+v from user %s for keygroup %s", r, u, k)
 	for _, role := range r {
 		for m := range permissions[role] {
 			err := a.n.RevokeUserPermissions(u, m, k)
@@ -49,7 +49,7 @@ func (a *authService) revokeRoles(u string, r []Role, k KeygroupName) error {
 }
 
 func (a *authService) isAllowed(u string, m Method, k KeygroupName) (bool, error) {
-	log.Debug().Msgf("checking if user %s is allowed to perform %s on keygroup %s...", u, m, k)
+	log.Trace().Msgf("checking if user %s is allowed to perform %s on keygroup %s...", u, m, k)
 	p, err := a.n.GetUserPermissions(u, k)
 
 	if err != nil {
@@ -66,7 +66,7 @@ func (a *authService) isAllowed(u string, m Method, k KeygroupName) (bool, error
 		} else {
 			res = "false"
 		}
-		log.Debug().Msgf("...user is allowed: %s", res)
+		log.Trace().Msgf("...user is allowed: %s", res)
 	}
 
 	return ok, nil

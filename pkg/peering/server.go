@@ -44,7 +44,7 @@ func NewServer(host string, handler *fred.IntHandler, certFile string, keyFile s
 
 	peering.RegisterNodeServer(s.Server, s)
 
-	log.Debug().Msgf("Peering Server is listening on %s", host)
+	log.Trace().Msgf("Peering Server is listening on %s", host)
 
 	go func() {
 		err := s.Server.Serve(lis)

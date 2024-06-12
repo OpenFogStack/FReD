@@ -88,6 +88,8 @@ func garbageCollection(db *badger.DB) {
 
 // New creates a new BadgerDB Storage on disk.
 func New(dbPath string) (s *Storage) {
+	log.Trace().Msgf("Opening BadgerDB at %s", dbPath)
+
 	db, err := badger.Open(badger.DefaultOptions(dbPath).WithLoggingLevel(badger.ERROR))
 	if err != nil {
 		panic(err)
@@ -105,6 +107,8 @@ func New(dbPath string) (s *Storage) {
 
 // NewMemory create a new BadgerDB Storage in memory.
 func NewMemory() (s *Storage) {
+	log.Trace().Msg("Opening BadgerDB in memory")
+
 	db, err := badger.Open(badger.DefaultOptions("").WithInMemory(true).WithLoggingLevel(badger.ERROR))
 	if err != nil {
 		panic(err)
@@ -127,6 +131,8 @@ func (s *Storage) Close() error {
 
 // Read returns an item with the specified id from the specified keygroup.
 func (s *Storage) Read(kg string, id string) ([]string, []vclock.VClock, bool, error) {
+	log.Trace().Msgf("Reading item %s in keygroup %s", id, kg)
+
 	values := make([]string, 0)
 	vvectors := make([]vclock.VClock, 0)
 
@@ -175,6 +181,8 @@ func (s *Storage) Read(kg string, id string) ([]string, []vclock.VClock, bool, e
 
 // ReadSome returns count number of items in the specified keygroup starting at id.
 func (s *Storage) ReadSome(kg, id string, count uint64) ([]string, []string, []vclock.VClock, error) {
+	log.Trace().Msgf("Reading %d items starting at %s in keygroup %s", count, id, kg)
+
 	keys := make([]string, 0)
 	items := make([]string, 0)
 	vvectors := make([]vclock.VClock, 0)
@@ -219,6 +227,8 @@ func (s *Storage) ReadSome(kg, id string, count uint64) ([]string, []string, []v
 
 // ReadAll returns all items in the specified keygroup.
 func (s *Storage) ReadAll(kg string) ([]string, []string, []vclock.VClock, error) {
+	log.Trace().Msgf("Reading all items in keygroup %s", kg)
+
 	keys := make([]string, 0)
 	items := make([]string, 0)
 	vvectors := make([]vclock.VClock, 0)
@@ -260,6 +270,8 @@ func (s *Storage) ReadAll(kg string) ([]string, []string, []vclock.VClock, error
 
 // IDs returns the keys of all items in the specified keygroup.
 func (s *Storage) IDs(kg string) ([]string, error) {
+	log.Trace().Msgf("Reading all keys in keygroup %s", kg)
+
 	var items []string
 
 	err := s.db.View(func(txn *badger.Txn) error {
@@ -294,6 +306,8 @@ func (s *Storage) IDs(kg string) ([]string, error) {
 
 // Update updates the item with the specified id in the specified keygroup.
 func (s *Storage) Update(kg, id, val string, expiry int, vvector vclock.VClock) error {
+	log.Trace().Msgf("Updating item %s in keygroup %s", id, kg)
+
 	err := s.db.Update(func(txn *badger.Txn) error {
 		key := makeKeyName(kg, id, vvector)
 
@@ -326,6 +340,8 @@ func (s *Storage) Update(kg, id, val string, expiry int, vvector vclock.VClock) 
 
 // Delete deletes the item with the specified id from the specified keygroup. Will delete a specific version or all versions if vvector is nil.
 func (s *Storage) Delete(kg string, id string, vvector vclock.VClock) error {
+	log.Trace().Msgf("Deleting item %s in keygroup %s", id, kg)
+
 	if vvector != nil {
 		err := s.db.Update(func(txn *badger.Txn) error {
 			err := txn.Delete(makeKeyName(kg, id, vvector))
@@ -390,6 +406,8 @@ func (s *Storage) Delete(kg string, id string, vvector vclock.VClock) error {
 
 // Append appends the item to the specified keygroup by incrementing the latest key by one.
 func (s *Storage) Append(kg string, id string, val string, expiry int) error {
+	log.Trace().Msgf("Appending item %s in keygroup %s", id, kg)
+
 	if s.Exists(kg, id) {
 		return errors.Errorf("key %s for keygroup %s exists in database already and may not be changed", id, kg)
 	}
@@ -426,6 +444,8 @@ func (s *Storage) Append(kg string, id string, val string, expiry int) error {
 
 // Exists checks if the given data item exists in the badgerdb database.
 func (s *Storage) Exists(kg string, id string) bool {
+	log.Trace().Msgf("Checking if item %s in keygroup %s exists", id, kg)
+
 	err := s.db.View(func(txn *badger.Txn) error {
 		prefix := makeKeyNamePrefix(kg, id)
 
@@ -455,6 +475,8 @@ func (s *Storage) Exists(kg string, id string) bool {
 
 // ExistsKeygroup checks if the given keygroup exists in the badgerdb database.
 func (s *Storage) ExistsKeygroup(kg string) bool {
+	log.Trace().Msgf("Checking if keygroup %s exists", kg)
+
 	err := s.db.View(func(txn *badger.Txn) error {
 		_, err := txn.Get(makeKeygroupConfigKeyName(kg))
 
@@ -474,6 +496,8 @@ func (s *Storage) ExistsKeygroup(kg string) bool {
 
 // CreateKeygroup creates the given keygroup in the badgerdb database.
 func (s *Storage) CreateKeygroup(kg string) error {
+	log.Trace().Msgf("Creating keygroup %s", kg)
+
 	err := s.db.Update(func(txn *badger.Txn) error {
 		err := txn.Set(makeKeygroupConfigKeyName(kg), []byte(kg))
 		if err != nil {
@@ -498,6 +522,8 @@ func (s *Storage) CreateKeygroup(kg string) error {
 
 // DeleteKeygroup deletes the given keygroup from the badgerdb database.
 func (s *Storage) DeleteKeygroup(kg string) error {
+	log.Trace().Msgf("Deleting keygroup %s", kg)
+
 	err := s.db.Update(func(txn *badger.Txn) error {
 		err := txn.Delete(makeKeygroupConfigKeyName(kg))
 		if err != nil {
@@ -607,6 +633,8 @@ func (s *Storage) DeleteKeygroup(kg string) error {
 
 // AddKeygroupTrigger adds a trigger node to the given keygroup in the badgerdb database.
 func (s *Storage) AddKeygroupTrigger(kg string, id string, host string) error {
+	log.Trace().Msgf("Adding trigger %s to keygroup %s", id, kg)
+
 	err := s.db.Update(func(txn *badger.Txn) error {
 		key := makeTriggerConfigKeyName(kg, id)
 
@@ -626,6 +654,8 @@ func (s *Storage) AddKeygroupTrigger(kg string, id string, host string) error {
 
 // DeleteKeygroupTrigger removes a trigger node from the given keygroup in the badgerdb database.
 func (s *Storage) DeleteKeygroupTrigger(kg string, id string) error {
+	log.Trace().Msgf("Deleting trigger %s from keygroup %s", id, kg)
+
 	err := s.db.Update(func(txn *badger.Txn) error {
 		err := txn.Delete(makeTriggerConfigKeyName(kg, id))
 		if err != nil {
@@ -643,6 +673,8 @@ func (s *Storage) DeleteKeygroupTrigger(kg string, id string) error {
 
 // GetKeygroupTrigger returns a list of all trigger nodes for the given keygroup in the badgerdb database.
 func (s *Storage) GetKeygroupTrigger(kg string) (map[string]string, error) {
+	log.Trace().Msgf("Getting all triggers for keygroup %s", kg)
+
 	items := make(map[string]string)
 
 	err := s.db.View(func(txn *badger.Txn) error {

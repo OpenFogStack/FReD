@@ -98,7 +98,7 @@ func NewNameService(nodeID string, endpoints []string, certFile string, keyFile 
 // RegisterSelf stores information about this node
 func (n *NameService) RegisterSelf(host string, externalHost string) error {
 	key := fmt.Sprintf(fmtNodeAdressString, n.NodeID)
-	log.Debug().Msgf("NaSe: registering self as %s // %s", key, host)
+	log.Trace().Msgf("NaSe: registering self as %s // %s", key, host)
 
 	err := n.put(key, host)
 
@@ -107,7 +107,7 @@ func (n *NameService) RegisterSelf(host string, externalHost string) error {
 	}
 
 	key = fmt.Sprintf(fmtNodeExternalAdressString, n.NodeID)
-	log.Debug().Msgf("NaSe: registering external address as %s // %s", key, externalHost)
+	log.Trace().Msgf("NaSe: registering external address as %s // %s", key, externalHost)
 	return n.put(key, externalHost)
 }
 

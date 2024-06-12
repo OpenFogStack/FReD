@@ -83,9 +83,9 @@ func vectorToString(v vclock.VClock) string {
 }
 
 func New(table string, region string, endpoint string, create bool) (*Storage, error) {
-	log.Debug().Msgf("creating a new dynamodb connection to table %s in region %s", table, region)
+	log.Trace().Msgf("creating a new dynamodb connection to table %s in region %s", table, region)
 
-	log.Debug().Msg("Checked creds - OK!")
+	log.Trace().Msg("Checked creds - OK!")
 
 	opts := dynamodb.Options{
 		Region: region,
@@ -105,11 +105,11 @@ func New(table string, region string, endpoint string, create bool) (*Storage, e
 		}
 	}
 
-	log.Debug().Msg("Created session - OK!")
+	log.Trace().Msg("Created session - OK!")
 
 	svc := dynamodb.New(opts)
 
-	log.Debug().Msg("Created service - OK!")
+	log.Trace().Msg("Created service - OK!")
 
 	if create {
 		// aws dynamodb create-table --table-name fred --attribute-definitions "AttributeName=Keygroup,AttributeType=S AttributeName=Key,AttributeType=S" --key-schema "AttributeName=Keygroup,KeyType=HASH AttributeName=Key,KeyType=RANGE" --provisioned-throughput "ReadCapacityUnits=1,WriteCapacityUnits=1"
@@ -146,7 +146,7 @@ func New(table string, region string, endpoint string, create bool) (*Storage, e
 			return nil, err
 		}
 
-		log.Debug().Msg("DynamoDB: Created table - OK!")
+		log.Trace().Msg("DynamoDB: Created table - OK!")
 
 		// aws dynamodb update-time-to-live --table-name fred --time-to-live-specification "Enabled=true, AttributeName=Expiry"
 		_, err = svc.UpdateTimeToLive(context.TODO(), &dynamodb.UpdateTimeToLiveInput{
@@ -161,7 +161,7 @@ func New(table string, region string, endpoint string, create bool) (*Storage, e
 			return nil, err
 		}
 
-		log.Debug().Msg("DynamoDB: Configured TTL - OK!")
+		log.Trace().Msg("DynamoDB: Configured TTL - OK!")
 
 		return &Storage{
 			dynamotable: table,
@@ -169,7 +169,7 @@ func New(table string, region string, endpoint string, create bool) (*Storage, e
 		}, nil
 	}
 
-	log.Debug().Msgf("Loading table %s...", table)
+	log.Trace().Msgf("Loading table %s...", table)
 	// check if the table with that name even exists
 	// if not: error out
 	desc, err := svc.DescribeTable(context.TODO(), &dynamodb.DescribeTableInput{
@@ -181,7 +181,7 @@ func New(table string, region string, endpoint string, create bool) (*Storage, e
 		return nil, errors.New(err)
 	}
 
-	log.Debug().Msgf("Checking table %s...", table)
+	log.Trace().Msgf("Checking table %s...", table)
 
 	// check that the table has the correct fields (i.e. a primary hash key with name "Keygroup" and secondary range key
 	// "Key") for our use
@@ -189,7 +189,7 @@ func New(table string, region string, endpoint string, create bool) (*Storage, e
 		return nil, errors.Errorf("expected a composite primary key with hash key \"%s\" and range key \"%s\" but got %d keys", keygroupName, keyName, len(desc.Table.KeySchema))
 	}
 
-	log.Debug().Msg("Checked table fields - OK!")
+	log.Trace().Msg("Checked table fields - OK!")
 
 	if *(desc.Table.KeySchema[0].AttributeName) != keygroupName || desc.Table.KeySchema[0].KeyType != dynamoDBTypes.KeyTypeHash {
 		return nil, errors.Errorf("expected the first part of primary key to be named \"%s\" and be of type hash but got %s with type %s", keygroupName, *(desc.Table.KeySchema[0].AttributeName), desc.Table.KeySchema[0].KeyType)
@@ -199,7 +199,7 @@ func New(table string, region string, endpoint string, create bool) (*Storage, e
 		return nil, errors.Errorf("expected the second part of primary key to be named \"%s\" and be of type range but got %s with type %s", keyName, *(desc.Table.KeySchema[1].AttributeName), desc.Table.KeySchema[1].KeyType)
 	}
 
-	log.Debug().Msg("Checked table keys - OK!")
+	log.Trace().Msg("Checked table keys - OK!")
 
 	return &Storage{
 		dynamotable: table,
@@ -214,6 +214,8 @@ func (s *Storage) Close() error {
 
 // Read returns an item with the specified id from the specified keygroup.
 func (s *Storage) Read(kg string, id string) ([]string, []vclock.VClock, bool, error) {
+	log.Trace().Msgf("Reading key %s from keygroup %s", id, kg)
+
 	// To read, we need to get the item with the "Keygroup" kg and "Key" id and convert the returned "Value" to a list
 	// of strings and vclocks.
 	proj := expression.NamesList(expression.Name(keyName), expression.Name(valName), expression.Name(expiryKey))
@@ -267,7 +269,7 @@ func (s *Storage) Read(kg string, id string) ([]string, []vclock.VClock, bool, e
 				return nil, nil, false, errors.New(err)
 			}
 
-			log.Debug().Msgf("Read found key expiring at %d, it is %d now", expiry, time.Now().UTC().Unix())
+			log.Trace().Msgf("Read found key expiring at %d, it is %d now", expiry, time.Now().UTC().Unix())
 
 			// oops, item has expired - we treat this as "not found"
 			if int64(expiry) < time.Now().UTC().Unix() {
@@ -311,6 +313,7 @@ func (s *Storage) Read(kg string, id string) ([]string, []vclock.VClock, bool, e
 }
 
 func (s *Storage) ReadSome(kg string, id string, count uint64) ([]string, []string, []vclock.VClock, error) {
+	log.Trace().Msgf("Reading %d keys from keygroup %s starting at %s", count, kg, id)
 
 	// in this case we need to get all items with "Keygroup" kg and then sort them
 	filt := expression.Name(keygroupName).Equal(expression.Value(kg)).And(expression.Name(keyName).GreaterThanEqual(expression.Value(id)))
@@ -380,7 +383,7 @@ func (s *Storage) ReadSome(kg string, id string, count uint64) ([]string, []stri
 					return nil, nil, nil, errors.New(err)
 				}
 
-				log.Debug().Msgf("ReadSome found key expiring at %d, it is %d now", expiry, time.Now().UTC().Unix())
+				log.Trace().Msgf("ReadSome found key expiring at %d, it is %d now", expiry, time.Now().UTC().Unix())
 
 				// oops, item has expired - we treat this as "not found"
 				if int64(expiry) < time.Now().UTC().Unix() {
@@ -449,6 +452,7 @@ func (s *Storage) ReadSome(kg string, id string, count uint64) ([]string, []stri
 
 // ReadAll returns all items in the specified keygroup.
 func (s *Storage) ReadAll(kg string) ([]string, []string, []vclock.VClock, error) {
+	log.Trace().Msgf("Reading all keys from keygroup %s", kg)
 
 	// in this case we need to get all items with "Keygroup" kg and then sort them
 	filt := expression.Name(keygroupName).Equal(expression.Value(kg))
@@ -476,7 +480,7 @@ func (s *Storage) ReadAll(kg string) ([]string, []string, []vclock.VClock, error
 		return nil, nil, nil, errors.New(err)
 	}
 
-	log.Debug().Msgf("ReadAll: got %d items", len(result.Items))
+	log.Trace().Msgf("ReadAll: got %d items", len(result.Items))
 
 	type item struct {
 		key     string
@@ -519,7 +523,7 @@ func (s *Storage) ReadAll(kg string) ([]string, []string, []vclock.VClock, error
 					return nil, nil, nil, errors.New(err)
 				}
 
-				log.Debug().Msgf("ReadAll found key expiring at %d, it is %d now", expiry, time.Now().UTC().Unix())
+				log.Trace().Msgf("ReadAll found key expiring at %d, it is %d now", expiry, time.Now().UTC().Unix())
 
 				// oops, item has expired - we treat this as "not found"
 				if int64(expiry) < time.Now().UTC().Unix() {
@@ -576,6 +580,8 @@ func (s *Storage) ReadAll(kg string) ([]string, []string, []vclock.VClock, error
 
 // Append appends the item to the specified keygroup by incrementing the latest key by one.
 func (s *Storage) Append(kg string, id string, val string, expiry int) error {
+	log.Trace().Msgf("Appending key %s to keygroup %s", id, kg)
+
 	cond := expression.AttributeNotExists(expression.Name(keygroupName))
 
 	expr, err := expression.NewBuilder().WithCondition(cond).Build()
@@ -624,6 +630,8 @@ func (s *Storage) Append(kg string, id string, val string, expiry int) error {
 
 // IDs returns the keys of all items in the specified keygroup.
 func (s *Storage) IDs(kg string) ([]string, error) {
+	log.Trace().Msgf("Getting all keys from keygroup %s", kg)
+
 	// in this case we need to get all items with "Keygroup" kg and then sort them
 	filt := expression.Name(keygroupName).Equal(expression.Value(kg))
 	proj := expression.NamesList(expression.Name(keyName), expression.Name(expiryKey))
@@ -680,7 +688,7 @@ func (s *Storage) IDs(kg string) ([]string, error) {
 					return nil, errors.New(err)
 				}
 
-				log.Debug().Msgf("Read found key expiring at %d, it is %d now", expiry, time.Now().UTC().Unix())
+				log.Trace().Msgf("Read found key expiring at %d, it is %d now", expiry, time.Now().UTC().Unix())
 
 				// oops, item has expired - we treat this as "not found"
 				if int64(expiry) < time.Now().UTC().Unix() {
@@ -703,6 +711,8 @@ func (s *Storage) IDs(kg string) ([]string, error) {
 
 // Update updates the item with the specified id in the specified keygroup.
 func (s *Storage) Update(kg string, id string, val string, expiry int, vvector vclock.VClock) error {
+	log.Trace().Msgf("Updating key %s in keygroup %s", id, kg)
+
 	version := vectorToString(vvector)
 
 	input := &dynamodb.UpdateItemInput{
@@ -735,7 +745,7 @@ func (s *Storage) Update(kg string, id string, val string, expiry int, vvector v
 		input.UpdateExpression = aws.String(*input.UpdateExpression + " SET  #expiry = :expiry")
 	}
 
-	log.Debug().Msgf("Update: setting item %s (keygroup %s) with version %s to %s with expiry %d", id, kg, version, val, expiry)
+	log.Trace().Msgf("Update: setting item %s (keygroup %s) with version %s to %s with expiry %d", id, kg, version, val, expiry)
 
 	_, err := s.svc.UpdateItem(context.TODO(), input)
 
@@ -806,6 +816,7 @@ func (s *Storage) Update(kg string, id string, val string, expiry int, vvector v
 
 // Delete deletes the item with the specified id from the specified keygroup.
 func (s *Storage) Delete(kg string, id string, vvector vclock.VClock) error {
+	log.Trace().Msgf("Deleting key %s from keygroup %s", id, kg)
 
 	version := vectorToString(vvector)
 
@@ -826,7 +837,7 @@ func (s *Storage) Delete(kg string, id string, vvector vclock.VClock) error {
 		UpdateExpression: aws.String("REMOVE #value.#version"),
 	}
 
-	log.Debug().Msgf("Delete: removing item %s (keygroup %s) with version %s", id, kg, version)
+	log.Trace().Msgf("Delete: removing item %s (keygroup %s) with version %s", id, kg, version)
 
 	_, err := s.svc.UpdateItem(context.TODO(), input)
 	if err != nil {
@@ -850,6 +861,8 @@ func (s *Storage) Delete(kg string, id string, vvector vclock.VClock) error {
 
 // Exists checks if the given data item exists in the dynamodb database.
 func (s *Storage) Exists(kg string, id string) bool {
+	log.Trace().Msgf("Checking if key %s exists in keygroup %s", id, kg)
+
 	proj := expression.NamesList(expression.Name(expiryKey))
 	expr, err := expression.NewBuilder().WithProjection(proj).Build()
 
@@ -895,7 +908,7 @@ func (s *Storage) Exists(kg string, id string) bool {
 				return false
 			}
 
-			log.Debug().Msgf("Exists found key expiring at %d, it is %d now", expiry, time.Now().UTC().Unix())
+			log.Trace().Msgf("Exists found key expiring at %d, it is %d now", expiry, time.Now().UTC().Unix())
 
 			// oops, item has expired - we treat this as "not found"
 			if int64(expiry) < time.Now().UTC().Unix() {
@@ -909,6 +922,8 @@ func (s *Storage) Exists(kg string, id string) bool {
 
 // ExistsKeygroup checks if the given keygroup exists in the DynamoDB database.
 func (s *Storage) ExistsKeygroup(kg string) bool {
+	log.Trace().Msgf("Checking if keygroup %s exists", kg)
+
 	result, err := s.svc.GetItem(context.TODO(), &dynamodb.GetItemInput{
 		Key: map[string]dynamoDBTypes.AttributeValue{
 			keygroupName: &dynamoDBTypes.AttributeValueMemberS{
@@ -937,6 +952,8 @@ func (s *Storage) ExistsKeygroup(kg string) bool {
 
 // CreateKeygroup creates the given keygroup in the DynamoDB database.
 func (s *Storage) CreateKeygroup(kg string) error {
+	log.Trace().Msgf("Creating keygroup %s", kg)
+
 	input := &dynamodb.PutItemInput{
 		Item: map[string]dynamoDBTypes.AttributeValue{
 			keygroupName: &dynamoDBTypes.AttributeValueMemberS{
@@ -963,6 +980,7 @@ func (s *Storage) CreateKeygroup(kg string) error {
 
 // DeleteKeygroup deletes the given keygroup from the DynamoDB database.
 func (s *Storage) DeleteKeygroup(kg string) error {
+	log.Trace().Msgf("Deleting keygroup %s", kg)
 
 	// delete all entries for that keygroup
 	filt := expression.Name(keygroupName).Equal(expression.Value(kg))
@@ -1048,6 +1066,8 @@ func (s *Storage) DeleteKeygroup(kg string) error {
 
 // AddKeygroupTrigger stores a trigger node in the dynamodb database.
 func (s *Storage) AddKeygroupTrigger(kg string, tid string, host string) error {
+	log.Trace().Msgf("Adding trigger %s to keygroup %s", tid, kg)
+
 	input := &dynamodb.UpdateItemInput{
 		TableName: aws.String(s.dynamotable),
 		Key: map[string]dynamoDBTypes.AttributeValue{
@@ -1121,6 +1141,8 @@ func (s *Storage) AddKeygroupTrigger(kg string, tid string, host string) error {
 
 // DeleteKeygroupTrigger removes a trigger node from the dynamodb database.
 func (s *Storage) DeleteKeygroupTrigger(kg string, tid string) error {
+	log.Trace().Msgf("Deleting trigger %s from keygroup %s", tid, kg)
+
 	input := &dynamodb.UpdateItemInput{
 		TableName: aws.String(s.dynamotable),
 		Key: map[string]dynamoDBTypes.AttributeValue{
@@ -1150,6 +1172,8 @@ func (s *Storage) DeleteKeygroupTrigger(kg string, tid string) error {
 
 // GetKeygroupTrigger returns a map of all trigger nodes from the dynamodb database.
 func (s *Storage) GetKeygroupTrigger(kg string) (map[string]string, error) {
+	log.Trace().Msgf("Getting triggers for keygroup %s", kg)
+
 	proj := expression.NamesList(expression.Name(triggerName))
 	expr, err := expression.NewBuilder().WithProjection(proj).Build()
 

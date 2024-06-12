@@ -58,7 +58,7 @@ func (s *replicationService) reportNodeFail(nodeID NodeID, kg KeygroupName, id s
 
 // createKeygroup creates the keygroup with the NaSe and saves its existence locally
 func (s *replicationService) createKeygroup(k Keygroup) error {
-	log.Debug().Msgf("CreateKeygroup from replservice: in keygroup=%+v", k)
+	log.Trace().Msgf("CreateKeygroup from replservice: in keygroup=%+v", k)
 
 	// Check if Keygroup already exists in NaSe
 	exists, err := s.n.ExistsKeygroup(k.Name)
@@ -87,7 +87,7 @@ func (s *replicationService) createKeygroup(k Keygroup) error {
 // It does not delete all the locally stored data from the keygroup.
 // This gets called by every node that is in a keygroup if it is to be deleted (via RelayDeleteKeygroup, right below this method)
 func (s *replicationService) deleteKeygroup(k Keygroup) error {
-	log.Debug().Msgf("DeleteKeygroup from replservice (does nothing): in %+v", k)
+	log.Trace().Msgf("DeleteKeygroup from replservice (does nothing): in %+v", k)
 
 	// Deleting the Keygroup with the NaSe happens in RelayDeleteKeygroup, so this would just be double duty
 	// err := s.nase.DeleteKeygroup(k.Name)
@@ -101,7 +101,7 @@ func (s *replicationService) deleteKeygroup(k Keygroup) error {
 // Calls DeleteKeygroup on every other node that is in this keygroup
 // TODO is this really necessary with the nase? Maybe
 func (s *replicationService) relayDeleteKeygroup(k Keygroup) error {
-	log.Debug().Msgf("RelayDeleteKeygroup from replservice: in %+v", k)
+	log.Trace().Msgf("RelayDeleteKeygroup from replservice: in %+v", k)
 
 	exists, err := s.n.ExistsKeygroup(k.Name)
 	if err != nil {
@@ -139,11 +139,11 @@ func (s *replicationService) relayDeleteKeygroup(k Keygroup) error {
 		wg.Add(1)
 		go func(addr string, _ NodeID) {
 			defer wg.Done()
-			log.Debug().Msgf("RelayDeleteKeygroup from replservice: sending %+v to %+v", k, addr)
+			log.Trace().Msgf("RelayDeleteKeygroup from replservice: sending %+v to %+v", k, addr)
 			err = s.c.SendDeleteKeygroup(addr, k.Name)
 
 			if err != nil {
-				log.Debug().Msg(err.Error())
+				log.Trace().Msg(err.Error())
 			}
 		}(addr, id)
 	}
@@ -164,7 +164,7 @@ func (s *replicationService) relayDeleteKeygroup(k Keygroup) error {
 // relayUpdate handles replication after requests to the Update endpoint of the client interface.
 // It sends the update to all other nodes by calling their Update method
 func (s *replicationService) relayUpdate(i Item) error {
-	log.Debug().Msgf("RelayUpdate from replservice: in %+v", i)
+	log.Trace().Msgf("RelayUpdate from replservice: in %+v", i)
 
 	exists, err := s.n.ExistsKeygroup(i.Keygroup)
 	if err != nil {
@@ -203,12 +203,12 @@ func (s *replicationService) relayUpdate(i Item) error {
 		go func(addr string, id NodeID) {
 			defer wg.Done()
 
-			log.Debug().Msgf("RelayUpdate from replservice: sending %+v to %+v", i, addr)
+			log.Trace().Msgf("RelayUpdate from replservice: sending %+v to %+v", i, addr)
 			if err := s.c.SendUpdate(addr, i.Keygroup, i.ID, i.Val, i.Tombstoned, i.Version); err != nil {
 				err = s.reportNodeFail(id, i.Keygroup, i.ID)
 
 				if err != nil {
-					log.Debug().Msg(err.Error())
+					log.Trace().Msg(err.Error())
 				}
 			}
 		}(addr, id)
@@ -224,7 +224,7 @@ func (s *replicationService) relayUpdate(i Item) error {
 // relayAppend handles replication after requests to the Append endpoint of the client interface.
 // It sends the append to all other nodes by calling their Append method
 func (s *replicationService) relayAppend(i Item) error {
-	log.Debug().Msgf("relayAppend from replservice: in %+v", i)
+	log.Trace().Msgf("relayAppend from replservice: in %+v", i)
 
 	exists, err := s.n.ExistsKeygroup(i.Keygroup)
 	if err != nil {
@@ -263,12 +263,12 @@ func (s *replicationService) relayAppend(i Item) error {
 		go func(addr string, id NodeID) {
 			defer wg.Done()
 
-			log.Debug().Msgf("relayAppend from replservice: sending %+v to %+v", i, addr)
+			log.Trace().Msgf("relayAppend from replservice: sending %+v to %+v", i, addr)
 			if err := s.c.SendAppend(addr, i.Keygroup, i.ID, i.Val); err != nil {
 				err = s.reportNodeFail(id, i.Keygroup, i.ID)
 
 				if err != nil {
-					log.Debug().Msg(err.Error())
+					log.Trace().Msg(err.Error())
 				}
 			}
 		}(addr, id)
@@ -283,7 +283,7 @@ func (s *replicationService) relayAppend(i Item) error {
 
 // addReplica handles replication after requests to the AddReplica endpoint.
 func (s *replicationService) addReplica(k Keygroup, n Node) error {
-	log.Debug().Msgf("AddReplica from replservice: in kg=%+v no=%+v", k, n)
+	log.Trace().Msgf("AddReplica from replservice: in kg=%+v no=%+v", k, n)
 
 	// we got the request from the client interface
 	// and are responsible to bring the new replica up to speed
@@ -371,24 +371,24 @@ func (s *replicationService) addReplica(k Keygroup, n Node) error {
 		return err
 	}
 
-	log.Debug().Msgf("AddReplica from replservice: About to send %d Elements to new node", len(i))
+	log.Trace().Msgf("AddReplica from replservice: About to send %d Elements to new node", len(i))
 	for _, item := range i {
 		// iterate over all data for that keygroup and send it to the new node
 		// a batch might be better here
 		if mutable {
-			log.Debug().Msgf("AddReplica from replservice: sending %+v to %+v (update)", item, n)
+			log.Trace().Msgf("AddReplica from replservice: sending %+v to %+v (update)", item, n)
 			if err := s.c.SendUpdate(newNodeAddr, k.Name, item.ID, item.Val, item.Tombstoned, item.Version); err != nil {
 				err = s.reportNodeFail(n.ID, k.Name, item.ID)
 				if err != nil {
-					log.Debug().Msg(err.Error())
+					log.Trace().Msg(err.Error())
 				}
 			}
 		} else {
-			log.Debug().Msgf("AddReplica from replservice: sending %+v to %+v (append)", item, n)
+			log.Trace().Msgf("AddReplica from replservice: sending %+v to %+v (append)", item, n)
 			if err := s.c.SendAppend(newNodeAddr, k.Name, item.ID, item.Val); err != nil {
 				err = s.reportNodeFail(n.ID, k.Name, item.ID)
 				if err != nil {
-					log.Debug().Msg(err.Error())
+					log.Trace().Msg(err.Error())
 				}
 			}
 		}
@@ -400,7 +400,7 @@ func (s *replicationService) addReplica(k Keygroup, n Node) error {
 
 // removeReplica handles replication after requests to the RemoveReplica endpoint
 func (s *replicationService) removeReplica(k Keygroup, n Node) error {
-	log.Debug().Msgf("RemoveReplica from replservice: in kg=%+v no=%+v", k, n)
+	log.Trace().Msgf("RemoveReplica from replservice: in kg=%+v no=%+v", k, n)
 
 	// This is the first removedNode to learn about it
 	removedNodeAddr, err := s.n.GetNodeAddress(n.ID)
@@ -471,7 +471,7 @@ func (s *replicationService) getNodesExternalAdress() ([]Node, error) {
 
 // getReplicaExternal returns a list of all replica nodes for a given keygroup.
 func (s *replicationService) getReplicaExternal(k Keygroup) (nodes []Node, expiries map[NodeID]int, err error) {
-	log.Debug().Msgf("GetReplicaExternal from replservice: in %+v", k)
+	log.Trace().Msgf("GetReplicaExternal from replservice: in %+v", k)
 
 	exists, err := s.n.ExistsKeygroup(k.Name)
 	if !exists {
@@ -485,7 +485,7 @@ func (s *replicationService) getReplicaExternal(k Keygroup) (nodes []Node, expir
 	expiries = make(map[NodeID]int)
 
 	ids, err := s.n.GetKeygroupMembers(k.Name, false)
-	log.Debug().Msgf("...got Nodes: %+v", ids)
+	log.Trace().Msgf("...got Nodes: %+v", ids)
 	for id, expiry := range ids {
 		addr, err := s.n.GetNodeAddressExternal(id)
 

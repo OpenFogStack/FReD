@@ -29,7 +29,7 @@ func newExthandler(s *storeService, r *replicationService, t *triggerService, a 
 func (h *ExtHandler) HandleCreateKeygroup(user string, k Keygroup) error {
 
 	if err := h.r.createKeygroup(k); err != nil {
-		log.Debug().Msg(err.(*errors.Error).ErrorStack())
+		log.Trace().Msg(err.(*errors.Error).ErrorStack())
 
 		return errors.Errorf("error creating keygroup")
 	}
@@ -135,7 +135,7 @@ func (h *ExtHandler) HandleScan(user string, i Item, count uint64) ([]Item, erro
 		return nil, errors.Errorf("error scanning %d items starting at %s from keygroup %s", count, i.ID, i.Keygroup)
 	}
 
-	log.Debug().Msgf("Scan of item=%s keygroup=%s count=%d resulted in %d items", i.ID, i.Keygroup, count, len(result))
+	log.Trace().Msgf("Scan of item=%s keygroup=%s count=%d resulted in %d items", i.ID, i.Keygroup, count, len(result))
 
 	return result, nil
 }
@@ -162,7 +162,7 @@ func (h *ExtHandler) HandleKeys(user string, i Item, count uint64) ([]Item, erro
 		return nil, errors.Errorf("error scanning keys for %d items starting at %s from keygroup %s", count, i.ID, i.Keygroup)
 	}
 
-	log.Debug().Msgf("Keys of item=%s keygroup=%s count=%d resulted in %d items", i.ID, i.Keygroup, count, len(result))
+	log.Trace().Msgf("Keys of item=%s keygroup=%s count=%d resulted in %d items", i.ID, i.Keygroup, count, len(result))
 
 	return result, nil
 }
@@ -175,7 +175,7 @@ func (h *ExtHandler) HandleAppend(user string, i Item) (Item, error) {
 		return i, errors.Errorf("user %s cannot update in keygroup %s", user, i.Keygroup)
 	}
 
-	log.Debug().Msgf("checking if keygroup %s is mutable...", i.Keygroup)
+	log.Trace().Msgf("checking if keygroup %s is mutable...", i.Keygroup)
 	m, err := h.n.IsMutable(i.Keygroup)
 
 	if err != nil {
@@ -186,7 +186,7 @@ func (h *ExtHandler) HandleAppend(user string, i Item) (Item, error) {
 		return i, errors.Errorf("cannot append %s to mutable keygroup", i.ID)
 	}
 
-	log.Debug().Msgf("...keygroup %s is immutable", i.Keygroup)
+	log.Trace().Msgf("...keygroup %s is immutable", i.Keygroup)
 
 	expiry, err := h.n.GetExpiry(i.Keygroup)
 
@@ -223,7 +223,7 @@ func (h *ExtHandler) HandleUpdate(user string, i Item, versions []vclock.VClock)
 		return i, errors.Errorf("user %s cannot update in keygroup %s", user, i.Keygroup)
 	}
 
-	log.Debug().Msgf("checking if keygroup %s is mutable...", i.Keygroup)
+	log.Trace().Msgf("checking if keygroup %s is mutable...", i.Keygroup)
 	m, err := h.n.IsMutable(i.Keygroup)
 
 	if err != nil {
@@ -234,7 +234,7 @@ func (h *ExtHandler) HandleUpdate(user string, i Item, versions []vclock.VClock)
 		return i, errors.Errorf("cannot update item %s because keygroup is immutable", i.ID)
 	}
 
-	log.Debug().Msgf("...keygroup %s is mutable", i.Keygroup)
+	log.Trace().Msgf("...keygroup %s is mutable", i.Keygroup)
 
 	expiry, err := h.n.GetExpiry(i.Keygroup)
 

@@ -33,6 +33,8 @@ func newVCache() *vcache {
 }
 
 func (vc *vcache) ensureExists(kg string, id string) {
+	log.Trace().Msgf("Ensuring existence of item %s in keygroup %s", id, kg)
+
 	// first check if the keygroup exists
 	// this requires rlocking the cache
 	vc.RLock()
@@ -76,8 +78,8 @@ func (vc *vcache) ensureExists(kg string, id string) {
 				clocks []vclock.VClock
 				*sync.RWMutex
 			}{
-				clocks: make([]vclock.VClock, 0),
-				RWMutex:  &sync.RWMutex{},
+				clocks:  make([]vclock.VClock, 0),
+				RWMutex: &sync.RWMutex{},
 			}
 		}
 		// then go back to a read lock
@@ -120,6 +122,7 @@ func (vc *vcache) isLocked(_ string, _ string) bool {
 }
 
 func (vc *vcache) add(kg string, id string, version vclock.VClock) error {
+	log.Trace().Msgf("Adding version %v of item %s in keygroup %s", version, id, kg)
 
 	if !vc.isLocked(kg, id) {
 		return fmt.Errorf("add failed because item %s in keygroup %s is not locked in cache", id, kg)
@@ -162,6 +165,7 @@ func (vc *vcache) add(kg string, id string, version vclock.VClock) error {
 }
 
 func (vc *vcache) supersede(kg string, id string, known []vclock.VClock, version vclock.VClock) error {
+	log.Trace().Msgf("Superseding version %v of item %s in keygroup %s", version, id, kg)
 
 	if !vc.isLocked(kg, id) {
 		return fmt.Errorf("supersede failed because item %s in keygroup %s is not locked in cache", id, kg)
@@ -193,6 +197,8 @@ func (vc *vcache) supersede(kg string, id string, known []vclock.VClock, version
 }
 
 func (vc *vcache) get(kg string, id string) ([]vclock.VClock, error) {
+	log.Trace().Msgf("Getting versions of item %s in keygroup %s", id, kg)
+	
 	if !vc.isLocked(kg, id) {
 		return nil, fmt.Errorf("get failed because item %s in keygroup %s is not locked in cache", id, kg)
 	}

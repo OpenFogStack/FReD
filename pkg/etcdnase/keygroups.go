@@ -164,8 +164,8 @@ func (n *NameService) GetKeygroupMembers(kg fred.KeygroupName, excludeSelf bool)
 		if v == "ok" {
 			// If we are to exclude ourselves
 			if excludeSelf && n.NodeID == getNodeNameFromKgNodeString(k) {
-				log.Debug().Msgf("NaSe: GetKeygroupMembers: Got result key: %s value: %s", k, v)
-				log.Debug().Msg("...Excluding this node from results since this is the own node")
+				log.Trace().Msgf("NaSe: GetKeygroupMembers: Got result key: %s value: %s", k, v)
+				log.Trace().Msg("...Excluding this node from results since this is the own node")
 			} else {
 				id := getNodeNameFromKgNodeString(k)
 				ids[fred.NodeID(id)], err = n.getKeygroupExpiry(string(kg), id)
@@ -175,8 +175,8 @@ func (n *NameService) GetKeygroupMembers(kg fred.KeygroupName, excludeSelf bool)
 			}
 
 		} else {
-			log.Debug().Msgf("NaSe: GetKeygroupMembers: Got result key: %s value: %s", k, v)
-			log.Debug().Msg("... node has a status != OK, not returning it.")
+			log.Trace().Msgf("NaSe: GetKeygroupMembers: Got result key: %s value: %s", k, v)
+			log.Trace().Msg("... node has a status != OK, not returning it.")
 		}
 	}
 	return

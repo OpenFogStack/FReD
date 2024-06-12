@@ -338,7 +338,7 @@ func (s *storeService) update(i Item, expiry int) (vclock.VClock, error) {
 	s.vCache[i.Keygroup].clocks[i.ID].Lock()
 	defer s.vCache[i.Keygroup].clocks[i.ID].Unlock()
 
-	log.Debug().Msgf("update: before known %+v", s.vCache[i.Keygroup].clocks[i.ID].clocks)
+	log.Trace().Msgf("update: before known %+v", s.vCache[i.Keygroup].clocks[i.ID].clocks)
 
 	oldVersion := vclock.VClock{}
 	toPrune := make([]vclock.VClock, len(s.vCache[i.Keygroup].clocks[i.ID].clocks))
@@ -360,7 +360,7 @@ func (s *storeService) update(i Item, expiry int) (vclock.VClock, error) {
 
 	s.prune(string(i.Keygroup), i.ID, toPrune)
 
-	log.Debug().Msgf("update: after known %+v", s.vCache[i.Keygroup].clocks[i.ID].clocks)
+	log.Trace().Msgf("update: after known %+v", s.vCache[i.Keygroup].clocks[i.ID].clocks)
 
 	return newVersion.Copy(), nil
 }
@@ -485,7 +485,7 @@ func (s *storeService) addVersion(i Item, remoteVersion vclock.VClock, expiry in
 	// if we have an older one, replace it with the newer one
 	// if none of that is the case, this is a concurrent version and we just store it
 
-	log.Debug().Msgf("addVersion: before known %+v", s.vCache[i.Keygroup].clocks[i.ID].clocks)
+	log.Trace().Msgf("addVersion: before known %+v", s.vCache[i.Keygroup].clocks[i.ID].clocks)
 
 	newClocks := make([]vclock.VClock, 0, len(s.vCache[i.Keygroup].clocks[i.ID].clocks))
 
@@ -494,14 +494,14 @@ func (s *storeService) addVersion(i Item, remoteVersion vclock.VClock, expiry in
 		switch local.Order(remoteVersion) {
 		case vclock.Ancestor:
 			{
-				log.Debug().Msgf("%s is an ancestor of %s: discarding version", vector.SortedVCString(remoteVersion), vector.SortedVCString(local))
+				log.Trace().Msgf("%s is an ancestor of %s: discarding version", vector.SortedVCString(remoteVersion), vector.SortedVCString(local))
 				return nil
 			}
 
 		// if this is an equal version, we better hope that we already know about this and the contents aren't any different
 		case vclock.Equal:
 			{
-				log.Debug().Msgf("%s is equal to %s: discarding version", vector.SortedVCString(remoteVersion), vector.SortedVCString(local))
+				log.Trace().Msgf("%s is equal to %s: discarding version", vector.SortedVCString(remoteVersion), vector.SortedVCString(local))
 
 				// ok this should actually never happen
 				// it can happen when a replica is added while an update is in progress
@@ -515,11 +515,11 @@ func (s *storeService) addVersion(i Item, remoteVersion vclock.VClock, expiry in
 		// if this is a newer version than we have, we can actually just overwrite our local version, and we're good
 		case vclock.Descendant:
 			{
-				log.Debug().Msgf("%s is a descendant of %s", vector.SortedVCString(remoteVersion), vector.SortedVCString(local))
+				log.Trace().Msgf("%s is a descendant of %s", vector.SortedVCString(remoteVersion), vector.SortedVCString(local))
 				// to do that, we just need to set our local cache to this new version
 				// and then store that version
 				// we won't lose any data or anything: a merge would just lead to the same remoteVersion since it is larger
-				log.Debug().Msgf("removing version %s", vector.SortedVCString(local))
+				log.Trace().Msgf("removing version %s", vector.SortedVCString(local))
 				s.prune(string(i.Keygroup), i.ID, []vclock.VClock{local})
 				continue
 			}
@@ -527,7 +527,7 @@ func (s *storeService) addVersion(i Item, remoteVersion vclock.VClock, expiry in
 		case vclock.Concurrent:
 			{
 				// not ancestor, descendant, equal => concurrent
-				log.Debug().Msgf("%s is concurrent to %s", vector.SortedVCString(remoteVersion), vector.SortedVCString(local))
+				log.Trace().Msgf("%s is concurrent to %s", vector.SortedVCString(remoteVersion), vector.SortedVCString(local))
 				newClocks = append(newClocks, local)
 			}
 
@@ -538,7 +538,7 @@ func (s *storeService) addVersion(i Item, remoteVersion vclock.VClock, expiry in
 		}
 	}
 
-	log.Debug().Msgf("storing version %s", vector.SortedVCString(remoteVersion))
+	log.Trace().Msgf("storing version %s", vector.SortedVCString(remoteVersion))
 
 	err = s.iS.Update(string(i.Keygroup), i.ID, i.Val, expiry, remoteVersion.GetMap())
 
@@ -551,7 +551,7 @@ func (s *storeService) addVersion(i Item, remoteVersion vclock.VClock, expiry in
 
 	s.vCache[i.Keygroup].clocks[i.ID].clocks = newClocks
 
-	log.Debug().Msgf("addVersion: after known %+v", s.vCache[i.Keygroup].clocks[i.ID].clocks)
+	log.Trace().Msgf("addVersion: after known %+v", s.vCache[i.Keygroup].clocks[i.ID].clocks)
 
 	return nil
 }
@@ -567,7 +567,7 @@ func (s *storeService) prune(kg string, id string, versions []vclock.VClock) {
 			return
 		}
 
-		log.Debug().Msgf("storeservice: pruning version %+v of %s in keygroup %s", v, id, kg)
+		log.Trace().Msgf("storeservice: pruning version %+v of %s in keygroup %s", v, id, kg)
 
 		err := s.iS.Delete(kg, id, v)
 
@@ -582,7 +582,7 @@ func (s *storeService) prune(kg string, id string, versions []vclock.VClock) {
 		log.Err(err).Msgf("error pruning version %+v of %s in keygroup %s", v, id, kg)
 	}
 
-	log.Debug().Msgf("pruning: versions %+v pruned, have versions %+v", versions, v)
+	log.Trace().Msgf("pruning: versions %+v pruned, have versions %+v", versions, v)
 }
 
 func (s *storeService) tombstone(i Item) (vclock.VClock, error) {
@@ -879,7 +879,7 @@ func (s *storeService) getKeygroupTrigger(kg KeygroupName) ([]Trigger, error) {
 		})
 	}
 
-	log.Debug().Msgf("getKeygroupTrigger: %d items, %+v %+v", len(t), t, tn)
+	log.Trace().Msgf("getKeygroupTrigger: %d items, %+v %+v", len(t), t, tn)
 
 	return tn, nil
 }

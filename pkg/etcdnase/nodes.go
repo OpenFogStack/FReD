@@ -21,7 +21,7 @@ func (n *NameService) GetNodeAddress(nodeID fred.NodeID) (addr string, err error
 		return "", errors.Errorf("no such node %s", nodeID)
 	}
 
-	log.Debug().Msgf("NaSe: GetNodeAdress: Address of node %s is %s", nodeID, resp)
+	log.Trace().Msgf("NaSe: GetNodeAdress: Address of node %s is %s", nodeID, resp)
 	return resp, nil
 }
 
@@ -37,7 +37,7 @@ func (n *NameService) GetNodeAddressExternal(nodeID fred.NodeID) (addr string, e
 		return "", errors.Errorf("no such node with nodeId=%s", nodeID)
 	}
 
-	log.Debug().Msgf("NaSe: GetNodeAddress: Address of node %s is %s", nodeID, resp)
+	log.Trace().Msgf("NaSe: GetNodeAddress: Address of node %s is %s", nodeID, resp)
 	return resp, nil
 }
 
@@ -70,7 +70,7 @@ func (n *NameService) getAllNodesBySuffix(suffix string) (nodes []fred.Node, err
 		// Now add node to return []
 		nodeID := strings.Split(k, sep)[1]
 
-		log.Debug().Msgf("NaSe: GetAllNodes: Got Response %s // %s", nodeID, v)
+		log.Trace().Msgf("NaSe: GetAllNodes: Got Response %s // %s", nodeID, v)
 
 		nodes = append(nodes, fred.Node{
 			ID:   fred.NodeID(nodeID),

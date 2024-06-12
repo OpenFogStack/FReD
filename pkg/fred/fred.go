@@ -83,7 +83,7 @@ func New(config *Config) (f Fred) {
 
 		}
 	} else {
-		log.Debug().Msg("NodeStatus: No updates were missed by this node.")
+		log.Trace().Msg("NodeStatus: No updates were missed by this node.")
 	}
 
 	return Fred{

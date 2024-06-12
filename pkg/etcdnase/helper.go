@@ -43,7 +43,7 @@ func (n *NameService) getPrefix(prefix string) (kv map[string]string, err error)
 			}
 		}
 
-		log.Debug().Msgf("prefix: %s cache miss", prefix)
+		log.Trace().Msgf("prefix: %s cache miss", prefix)
 	}
 
 	// didn't find anything? ask nameservice, cache, and be sure to invalidate on change
@@ -70,25 +70,25 @@ func (n *NameService) getPrefix(prefix string) (kv map[string]string, err error)
 		go func() {
 			watchCtx, watchCncl := context.WithCancel(context.Background())
 			c := n.watcher.Watch(watchCtx, prefix, clientv3.WithPrefix())
-			log.Debug().Msgf("nase cache: watching for changes to prefix %s", prefix)
+			log.Trace().Msgf("nase cache: watching for changes to prefix %s", prefix)
 
 			defer watchCncl()
 			for r := range c {
 				if err := r.Err(); err != nil {
 					log.Err(err).Msgf("nase cache: error getting changes to prefix %s", prefix)
 				}
-				log.Debug().Msgf("nase cache: got %d changes to prefix %s", len(r.Events), prefix)
+				log.Trace().Msgf("nase cache: got %d changes to prefix %s", len(r.Events), prefix)
 
 				for _, ev := range r.Events {
 
 					if ev.Type == clientv3.EventTypeDelete {
 						delete(kv, string(ev.Kv.Key))
-						log.Debug().Msgf("prefix: %s remote cache invalidation for key %s", prefix, string(ev.Kv.Key))
+						log.Trace().Msgf("prefix: %s remote cache invalidation for key %s", prefix, string(ev.Kv.Key))
 					}
 
 					if ev.Type == clientv3.EventTypePut {
 						kv[string(ev.Kv.Key)] = string(ev.Kv.Value)
-						log.Debug().Msgf("prefix: %s remote cache update for key %s", prefix, string(ev.Kv.Key))
+						log.Trace().Msgf("prefix: %s remote cache update for key %s", prefix, string(ev.Kv.Key))
 					}
 				}
 
@@ -114,11 +114,11 @@ func (n *NameService) getExact(key string) (v string, err error) {
 
 		// found something!
 		if ok {
-			log.Debug().Msgf("key: %s cache hit", key)
+			log.Trace().Msgf("key: %s cache hit", key)
 			return val.(string), nil
 		}
 
-		log.Debug().Msgf("key: %s cache miss", key)
+		log.Trace().Msgf("key: %s cache miss", key)
 	}
 
 	// didn't find anything? ask nameservice, cache, and be sure to invalidate on change
@@ -151,17 +151,17 @@ func (n *NameService) getExact(key string) (v string, err error) {
 				if err := r.Err(); err != nil {
 					log.Err(err).Msgf("nase cache: error getting changes to key %s", key)
 				}
-				log.Debug().Msgf("nase cache: got %d changes to key %s", len(r.Events), key)
+				log.Trace().Msgf("nase cache: got %d changes to key %s", len(r.Events), key)
 				for _, ev := range r.Events {
 					if ev.Type == clientv3.EventTypeDelete {
 						n.local.Del(key)
-						log.Debug().Msgf("key: %s remote cache invalidation", key)
+						log.Trace().Msgf("key: %s remote cache invalidation", key)
 						return
 					}
 
 					if ev.Type == clientv3.EventTypePut {
 						n.local.Set(key, string(ev.Kv.Value), 1)
-						log.Debug().Msgf("key: %s remote cache update", key)
+						log.Trace().Msgf("key: %s remote cache update", key)
 					}
 				}
 			}
@@ -224,10 +224,10 @@ func (n *NameService) put(key, value string, prefix ...string) (err error) {
 			prefixMap[key] = value
 
 			n.local.Set(p, prefixMap, int64(len(prefixMap)))
-			log.Debug().Msgf("prefix: %s local cache update for key %s", p, key)
+			log.Trace().Msgf("prefix: %s local cache update for key %s", p, key)
 		}
 		n.local.Set(key, value, 1)
-		log.Debug().Msgf("key: %s local cache update", key)
+		log.Trace().Msgf("key: %s local cache update", key)
 	}
 
 	_, err = n.cli.Put(ctx, key, value)
@@ -270,11 +270,11 @@ func (n *NameService) delete(key string, prefix ...string) (err error) {
 			delete(prefixMap, key)
 
 			n.local.Set(p, prefixMap, int64(len(prefixMap)))
-			log.Debug().Msgf("prefix: %s local cache invalidation for key %s", p, key)
+			log.Trace().Msgf("prefix: %s local cache invalidation for key %s", p, key)
 
 		}
 		n.local.Del(key)
-		log.Debug().Msgf("key: %s local cache invalidation", key)
+		log.Trace().Msgf("key: %s local cache invalidation", key)
 	}
 
 	_, err = n.cli.Delete(ctx, key)

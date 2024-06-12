@@ -38,7 +38,7 @@ func (t *triggerService) getClient(host string) (trigger.TriggerNodeClient, erro
 		return nil, err
 	}
 
-	log.Debug().Msgf("Interclient: Created Connection to %s", host)
+	log.Trace().Msgf("Interclient: Created Connection to %s", host)
 
 	t.c[host] = trigger.NewTriggerNodeClient(conn)
 	return t.c[host], nil
@@ -86,7 +86,7 @@ func newTriggerService(s *storeService, certFile string, keyFile string, caFiles
 }
 
 func (t *triggerService) triggerDelete(i Item) (e error) {
-	log.Debug().Msgf("triggerDelete from triggerservice: in %+v", i)
+	log.Trace().Msgf("triggerDelete from triggerservice: in %+v", i)
 
 	nodes, err := t.s.getKeygroupTrigger(i.Keygroup)
 
@@ -132,7 +132,7 @@ func (t *triggerService) triggerDelete(i Item) (e error) {
 }
 
 func (t *triggerService) triggerUpdate(i Item) (e error) {
-	log.Debug().Msgf("triggerUpdate from triggerservice: in %+v", i)
+	log.Trace().Msgf("triggerUpdate from triggerservice: in %+v", i)
 
 	nodes, err := t.s.getKeygroupTrigger(i.Keygroup)
 
@@ -161,7 +161,7 @@ func (t *triggerService) triggerUpdate(i Item) (e error) {
 		go func(node Trigger, client trigger.TriggerNodeClient) {
 			defer wg.Done()
 
-			log.Debug().Msgf("triggerUpdate: updating %s %s", node.ID, node.Host)
+			log.Trace().Msgf("triggerUpdate: updating %s %s", node.ID, node.Host)
 			_, err = client.PutItemTrigger(context.Background(), &trigger.PutItemTriggerRequest{
 				Keygroup: string(i.Keygroup),
 				Id:       i.ID,
@@ -181,19 +181,19 @@ func (t *triggerService) triggerUpdate(i Item) (e error) {
 }
 
 func (t *triggerService) addTrigger(k Keygroup, tn Trigger) error {
-	log.Debug().Msgf("addTrigger from triggerservice: in %+v %+v", k, tn)
+	log.Trace().Msgf("addTrigger from triggerservice: in %+v %+v", k, tn)
 
 	return t.s.addKeygroupTrigger(k.Name, tn)
 }
 
 func (t *triggerService) getTrigger(k Keygroup) ([]Trigger, error) {
-	log.Debug().Msgf("getTrigger from triggerservice: in %+v", k)
+	log.Trace().Msgf("getTrigger from triggerservice: in %+v", k)
 
 	return t.s.getKeygroupTrigger(k.Name)
 }
 
 func (t *triggerService) removeTrigger(k Keygroup, tn Trigger) error {
-	log.Debug().Msgf("removeTrigger from triggerservice: in %+v %+v", k, tn)
+	log.Trace().Msgf("removeTrigger from triggerservice: in %+v %+v", k, tn)
 
 	return t.s.deleteKeygroupTrigger(k.Name, tn)
 }

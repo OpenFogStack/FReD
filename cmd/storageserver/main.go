@@ -52,6 +52,8 @@ func main() {
 	}
 
 	switch *loglevel {
+	case "trace":
+		zerolog.SetGlobalLevel(zerolog.TraceLevel)
 	case "debug":
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	case "info":
@@ -65,8 +67,8 @@ func main() {
 	case "panic":
 		zerolog.SetGlobalLevel(zerolog.PanicLevel)
 	default:
-		zerolog.SetGlobalLevel(zerolog.DebugLevel)
-		log.Info().Msg("No Loglevel specified, using 'debug'")
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
+		log.Info().Msg("No Loglevel specified, using 'info'")
 	}
 
 	creds, _, err := grpcutil.GetCredsFromConfig(*cert, *key, []string{*ca}, false, *skipVerify, &tls.Config{ClientAuth: tls.RequireAndVerifyClientCert})
