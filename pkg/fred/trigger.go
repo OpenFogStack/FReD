@@ -21,9 +21,10 @@ type Trigger struct {
 }
 
 type triggerService struct {
-	tc *credentials.TransportCredentials
-	s  *storeService
-	c  map[string]trigger.TriggerNodeClient
+	tc    *credentials.TransportCredentials
+	s     *storeService
+	c     map[string]trigger.TriggerNodeClient
+	async bool
 }
 
 func (t *triggerService) getClient(host string) (trigger.TriggerNodeClient, error) {
@@ -44,7 +45,7 @@ func (t *triggerService) getClient(host string) (trigger.TriggerNodeClient, erro
 	return t.c[host], nil
 }
 
-func newTriggerService(s *storeService, certFile string, keyFile string, caFiles []string) *triggerService {
+func newTriggerService(s *storeService, certFile string, keyFile string, caFiles []string, async bool) *triggerService {
 	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 
 	if err != nil {
@@ -79,13 +80,43 @@ func newTriggerService(s *storeService, certFile string, keyFile string, caFiles
 	tc := credentials.NewTLS(tlsConfig)
 
 	return &triggerService{
-		tc: &tc,
-		s:  s,
-		c:  make(map[string]trigger.TriggerNodeClient),
+		tc:    &tc,
+		s:     s,
+		c:     make(map[string]trigger.TriggerNodeClient),
+		async: async,
 	}
 }
+func (t *triggerService) triggerDelete(i Item) error {
+	if t.async {
+		go func() {
+			err := t.runTriggerDelete(i)
 
-func (t *triggerService) triggerDelete(i Item) (e error) {
+			if err != nil {
+				log.Error().Msgf("error in triggerDelete: %s", err.Error())
+			}
+		}()
+		return nil
+	}
+
+	return t.runTriggerDelete(i)
+}
+
+func (t *triggerService) triggerUpdate(i Item) error {
+	if t.async {
+		go func() {
+			err := t.runTriggerUpdate(i)
+
+			if err != nil {
+				log.Error().Msgf("error in triggerUpdate: %s", err.Error())
+			}
+		}()
+		return nil
+	}
+
+	return t.runTriggerUpdate(i)
+}
+
+func (t *triggerService) runTriggerDelete(i Item) (e error) {
 	log.Trace().Msgf("triggerDelete from triggerservice: in %+v", i)
 
 	nodes, err := t.s.getKeygroupTrigger(i.Keygroup)
@@ -131,7 +162,7 @@ func (t *triggerService) triggerDelete(i Item) (e error) {
 	return e
 }
 
-func (t *triggerService) triggerUpdate(i Item) (e error) {
+func (t *triggerService) runTriggerUpdate(i Item) (e error) {
 	log.Trace().Msgf("triggerUpdate from triggerservice: in %+v", i)
 
 	nodes, err := t.s.getKeygroupTrigger(i.Keygroup)

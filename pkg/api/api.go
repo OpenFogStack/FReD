@@ -422,6 +422,8 @@ func (s *Server) Delete(ctx context.Context, request *client.DeleteRequest) (*cl
 	log.Trace().Msgf("API Server has rcvd Delete. In: %+v", request)
 	log.Debug().Msgf("Delete: keygroup: %s, id: %s, versions: %+v", request.Keygroup, request.Id, request.Versions)
 
+	start := time.Now()
+
 	user, err := s.CheckCert(ctx)
 
 	if err != nil {
@@ -435,11 +437,15 @@ func (s *Server) Delete(ctx context.Context, request *client.DeleteRequest) (*cl
 		versions = append(versions, v.Version)
 	}
 
+	log.Debug().Msgf("Preparing deletion of %s took %s", request.Id, time.Since(start))
+
 	i, err := s.e.HandleDelete(user, fred.Item{Keygroup: fred.KeygroupName(request.Keygroup), ID: request.Id}, versions)
 
 	if err != nil {
 		return nil, err
 	}
+
+	log.Debug().Msgf("Delete of %s took %s", request.Id, time.Since(start))
 
 	return &client.DeleteResponse{
 		Version: &client.Version{Version: i.Version.GetMap()},

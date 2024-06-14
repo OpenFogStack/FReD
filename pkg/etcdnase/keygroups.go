@@ -179,6 +179,9 @@ func (n *NameService) GetKeygroupMembers(kg fred.KeygroupName, excludeSelf bool)
 			log.Trace().Msg("... node has a status != OK, not returning it.")
 		}
 	}
+
+	log.Debug().Msgf("NaSe: GetKeygroupMembers: Returning %v", ids)
+
 	return
 }
 

@@ -3,6 +3,7 @@ package peering
 import (
 	"context"
 	"crypto/tls"
+	"io"
 	"net"
 
 	"git.tu-berlin.de/mcc-fred/fred/pkg/grpcutil"
@@ -66,7 +67,9 @@ func (s *Server) Close() error {
 
 // CreateKeygroup calls this Method on the Inthandler
 func (s *Server) CreateKeygroup(_ context.Context, request *peering.CreateKeygroupRequest) (*peering.Empty, error) {
-	log.Info().Msgf("Peering server has rcvd CreateKeygroup. In: %+v", request)
+	log.Trace().Msgf("Peering server has rcvd CreateKeygroup. In: %+v", request)
+	log.Debug().Msgf("Peering server has rcvd CreateKeygroup for keygroup %s", request.Keygroup)
+
 	err := s.i.HandleCreateKeygroup(fred.Keygroup{Name: fred.KeygroupName(request.Keygroup)})
 	if err != nil {
 		return nil, err
@@ -76,7 +79,9 @@ func (s *Server) CreateKeygroup(_ context.Context, request *peering.CreateKeygro
 
 // DeleteKeygroup calls this Method on the Inthandler
 func (s *Server) DeleteKeygroup(_ context.Context, request *peering.DeleteKeygroupRequest) (*peering.Empty, error) {
-	log.Info().Msgf("Peering server has rcvd DeleteKeygroup. In: %+v", request)
+	log.Trace().Msgf("Peering server has rcvd DeleteKeygroup. In: %+v", request)
+	log.Debug().Msgf("Peering server has rcvd DeleteKeygroup for keygroup %s", request.Keygroup)
+
 	err := s.i.HandleDeleteKeygroup(fred.Keygroup{Name: fred.KeygroupName(request.Keygroup)})
 	if err != nil {
 		return nil, err
@@ -92,7 +97,20 @@ func (s *Server) PutItem(ctx context.Context, request *peering.PutItemRequest) (
 		other = p.Addr.String()
 	}
 
-	log.Info().Msgf("Peering server has rcvd PutItem. In: %+v from %s to %s", request, other, s.host)
+	log.Trace().Msgf("Peering server has rcvd PutItem. In: %+v from %s to %s", request, other, s.host)
+	log.Debug().Msgf("Peering server has rcvd PutItem for keygroup %s and id %s (append = %v)", request.Keygroup, request.Id, request.Append)
+
+	if request.Append {
+		err := s.i.HandleAppend(fred.Item{
+			Keygroup: fred.KeygroupName(request.Keygroup),
+			ID:       request.Id,
+			Val:      request.Val,
+		})
+		if err != nil {
+			return nil, err
+		}
+		return &peering.Empty{}, nil
+	}
 
 	err := s.i.HandleUpdate(fred.Item{
 		Keygroup:   fred.KeygroupName(request.Keygroup),
@@ -108,26 +126,51 @@ func (s *Server) PutItem(ctx context.Context, request *peering.PutItemRequest) (
 	return &peering.Empty{}, nil
 }
 
-// AppendItem calls HandleAppend on the Inthandler
-func (s *Server) AppendItem(_ context.Context, request *peering.AppendItemRequest) (*peering.Empty, error) {
-	log.Info().Msgf("Peering server has rcvd AppendItem. In: %+v", request)
+// DeleteItem calls this Method on the Inthandler
+func (s *Server) StreamPut(p peering.Node_StreamPutServer) error {
+	log.Trace().Msgf("Peering server has rcvd StreamPut. In: %+v", s)
+	log.Debug().Msgf("Peering server has rcvd StreamPut")
 
-	err := s.i.HandleAppend(fred.Item{
-		Keygroup: fred.KeygroupName(request.Keygroup),
-		ID:       request.Id,
-		Val:      request.Data,
-	})
+	for item, err := p.Recv(); err != io.EOF; item, err = p.Recv() {
+		if err != nil {
+			return err
+		}
 
-	if err != nil {
-		return nil, err
+		log.Trace().Msgf("Peering server has rcvd StreamPut for keygroup %s and id %s", item.Keygroup, item.Id)
+
+		if item.Append {
+			err = s.i.HandleAppend(fred.Item{
+				Keygroup: fred.KeygroupName(item.Keygroup),
+				ID:       item.Id,
+				Val:      item.Val,
+			})
+			if err != nil {
+				return err
+			}
+			continue
+		}
+
+		err = s.i.HandleUpdate(fred.Item{
+			Keygroup:   fred.KeygroupName(item.Keygroup),
+			ID:         item.Id,
+			Val:        item.Val,
+			Version:    item.Version,
+			Tombstoned: item.Tombstoned,
+		})
+
+		if err != nil {
+			return err
+		}
 	}
 
-	return &peering.Empty{}, nil
+	return nil
 }
 
 // GetItem has no implementation
-func (s *Server) GetItem(_ context.Context, request *peering.GetItemRequest) (*peering.GetItemResponse, error) {
-	log.Info().Msgf("Peering server has rcvd GetItem. In: %+v", request)
+func (s *Server) GetItem(_ context.Context, request *peering.GetItemRequest) (*peering.ItemResponse, error) {
+	log.Trace().Msgf("Peering server has rcvd GetItem. In: %+v", request)
+	log.Debug().Msgf("Peering server has rcvd GetItem for keygroup %s and id %s", request.Keygroup, request.Id)
+
 	items, err := s.i.HandleGet(fred.Item{
 		Keygroup: fred.KeygroupName(request.Keygroup),
 		ID:       request.Id,
@@ -147,32 +190,37 @@ func (s *Server) GetItem(_ context.Context, request *peering.GetItemRequest) (*p
 		}
 	}
 
-	return &peering.GetItemResponse{
+	return &peering.ItemResponse{
 		Data: data,
 	}, nil
 }
 
 // GetAllItems has no implementation
-func (s *Server) GetAllItems(_ context.Context, request *peering.GetAllItemsRequest) (*peering.GetAllItemsResponse, error) {
-	log.Info().Msgf("Peering server has rcvd GetItem. In: %+v", request)
+func (s *Server) GetAllItems(request *peering.GetAllItemsRequest, server peering.Node_GetAllItemsServer) error {
+	log.Trace().Msgf("Peering server has rcvd GetItem. In: %+v", request)
+	log.Debug().Msgf("Peering server has rcvd GetAllItems for keygroup %s", request.Keygroup)
+
 	data, err := s.i.HandleGetAllItems(fred.Keygroup{
 		Name: fred.KeygroupName(request.Keygroup),
 	})
+
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	d := make([]*peering.Data, len(data))
-
-	for i, item := range data {
-		d[i] = &peering.Data{
-			Id:      item.ID,
-			Val:     item.Val,
-			Version: item.Version,
+	for _, item := range data {
+		if err := server.Send(&peering.ItemResponse{
+			Data: []*peering.Data{
+				{
+					Id:      item.ID,
+					Val:     item.Val,
+					Version: item.Version,
+				},
+			},
+		}); err != nil {
+			return err
 		}
 	}
 
-	return &peering.GetAllItemsResponse{
-		Data: d,
-	}, nil
+	return nil
 }

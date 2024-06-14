@@ -25,9 +25,9 @@ type NodeClient interface {
 	CreateKeygroup(ctx context.Context, in *CreateKeygroupRequest, opts ...grpc.CallOption) (*Empty, error)
 	DeleteKeygroup(ctx context.Context, in *DeleteKeygroupRequest, opts ...grpc.CallOption) (*Empty, error)
 	PutItem(ctx context.Context, in *PutItemRequest, opts ...grpc.CallOption) (*Empty, error)
-	AppendItem(ctx context.Context, in *AppendItemRequest, opts ...grpc.CallOption) (*Empty, error)
-	GetItem(ctx context.Context, in *GetItemRequest, opts ...grpc.CallOption) (*GetItemResponse, error)
-	GetAllItems(ctx context.Context, in *GetAllItemsRequest, opts ...grpc.CallOption) (*GetAllItemsResponse, error)
+	StreamPut(ctx context.Context, opts ...grpc.CallOption) (Node_StreamPutClient, error)
+	GetItem(ctx context.Context, in *GetItemRequest, opts ...grpc.CallOption) (*ItemResponse, error)
+	GetAllItems(ctx context.Context, in *GetAllItemsRequest, opts ...grpc.CallOption) (Node_GetAllItemsClient, error)
 }
 
 type nodeClient struct {
@@ -65,17 +65,42 @@ func (c *nodeClient) PutItem(ctx context.Context, in *PutItemRequest, opts ...gr
 	return out, nil
 }
 
-func (c *nodeClient) AppendItem(ctx context.Context, in *AppendItemRequest, opts ...grpc.CallOption) (*Empty, error) {
-	out := new(Empty)
-	err := c.cc.Invoke(ctx, "/mcc.fred.peering.Node/AppendItem", in, out, opts...)
+func (c *nodeClient) StreamPut(ctx context.Context, opts ...grpc.CallOption) (Node_StreamPutClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Node_ServiceDesc.Streams[0], "/mcc.fred.peering.Node/StreamPut", opts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &nodeStreamPutClient{stream}
+	return x, nil
 }
 
-func (c *nodeClient) GetItem(ctx context.Context, in *GetItemRequest, opts ...grpc.CallOption) (*GetItemResponse, error) {
-	out := new(GetItemResponse)
+type Node_StreamPutClient interface {
+	Send(*PutItemRequest) error
+	CloseAndRecv() (*Empty, error)
+	grpc.ClientStream
+}
+
+type nodeStreamPutClient struct {
+	grpc.ClientStream
+}
+
+func (x *nodeStreamPutClient) Send(m *PutItemRequest) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *nodeStreamPutClient) CloseAndRecv() (*Empty, error) {
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	m := new(Empty)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *nodeClient) GetItem(ctx context.Context, in *GetItemRequest, opts ...grpc.CallOption) (*ItemResponse, error) {
+	out := new(ItemResponse)
 	err := c.cc.Invoke(ctx, "/mcc.fred.peering.Node/GetItem", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -83,13 +108,36 @@ func (c *nodeClient) GetItem(ctx context.Context, in *GetItemRequest, opts ...gr
 	return out, nil
 }
 
-func (c *nodeClient) GetAllItems(ctx context.Context, in *GetAllItemsRequest, opts ...grpc.CallOption) (*GetAllItemsResponse, error) {
-	out := new(GetAllItemsResponse)
-	err := c.cc.Invoke(ctx, "/mcc.fred.peering.Node/GetAllItems", in, out, opts...)
+func (c *nodeClient) GetAllItems(ctx context.Context, in *GetAllItemsRequest, opts ...grpc.CallOption) (Node_GetAllItemsClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Node_ServiceDesc.Streams[1], "/mcc.fred.peering.Node/GetAllItems", opts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &nodeGetAllItemsClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type Node_GetAllItemsClient interface {
+	Recv() (*ItemResponse, error)
+	grpc.ClientStream
+}
+
+type nodeGetAllItemsClient struct {
+	grpc.ClientStream
+}
+
+func (x *nodeGetAllItemsClient) Recv() (*ItemResponse, error) {
+	m := new(ItemResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 // NodeServer is the server API for Node service.
@@ -99,9 +147,9 @@ type NodeServer interface {
 	CreateKeygroup(context.Context, *CreateKeygroupRequest) (*Empty, error)
 	DeleteKeygroup(context.Context, *DeleteKeygroupRequest) (*Empty, error)
 	PutItem(context.Context, *PutItemRequest) (*Empty, error)
-	AppendItem(context.Context, *AppendItemRequest) (*Empty, error)
-	GetItem(context.Context, *GetItemRequest) (*GetItemResponse, error)
-	GetAllItems(context.Context, *GetAllItemsRequest) (*GetAllItemsResponse, error)
+	StreamPut(Node_StreamPutServer) error
+	GetItem(context.Context, *GetItemRequest) (*ItemResponse, error)
+	GetAllItems(*GetAllItemsRequest, Node_GetAllItemsServer) error
 }
 
 // UnimplementedNodeServer should be embedded to have forward compatible implementations.
@@ -117,14 +165,14 @@ func (UnimplementedNodeServer) DeleteKeygroup(context.Context, *DeleteKeygroupRe
 func (UnimplementedNodeServer) PutItem(context.Context, *PutItemRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PutItem not implemented")
 }
-func (UnimplementedNodeServer) AppendItem(context.Context, *AppendItemRequest) (*Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AppendItem not implemented")
+func (UnimplementedNodeServer) StreamPut(Node_StreamPutServer) error {
+	return status.Errorf(codes.Unimplemented, "method StreamPut not implemented")
 }
-func (UnimplementedNodeServer) GetItem(context.Context, *GetItemRequest) (*GetItemResponse, error) {
+func (UnimplementedNodeServer) GetItem(context.Context, *GetItemRequest) (*ItemResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetItem not implemented")
 }
-func (UnimplementedNodeServer) GetAllItems(context.Context, *GetAllItemsRequest) (*GetAllItemsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetAllItems not implemented")
+func (UnimplementedNodeServer) GetAllItems(*GetAllItemsRequest, Node_GetAllItemsServer) error {
+	return status.Errorf(codes.Unimplemented, "method GetAllItems not implemented")
 }
 
 // UnsafeNodeServer may be embedded to opt out of forward compatibility for this service.
@@ -192,22 +240,30 @@ func _Node_PutItem_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Node_AppendItem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AppendItemRequest)
-	if err := dec(in); err != nil {
+func _Node_StreamPut_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(NodeServer).StreamPut(&nodeStreamPutServer{stream})
+}
+
+type Node_StreamPutServer interface {
+	SendAndClose(*Empty) error
+	Recv() (*PutItemRequest, error)
+	grpc.ServerStream
+}
+
+type nodeStreamPutServer struct {
+	grpc.ServerStream
+}
+
+func (x *nodeStreamPutServer) SendAndClose(m *Empty) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *nodeStreamPutServer) Recv() (*PutItemRequest, error) {
+	m := new(PutItemRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
-	if interceptor == nil {
-		return srv.(NodeServer).AppendItem(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/mcc.fred.peering.Node/AppendItem",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NodeServer).AppendItem(ctx, req.(*AppendItemRequest))
-	}
-	return interceptor(ctx, in, info, handler)
+	return m, nil
 }
 
 func _Node_GetItem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -228,22 +284,25 @@ func _Node_GetItem_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Node_GetAllItems_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetAllItemsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
+func _Node_GetAllItems_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(GetAllItemsRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
 	}
-	if interceptor == nil {
-		return srv.(NodeServer).GetAllItems(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/mcc.fred.peering.Node/GetAllItems",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NodeServer).GetAllItems(ctx, req.(*GetAllItemsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
+	return srv.(NodeServer).GetAllItems(m, &nodeGetAllItemsServer{stream})
+}
+
+type Node_GetAllItemsServer interface {
+	Send(*ItemResponse) error
+	grpc.ServerStream
+}
+
+type nodeGetAllItemsServer struct {
+	grpc.ServerStream
+}
+
+func (x *nodeGetAllItemsServer) Send(m *ItemResponse) error {
+	return x.ServerStream.SendMsg(m)
 }
 
 // Node_ServiceDesc is the grpc.ServiceDesc for Node service.
@@ -266,18 +325,21 @@ var Node_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Node_PutItem_Handler,
 		},
 		{
-			MethodName: "AppendItem",
-			Handler:    _Node_AppendItem_Handler,
-		},
-		{
 			MethodName: "GetItem",
 			Handler:    _Node_GetItem_Handler,
 		},
+	},
+	Streams: []grpc.StreamDesc{
 		{
-			MethodName: "GetAllItems",
-			Handler:    _Node_GetAllItems_Handler,
+			StreamName:    "StreamPut",
+			Handler:       _Node_StreamPut_Handler,
+			ClientStreams: true,
+		},
+		{
+			StreamName:    "GetAllItems",
+			Handler:       _Node_GetAllItems_Handler,
+			ServerStreams: true,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
 	Metadata: "peering.proto",
 }

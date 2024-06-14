@@ -58,7 +58,8 @@ func main() {
 	c := parseArgs()
 
 	// Setup Logging as always
-	if c.logHandler == "dev" {
+	switch c.logHandler {
+	case "dev":
 		log.Logger = log.Output(
 			zerolog.ConsoleWriter{
 				Out:     os.Stderr,
@@ -69,7 +70,11 @@ func main() {
 		zerolog.DisableSampling(true)
 
 		log.Info().Msgf("Current configuration:\n%+v", c)
-	} else if c.logHandler != "prod" {
+	case "prod":
+		// add millisecond fraction to log
+		// is also slightly faster
+		zerolog.TimeFieldFormat = zerolog.TimeFormatUnixMs
+	default:
 		log.Fatal().Msg("Log Handler has to be either dev or prod")
 	}
 

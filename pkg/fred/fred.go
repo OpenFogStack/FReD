@@ -19,6 +19,7 @@ type Config struct {
 	TriggerCert             string
 	TriggerKey              string
 	TriggerCA               []string
+	TriggerAsync            bool
 }
 
 // Fred is an instance of FReD.
@@ -52,7 +53,7 @@ func New(config *Config) (f Fred) {
 
 	r := newReplicationService(s, config.Client, config.NaSe, config.PeeringAsyncReplication)
 
-	t := newTriggerService(s, config.TriggerCert, config.TriggerKey, config.TriggerCA)
+	t := newTriggerService(s, config.TriggerCert, config.TriggerKey, config.TriggerCA, config.TriggerAsync)
 
 	a := newAuthService(config.NaSe)
 

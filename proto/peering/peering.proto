@@ -8,9 +8,9 @@ service Node {
     rpc CreateKeygroup (CreateKeygroupRequest) returns (Empty);
     rpc DeleteKeygroup (DeleteKeygroupRequest) returns (Empty);
     rpc PutItem (PutItemRequest) returns (Empty);
-    rpc AppendItem (AppendItemRequest) returns (Empty);
-    rpc GetItem (GetItemRequest) returns (GetItemResponse);
-    rpc GetAllItems (GetAllItemsRequest) returns (GetAllItemsResponse);
+    rpc StreamPut(stream PutItemRequest) returns (Empty);
+    rpc GetItem (GetItemRequest) returns (ItemResponse);
+    rpc GetAllItems (GetAllItemsRequest) returns (stream ItemResponse);
 }
 
 message Empty{}
@@ -28,8 +28,9 @@ message PutItemRequest {
     string keygroup = 1;
     string id = 2;
     string val = 3;
-    bool tombstoned = 4;
-    map<string, uint64> version = 5;
+    bool append = 4;
+    bool tombstoned = 5;
+    map<string, uint64> version = 6;
 }
 
 message GetItemRequest {
@@ -37,16 +38,12 @@ message GetItemRequest {
     string id = 2;
 }
 
-message GetItemResponse {
+message ItemResponse {
     repeated Data data = 1;
 }
 
 message GetAllItemsRequest {
     string keygroup = 1;
-}
-
-message GetAllItemsResponse {
-    repeated Data data = 1;
 }
 
 message Data {

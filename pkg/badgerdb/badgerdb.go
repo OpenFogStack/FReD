@@ -147,6 +147,11 @@ func (s *Storage) Read(kg string, id string) ([]string, []vclock.VClock, bool, e
 
 		for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
 			item := it.Item()
+
+			if item.IsDeletedOrExpired() {
+				continue
+			}
+
 			_, _, vvector := getKey(string(item.Key()))
 
 			v, err := item.ValueCopy(nil)
@@ -200,6 +205,11 @@ func (s *Storage) ReadSome(kg, id string, count uint64) ([]string, []string, []v
 		var i uint64
 		for it.Seek(start); it.ValidForPrefix(prefix) && i < count; it.Next() {
 			item := it.Item()
+
+			if item.IsDeletedOrExpired() {
+				continue
+			}
+
 			_, key, vvector := getKey(string(item.Key()))
 
 			v, err := item.ValueCopy(nil)
@@ -244,6 +254,11 @@ func (s *Storage) ReadAll(kg string) ([]string, []string, []vclock.VClock, error
 
 		for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
 			item := it.Item()
+
+			if item.IsDeletedOrExpired() {
+				continue
+			}
+
 			_, key, vvector := getKey(string(item.Key()))
 
 			v, err := item.ValueCopy(nil)
@@ -286,6 +301,11 @@ func (s *Storage) IDs(kg string) ([]string, error) {
 
 		for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
 			item := it.Item()
+
+			if item.IsDeletedOrExpired() {
+				continue
+			}
+
 			_, key, _ := getKey(string(item.Key()))
 
 			if len(items) > 0 && key == items[len(items)-1] {
@@ -375,6 +395,10 @@ func (s *Storage) Delete(kg string, id string, vvector vclock.VClock) error {
 		prefix := makeKeyNamePrefix(kg, id)
 
 		for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
+			if it.Item().IsDeletedOrExpired() {
+				continue
+			}
+
 			ids = append(ids, string(it.Item().Key()))
 		}
 		return nil
@@ -455,7 +479,8 @@ func (s *Storage) Exists(kg string, id string) bool {
 		it := txn.NewIterator(opts)
 		defer it.Close()
 		it.Seek(prefix)
-		if it.ValidForPrefix(prefix) {
+
+		if it.ValidForPrefix(prefix) && !it.Item().IsDeletedOrExpired() {
 			return nil
 		}
 

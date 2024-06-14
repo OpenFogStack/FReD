@@ -89,6 +89,7 @@ type fredConfig struct {
 		Key        string `env:"TRIGGER_KEY"`
 		CA         string `env:"TRIGGER_CA"`
 		SkipVerify bool   `env:"TRIGGER_SKIP_VERIFY"`
+		Async      bool   `env:"TRIGGER_ASYNC"`
 	}
 	Profiling struct {
 		CPUProfPath string `env:"PROFILING_CPU_PATH"`
@@ -161,6 +162,7 @@ func parseArgs() (fc fredConfig) {
 	flag.StringVar(&(fc.Trigger.Key), "trigger-key", "", "Key file for trigger node connection. (Env: TRIGGER_KEY)")
 	flag.StringVar(&(fc.Trigger.CA), "trigger-ca", "", "Comma-separated list of CA certificate files for trigger node connection. (Env: TRIGGER_CA)")
 	flag.BoolVar(&(fc.Trigger.SkipVerify), "trigger-skip-verify", false, "Skip verification of client certificates. (Env: TRIGGER_SKIP_VERIFY)")
+	flag.BoolVar(&(fc.Trigger.Async), "trigger-async", false, "Enable asynchronous trigger replication. Experimental. (Env: TRIGGER_ASYNC)")
 
 	flag.StringVar(&(fc.Profiling.CPUProfPath), "cpuprofile", "", "Enable CPU profiling and specify path for pprof output")
 	flag.StringVar(&(fc.Profiling.MemProfPath), "memprofile", "", "Enable memory profiling and specify path for pprof output")
@@ -218,7 +220,8 @@ func main() {
 	// Setup Logging
 	// In Dev the ConsoleWriter has nice colored output, but is not very fast.
 	// In Prod the default handler is used. It writes json to stdout and is very fast.
-	if fc.Log.Handler == "dev" {
+	switch fc.Log.Handler {
+	case "dev":
 		log.Logger = log.Output(
 			zerolog.ConsoleWriter{
 				Out:     os.Stderr,
@@ -227,8 +230,14 @@ func main() {
 		)
 
 		zerolog.DisableSampling(true)
-	} else if fc.Log.Handler != "prod" {
-		log.Fatal().Msg("Log ExtHandler has to be either dev or prod")
+
+		log.Info().Msgf("Current configuration:\n%+v", fc)
+	case "prod":
+		// add millisecond fraction to log
+		// is also slightly faster
+		zerolog.TimeFieldFormat = zerolog.TimeFormatUnixMs
+	default:
+		log.Fatal().Msg("Log Handler has to be either dev or prod")
 	}
 
 	// https://github.com/influxdata/influxdb/blob/master/cmd/influxd/internal/profile/profile.go
@@ -340,6 +349,7 @@ func main() {
 		TriggerCert:             fc.Trigger.Cert,
 		TriggerKey:              fc.Trigger.Key,
 		TriggerCA:               strings.Split(fc.Trigger.CA, ","),
+		TriggerAsync:            fc.Trigger.Async,
 	})
 
 	log.Debug().Msg("Starting Interconnection Server...")

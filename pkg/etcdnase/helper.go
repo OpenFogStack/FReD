@@ -29,7 +29,7 @@ func (n *NameService) getPrefix(prefix string) (kv map[string]string, err error)
 
 		// found something!
 		if ok {
-			log.Debug().Msgf("prefix: %s cache hit", prefix)
+			log.Trace().Msgf("prefix: %s cache hit", prefix)
 
 			_, ok = val.(map[string]string)
 			if ok {

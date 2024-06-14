@@ -1,6 +1,8 @@
 package fred
 
 import (
+	"time"
+
 	"git.tu-berlin.de/mcc-fred/vclock"
 	"github.com/go-errors/errors"
 	"github.com/rs/zerolog/log"
@@ -277,11 +279,15 @@ func (h *ExtHandler) HandleUpdate(user string, i Item, versions []vclock.VClock)
 
 // HandleDelete handles requests to the Delete endpoint of the client interface.
 func (h *ExtHandler) HandleDelete(user string, i Item, versions []vclock.VClock) (Item, error) {
+	start := time.Now()
+
 	allowed, err := h.a.isAllowed(user, Delete, i.Keygroup)
 
 	if err != nil || !allowed {
 		return i, errors.Errorf("user %s cannot delete keygroup %s", user, i.Keygroup)
 	}
+
+	log.Debug().Msgf("Delete: %s allowed after %s", i.ID, time.Since(start))
 
 	m, err := h.n.IsMutable(i.Keygroup)
 
@@ -293,15 +299,22 @@ func (h *ExtHandler) HandleDelete(user string, i Item, versions []vclock.VClock)
 		return i, errors.Errorf("cannot update item %s because keygroup is immutable", i.ID)
 	}
 
+	log.Debug().Msgf("Delete: %s mutable after %s", i.ID, time.Since(start))
+
+	start = time.Now()
+
 	if !h.s.exists(i) {
 		return i, errors.Errorf("item does not exist so it cannot be deleted")
 	}
 
 	i.Tombstoned = true
 
+	log.Debug().Msgf("Delete: %s starting after %s", i.ID, time.Since(start))
+
 	// if delete request has a list of versions, all versions that are equal or less than those versions will be overwritten with tombstone
 	// else only the local counter will be incremented
 	if versions == nil {
+		start = time.Now()
 		i.Version, err = h.s.tombstone(i)
 
 		if err != nil {
@@ -309,6 +322,8 @@ func (h *ExtHandler) HandleDelete(user string, i Item, versions []vclock.VClock)
 			log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 			return i, errors.Errorf("error updating item")
 		}
+
+		log.Debug().Msgf("Delete: %s tombstoned after %s", i.ID, time.Since(start))
 	} else {
 		i.Version, err = h.s.tombstoneVersions(i, versions)
 
@@ -319,15 +334,23 @@ func (h *ExtHandler) HandleDelete(user string, i Item, versions []vclock.VClock)
 		}
 	}
 
+	start = time.Now()
+
 	if err := h.r.relayUpdate(i); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return i, errors.Errorf("error deleting item")
 	}
 
+	log.Debug().Msgf("Delete: %s relayed after %s", i.ID, time.Since(start))
+
+	start = time.Now()
+
 	if err := h.t.triggerDelete(i); err != nil {
 		log.Err(err).Msg(err.(*errors.Error).ErrorStack())
 		return i, errors.Errorf("error deleting item")
 	}
+
+	log.Debug().Msgf("Delete: %s triggered after %s", i.ID, time.Since(start))
 
 	return i, nil
 }

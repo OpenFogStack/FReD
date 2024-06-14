@@ -2,6 +2,7 @@ package peering
 
 import (
 	"context"
+	"io"
 	"sync"
 
 	"git.tu-berlin.de/mcc-fred/fred/pkg/fred"
@@ -104,6 +105,8 @@ func (c *Client) SendDeleteKeygroup(host string, kgname fred.KeygroupName) error
 
 // SendUpdate sends this command to the server at this address
 func (c *Client) SendUpdate(host string, kgname fred.KeygroupName, id string, value string, tombstoned bool, vvector vclock.VClock) error {
+	log.Debug().Msgf("Sending update for %s in %s to %s", id, kgname, host)
+
 	client, err := c.getClient(host)
 
 	if err != nil {
@@ -114,6 +117,7 @@ func (c *Client) SendUpdate(host string, kgname fred.KeygroupName, id string, va
 		Keygroup:   string(kgname),
 		Id:         id,
 		Val:        value,
+		Append:     false,
 		Tombstoned: tombstoned,
 		Version:    vvector,
 	})
@@ -132,15 +136,66 @@ func (c *Client) SendAppend(host string, kgname fred.KeygroupName, id string, va
 		return errors.New(err)
 	}
 
-	_, err = client.AppendItem(context.Background(), &peering.AppendItemRequest{
+	_, err = client.PutItem(context.Background(), &peering.PutItemRequest{
 		Keygroup: string(kgname),
 		Id:       id,
-		Data:     value,
+		Val:      value,
+		Append:   true,
 	})
 
 	if err != nil {
 		return errors.New(err)
 	}
+	return nil
+}
+
+// StreamItems streams items from the server at this address
+func (c *Client) StreamItems(host string, kgname fred.KeygroupName, append bool, items []fred.Item) error {
+	client, err := c.getClient(host)
+
+	if err != nil {
+		return errors.New(err)
+	}
+
+	s, err := client.StreamPut(context.Background())
+
+	if err != nil {
+		return errors.New(err)
+	}
+
+	for i, item := range items {
+		if i%100 == 0 {
+			log.Debug().Msgf("Sent %d items for keygroup %s to %s", i, kgname, host)
+		}
+
+		if append {
+			err = s.Send(&peering.PutItemRequest{
+				Keygroup: string(kgname),
+				Id:       item.ID,
+				Val:      item.Val,
+				Append:   true,
+			})
+
+			if err != nil {
+				return errors.New(err)
+			}
+
+			continue
+		}
+		err = s.Send(&peering.PutItemRequest{
+			Keygroup:   string(kgname),
+			Id:         item.ID,
+			Val:        item.Val,
+			Append:     false,
+			Tombstoned: item.Tombstoned,
+			Version:    item.Version,
+		})
+
+		if err != nil {
+			return errors.New(err)
+		}
+	}
+
 	return nil
 }
 
@@ -183,7 +238,7 @@ func (c *Client) SendGetAllItems(host string, kgname fred.KeygroupName) ([]fred.
 		return nil, err
 	}
 
-	res, err := client.GetAllItems(context.Background(), &peering.GetAllItemsRequest{
+	server, err := client.GetAllItems(context.Background(), &peering.GetAllItemsRequest{
 		Keygroup: string(kgname),
 	})
 
@@ -191,14 +246,20 @@ func (c *Client) SendGetAllItems(host string, kgname fred.KeygroupName) ([]fred.
 		return nil, errors.New(err)
 	}
 
-	d := make([]fred.Item, len(res.Data))
+	d := make([]fred.Item, 0)
 
-	for i, item := range res.Data {
-		d[i] = fred.Item{
-			Keygroup: kgname,
-			ID:       item.Id,
-			Val:      item.Val,
-			Version:  item.Version,
+	for item, err := server.Recv(); err != io.EOF; item, err = server.Recv() {
+		if err != nil {
+			return nil, errors.New(err)
+		}
+
+		for _, data := range item.Data {
+			d = append(d, fred.Item{
+				Keygroup: kgname,
+				ID:       data.Id,
+				Val:      data.Val,
+				Version:  data.Version,
+			})
 		}
 	}
 

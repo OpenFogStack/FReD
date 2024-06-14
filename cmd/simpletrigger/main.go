@@ -118,18 +118,21 @@ func main() {
 	// Setup Logging
 	// In Dev the ConsoleWriter has nice colored output, but is not very fast.
 	// In Prod the default handler is used. It writes json to stdout and is very fast.
-	zerolog.SetGlobalLevel(zerolog.InfoLevel)
-	if *loghandler == "dev" {
+	switch *loghandler {
+	case "dev":
 		log.Logger = log.Output(
 			zerolog.ConsoleWriter{
 				Out:     os.Stderr,
 				NoColor: false,
 			},
 		)
-		zerolog.SetGlobalLevel(zerolog.TraceLevel)
 
 		zerolog.DisableSampling(true)
-	} else if *loghandler != "prod" {
+	case "prod":
+		// add millisecond fraction to log
+		// is also slightly faster
+		zerolog.TimeFieldFormat = zerolog.TimeFormatUnixMs
+	default:
 		log.Fatal().Msg("Log Handler has to be either dev or prod")
 	}
 

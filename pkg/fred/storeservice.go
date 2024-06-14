@@ -2,6 +2,7 @@ package fred
 
 import (
 	"sync"
+	"time"
 
 	"git.tu-berlin.de/mcc-fred/fred/pkg/vector"
 	"git.tu-berlin.de/mcc-fred/vclock"
@@ -85,11 +86,16 @@ func (s *storeService) read(kg KeygroupName, id string) ([]Item, error) {
 		return nil, errors.Errorf("no such keygroup in store: %+v", kg)
 	}
 
+	log.Debug().Msgf("storeservice: reading %s from keygroup %s", id, kg)
+	start := time.Now()
+
 	data, vvectors, found, err := s.iS.Read(string(kg), id)
 
 	if err != nil {
 		return nil, err
 	}
+
+	log.Debug().Msgf("storeservice: read %s from keygroup %s in %s", id, kg, time.Since(start))
 
 	if !found {
 		return []Item{}, nil
@@ -286,10 +292,6 @@ func (s *storeService) readAll(kg KeygroupName) ([]Item, error) {
 
 // exists checks if an item exists in the key-value store.
 func (s *storeService) exists(i Item) bool {
-	if !s.iS.ExistsKeygroup(string(i.Keygroup)) {
-		return false
-	}
-
 	return s.iS.Exists(string(i.Keygroup), i.ID)
 }
 
@@ -587,14 +589,12 @@ func (s *storeService) prune(kg string, id string, versions []vclock.VClock) {
 
 func (s *storeService) tombstone(i Item) (vclock.VClock, error) {
 	//TODO
+	start := time.Now()
+
 	err := checkKGandID(i.Keygroup, i.ID)
 
 	if err != nil {
 		return nil, err
-	}
-
-	if !s.iS.ExistsKeygroup(string(i.Keygroup)) {
-		return nil, errors.Errorf("no such keygroup in store: %+v", i.Keygroup)
 	}
 
 	i.Tombstoned = true
@@ -634,13 +634,21 @@ func (s *storeService) tombstone(i Item) (vclock.VClock, error) {
 
 	s.vCache[i.Keygroup].clocks[i.ID].clocks = []vclock.VClock{newVersion}
 
+	log.Debug().Msgf("Calculated version vectors for tombstone for %s in %s", i.ID, time.Since(start))
+	start = time.Now()
+
 	err = s.iS.Update(string(i.Keygroup), i.ID, i.Val, 0, newVersion.GetMap())
 
 	if err != nil {
 		return nil, err
 	}
 
+	log.Debug().Msgf("Updated tombstone for %s in %s", i.ID, time.Since(start))
+	start = time.Now()
+
 	s.prune(string(i.Keygroup), i.ID, toPrune)
+
+	log.Debug().Msgf("Pruned tombstone for %s in %s", i.ID, time.Since(start))
 
 	return newVersion.Copy(), nil
 }
@@ -653,11 +661,6 @@ func (s *storeService) tombstoneVersions(i Item, versions []vclock.VClock) (vclo
 	if err != nil {
 		return nil, err
 	}
-
-	if !s.iS.ExistsKeygroup(string(i.Keygroup)) {
-		return nil, errors.Errorf("no such keygroup in store: %+v", i.Keygroup)
-	}
-
 	i.Tombstoned = true
 	i.Val = ""
 
